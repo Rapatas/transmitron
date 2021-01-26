@@ -1,0 +1,3 @@
+*.sw?
+/compile_commands.json
+/build*

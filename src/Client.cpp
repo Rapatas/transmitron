@@ -1,0 +1,453 @@
+#include <sstream>
+#include <nlohmann/json.hpp>
+
+#include "Client.hpp"
+#include "images/plus/plus-18x18.hpp"
+
+#define wxLOG_COMPONENT "Client"
+
+wxDEFINE_EVENT(EVT_MESSAGE, MessageEvent);
+
+Client::Client(
+  wxWindow* parent,
+  const Connection &connection
+) :
+  wxPanel(parent),
+  mConnectionInfo(connection)
+{
+  mClient = std::make_shared<MQTT::Client>();
+  mClient->attachObserver(this);
+  Bind(wxEVT_CLOSE_WINDOW, &Client::onClose, this);
+  Bind(wxEVT_COMMAND_MENU_SELECTED, &Client::onContextSelected, this);
+
+#if not BUILD_DOCKING
+
+  mSplitLeft = new wxSplitterWindow(this);
+  mSplitRight = new wxSplitterWindow(mSplitLeft);
+  mSplitCenter = new wxSplitterWindow(mSplitRight);
+  mSplitLeft->SetMinimumPaneSize(100);
+  mSplitRight->SetMinimumPaneSize(100);
+  mSplitCenter->SetMinimumPaneSize(100);
+  mSplitLeft->SetSashGravity(0.3333);
+  mSplitRight->SetSashGravity(0.5);
+
+  setupPanelConnect(this);
+  setupPanelPublish(mSplitLeft);
+  setupPanelHistory(mSplitCenter);
+  setupPanelSubscriptions(mSplitCenter);
+  setupPanelPreview(mSplitRight);
+
+  auto s = new wxBoxSizer(wxVERTICAL);
+  s->Add(mConnection, 0, wxEXPAND);
+  s->Add(mSplitLeft, 1, wxEXPAND);
+  SetSizer(s);
+
+#else
+
+  setupPanelConnect(this);
+  setupPanelPublish(this);
+  setupPanelHistory(this);
+  setupPanelSubscriptions(this);
+  setupPanelPreview(this);
+
+  wxAuiPaneInfo connectionInfo;
+  wxAuiPaneInfo historyInfo;
+  wxAuiPaneInfo previewInfo;
+  wxAuiPaneInfo publishInfo;
+  wxAuiPaneInfo subscriptionsInfo;
+
+  connectionInfo.Caption("Connection");
+  historyInfo.Caption("History");
+  previewInfo.Caption("Preview");
+  publishInfo.Caption("Publish");
+  subscriptionsInfo.Caption("Subscriptions");
+
+  connectionInfo.Movable(true);
+  historyInfo.Movable(true);
+  previewInfo.Movable(true);
+  publishInfo.Movable(true);
+  subscriptionsInfo.Movable(true);
+
+  connectionInfo.Floatable(true);
+  historyInfo.Floatable(true);
+  previewInfo.Floatable(true);
+  publishInfo.Floatable(true);
+  subscriptionsInfo.Floatable(true);
+
+  previewInfo.Center();
+  connectionInfo.Left();
+  historyInfo.Left();
+  publishInfo.Left();
+  subscriptionsInfo.Left();
+
+  previewInfo.Layer(0);
+  connectionInfo.Layer(1);
+  historyInfo.Layer(1);
+  publishInfo.Layer(2);
+  subscriptionsInfo.Layer(1);
+
+  publishInfo.BestSize(wxSize(300, 500));
+  connectionInfo.MaxSize(wxSize(300, 80));
+  subscriptionsInfo.BestSize(wxSize(500, 0));
+
+  mAuiMan.SetManagedWindow(this);
+  mAuiMan.AddPane(mConnection,    connectionInfo);
+  mAuiMan.AddPane(mSubscriptions, subscriptionsInfo);
+  mAuiMan.AddPane(mPublish,    publishInfo);
+  mAuiMan.AddPane(mHistory,       historyInfo);
+  mAuiMan.AddPane(mPreview,       previewInfo);
+  mAuiMan.Update();
+
+#endif
+}
+
+void Client::setupPanelHistory(wxWindow *parent)
+{
+  wxDataViewColumn* const icon = new wxDataViewColumn(
+    L"icon",
+    new wxDataViewBitmapRenderer(),
+    (unsigned)History::Column::Icon,
+    wxCOL_WIDTH_AUTOSIZE,
+    wxALIGN_LEFT
+  );
+  wxDataViewColumn* const topic = new wxDataViewColumn(
+    L"topic",
+    new wxDataViewTextRenderer(),
+    (unsigned)History::Column::Topic,
+    wxCOL_WIDTH_AUTOSIZE,
+    wxALIGN_LEFT
+  );
+  wxDataViewColumn* const qos = new wxDataViewColumn(
+    L"qos",
+    new wxDataViewBitmapRenderer(),
+    (unsigned)History::Column::Qos,
+    25
+  );
+  wxDataViewColumn* const retained = new wxDataViewColumn(
+    L"retained",
+    new wxDataViewBitmapRenderer(),
+    (unsigned)History::Column::Retained,
+    25
+  );
+
+  mHistory = new wxPanel(parent, -1, wxDefaultPosition, wxSize(200, 150));
+
+  mHistoryCtrl = new wxDataViewCtrl(
+    mHistory,
+    -1,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxDV_NO_HEADER | wxDV_ROW_LINES
+  );
+
+  mHistoryModel = new History;
+  mHistoryCtrl->AssociateModel(mHistoryModel.get());
+
+  mHistoryCtrl->AppendColumn(icon);
+  mHistoryCtrl->AppendColumn(qos);
+  mHistoryCtrl->AppendColumn(retained);
+  mHistoryCtrl->AppendColumn(topic);
+
+  wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
+  vsizer->Add(mHistoryCtrl, 1, wxEXPAND);
+  mHistory->SetSizer(vsizer);
+
+  mHistoryCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Client::onHistorySelected, this);
+  mHistoryCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &Client::onHistoryContext, this);
+  mHistoryModel->Bind(EVT_MESSAGE_RECEIVED, &Client::onMessageAdded, this);
+}
+
+void Client::setupPanelConnect(wxWindow *parent)
+{
+  mConnection = new wxPanel(parent, -1, wxDefaultPosition, wxDefaultSize);
+
+  mConnect  = new wxButton(mConnection, -1, "Connect");
+
+  wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
+  hsizer->Add(mConnect,  0, wxEXPAND);
+  mConnection->SetSizer(hsizer);
+
+  mConnect->Bind(wxEVT_BUTTON, &Client::onConnectClicked, this);
+}
+
+void Client::setupPanelSubscriptions(wxWindow *parent)
+{
+  wxDataViewColumn* const icon = new wxDataViewColumn(
+    "icon",
+    new wxDataViewBitmapRenderer(),
+    (unsigned)Subscriptions::Column::Icon,
+    40
+  );
+  wxDataViewColumn* const topic = new wxDataViewColumn(
+    "topic",
+    new wxDataViewTextRenderer(),
+    (unsigned)Subscriptions::Column::Topic,
+    wxCOL_WIDTH_AUTOSIZE,
+    wxALIGN_LEFT
+  );
+  wxDataViewColumn* const qos = new wxDataViewColumn(
+    "qos",
+    new wxDataViewBitmapRenderer(),
+    (unsigned)Subscriptions::Column::Qos,
+    25
+  );
+
+  mSubscriptions = new wxPanel(parent, -1, wxDefaultPosition, wxSize(200, 150));
+
+  mSubscriptionsCtrl = new wxDataViewListCtrl(mSubscriptions, -1, wxDefaultPosition, wxDefaultSize, wxDV_NO_HEADER);
+  mSubscriptionsCtrl->AppendColumn(icon);
+  mSubscriptionsCtrl->AppendColumn(qos);
+  mSubscriptionsCtrl->AppendColumn(topic);
+
+  mSubscriptionsModel = new Subscriptions(mClient, mHistoryModel);
+  mSubscriptionsCtrl->AssociateModel(mSubscriptionsModel);
+
+  mSubscribe = new wxBitmapButton(mSubscriptions, -1, *bin2c_plus_18x18_png);
+
+  mFilter = new wxTextCtrl(mSubscriptions, -1);
+  mFilter->SetHint("subscribe");
+
+  wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
+  wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
+  hsizer->Add(mFilter,  1, wxEXPAND);
+  hsizer->Add(mSubscribe,  0, wxEXPAND);
+  vsizer->Add(hsizer,  0, wxEXPAND);
+  vsizer->Add(mSubscriptionsCtrl,  1, wxEXPAND);
+  mSubscriptions->SetSizer(vsizer);
+
+  mSubscriptionsCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Client::onSubscriptionSelected, this);
+  mSubscriptionsCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &Client::onSubscriptionContext, this);
+  mSubscribe->Bind(wxEVT_BUTTON, &Client::onSubscribeClicked, this);
+  mFilter->Bind(wxEVT_KEY_DOWN, &Client::onSubscribeEnter, this);
+}
+
+void Client::setupPanelPreview(wxWindow *parent)
+{
+  mPreview = new Edit(parent);
+  mPreview->setReadOnly(true);
+}
+
+void Client::setupPanelPublish(wxWindow *parent)
+{
+  mPublish = new Edit(parent);
+
+  mPublish->Bind(wxEVT_BUTTON, &Client::onPublishClicked, this);
+}
+
+void Client::onPublishClicked(wxCommandEvent &event)
+{
+  if (!mClient->connected()) { return; }
+  auto topic = mPublish->getTopic();
+  if (topic.empty()) { return; }
+
+  auto payload  = mPublish->getPayload();
+  auto qos      = mPublish->getQos();
+  bool retained = mPublish->getRetained();
+
+  mClient->publish(topic, payload, qos, retained);
+}
+
+void Client::onSubscribeClicked(wxCommandEvent &event)
+{
+  auto text = mFilter->GetValue();
+  mFilter->SetValue("");
+  auto topic = text.empty()
+    ? "#"
+    : text.ToStdString();
+  mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
+}
+
+void Client::onSubscribeEnter(wxKeyEvent &event)
+{
+  if (event.GetKeyCode() != WXK_RETURN)
+  {
+    event.Skip();
+    return;
+  }
+
+  auto text = mFilter->GetValue();
+  mFilter->SetValue("");
+  auto topic = text.empty()
+    ? "#"
+    : text.ToStdString();
+  mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
+  event.Skip();
+}
+
+void Client::onConnectClicked(wxCommandEvent &event)
+{
+  mConnect->Disable();
+
+  if (mClient->connected())
+  {
+    mClient->disconnect();
+  }
+  else
+  {
+    mClient->setHostname(mConnectionInfo.getHostname());
+    mClient->setPort(mConnectionInfo.getPort());
+    mClient->connect();
+  }
+}
+
+Client::~Client()
+{
+#if BUILD_DOCKING
+
+  mAuiMan.UnInit();
+
+#endif
+}
+
+void Client::onHistorySelected(wxDataViewEvent &event)
+{
+  if (!event.GetItem().IsOk()) { return; }
+  auto item = event.GetItem();
+
+  mPreview->setPayload(mHistoryModel->getPayload(item));
+  mPreview->setTopic(mHistoryModel->getTopic(item));
+  mPreview->setQos(mHistoryModel->getQos(item));
+  mPreview->setRetained(mHistoryModel->getRetained(item));
+}
+
+void Client::onSubscriptionContext(wxDataViewEvent& dve)
+{
+  if (!dve.GetItem().IsOk()) { return; }
+
+  mSubscriptionsCtrl->Select(dve.GetItem());
+
+  wxMenu menu;
+  menu.Append((unsigned)ContextIDs::SubscriptionsUnsubscribe, "Unsubscribe");
+  menu.Append((unsigned)ContextIDs::SubscriptionsChangeColor, "Color change");
+  menu.Append((unsigned)ContextIDs::SubscriptionsSolo, "Solo");
+  menu.Append((unsigned)ContextIDs::SubscriptionsMute, "Mute");
+  menu.Append((unsigned)ContextIDs::SubscriptionsUnmute, "Unmute");
+  PopupMenu(&menu);
+}
+
+void Client::onHistoryContext(wxDataViewEvent& dve)
+{
+  if (!dve.GetItem().IsOk()) { return; }
+
+  mHistoryCtrl->Select(dve.GetItem());
+
+  wxMenu menu;
+  menu.Append((unsigned)ContextIDs::HistoryRetainedClear, "Clear retained");
+  menu.Append((unsigned)ContextIDs::HistoryResend, "Re-Send");
+  PopupMenu(&menu);
+}
+
+void Client::onContextSelected(wxCommandEvent& event)
+{
+  switch ((ContextIDs)event.GetId())
+  {
+    case ContextIDs::HistoryRetainedClear: {
+      wxLogMessage("Requesting clear retained");
+      auto item = mHistoryCtrl->GetSelection();
+      auto topic = mHistoryModel->getTopic(item);
+      auto qos = mHistoryModel->getQos(item);
+      mClient->publish(topic, "", qos, true);
+    } break;
+    case ContextIDs::SubscriptionsUnsubscribe: {
+      wxLogMessage("Requesting unsubscribe");
+      auto item = mSubscriptionsCtrl->GetSelection();
+      mSubscriptionsModel->unsubscribe(item);
+      auto selected = mHistoryCtrl->GetSelection();
+      mPreview->clear();
+      mHistoryCtrl->Unselect(selected);
+    } break;
+    case ContextIDs::SubscriptionsSolo: {
+      wxLogMessage("Requesting solo");
+      auto item = mSubscriptionsCtrl->GetSelection();
+      mSubscriptionsModel->solo(item);
+    } break;
+    case ContextIDs::SubscriptionsMute: {
+      wxLogMessage("Requesting mute");
+      auto item = mSubscriptionsCtrl->GetSelection();
+      mSubscriptionsModel->mute(item);
+    } break;
+    case ContextIDs::SubscriptionsUnmute: {
+      wxLogMessage("Requesting unmute");
+      auto item = mSubscriptionsCtrl->GetSelection();
+      mSubscriptionsModel->unmute(item);
+    } break;
+    case ContextIDs::SubscriptionsChangeColor: {
+      wxLogMessage("Requesting new color");
+      auto item = mSubscriptionsCtrl->GetSelection();
+      wxColor color(
+        (rand() % 100) + 100,
+        (rand() % 100) + 100,
+        (rand() % 100) + 100
+      );
+      mSubscriptionsModel->setColor(item, color);
+      mSubscriptionsCtrl->Refresh();
+      mHistoryCtrl->Refresh();
+    } break;
+    case ContextIDs::HistoryResend: {
+      wxLogMessage("Requesting resend");
+      auto item     = mHistoryCtrl->GetSelection();
+      auto topic    = mHistoryModel->getTopic(item);
+      auto retained = mHistoryModel->getRetained(item);
+      auto qos      = mHistoryModel->getQos(item);
+      auto payload  = mHistoryModel->getPayload(item);
+      mClient->publish(topic, payload, qos, retained);
+    } break;
+  }
+  event.Skip(true);
+}
+
+void Client::onClose(wxCloseEvent &event)
+{
+  if (mClient->connected())
+  {
+    mPreview->setPayload("Closing...");
+    mClient->disconnect();
+  }
+  Destroy();
+}
+
+void Client::onMessageAdded(MessageEvent &event)
+{
+  auto item = event.getMessage();
+
+  mHistoryCtrl->Select(item);
+  mHistoryCtrl->EnsureVisible(item);
+
+  mPreview->setPayload(mHistoryModel->getPayload(item));
+  mPreview->setTopic(mHistoryModel->getTopic(item));
+  mPreview->setQos(mHistoryModel->getQos(item));
+  mPreview->setRetained(mHistoryModel->getRetained(item));
+}
+
+void Client::resize() const
+{
+#if not BUILD_DOCKING
+  int widthThird = GetSize().x / 3;
+  int heightThird = GetSize().y / 3;
+
+  mSplitLeft->SplitVertically(mPublish, mSplitRight, widthThird);
+  mSplitCenter->SplitHorizontally(mSubscriptions, mHistory, heightThird);
+  mSplitRight->SplitVertically(mSplitCenter, mPreview);
+#endif
+}
+
+void Client::onConnected()
+{
+  mConnect->Enable();
+  mConnect->SetLabelText("Disconnect");
+}
+
+void Client::onDisconnected()
+{
+  mConnect->Enable();
+  mConnect->SetLabelText("Connect");
+}
+
+void Client::onSubscriptionSelected(wxDataViewEvent &event)
+{
+  auto item = mSubscriptionsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+  auto f = mSubscriptionsModel->getFilter(item);
+  mFilter->SetValue(f);
+}
+

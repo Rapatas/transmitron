@@ -1,0 +1,210 @@
+#include <wx/dcmemory.h>
+#include <wx/log.h>
+#include "History.hpp"
+#include "images/pin/pinned-18x18.hpp"
+#include "images/pin/not-pinned-18x18.hpp"
+#include "images/qos/qos-0.hpp"
+#include "images/qos/qos-1.hpp"
+#include "images/qos/qos-2.hpp"
+#include "Events/MessageEvent.hpp"
+
+#define wxLOG_COMPONENT "models/history"
+
+wxDEFINE_EVENT(EVT_MESSAGE_RECEIVED, MessageEvent);
+
+History::History() {}
+History::~History() {}
+
+void History::insert(
+  SubscriptionData *sub,
+  mqtt::const_message_ptr msg
+) {
+  Message m{sub, msg};
+  mMessages.push_back(m);
+
+  if (!sub->getMuted())
+  {
+    std::lock_guard<std::mutex> lock(mRemapMtx);
+    mRemap.push_back(mMessages.size() - 1);
+    RowAppended();
+
+    auto me = new MessageEvent(EVT_MESSAGE_RECEIVED);
+    me->setMessage(GetItem(mMessages.size() - 1));
+    wxQueueEvent(this, me);
+  }
+}
+
+void History::remove(SubscriptionData *sub)
+{
+  for (auto it = std::begin(mMessages); it != std::end(mMessages); )
+  {
+    if (it->sub == sub)
+    {
+      it = mMessages.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
+
+  remap();
+}
+
+void History::remap()
+{
+  std::lock_guard<std::mutex> lock(mRemapMtx);
+  size_t before = mRemap.size();
+  mRemap.clear();
+  mRemap.reserve(mMessages.size());
+
+  for (size_t i = 0; i < mMessages.size(); ++i)
+  {
+    if (!mMessages[i].sub->getMuted())
+    {
+      mRemap.push_back(i);
+    }
+  }
+
+  mRemap.shrink_to_fit();
+
+  for (size_t i = 0; i < mRemap.size(); ++i)
+  {
+    RowChanged(i);
+  }
+
+  if (before < mRemap.size())
+  {
+    size_t diff = mRemap.size() - before;
+
+    for (size_t i = 0; i < diff; ++i)
+    {
+      RowAppended();
+    }
+  }
+  else if (before > mRemap.size())
+  {
+    wxArrayInt rows;
+    size_t diff = before - mRemap.size();
+
+    for (size_t i = 0; i < diff; ++i)
+    {
+      rows.Add(mRemap.size() + i);
+    }
+
+    RowsDeleted(rows);
+  }
+}
+
+void History::refresh(SubscriptionData *sub)
+{
+  std::lock_guard<std::mutex> lock(mRemapMtx);
+  for (size_t i = 0; i < mRemap.size(); ++i)
+  {
+    if (mMessages[mRemap[i]].sub == sub)
+    {
+      RowChanged(i);
+    }
+  }
+}
+
+std::string History::getPayload(const wxDataViewItem &item) const
+{
+  return mMessages.at(mRemap.at(GetRow(item))).msg->get_payload();
+}
+
+std::string History::getTopic(const wxDataViewItem &item) const
+{
+  return mMessages.at(mRemap.at(GetRow(item))).msg->get_topic();
+}
+
+MQTT::QoS History::getQos(const wxDataViewItem &item) const
+{
+  return (MQTT::QoS)mMessages.at(mRemap.at(GetRow(item))).msg->get_qos();
+}
+
+bool History::getRetained(const wxDataViewItem &item) const
+{
+  return mMessages.at(mRemap.at(GetRow(item))).msg->is_retained();
+}
+
+unsigned History::GetColumnCount() const
+{
+  return (unsigned)Column::Max;
+}
+
+unsigned History::GetCount() const
+{
+  return mRemap.size();
+}
+
+wxString History::GetColumnType(unsigned int col) const
+{
+  switch ((Column)col)
+  {
+    case Column::Icon:  { return "wxColour";                                 } break;
+    case Column::Retained:
+    case Column::Qos:   { return wxDataViewBitmapRenderer::GetDefaultType(); } break;
+    case Column::Topic: { return wxDataViewTextRenderer::GetDefaultType();   } break;
+    default: { return "string"; }
+  }
+}
+
+void History::GetValueByRow(
+  wxVariant &variant,
+  unsigned int row,
+  unsigned int col
+) const {
+
+  const auto &m = mMessages.at(mRemap.at(row));
+
+  switch ((Column)col) {
+    case Column::Icon: {
+
+      wxBitmap b(20, 20);
+      wxMemoryDC mem;
+      mem.SelectObject(b);
+      mem.SetBackground(wxBrush(m.sub->getColor()));
+      mem.Clear();
+      mem.SelectObject(wxNullBitmap);
+
+      variant << b;
+    } break;
+    case Column::Topic: {
+      variant = m.msg->get_topic();
+    } break;
+    case Column::Retained: {
+      wxBitmap *result;
+      result = m.msg->is_retained()
+        ? bin2c_pinned_18x18_png
+        : bin2c_not_pinned_18x18_png;
+      variant << *result;
+    } break;
+    case Column::Qos: {
+      wxBitmap *result;
+      switch ((MQTT::QoS)m.msg->get_qos()) {
+        case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0_png; } break;
+        case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1_png; } break;
+        case MQTT::QoS::ExactlyOnce: { result = bin2c_qos_2_png; } break;
+      }
+      variant << *result;
+    } break;
+    default: {}
+  }
+}
+
+bool History::GetAttrByRow(
+  unsigned int row,
+  unsigned int col,
+  wxDataViewItemAttr &attr
+) const {
+  return false;
+}
+
+bool History::SetValueByRow(
+  const wxVariant &variant,
+  unsigned int row,
+  unsigned int col
+) {
+  return false;
+}
