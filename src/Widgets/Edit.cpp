@@ -14,6 +14,7 @@ using namespace nlohmann;
 Edit::Edit(wxWindow* parent) :
   wxPanel(parent)
 {
+  mFont = wxFont(wxFontInfo(9).FaceName("Consolas"));
   setupScintilla();
 
   mFormatSelect = new wxComboBox(this, -1, "TEXT", wxDefaultPosition, wxSize(100, 25));
@@ -23,6 +24,7 @@ Edit::Edit(wxWindow* parent) :
 
   mTopic = new wxTextCtrl(this, -1);
   mTopic->SetHint("topic");
+  mTopic->SetFont(mFont);
 
   mTop = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   mVsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
@@ -118,8 +120,7 @@ void Edit::setupScintilla()
 
   mText->SetAutomaticFold(wxSTC_AUTOMATICFOLD_CLICK);
 
-  wxFont font(wxFontInfo(9).FaceName("Consolas"));
-  mText->StyleSetFont(wxSTC_STYLE_DEFAULT, font);
+  mText->StyleSetFont(wxSTC_STYLE_DEFAULT, mFont);
 
   mText->StyleSetBackground(wxSTC_STYLE_DEFAULT, backgound);
   mText->StyleSetForeground(wxSTC_STYLE_DEFAULT, foreground);
@@ -167,6 +168,7 @@ void Edit::setReadOnly(bool readonly)
   delete mTopic;
   mTopic = newTopic;
   mTopic->SetHint("topic");
+  mTopic->SetFont(mFont);
 
   mPublish->Show(!readonly);
   mTop->Layout();

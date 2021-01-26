@@ -130,6 +130,8 @@ void Client::setupPanelHistory(wxWindow *parent)
     25
   );
 
+  wxFont font(wxFontInfo(9).FaceName("Consolas"));
+
   mHistory = new wxPanel(parent, -1, wxDefaultPosition, wxSize(200, 150));
 
   mHistoryCtrl = new wxDataViewCtrl(
@@ -142,6 +144,8 @@ void Client::setupPanelHistory(wxWindow *parent)
 
   mHistoryModel = new History;
   mHistoryCtrl->AssociateModel(mHistoryModel.get());
+
+  mHistoryCtrl->SetFont(font);
 
   mHistoryCtrl->AppendColumn(icon);
   mHistoryCtrl->AppendColumn(qos);
@@ -192,6 +196,8 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
     25
   );
 
+  wxFont font(wxFontInfo(9).FaceName("Consolas"));
+
   mSubscriptions = new wxPanel(parent, -1, wxDefaultPosition, wxSize(200, 150));
 
   mSubscriptionsCtrl = new wxDataViewListCtrl(mSubscriptions, -1, wxDefaultPosition, wxDefaultSize, wxDV_NO_HEADER);
@@ -202,10 +208,13 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mSubscriptionsModel = new Subscriptions(mClient, mHistoryModel);
   mSubscriptionsCtrl->AssociateModel(mSubscriptionsModel);
 
+  mSubscriptionsCtrl->SetFont(font);
+
   mSubscribe = new wxBitmapButton(mSubscriptions, -1, *bin2c_plus_18x18_png);
 
   mFilter = new wxTextCtrl(mSubscriptions, -1);
   mFilter->SetHint("subscribe");
+  mFilter->SetFont(font);
 
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);

@@ -32,6 +32,8 @@ public:
 
 private:
 
+  wxFont mFont;
+
   bool mReadOnly = false;
 
   wxBoxSizer *mTop;
