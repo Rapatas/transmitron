@@ -38,6 +38,7 @@ public:
   void solo(const wxDataViewItem &item);
 
   std::string getFilter(const wxDataViewItem &item) const;
+  bool getMuted(const wxDataViewItem &item) const;
 
 private:
 

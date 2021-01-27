@@ -323,14 +323,23 @@ void Client::onSubscriptionContext(wxDataViewEvent& dve)
 {
   if (!dve.GetItem().IsOk()) { return; }
 
-  mSubscriptionsCtrl->Select(dve.GetItem());
+  auto item = dve.GetItem();
+
+  mSubscriptionsCtrl->Select(item);
+  bool muted = mSubscriptionsModel->getMuted(item);
 
   wxMenu menu;
   menu.Append((unsigned)ContextIDs::SubscriptionsUnsubscribe, "Unsubscribe");
   menu.Append((unsigned)ContextIDs::SubscriptionsChangeColor, "Color change");
   menu.Append((unsigned)ContextIDs::SubscriptionsSolo, "Solo");
-  menu.Append((unsigned)ContextIDs::SubscriptionsMute, "Mute");
-  menu.Append((unsigned)ContextIDs::SubscriptionsUnmute, "Unmute");
+  if (muted)
+  {
+    menu.Append((unsigned)ContextIDs::SubscriptionsUnmute, "Unmute");
+  }
+  else
+  {
+    menu.Append((unsigned)ContextIDs::SubscriptionsMute, "Mute");
+  }
   PopupMenu(&menu);
 }
 

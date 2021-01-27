@@ -24,11 +24,16 @@ Subscriptions::~Subscriptions()
   }
 }
 
-std::string Subscriptions::getFilter(
-  const wxDataViewItem &item
-) const {
+std::string Subscriptions::getFilter(const wxDataViewItem &item) const
+{
   auto sub = static_cast<SubscriptionData*>(item.GetID());
   return sub->getFilter();
+}
+
+bool Subscriptions::getMuted(const wxDataViewItem &item) const
+{
+  auto sub = static_cast<SubscriptionData*>(item.GetID());
+  return sub->getMuted();
 }
 
 void Subscriptions::setColor(const wxDataViewItem &item, const wxColor &color)
