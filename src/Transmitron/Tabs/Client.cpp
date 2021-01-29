@@ -10,8 +10,6 @@
 using namespace Transmitron::Tabs;
 using namespace Transmitron;
 
-wxDEFINE_EVENT(EVT_MESSAGE_RECEIVED, Events::Message);
-
 Client::Client(
   wxWindow* parent,
   const Types::Connection &connection
@@ -162,7 +160,7 @@ void Client::setupPanelHistory(wxWindow *parent)
 
   mHistoryCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Client::onHistorySelected, this);
   mHistoryCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &Client::onHistoryContext, this);
-  mHistoryModel->Bind(EVT_MESSAGE_RECEIVED, &Client::onMessageAdded, this);
+  mHistoryModel->Bind(Events::MESSAGE_RECEIVED, &Client::onMessageAdded, this);
 }
 
 void Client::setupPanelConnect(wxWindow *parent)
@@ -184,7 +182,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
     "icon",
     new wxDataViewBitmapRenderer(),
     (unsigned)Models::Subscriptions::Column::Icon,
-    40
+    wxCOL_WIDTH_AUTOSIZE
   );
   wxDataViewColumn* const topic = new wxDataViewColumn(
     "topic",

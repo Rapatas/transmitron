@@ -13,7 +13,7 @@ namespace Transmitron::Models
 {
 
 class Subscriptions :
-  public wxDataViewModel,
+  public wxDataViewVirtualListModel,
   public Types::SubscriptionData::Observer
 {
 public:
@@ -49,33 +49,26 @@ private:
   wxObjectDataPtr<History> mHistory;
   std::vector<Types::SubscriptionData*> mSubscriptions;
 
-  // wxDataViewModel interface.
+  // wxDataViewVirtualListModel interface.
   virtual unsigned GetColumnCount() const override;
   virtual wxString GetColumnType(unsigned int col) const override;
-  virtual void GetValue(
+  virtual unsigned GetCount() const override;
+  virtual void GetValueByRow(
     wxVariant &variant,
-    const wxDataViewItem &item,
+    unsigned int row,
     unsigned int col
   ) const override;
-  virtual bool SetValue(
+  virtual bool GetAttrByRow(
+    unsigned int row,
+    unsigned int col,
+    wxDataViewItemAttr &attr
+  ) const override;
+  virtual bool SetValueByRow(
     const wxVariant &variant,
-    const wxDataViewItem &item,
+    unsigned int row,
     unsigned int col
   ) override;
-  virtual bool IsEnabled(
-    const wxDataViewItem &item,
-    unsigned int col
-  ) const override;
-  virtual wxDataViewItem GetParent(
-    const wxDataViewItem &item
-  ) const override;
-  virtual bool IsContainer(
-    const wxDataViewItem &item
-  ) const override;
-  virtual unsigned int GetChildren(
-    const wxDataViewItem &parent,
-    wxDataViewItemArray &array
-  ) const override;
+
 
   // SubscriptionData::Observer interface.
   void onMessage(

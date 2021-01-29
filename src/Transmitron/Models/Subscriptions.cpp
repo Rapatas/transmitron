@@ -28,19 +28,19 @@ Subscriptions::~Subscriptions()
 
 std::string Subscriptions::getFilter(const wxDataViewItem &item) const
 {
-  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
+  auto sub = mSubscriptions.at(GetRow(item));
   return sub->getFilter();
 }
 
 bool Subscriptions::getMuted(const wxDataViewItem &item) const
 {
-  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
+  auto sub = mSubscriptions.at(GetRow(item));
   return sub->getMuted();
 }
 
 void Subscriptions::setColor(const wxDataViewItem &item, const wxColor &color)
 {
-  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
+  auto sub = mSubscriptions.at(GetRow(item));
   sub->setColor(color);
   mHistory->refresh(sub);
   ValueChanged(item, (unsigned)Column::Icon);
@@ -48,7 +48,7 @@ void Subscriptions::setColor(const wxDataViewItem &item, const wxColor &color)
 
 void Subscriptions::unmute(const wxDataViewItem &item)
 {
-  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
+  auto sub = mSubscriptions.at(GetRow(item));
   sub->setMuted(false);
   mHistory->remap();
   ItemChanged(item);
@@ -56,7 +56,7 @@ void Subscriptions::unmute(const wxDataViewItem &item)
 
 void Subscriptions::mute(const wxDataViewItem &item)
 {
-  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
+  auto sub = mSubscriptions.at(GetRow(item));
   sub->setMuted(true);
   mHistory->remap();
   ItemChanged(item);
@@ -64,13 +64,13 @@ void Subscriptions::mute(const wxDataViewItem &item)
 
 void Subscriptions::solo(const wxDataViewItem &item)
 {
-  for (const auto &sub : mSubscriptions)
+  for (size_t i = 0; i < mSubscriptions.size(); ++i)
   {
-    sub->setMuted(true);
-    ItemChanged(wxDataViewItem(static_cast<void*>(sub)));
+    mSubscriptions[i]->setMuted(true);
+    ItemChanged(GetItem(i));
   }
 
-  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
+  auto sub = mSubscriptions.at(GetRow(item));
   sub->setMuted(false);
   mHistory->remap();
   ItemChanged(item);
@@ -100,19 +100,24 @@ void Subscriptions::subscribe(const std::string &topic, MQTT::QoS qos)
   sd->Bind(Events::SUB_UNSUBSCRIBED, &Subscriptions::onUnsubscribed, this);
   sd->attachObserver(this);
 
-  wxDataViewItem child(static_cast<void*>(sd));
-  ItemAdded(wxDataViewItem(0), child);
+  auto item = GetItem(mSubscriptions.size() - 1);
+  ItemAdded(wxDataViewItem(0), item);
 }
 
 void Subscriptions::unsubscribe(const wxDataViewItem &item)
 {
-  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
+  auto sub = mSubscriptions.at(GetRow(item));
   sub->unsubscribe();
 }
 
 unsigned Subscriptions::GetColumnCount() const
 {
   return (unsigned)Column::Max;
+}
+
+unsigned Subscriptions::GetCount() const
+{
+  return mSubscriptions.size();
 }
 
 wxString Subscriptions::GetColumnType(unsigned int col) const
@@ -126,12 +131,12 @@ wxString Subscriptions::GetColumnType(unsigned int col) const
   }
 }
 
-void Subscriptions::GetValue(
+void Subscriptions::GetValueByRow(
   wxVariant &variant,
-  const wxDataViewItem &item,
+  unsigned int row,
   unsigned int col
 ) const {
-  auto s = static_cast<Types::SubscriptionData*>(item.GetID());
+  auto s = mSubscriptions.at(row);
 
   switch ((Column)col) {
     case Column::Icon: {
@@ -161,42 +166,20 @@ void Subscriptions::GetValue(
   }
 }
 
-bool Subscriptions::SetValue(
+bool Subscriptions::GetAttrByRow(
+  unsigned int row,
+  unsigned int col,
+  wxDataViewItemAttr &attr
+) const {
+  return false;
+}
+
+bool Subscriptions::SetValueByRow(
   const wxVariant &variant,
-  const wxDataViewItem &item,
+  unsigned int row,
   unsigned int col
 ) {
   return false;
-}
-
-bool Subscriptions::IsEnabled(
-  const wxDataViewItem &item,
-  unsigned int col
-) const {
-  return true;
-}
-
-wxDataViewItem Subscriptions::GetParent(
-  const wxDataViewItem &item
-) const {
-  return wxDataViewItem(nullptr);
-}
-
-bool Subscriptions::IsContainer(
-  const wxDataViewItem &item
-) const {
-  return false;
-}
-
-unsigned int Subscriptions::GetChildren(
-  const wxDataViewItem &parent,
-  wxDataViewItemArray &array
-) const {
-  for (const auto &s : mSubscriptions)
-  {
-    array.Add(wxDataViewItem(static_cast<void*>(s)));
-  }
-  return mSubscriptions.size();
 }
 
 void Subscriptions::onSubscribed(Events::Subscription &e)
@@ -218,8 +201,7 @@ void Subscriptions::onUnsubscribed(Events::Subscription &e)
   }
 
   mHistory->remove(e.getSubscription());
-  wxDataViewItem item(static_cast<void*>(e.getSubscription()));
-  ItemDeleted(wxDataViewItem(0), item);
+  ItemDeleted(wxDataViewItem(0), GetItem(std::begin(mSubscriptions) - it));
   mSubscriptions.erase(it);
 }
 
