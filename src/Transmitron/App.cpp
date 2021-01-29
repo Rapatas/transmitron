@@ -1,20 +1,24 @@
-#include "Client.hpp"
-#include "Transmitron.hpp"
-#include "LogFormat.hpp"
-#include "images/send/send-18x18.hpp"
-#include "images/pin/pinned-18x18.hpp"
-#include "images/pin/not-pinned-18x18.hpp"
-#include "images/plus/plus-18x18.hpp"
-#include "images/qos/qos-0.hpp"
-#include "images/qos/qos-1.hpp"
-#include "images/qos/qos-2.hpp"
-#include "Info.hpp"
+#include "App.hpp"
 
 #include <wx/notebook.h>
 
-#define wxLOG_COMPONENT "Transmitron"
+#include "Info.hpp"
+#include "LogFormat.hpp"
+#include "Resources/pin/not-pinned-18x18.hpp"
+#include "Resources/pin/pinned-18x18.hpp"
+#include "Resources/plus/plus-18x18.hpp"
+#include "Resources/qos/qos-0.hpp"
+#include "Resources/qos/qos-1.hpp"
+#include "Resources/qos/qos-2.hpp"
+#include "Resources/send/send-18x18.hpp"
+#include "Tabs/Client.hpp"
+#include "Tabs/Homepage.hpp"
 
-bool Transmitron::OnInit()
+#define wxLOG_COMPONENT "App"
+
+using namespace Transmitron;
+
+bool App::OnInit()
 {
   wxImage::AddHandler(new wxPNGHandler);
   bin2c_init_SEND_18X18_HPP();
@@ -26,7 +30,7 @@ bool Transmitron::OnInit()
   bin2c_init_QOS_2_HPP();
 
   auto log = new wxLogStderr();
-  log->SetFormatter(new MyLogFormatter());
+  log->SetFormatter(new LogFormat());
   wxLog::SetActiveTarget(log);
 
   wxImageList * il = new wxImageList;
@@ -42,15 +46,15 @@ bool Transmitron::OnInit()
   auto secret = new wxPanel(mNote);
   mCount += mNote->AddPage(secret, "", false, 0);
 
-  mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGING, &Transmitron::onPageSelected, this);
-  mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CLOSE, &Transmitron::onPageClosed, this);
+  mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGING, &App::onPageSelected, this);
+  mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CLOSE, &App::onPageClosed, this);
 
   frame->Show();
 
   return true;
 }
 
-void Transmitron::onPageSelected(wxBookCtrlEvent& event)
+void App::onPageSelected(wxBookCtrlEvent& event)
 {
   if (event.GetSelection() != mCount - 1)
   {
@@ -62,7 +66,7 @@ void Transmitron::onPageSelected(wxBookCtrlEvent& event)
   event.Veto();
 };
 
-void Transmitron::onPageClosed(wxBookCtrlEvent& event)
+void App::onPageClosed(wxBookCtrlEvent& event)
 {
   --mCount;
 
@@ -77,17 +81,17 @@ void Transmitron::onPageClosed(wxBookCtrlEvent& event)
   }
 }
 
-void Transmitron::newConnectionTab()
+void App::newConnectionTab()
 {
-  auto homepage = new Homepage(mNote);
+  auto homepage = new Tabs::Homepage(mNote);
   mCount += mNote->InsertPage(mCount - 1, homepage, "Homepage");
   mNote->SetSelection(mCount - 2);
 
-  homepage->Bind(EVT_CONNECTION, [this, &homepage](ConnectionEvent e){
+  homepage->Bind(Events::CONNECTION, [this, &homepage](Events::Connection e){
     auto c = e.getConnection();
     size_t selected = mNote->GetSelection();
 
-    auto client = new Client(mNote, c);
+    auto client = new Tabs::Client(mNote, c);
     mNote->RemovePage(selected);
     mNote->InsertPage(selected, client, "");
     mNote->SetSelection(selected);

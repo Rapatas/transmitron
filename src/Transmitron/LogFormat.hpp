@@ -1,9 +1,12 @@
-#ifndef LOGFORMAT_H
-#define LOGFORMAT_H
+#ifndef TRANSMITRON_LOGFORMAT_HPP
+#define TRANSMITRON_LOGFORMAT_HPP
 
 #include <wx/log.h>
 
-class MyLogFormatter :
+namespace Transmitron
+{
+
+class LogFormat :
   public wxLogFormatter
 {
   virtual wxString Format(
@@ -23,4 +26,6 @@ class MyLogFormatter :
   }
 };
 
-#endif // LOGFORMAT_H
+}
+
+#endif // TRANSMITRON_LOGFORMAT_HPP

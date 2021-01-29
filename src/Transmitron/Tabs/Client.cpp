@@ -1,16 +1,20 @@
+#include "Client.hpp"
+
 #include <sstream>
 #include <nlohmann/json.hpp>
 
-#include "Client.hpp"
-#include "images/plus/plus-18x18.hpp"
+#include "Transmitron/Resources/plus/plus-18x18.hpp"
 
 #define wxLOG_COMPONENT "Client"
 
-wxDEFINE_EVENT(EVT_MESSAGE, MessageEvent);
+using namespace Transmitron::Tabs;
+using namespace Transmitron;
+
+wxDEFINE_EVENT(EVT_MESSAGE_RECEIVED, Events::Message);
 
 Client::Client(
   wxWindow* parent,
-  const Connection &connection
+  const Types::Connection &connection
 ) :
   wxPanel(parent),
   mConnectionInfo(connection)
@@ -106,27 +110,27 @@ void Client::setupPanelHistory(wxWindow *parent)
   wxDataViewColumn* const icon = new wxDataViewColumn(
     L"icon",
     new wxDataViewBitmapRenderer(),
-    (unsigned)History::Column::Icon,
+    (unsigned)Models::History::Column::Icon,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
   wxDataViewColumn* const topic = new wxDataViewColumn(
     L"topic",
     new wxDataViewTextRenderer(),
-    (unsigned)History::Column::Topic,
+    (unsigned)Models::History::Column::Topic,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
   wxDataViewColumn* const qos = new wxDataViewColumn(
     L"qos",
     new wxDataViewBitmapRenderer(),
-    (unsigned)History::Column::Qos,
+    (unsigned)Models::History::Column::Qos,
     25
   );
   wxDataViewColumn* const retained = new wxDataViewColumn(
     L"retained",
     new wxDataViewBitmapRenderer(),
-    (unsigned)History::Column::Retained,
+    (unsigned)Models::History::Column::Retained,
     25
   );
 
@@ -142,7 +146,7 @@ void Client::setupPanelHistory(wxWindow *parent)
     wxDV_NO_HEADER | wxDV_ROW_LINES
   );
 
-  mHistoryModel = new History;
+  mHistoryModel = new Models::History;
   mHistoryCtrl->AssociateModel(mHistoryModel.get());
 
   mHistoryCtrl->SetFont(font);
@@ -179,20 +183,20 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   wxDataViewColumn* const icon = new wxDataViewColumn(
     "icon",
     new wxDataViewBitmapRenderer(),
-    (unsigned)Subscriptions::Column::Icon,
+    (unsigned)Models::Subscriptions::Column::Icon,
     40
   );
   wxDataViewColumn* const topic = new wxDataViewColumn(
     "topic",
     new wxDataViewTextRenderer(),
-    (unsigned)Subscriptions::Column::Topic,
+    (unsigned)Models::Subscriptions::Column::Topic,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
   wxDataViewColumn* const qos = new wxDataViewColumn(
     "qos",
     new wxDataViewBitmapRenderer(),
-    (unsigned)Subscriptions::Column::Qos,
+    (unsigned)Models::Subscriptions::Column::Qos,
     25
   );
 
@@ -205,7 +209,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mSubscriptionsCtrl->AppendColumn(qos);
   mSubscriptionsCtrl->AppendColumn(topic);
 
-  mSubscriptionsModel = new Subscriptions(mClient, mHistoryModel);
+  mSubscriptionsModel = new Models::Subscriptions(mClient, mHistoryModel);
   mSubscriptionsCtrl->AssociateModel(mSubscriptionsModel);
 
   mSubscriptionsCtrl->SetFont(font);
@@ -232,13 +236,13 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
 void Client::setupPanelPreview(wxWindow *parent)
 {
-  mPreview = new Edit(parent);
+  mPreview = new Widgets::Edit(parent);
   mPreview->setReadOnly(true);
 }
 
 void Client::setupPanelPublish(wxWindow *parent)
 {
-  mPublish = new Edit(parent);
+  mPublish = new Widgets::Edit(parent);
 
   mPublish->Bind(wxEVT_BUTTON, &Client::onPublishClicked, this);
 }
@@ -424,7 +428,7 @@ void Client::onClose(wxCloseEvent &event)
   Destroy();
 }
 
-void Client::onMessageAdded(MessageEvent &event)
+void Client::onMessageAdded(Events::Message &event)
 {
   auto item = event.getMessage();
 

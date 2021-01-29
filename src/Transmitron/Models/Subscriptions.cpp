@@ -2,11 +2,13 @@
 #include <wx/dcmemory.h>
 #include <wx/log.h>
 #include "Subscriptions.hpp"
-#include "images/qos/qos-0.hpp"
-#include "images/qos/qos-1.hpp"
-#include "images/qos/qos-2.hpp"
+#include "Transmitron/Resources/qos/qos-0.hpp"
+#include "Transmitron/Resources/qos/qos-1.hpp"
+#include "Transmitron/Resources/qos/qos-2.hpp"
 
 #define wxLOG_COMPONENT "models/subscriptions"
+
+using namespace Transmitron::Models;
 
 Subscriptions::Subscriptions(
   std::shared_ptr<MQTT::Client> client,
@@ -26,19 +28,19 @@ Subscriptions::~Subscriptions()
 
 std::string Subscriptions::getFilter(const wxDataViewItem &item) const
 {
-  auto sub = static_cast<SubscriptionData*>(item.GetID());
+  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
   return sub->getFilter();
 }
 
 bool Subscriptions::getMuted(const wxDataViewItem &item) const
 {
-  auto sub = static_cast<SubscriptionData*>(item.GetID());
+  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
   return sub->getMuted();
 }
 
 void Subscriptions::setColor(const wxDataViewItem &item, const wxColor &color)
 {
-  auto sub = static_cast<SubscriptionData*>(item.GetID());
+  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
   sub->setColor(color);
   mHistory->refresh(sub);
   ValueChanged(item, (unsigned)Column::Icon);
@@ -46,7 +48,7 @@ void Subscriptions::setColor(const wxDataViewItem &item, const wxColor &color)
 
 void Subscriptions::unmute(const wxDataViewItem &item)
 {
-  auto sub = static_cast<SubscriptionData*>(item.GetID());
+  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
   sub->setMuted(false);
   mHistory->remap();
   ItemChanged(item);
@@ -54,7 +56,7 @@ void Subscriptions::unmute(const wxDataViewItem &item)
 
 void Subscriptions::mute(const wxDataViewItem &item)
 {
-  auto sub = static_cast<SubscriptionData*>(item.GetID());
+  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
   sub->setMuted(true);
   mHistory->remap();
   ItemChanged(item);
@@ -68,7 +70,7 @@ void Subscriptions::solo(const wxDataViewItem &item)
     ItemChanged(wxDataViewItem(static_cast<void*>(sub)));
   }
 
-  auto sub = static_cast<SubscriptionData*>(item.GetID());
+  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
   sub->setMuted(false);
   mHistory->remap();
   ItemChanged(item);
@@ -79,7 +81,7 @@ void Subscriptions::subscribe(const std::string &topic, MQTT::QoS qos)
   auto it = std::find_if(
     std::begin(mSubscriptions),
     std::end(mSubscriptions),
-    [&topic](SubscriptionData *sub)
+    [&topic](Types::SubscriptionData *sub)
     {
       return sub->getFilter() == topic;
     }
@@ -92,10 +94,10 @@ void Subscriptions::subscribe(const std::string &topic, MQTT::QoS qos)
   }
 
   auto sub = mClient->subscribe(topic);
-  auto sd = new SubscriptionData(sub);
+  auto sd = new Types::SubscriptionData(sub);
   mSubscriptions.push_back(sd);
-  sd->Bind(EVT_SUB_SUBSCRIBED, &Subscriptions::onSubscribed, this);
-  sd->Bind(EVT_SUB_UNSUBSCRIBED, &Subscriptions::onUnsubscribed, this);
+  sd->Bind(Events::SUB_SUBSCRIBED, &Subscriptions::onSubscribed, this);
+  sd->Bind(Events::SUB_UNSUBSCRIBED, &Subscriptions::onUnsubscribed, this);
   sd->attachObserver(this);
 
   wxDataViewItem child(static_cast<void*>(sd));
@@ -104,7 +106,7 @@ void Subscriptions::subscribe(const std::string &topic, MQTT::QoS qos)
 
 void Subscriptions::unsubscribe(const wxDataViewItem &item)
 {
-  auto sub = static_cast<SubscriptionData*>(item.GetID());
+  auto sub = static_cast<Types::SubscriptionData*>(item.GetID());
   sub->unsubscribe();
 }
 
@@ -129,7 +131,7 @@ void Subscriptions::GetValue(
   const wxDataViewItem &item,
   unsigned int col
 ) const {
-  auto s = static_cast<SubscriptionData*>(item.GetID());
+  auto s = static_cast<Types::SubscriptionData*>(item.GetID());
 
   switch ((Column)col) {
     case Column::Icon: {
@@ -197,12 +199,12 @@ unsigned int Subscriptions::GetChildren(
   return mSubscriptions.size();
 }
 
-void Subscriptions::onSubscribed(SubscriptionEvent &e)
+void Subscriptions::onSubscribed(Events::Subscription &e)
 {
 
 }
 
-void Subscriptions::onUnsubscribed(SubscriptionEvent &e)
+void Subscriptions::onUnsubscribed(Events::Subscription &e)
 {
   auto it = std::find(
     std::begin(mSubscriptions),
@@ -222,7 +224,7 @@ void Subscriptions::onUnsubscribed(SubscriptionEvent &e)
 }
 
 void Subscriptions::onMessage(
-  SubscriptionData *subscriptionData,
+  Types::SubscriptionData *subscriptionData,
   mqtt::const_message_ptr msg
 ) {
   mHistory->insert(subscriptionData, msg);

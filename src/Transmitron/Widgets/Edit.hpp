@@ -1,10 +1,13 @@
-#ifndef EDIT_H
-#define EDIT_H
+#ifndef TRANSMITRON_WIDGETS_EDIT_HPP
+#define TRANSMITRON_WIDGETS_EDIT_HPP
 
 #include <wx/stc/stc.h>
 #include <wx/wx.h>
 
 #include "MQTT/Client.hpp"
+
+namespace Transmitron::Widgets
+{
 
 class Edit :
   public wxPanel
@@ -70,4 +73,6 @@ private:
   );
 };
 
-#endif // EDIT_H
+}
+
+#endif // TRANSMITRON_WIDGETS_EDIT_HPP

@@ -1,4 +1,4 @@
-#include "Transmitron.hpp"
+#include "Transmitron/App.hpp"
 
-DECLARE_APP(Transmitron);
-IMPLEMENT_APP(Transmitron);
+DECLARE_APP(Transmitron::App);
+IMPLEMENT_APP(Transmitron::App);

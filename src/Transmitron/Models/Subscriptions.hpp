@@ -1,17 +1,20 @@
-#ifndef MODELS_SUBSCRIPTIONS_H
-#define MODELS_SUBSCRIPTIONS_H
+#ifndef TRANSMITRON_MODELS_SUBSCRIPTIONS_HPP
+#define TRANSMITRON_MODELS_SUBSCRIPTIONS_HPP
 
 #include <memory>
 #include <wx/dataview.h>
 
 #include "History.hpp"
 #include "MQTT/Client.hpp"
-#include "SubscriptionData.hpp"
-#include "Events/SubscriptionEvent.hpp"
+#include "Transmitron/Types/SubscriptionData.hpp"
+#include "Transmitron/Events/Subscription.hpp"
+
+namespace Transmitron::Models
+{
 
 class Subscriptions :
   public wxDataViewModel,
-  public SubscriptionData::Observer
+  public Types::SubscriptionData::Observer
 {
 public:
 
@@ -44,7 +47,7 @@ private:
 
   std::shared_ptr<MQTT::Client> mClient;
   wxObjectDataPtr<History> mHistory;
-  std::vector<SubscriptionData*> mSubscriptions;
+  std::vector<Types::SubscriptionData*> mSubscriptions;
 
   // wxDataViewModel interface.
   virtual unsigned GetColumnCount() const override;
@@ -76,13 +79,14 @@ private:
 
   // SubscriptionData::Observer interface.
   void onMessage(
-    SubscriptionData *subscriptionData,
+    Types::SubscriptionData *subscriptionData,
     mqtt::const_message_ptr msg
   ) override;
 
-  void onSubscribed(SubscriptionEvent &e);
-  void onUnsubscribed(SubscriptionEvent &e);
-  // void onMessage(SubscriptionEvent &e);
+  void onSubscribed(Events::Subscription&e);
+  void onUnsubscribed(Events::Subscription&e);
 };
 
-#endif // MODELS_SUBSCRIPTIONS_H
+}
+
+#endif // TRANSMITRON_MODELS_SUBSCRIPTIONS_HPP

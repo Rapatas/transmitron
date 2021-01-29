@@ -1,8 +1,11 @@
-#ifndef CONNECTION_H
-#define CONNECTION_H
+#ifndef TRANSMITRON_TYPES_CONNECTION_HPP
+#define TRANSMITRON_TYPES_CONNECTION_HPP
 
 #include <nlohmann/json.hpp>
 #include <wx/log.h>
+
+namespace Transmitron::Types
+{
 
 class Connection
 {
@@ -59,4 +62,6 @@ private:
   );
 };
 
-#endif // CONNECTION_H
+}
+
+#endif // TRANSMITRON_TYPES_CONNECTION_HPP

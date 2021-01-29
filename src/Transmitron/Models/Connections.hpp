@@ -1,9 +1,12 @@
-#ifndef CONNECTIONS_MODEL_H
-#define CONNECTIONS_MODEL_H
+#ifndef TRANSMITRON_MODELS_CONNECTIONS_HPP
+#define TRANSMITRON_MODELS_CONNECTIONS_HPP
 
-#include "Connection.hpp"
 #include <filesystem>
 #include <wx/dataview.h>
+#include "Transmitron/Types/Connection.hpp"
+
+namespace Transmitron::Models
+{
 
 class Connections :
   public wxDataViewModel
@@ -20,15 +23,15 @@ public:
     Max
   };
 
-  void updateConnection(wxDataViewItem &item, const Connection &data);
-  wxDataViewItem createConnection(const Connection &data);
-  Connection getConnection(wxDataViewItem &item) const;
+  void updateConnection(wxDataViewItem &item, const Types::Connection &data);
+  wxDataViewItem createConnection(const Types::Connection &data);
+  Types::Connection getConnection(wxDataViewItem &item) const;
 
 private:
 
   struct ConnectionInfo
   {
-    Connection connection;
+    Types::Connection connection;
     bool saved = false;
   };
 
@@ -66,4 +69,6 @@ private:
   static std::filesystem::path toFileName(const std::string &name);
 };
 
-#endif // CONNECTIONS_MODEL_H
+}
+
+#endif // TRANSMITRON_MODELS_CONNECTIONS_HPP

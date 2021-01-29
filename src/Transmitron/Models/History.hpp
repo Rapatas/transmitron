@@ -1,11 +1,14 @@
-#ifndef HISTORY_H
-#define HISTORY_H
+#ifndef TRANSMITRON_MODELS_HISTORY_HPP
+#define TRANSMITRON_MODELS_HISTORY_HPP
 
 #include <mutex>
 #include <wx/dataview.h>
 #include <mqtt/message.h>
 #include "MQTT/Client.hpp"
-#include "SubscriptionData.hpp"
+#include "Transmitron/Types/SubscriptionData.hpp"
+
+namespace Transmitron::Models
+{
 
 class History :
   public wxEvtHandler,
@@ -15,7 +18,7 @@ public:
 
   struct Message
   {
-    SubscriptionData *sub;
+    Types::SubscriptionData *sub;
     mqtt::const_message_ptr msg;
   };
 
@@ -32,12 +35,12 @@ public:
   virtual ~History();
 
   void insert(
-    SubscriptionData *sub,
+    Types::SubscriptionData *sub,
     mqtt::const_message_ptr msg
   );
-  void remove(SubscriptionData *sub);
+  void remove(Types::SubscriptionData *sub);
   void remap();
-  void refresh(SubscriptionData *sub);
+  void refresh(Types::SubscriptionData *sub);
 
   std::string getPayload(const wxDataViewItem &item) const;
   std::string getTopic(const wxDataViewItem &item) const;
@@ -72,4 +75,6 @@ private:
 
 };
 
-#endif // HISTORY_H
+}
+
+#endif // TRANSMITRON_MODELS_HISTORY_HPP

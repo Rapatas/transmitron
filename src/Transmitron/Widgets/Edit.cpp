@@ -1,15 +1,16 @@
 #include <nlohmann/json.hpp>
 #include <tinyxml2.h>
 #include "Edit.hpp"
-#include "images/send/send-18x18.hpp"
-#include "images/pin/pinned-18x18.hpp"
-#include "images/pin/not-pinned-18x18.hpp"
-#include "images/qos/qos-0.hpp"
-#include "images/qos/qos-1.hpp"
-#include "images/qos/qos-2.hpp"
+#include "Transmitron/Resources/send/send-18x18.hpp"
+#include "Transmitron/Resources/pin/pinned-18x18.hpp"
+#include "Transmitron/Resources/pin/not-pinned-18x18.hpp"
+#include "Transmitron/Resources/qos/qos-0.hpp"
+#include "Transmitron/Resources/qos/qos-1.hpp"
+#include "Transmitron/Resources/qos/qos-2.hpp"
 
 using namespace tinyxml2;
 using namespace nlohmann;
+using namespace Transmitron::Widgets;
 
 Edit::Edit(wxWindow* parent) :
   wxPanel(parent)

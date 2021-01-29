@@ -1,10 +1,13 @@
-#ifndef TRANSMITRON_MODELS_SUBSCRIPTIONDATA_HPP
-#define TRANSMITRON_MODELS_SUBSCRIPTIONDATA_HPP
+#ifndef TRANSMITRON_TYPES_SUBSCRIPTIONDATA_HPP
+#define TRANSMITRON_TYPES_SUBSCRIPTIONDATA_HPP
 
 #include <map>
 #include <wx/colour.h>
 #include <wx/event.h>
 #include "MQTT/Subscription.hpp"
+
+namespace Transmitron::Types
+{
 
 class SubscriptionData :
   public wxEvtHandler,
@@ -48,4 +51,6 @@ private:
   static wxColor colorFromString(const std::string &data);
 };
 
-#endif // TRANSMITRON_MODELS_SUBSCRIPTIONDATA_HPP
+}
+
+#endif // TRANSMITRON_TYPES_SUBSCRIPTIONDATA_HPP

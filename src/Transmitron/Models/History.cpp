@@ -1,22 +1,25 @@
 #include <wx/dcmemory.h>
 #include <wx/log.h>
 #include "History.hpp"
-#include "images/pin/pinned-18x18.hpp"
-#include "images/pin/not-pinned-18x18.hpp"
-#include "images/qos/qos-0.hpp"
-#include "images/qos/qos-1.hpp"
-#include "images/qos/qos-2.hpp"
-#include "Events/MessageEvent.hpp"
+#include "Transmitron/Resources/pin/pinned-18x18.hpp"
+#include "Transmitron/Resources/pin/not-pinned-18x18.hpp"
+#include "Transmitron/Resources/qos/qos-0.hpp"
+#include "Transmitron/Resources/qos/qos-1.hpp"
+#include "Transmitron/Resources/qos/qos-2.hpp"
+#include "Transmitron/Events/Message.hpp"
 
 #define wxLOG_COMPONENT "models/history"
 
-wxDEFINE_EVENT(EVT_MESSAGE_RECEIVED, MessageEvent);
+using namespace Transmitron::Models;
+using namespace Transmitron;
+
+wxDEFINE_EVENT(Events::MESSAGE_RECEIVED, Events::Message);
 
 History::History() {}
 History::~History() {}
 
 void History::insert(
-  SubscriptionData *sub,
+  Types::SubscriptionData *sub,
   mqtt::const_message_ptr msg
 ) {
   Message m{sub, msg};
@@ -28,13 +31,13 @@ void History::insert(
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
 
-    auto me = new MessageEvent(EVT_MESSAGE_RECEIVED);
+    auto me = new Events::Message(Events::MESSAGE_RECEIVED);
     me->setMessage(GetItem(mMessages.size() - 1));
     wxQueueEvent(this, me);
   }
 }
 
-void History::remove(SubscriptionData *sub)
+void History::remove(Types::SubscriptionData *sub)
 {
   for (auto it = std::begin(mMessages); it != std::end(mMessages); )
   {
@@ -96,7 +99,7 @@ void History::remap()
   }
 }
 
-void History::refresh(SubscriptionData *sub)
+void History::refresh(Types::SubscriptionData *sub)
 {
   std::lock_guard<std::mutex> lock(mRemapMtx);
   for (size_t i = 0; i < mRemap.size(); ++i)

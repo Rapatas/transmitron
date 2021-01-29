@@ -5,31 +5,31 @@ project(
   VERSION 0.0.0
 )
 
-set(INFO_PRE_CONF ./src/Info.in.cpp)
-set(INFO_POST_CONF ${CMAKE_CURRENT_BINARY_DIR}/Info.cpp)
+set(INFO_PRE_CONF ./src/Transmitron/Info.in.cpp)
+set(INFO_POST_CONF ${CMAKE_CURRENT_BINARY_DIR}/Transmitron/Info.cpp)
 
 add_executable(
   ${PROJECT_NAME}
   ${INFO_POST_CONF}
-  ./src/Client.cpp
-  ./src/Connection.cpp
-  ./src/Homepage.cpp
-  ./src/MQTT/Client.cpp
-  ./src/MQTT/Subscription.cpp
-  ./src/Models/Connections.cpp
-  ./src/Models/History.cpp
-  ./src/Models/Subscriptions.cpp
-  ./src/Models/SubscriptionData.cpp
-  ./src/Transmitron.cpp
-  ./src/Widgets/Edit.cpp
-  ./src/images/pin/not-pinned-18x18.cpp
-  ./src/images/pin/pinned-18x18.cpp
-  ./src/images/qos/qos-0.cpp
-  ./src/images/qos/qos-1.cpp
-  ./src/images/qos/qos-2.cpp
-  ./src/images/plus/plus-18x18.cpp
-  ./src/images/send/send-18x18.cpp
-  ./src/main.cpp
+  src/MQTT/Client.cpp
+  src/MQTT/Subscription.cpp
+  src/Transmitron/Models/Connections.cpp
+  src/Transmitron/Models/History.cpp
+  src/Transmitron/Models/Subscriptions.cpp
+  src/Transmitron/Resources/pin/not-pinned-18x18.cpp
+  src/Transmitron/Resources/pin/pinned-18x18.cpp
+  src/Transmitron/Resources/plus/plus-18x18.cpp
+  src/Transmitron/Resources/qos/qos-0.cpp
+  src/Transmitron/Resources/qos/qos-1.cpp
+  src/Transmitron/Resources/qos/qos-2.cpp
+  src/Transmitron/Resources/send/send-18x18.cpp
+  src/Transmitron/Tabs/Client.cpp
+  src/Transmitron/Tabs/Homepage.cpp
+  src/Transmitron/App.cpp
+  src/Transmitron/Types/Connection.cpp
+  src/Transmitron/Types/SubscriptionData.cpp
+  src/Transmitron/Widgets/Edit.cpp
+  src/main.cpp
 )
 
 configure_file(

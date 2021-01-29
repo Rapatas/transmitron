@@ -1,11 +1,13 @@
-#include "Connection.hpp"
-#include "Homepage.hpp"
+#ifndef TRANSMITRON_APP_HPP
+#define TRANSMITRON_APP_HPP
 
-#include <wx/spinctrl.h>
-#include <wx/aui/aui.h>
 #include <wx/wx.h>
+#include <wx/aui/auibook.h>
 
-struct Transmitron :
+namespace Transmitron
+{
+
+struct App :
   public wxApp
 {
   bool OnInit();
@@ -19,3 +21,7 @@ private:
 
   void newConnectionTab();
 };
+
+}
+
+#endif // TRANSMITRON_APP_HPP

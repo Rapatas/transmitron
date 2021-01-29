@@ -1,7 +1,7 @@
 #include "Client.hpp"
-#include "Subscription.hpp"
 #include <wx/log.h>
 #include <thread>
+#include "Subscription.hpp"
 
 #define wxLOG_COMPONENT "mqtt/client"
 

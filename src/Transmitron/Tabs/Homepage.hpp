@@ -1,14 +1,17 @@
-#ifndef HOMEPAGE_H
-#define HOMEPAGE_H
-
-#include "Events/ConnectionEvent.hpp"
-#include "Models/Connections.hpp"
+#ifndef TRANSMITRON_TABS_HOMEPAGE_HPP
+#define TRANSMITRON_TABS_HOMEPAGE_HPP
 
 #include <wx/propgrid/props.h>
 #include <wx/panel.h>
 #include <wx/sizer.h>
 #include <wx/textctrl.h>
 #include <wx/spinctrl.h>
+
+#include "Transmitron/Events/Connection.hpp"
+#include "Transmitron/Models/Connections.hpp"
+
+namespace Transmitron::Tabs
+{
 
 class Homepage :
   public wxPanel
@@ -20,7 +23,7 @@ public:
 
 private:
 
-  wxObjectDataPtr<Connections> mConnectionsModel;
+  wxObjectDataPtr<Models::Connections> mConnectionsModel;
   wxDataViewCtrl *mConnectionsCtrl;
 
   wxBoxSizer *mSizer;
@@ -51,8 +54,10 @@ private:
   wxButton *mSave;
   wxButton *mConnect;
 
-  void fillPropertyGrid(const Connection &c);
-  Connection fromPropertyGrid() const;
+  void fillPropertyGrid(const Types::Connection &c);
+  Types::Connection fromPropertyGrid() const;
 };
 
-#endif // HOMEPAGE_H
+}
+
+#endif // TRANSMITRON_TABS_HOMEPAGE_HPP

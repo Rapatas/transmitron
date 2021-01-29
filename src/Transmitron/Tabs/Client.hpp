@@ -1,18 +1,24 @@
+#ifndef TRANSMITRON_TABS_CLIENT_HPP
+#define TRANSMITRON_TABS_CLIENT_HPP
+
 #include <wx/listctrl.h>
 #include <wx/splitter.h>
 #include <wx/aui/aui.h>
 #include <wx/tglbtn.h>
 
 #include "MQTT/Client.hpp"
-#include "Widgets/Edit.hpp"
-#include "Models/History.hpp"
-#include "Models/Subscriptions.hpp"
-#include "Connection.hpp"
-#include "Events/MessageEvent.hpp"
+#include "Transmitron/Events/Message.hpp"
+#include "Transmitron/Models/History.hpp"
+#include "Transmitron/Models/Subscriptions.hpp"
+#include "Transmitron/Types/Connection.hpp"
+#include "Transmitron/Widgets/Edit.hpp"
 
 #ifndef BUILD_DOCKING
 #define BUILD_DOCKING false
 #endif
+
+namespace Transmitron::Tabs
+{
 
 class Client :
   public wxPanel,
@@ -22,7 +28,7 @@ public:
 
   Client(
     wxWindow* parent = nullptr,
-    const Connection &connection = Connection{}
+    const Types::Connection &connection = {}
   );
   ~Client();
 
@@ -45,7 +51,7 @@ private:
     HistoryResend,
   };
 
-  const Connection mConnectionInfo;
+  const Types::Connection mConnectionInfo;
 
   // Connection:
   wxPanel *mConnection;
@@ -54,20 +60,20 @@ private:
 
   // History:
   wxPanel *mHistory;
-  wxObjectDataPtr<History> mHistoryModel;
+  wxObjectDataPtr<Models::History> mHistoryModel;
   wxDataViewCtrl *mHistoryCtrl;
 
   // Preview:
-  Edit *mPreview;
+  Widgets::Edit *mPreview;
 
   // Publish:
-  Edit *mPublish;
+  Widgets::Edit *mPublish;
 
   // Subscriptions:
   wxBitmapButton *mSubscribe;
   wxTextCtrl *mFilter;
   wxPanel *mSubscriptions;
-  Subscriptions *mSubscriptionsModel;
+  Models::Subscriptions *mSubscriptionsModel;
   wxDataViewCtrl *mSubscriptionsCtrl;
 
   std::shared_ptr<MQTT::Client> mClient;
@@ -88,8 +94,8 @@ private:
   void onHistoryContext(wxDataViewEvent& event);
   void onContextSelected(wxCommandEvent& event);
   void onSubscriptionSelected(wxDataViewEvent &event);
-  void onMessageAddedSync(MessageEvent &event);
-  void onMessageAdded(MessageEvent &event);
+  void onMessageAddedSync(Events::Message &event);
+  void onMessageAdded(Events::Message &event);
 
   wxSplitterWindow *mSplitLeft;
   wxSplitterWindow *mSplitRight;
@@ -103,3 +109,6 @@ private:
 
 };
 
+}
+
+#endif // TRANSMITRON_TABS_CLIENT_HPP

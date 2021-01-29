@@ -1,8 +1,11 @@
 #include "SubscriptionData.hpp"
-#include "Events/SubscriptionEvent.hpp"
+#include "Transmitron/Events/Subscription.hpp"
 
-wxDEFINE_EVENT(EVT_SUB_SUBSCRIBED, SubscriptionEvent);
-wxDEFINE_EVENT(EVT_SUB_UNSUBSCRIBED, SubscriptionEvent);
+using namespace Transmitron::Types;
+using namespace Transmitron;
+
+wxDEFINE_EVENT(Events::SUB_SUBSCRIBED, Events::Subscription);
+wxDEFINE_EVENT(Events::SUB_UNSUBSCRIBED, Events::Subscription);
 
 SubscriptionData::SubscriptionData(std::shared_ptr<MQTT::Subscription> sub) :
   mSub(sub),
@@ -24,14 +27,14 @@ size_t SubscriptionData::attachObserver(Observer *o)
 
 void SubscriptionData::onSubscribed()
 {
-  auto e = new SubscriptionEvent(EVT_SUB_SUBSCRIBED);
+  auto e = new Events::Subscription(Events::SUB_SUBSCRIBED);
   e->setSubscription(this);
   wxQueueEvent(this, e);
 }
 
 void SubscriptionData::onUnsubscribed()
 {
-  auto e = new SubscriptionEvent(EVT_SUB_UNSUBSCRIBED);
+  auto e = new Events::Subscription(Events::SUB_UNSUBSCRIBED);
   e->setSubscription(this);
   wxQueueEvent(this, e);
 }

@@ -1,5 +1,5 @@
-#ifndef MQTT_SUBSCRIPTION_H
-#define MQTT_SUBSCRIPTION_H
+#ifndef MQTT_SUBSCRIPTION_HPP
+#define MQTT_SUBSCRIPTION_HPP
 
 #include <functional>
 #include <string>
@@ -69,4 +69,4 @@ private:
 
 }
 
-#endif // MQTT_SUBSCRIPTION_H
+#endif // MQTT_SUBSCRIPTION_HPP

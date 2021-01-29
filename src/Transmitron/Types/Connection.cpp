@@ -1,5 +1,7 @@
 #include "Connection.hpp"
 
+using namespace Transmitron::Types;
+
 Connection::Connection() {}
 Connection::~Connection() {}
 

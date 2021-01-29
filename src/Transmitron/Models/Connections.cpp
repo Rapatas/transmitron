@@ -2,12 +2,14 @@
 #include <wx/log.h>
 #include <fmt/core.h>
 #include <cppcodec/base32_rfc4648.hpp>
-#include "Info.hpp"
+#include "Transmitron/Info.hpp"
 #include "Connections.hpp"
 
 #define wxLOG_COMPONENT "models/connections"
 
 namespace fs = std::filesystem;
+using namespace Transmitron::Models;
+using namespace Transmitron;
 
 Connections::Connections()
 {
@@ -46,7 +48,7 @@ Connections::Connections()
       std::string name{nameV.begin(), nameV.end()};
 
       auto j = nlohmann::json::parse(buffer.str());
-      mConnections.push_back(new ConnectionInfo{Connection(j, name), true});
+      mConnections.push_back(new ConnectionInfo{Types::Connection(j, name), true});
 
     } catch (cppcodec::parse_error &e) {
       wxLogError(
@@ -65,9 +67,9 @@ Connections::~Connections()
   }
 }
 
-void Connections::updateConnection(wxDataViewItem &item, const Connection &data)
+void Connections::updateConnection(wxDataViewItem &item, const Types::Connection &data)
 {
-  auto c = reinterpret_cast<Connection*>(item.GetID());
+  auto c = reinterpret_cast<Types::Connection*>(item.GetID());
 
   if (c->getName() != data.getName())
   {
@@ -88,7 +90,7 @@ void Connections::updateConnection(wxDataViewItem &item, const Connection &data)
   ItemChanged(item);
 }
 
-wxDataViewItem Connections::createConnection(const Connection &data)
+wxDataViewItem Connections::createConnection(const Types::Connection &data)
 {
   if (data.getName().empty())
   {
@@ -125,7 +127,7 @@ wxDataViewItem Connections::createConnection(const Connection &data)
   return item;
 }
 
-Connection Connections::getConnection(wxDataViewItem &item) const
+Types::Connection Connections::getConnection(wxDataViewItem &item) const
 {
   return static_cast<ConnectionInfo*>(item.GetID())->connection;
 }

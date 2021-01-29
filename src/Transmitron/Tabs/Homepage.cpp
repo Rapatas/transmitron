@@ -1,11 +1,15 @@
 #include "Homepage.hpp"
+
 #include <wx/button.h>
 #include <wx/wx.h>
 #include <wx/propgrid/propgrid.h>
 
 #define wxLOG_COMPONENT "Homepage"
 
-wxDEFINE_EVENT(EVT_CONNECTION, ConnectionEvent);
+using namespace Transmitron::Tabs;
+using namespace Transmitron;
+
+wxDEFINE_EVENT(Events::CONNECTION, Events::Connection);
 
 Homepage::Homepage(wxWindow *parent) :
   wxPanel(parent)
@@ -29,14 +33,14 @@ void Homepage::setupConnections()
   wxDataViewColumn* const name = new wxDataViewColumn(
     "name",
     new wxDataViewTextRenderer(),
-    (unsigned)Connections::Column::Name,
+    (unsigned)Models::Connections::Column::Name,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
   wxDataViewColumn* const url = new wxDataViewColumn(
     "url",
     new wxDataViewTextRenderer(),
-    (unsigned)Connections::Column::URL,
+    (unsigned)Models::Connections::Column::URL,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
@@ -45,7 +49,7 @@ void Homepage::setupConnections()
 
   auto newConnection = new wxButton(mConnections, -1, "New Connection");
 
-  mConnectionsModel = new Connections;
+  mConnectionsModel = new Models::Connections;
   mConnectionsCtrl = new wxDataViewCtrl(mConnections, -1);
   mConnectionsCtrl->AssociateModel(mConnectionsModel.get());
   mConnectionsCtrl->AppendColumn(name);
@@ -107,10 +111,10 @@ void Homepage::setupConnectionForm()
 
 void Homepage::onConnectionActivated(wxDataViewEvent &event)
 {
-  auto conn = reinterpret_cast<Connection*>(event.GetItem().GetID());
+  auto conn = reinterpret_cast<Types::Connection*>(event.GetItem().GetID());
   wxLogMessage("Queueing event for connection at %s:%d", conn->getHostname(), conn->getPort());
 
-  auto ce = new ConnectionEvent();
+  auto ce = new Events::Connection();
   ce->setConnection(*conn);
   wxQueueEvent(this, ce);
 
@@ -119,7 +123,7 @@ void Homepage::onConnectionActivated(wxDataViewEvent &event)
 
 void Homepage::onConnectionSelected(wxDataViewEvent &event)
 {
-  auto c = reinterpret_cast<Connection*>(event.GetItem().GetID());
+  auto c = reinterpret_cast<Types::Connection*>(event.GetItem().GetID());
   fillPropertyGrid(*c);
   event.Skip();
 }
@@ -129,7 +133,7 @@ void Homepage::onConnectClicked(wxCommandEvent &event)
   auto c = fromPropertyGrid();
   wxLogMessage("Queueing event for connection at %s:%d", c.getHostname(), c.getPort());
 
-  auto ce = new ConnectionEvent();
+  auto ce = new Events::Connection();
   ce->setConnection(c);
   wxQueueEvent(this, ce);
 }
@@ -149,7 +153,7 @@ void Homepage::onSaveClicked(wxCommandEvent &event)
 
 void Homepage::onNewConnectionClicked(wxCommandEvent &event)
 {
-  Connection c;
+  Types::Connection c;
   c.setName("New connection");
   auto item = mConnectionsModel->createConnection(c);
   mConnectionsCtrl->Select(item);
@@ -157,7 +161,7 @@ void Homepage::onNewConnectionClicked(wxCommandEvent &event)
   fillPropertyGrid(mConnectionsModel->getConnection(item));
 }
 
-void Homepage::fillPropertyGrid(const Connection &c)
+void Homepage::fillPropertyGrid(const Types::Connection &c)
 {
   mNameProp->SetValue(c.getName());
   mHostnameProp->SetValue(c.getHostname());
@@ -175,9 +179,9 @@ void Homepage::fillPropertyGrid(const Connection &c)
   mProp->Enable(true);
 }
 
-Connection Homepage::fromPropertyGrid() const
+Types::Connection Homepage::fromPropertyGrid() const
 {
-  Connection c;
+  Types::Connection c;
   c.setName(mNameProp->GetValue());
   c.setHostname(mHostnameProp->GetValue());
   c.setPort(mPortProp->GetValue().GetInteger());

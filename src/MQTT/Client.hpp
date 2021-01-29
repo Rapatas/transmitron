@@ -1,5 +1,5 @@
-#ifndef MQTT_CLIENT_H
-#define MQTT_CLIENT_H
+#ifndef MQTT_CLIENT_HPP
+#define MQTT_CLIENT_HPP
 
 #include <memory>
 #include <map>
@@ -109,4 +109,4 @@ private:
 
 }
 
-#endif // MQTT_CLIENT_H
+#endif // MQTT_CLIENT_HPP

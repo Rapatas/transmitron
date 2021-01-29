@@ -1,4 +1,4 @@
-#include "Info.hpp"
+#include "Transmitron/Info.hpp"
 
 #ifndef PROJECT_NAME
 #define PROJECT_NAME "@PROJECT_NAME@"
