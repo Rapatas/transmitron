@@ -49,6 +49,7 @@ private:
     SubscriptionsSolo,
     HistoryRetainedClear,
     HistoryResend,
+    HistoryEdit,
   };
 
   const Types::Connection mConnectionInfo;

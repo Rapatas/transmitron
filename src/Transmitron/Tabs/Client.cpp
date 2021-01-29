@@ -352,8 +352,9 @@ void Client::onHistoryContext(wxDataViewEvent& dve)
   mHistoryCtrl->Select(dve.GetItem());
 
   wxMenu menu;
-  menu.Append((unsigned)ContextIDs::HistoryRetainedClear, "Clear retained");
+  menu.Append((unsigned)ContextIDs::HistoryEdit, "Edit");
   menu.Append((unsigned)ContextIDs::HistoryResend, "Re-Send");
+  menu.Append((unsigned)ContextIDs::HistoryRetainedClear, "Clear retained");
   PopupMenu(&menu);
 }
 
@@ -411,6 +412,16 @@ void Client::onContextSelected(wxCommandEvent& event)
       auto qos      = mHistoryModel->getQos(item);
       auto payload  = mHistoryModel->getPayload(item);
       mClient->publish(topic, payload, qos, retained);
+    } break;
+    case ContextIDs::HistoryEdit: {
+      wxLogMessage("Requesting edit");
+      auto item = mHistoryCtrl->GetSelection();
+      if (!item.IsOk()) { return; }
+      mPublish->clear();
+      mPublish->setTopic(mHistoryModel->getTopic(item));
+      mPublish->setQos(mHistoryModel->getQos(item));
+      mPublish->setPayload(mHistoryModel->getPayload(item));
+      mPublish->setRetained(mHistoryModel->getRetained(item));
     } break;
   }
   event.Skip(true);

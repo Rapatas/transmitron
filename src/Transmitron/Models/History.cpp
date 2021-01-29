@@ -164,7 +164,7 @@ void History::GetValueByRow(
   switch ((Column)col) {
     case Column::Icon: {
 
-      wxBitmap b(20, 20);
+      wxBitmap b(10, 20);
       wxMemoryDC mem;
       mem.SelectObject(b);
       mem.SetBackground(wxBrush(m.sub->getColor()));
