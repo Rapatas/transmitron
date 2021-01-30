@@ -123,7 +123,7 @@ void Client::setupPanelHistory(wxWindow *parent)
     L"qos",
     new wxDataViewBitmapRenderer(),
     (unsigned)Models::History::Column::Qos,
-    25
+    wxCOL_WIDTH_AUTOSIZE
   );
   wxDataViewColumn* const retained = new wxDataViewColumn(
     L"retained",
@@ -195,7 +195,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
     "qos",
     new wxDataViewBitmapRenderer(),
     (unsigned)Models::Subscriptions::Column::Qos,
-    25
+    wxCOL_WIDTH_AUTOSIZE
   );
 
   wxFont font(wxFontInfo(9).FaceName("Consolas"));
