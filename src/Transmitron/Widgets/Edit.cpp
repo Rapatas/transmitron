@@ -209,7 +209,7 @@ std::string Edit::formatTry(
   if (format == "JSON" && json::accept(text))
   {
     auto j = json::parse(text);
-    return j.dump(4);
+    return j.dump(2);
   }
   else if (format == "XML" && doc.Parse(text.c_str()) == XMLError::XML_SUCCESS)
   {
