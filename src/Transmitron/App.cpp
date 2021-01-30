@@ -1,6 +1,7 @@
 #include "App.hpp"
 
 #include <wx/notebook.h>
+#include <fmt/core.h>
 
 #include "Info.hpp"
 #include "LogFormat.hpp"
@@ -17,6 +18,7 @@
 #define wxLOG_COMPONENT "App"
 
 using namespace Transmitron;
+namespace fs = std::filesystem;
 
 bool App::OnInit()
 {
@@ -40,6 +42,9 @@ bool App::OnInit()
 
   mNote = new wxAuiNotebook(frame, -1);
   mNote->SetImageList(il);
+
+  mConnectionsModel = new Models::Connections();
+  mConnectionsModel->load(getConfigDir());
 
   newConnectionTab();
 
@@ -83,7 +88,7 @@ void App::onPageClosed(wxBookCtrlEvent& event)
 
 void App::newConnectionTab()
 {
-  auto homepage = new Tabs::Homepage(mNote);
+  auto homepage = new Tabs::Homepage(mNote, mConnectionsModel);
   mCount += mNote->InsertPage(mCount - 1, homepage, "Homepage");
   mNote->SetSelection(mCount - 2);
 
@@ -99,3 +104,41 @@ void App::newConnectionTab()
     client->resize();
   });
 }
+
+std::string App::getConfigDir()
+{
+  std::string result;
+
+  char *xdg_config_home = getenv("XDG_CONFIG_HOME");
+  if (xdg_config_home == nullptr)
+  {
+    char *user = getenv("USER");
+    if (user != nullptr)
+    {
+      result = fmt::format("/home/{}/.config/{}", user, getProjectName());
+    }
+  }
+  else
+  {
+    std::string xdgConfigHome(xdg_config_home);
+
+    if (xdgConfigHome.back() != '/')
+    {
+      xdgConfigHome += '/';
+    }
+
+    result = xdgConfigHome + getProjectName();
+  }
+
+  if (!fs::is_directory(result) || !fs::exists(result))
+  {
+    if (!fs::create_directory(result))
+    {
+      wxLogWarning("Could not create directory '%s'", result.c_str());
+      result = {};
+    }
+  }
+
+  return result;
+}
+

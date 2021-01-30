@@ -3,6 +3,7 @@
 
 #include <wx/wx.h>
 #include <wx/aui/auibook.h>
+#include "Transmitron/Models/Connections.hpp"
 
 namespace Transmitron
 {
@@ -16,10 +17,15 @@ private:
   unsigned mCount = 0;
   wxAuiNotebook *mNote;
 
+  wxObjectDataPtr<Models::Connections> mConnectionsModel;
+
   void onPageClosed(wxBookCtrlEvent& event);
   void onPageSelected(wxBookCtrlEvent& event);
 
   void newConnectionTab();
+
+  /// Empty if it fails.
+  static std::string getConfigDir();
 };
 
 }

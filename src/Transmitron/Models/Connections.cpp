@@ -11,53 +11,7 @@ namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 using namespace Transmitron;
 
-Connections::Connections()
-{
-  auto config = getConfigPath();
-
-  if (!fs::is_directory(config) || !fs::exists(config))
-  {
-    if (!fs::create_directory(config))
-    {
-      wxLogWarning("Could not create config directory: %s", config.c_str());
-      return;
-    }
-  }
-
-  for (const auto &entry : fs::directory_iterator(config))
-  {
-    if (entry.path().extension() != ".json") { continue; }
-
-    wxLogMessage("Loading %s", entry.path().c_str());
-
-    std::ifstream file(entry.path());
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    if (!nlohmann::json::accept(buffer.str()))
-    {
-      wxLogWarning(
-        "Could not load %s: Malformed json.",
-        entry.path().u8string()
-      );
-      continue;
-    }
-
-    try {
-      auto stem = entry.path().stem().u8string();
-      auto nameV = cppcodec::base32_rfc4648::decode(stem);
-      std::string name{nameV.begin(), nameV.end()};
-
-      auto j = nlohmann::json::parse(buffer.str());
-      mConnections.push_back(new ConnectionInfo{Types::Connection(j, name), true});
-
-    } catch (cppcodec::parse_error &e) {
-      wxLogError(
-        "Could not load %s: Malformed base32 encoding.",
-        entry.path().u8string()
-      );
-    }
-  }
-}
+Connections::Connections() {}
 
 Connections::~Connections()
 {
@@ -67,27 +21,135 @@ Connections::~Connections()
   }
 }
 
-void Connections::updateConnection(wxDataViewItem &item, const Types::Connection &data)
+bool Connections::load(const std::string &configDir)
 {
-  auto c = reinterpret_cast<Types::Connection*>(item.GetID());
-
-  if (c->getName() != data.getName())
+  if (configDir.empty())
   {
-    fs::remove(toFileName(c->getName()));
+    wxLogWarning("No directory provided");
+    return false;
   }
 
-  std::ofstream file(toFileName(data.getName()));
+  mConnectionsDir = configDir + "/connections";
+
+  bool exists = fs::exists(mConnectionsDir);
+  bool isDir = fs::is_directory(mConnectionsDir);
+
+  if (exists && !isDir && !fs::remove(mConnectionsDir))
+  {
+    wxLogWarning("Could not remove file %s", mConnectionsDir);
+    return false;
+  }
+
+  if (!exists && !fs::create_directory(mConnectionsDir))
+  {
+    wxLogWarning(
+      "Could not create connections directory: %s",
+      mConnectionsDir
+    );
+    return false;
+  }
+
+
+  for (const auto &entry : fs::directory_iterator(mConnectionsDir))
+  {
+    wxLogMessage("Checking %s", entry.path().u8string());
+    if (entry.status().type() != fs::file_type::directory) { continue; }
+
+    fs::path connectionPath = entry.path().u8string() + "/connection.json";
+
+    std::ifstream file(connectionPath);
+    if (!file.is_open())
+    {
+      wxLogWarning("Could not open '%s'", connectionPath.u8string());
+      continue;
+    }
+
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    if (!nlohmann::json::accept(buffer.str()))
+    {
+      wxLogWarning("Could not load '%s' Malformed json", entry.path().u8string());
+      continue;
+    }
+
+    auto stem = entry.path().stem().u8string();
+    std::vector<uint8_t> decoded;
+
+    try { decoded = cppcodec::base32_rfc4648::decode(stem); }
+    catch (cppcodec::parse_error &e) {
+      wxLogError(
+        "Could not load '%s' Malformed base32 encoding.",
+        entry.path().u8string()
+      );
+      continue;
+    }
+
+    auto j = nlohmann::json::parse(buffer.str());
+    std::string name{decoded.begin(), decoded.end()};
+    mConnections.push_back(
+      new ConnectionInfo{
+        Types::Connection(j, name),
+        true
+      }
+    );
+  }
+
+  return true;
+}
+
+bool Connections::updateConnection(
+  wxDataViewItem &item,
+  const Types::Connection &data
+) {
+  auto info = reinterpret_cast<ConnectionInfo*>(item.GetID());
+
+  std::string dir = toDir(data.getName());
+
+  if (info->saved)
+  {
+    if (info->connection.getName() != data.getName())
+    {
+      std::error_code ec;
+      fs::rename(
+        toDir(info->connection.getName()),
+        dir,
+        ec
+      );
+      if (ec)
+      {
+        wxLogError(
+          "Could not rename '%s' to '%s'",
+          info->connection.getName(),
+          data.getName()
+        );
+        return false;
+      }
+    }
+  }
+  else
+  {
+    if (!fs::create_directory(dir))
+    {
+      wxLogError("Could not create connection dir");
+      return false;
+    }
+  }
+
+  std::ofstream file(dir + "/connection.json");
   if (!file.is_open())
   {
     wxLogError("Could not save connection");
-    return;
+    return false;
   }
 
   file << data.toJson().dump(2);
   file.close();
 
-  *c = data;
+  info->connection = data;
+  info->saved = true;
   ItemChanged(item);
+
+  return true;
 }
 
 wxDataViewItem Connections::createConnection(const Types::Connection &data)
@@ -207,34 +269,9 @@ unsigned int Connections::GetChildren(
   return mConnections.size();
 }
 
-std::filesystem::path Connections::getConfigPath()
-{
-  char *xdg_config_home = getenv("XDG_CONFIG_HOME");
-  if (xdg_config_home == nullptr)
-  {
-    char *user = getenv("USER");
-    if (user == nullptr)
-    {
-      throw std::runtime_error("Environment Variable $USER not set");
-    }
-    return fmt::format("/home/{}/.config/{}", user, getProjectName());
-  }
-  else
-  {
-    std::string xdgConfigHome(xdg_config_home);
-
-    if (xdgConfigHome.back() != '/')
-    {
-      xdgConfigHome += '/';
-    }
-
-    return xdgConfigHome + getProjectName();
-  }
-}
-
-std::filesystem::path Connections::toFileName(const std::string &name)
+std::string Connections::toDir(const std::string &name) const
 {
   auto encV = cppcodec::base32_rfc4648::encode(name);
   std::string encoded{std::begin(encV), std::end(encV)};
-  return fmt::format("{}/{}.json", getConfigPath().u8string(), encoded);
+  return fmt::format("{}/{}", mConnectionsDir, encoded);
 }

@@ -6,6 +6,7 @@
 #include <wx/sizer.h>
 #include <wx/textctrl.h>
 #include <wx/spinctrl.h>
+#include <wx/dataview.h>
 
 #include "Transmitron/Events/Connection.hpp"
 #include "Transmitron/Models/Connections.hpp"
@@ -18,13 +19,16 @@ class Homepage :
 {
 public:
 
-  explicit Homepage(wxWindow *parent = nullptr);
+  explicit Homepage(
+    wxWindow *parent,
+    wxObjectDataPtr<Models::Connections> connectionsModel
+  );
   virtual ~Homepage();
 
 private:
 
-  wxObjectDataPtr<Models::Connections> mConnectionsModel;
   wxDataViewCtrl *mConnectionsCtrl;
+  wxObjectDataPtr<Models::Connections> mConnectionsModel;
 
   wxBoxSizer *mSizer;
   wxPanel *mConnections;

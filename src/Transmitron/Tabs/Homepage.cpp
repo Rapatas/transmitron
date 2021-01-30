@@ -11,8 +11,12 @@ using namespace Transmitron;
 
 wxDEFINE_EVENT(Events::CONNECTION, Events::Connection);
 
-Homepage::Homepage(wxWindow *parent) :
-  wxPanel(parent)
+Homepage::Homepage(
+  wxWindow *parent,
+  wxObjectDataPtr<Models::Connections> connectionsModel
+) :
+  wxPanel(parent),
+  mConnectionsModel(connectionsModel)
 {
   mSizer = new wxBoxSizer(wxHORIZONTAL);
   this->SetSizer(mSizer);
@@ -49,7 +53,6 @@ void Homepage::setupConnections()
 
   auto newConnection = new wxButton(mConnections, -1, "New Connection");
 
-  mConnectionsModel = new Models::Connections;
   mConnectionsCtrl = new wxDataViewCtrl(mConnections, -1);
   mConnectionsCtrl->AssociateModel(mConnectionsModel.get());
   mConnectionsCtrl->AppendColumn(name);

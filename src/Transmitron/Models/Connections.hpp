@@ -13,9 +13,6 @@ class Connections :
 {
 public:
 
-  explicit Connections();
-  virtual ~Connections();
-
   enum class Column : unsigned
   {
     Name,
@@ -23,7 +20,12 @@ public:
     Max
   };
 
-  void updateConnection(wxDataViewItem &item, const Types::Connection &data);
+  explicit Connections();
+  virtual ~Connections();
+
+  bool load(const std::string &configDir);
+
+  bool updateConnection(wxDataViewItem &item, const Types::Connection &data);
   wxDataViewItem createConnection(const Types::Connection &data);
   Types::Connection getConnection(wxDataViewItem &item) const;
 
@@ -36,6 +38,7 @@ private:
   };
 
   std::vector<ConnectionInfo*> mConnections;
+  std::string mConnectionsDir;
 
   // wxDataViewModel interface.
   virtual unsigned GetColumnCount() const override;
@@ -65,8 +68,7 @@ private:
     wxDataViewItemArray &array
   ) const override;
 
-  static std::filesystem::path getConfigPath();
-  static std::filesystem::path toFileName(const std::string &name);
+  std::string toDir(const std::string &name) const;
 };
 
 }
