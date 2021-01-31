@@ -25,19 +25,23 @@ public:
 
   bool load(const std::string &configDir);
 
-  bool updateConnection(wxDataViewItem &item, const Types::Connection &data);
-  wxDataViewItem createConnection(const Types::Connection &data);
+  bool updateBrokerOptions(
+    wxDataViewItem &item,
+    const ValueObjects::BrokerOptions &brokerOptions
+  );
+  bool updateName(
+    wxDataViewItem &item,
+    const std::string &name
+  );
+  wxDataViewItem createConnection();
   Types::Connection getConnection(wxDataViewItem &item) const;
 
 private:
 
-  struct ConnectionInfo
-  {
-    Types::Connection connection;
-    bool saved = false;
-  };
+  static constexpr const char *BrokerOptionsFilename =
+    "broker-options.json";
 
-  std::vector<ConnectionInfo*> mConnections;
+  std::vector<Types::Connection*> mConnections;
   std::string mConnectionsDir;
 
   // wxDataViewModel interface.

@@ -52,10 +52,10 @@ private:
     HistoryEdit,
   };
 
-  const Types::Connection mConnectionInfo;
+  const Types::Connection mConnection;
 
   // Connection:
-  wxPanel *mConnection;
+  wxPanel *mConnectionBar;
   wxButton *mConnect;
   wxStatusBar *mStatusBar;
 

@@ -49,138 +49,141 @@ bool Connections::load(const std::string &configDir)
     return false;
   }
 
-
   for (const auto &entry : fs::directory_iterator(mConnectionsDir))
   {
     wxLogMessage("Checking %s", entry.path().u8string());
     if (entry.status().type() != fs::file_type::directory) { continue; }
 
-    fs::path connectionPath = entry.path().u8string() + "/connection.json";
-
-    std::ifstream file(connectionPath);
-    if (!file.is_open())
+    // Get name.
+    std::vector<uint8_t> decoded;
+    try { decoded = cppcodec::base32_rfc4648::decode(entry.path().stem().u8string()); }
+    catch (cppcodec::parse_error &e)
     {
-      wxLogWarning("Could not open '%s'", connectionPath.u8string());
+      wxLogError(
+        "Could not load '%s': %s",
+        entry.path().u8string(),
+        e.what()
+      );
+      continue;
+    }
+    std::string name{decoded.begin(), decoded.end()};
+
+    // Get BrokerOptions.
+    auto brokerOptionsFilepath = fmt::format(
+      "{}/{}",
+      entry.path().c_str(),
+      BrokerOptionsFilename
+    );
+
+    std::ifstream brokerOptionsFile(brokerOptionsFilepath);
+    if (!brokerOptionsFile.is_open())
+    {
       continue;
     }
 
     std::stringstream buffer;
-    buffer << file.rdbuf();
+    buffer << brokerOptionsFile.rdbuf();
     if (!nlohmann::json::accept(buffer.str()))
     {
-      wxLogWarning("Could not load '%s' Malformed json", entry.path().u8string());
-      continue;
-    }
-
-    auto stem = entry.path().stem().u8string();
-    std::vector<uint8_t> decoded;
-
-    try { decoded = cppcodec::base32_rfc4648::decode(stem); }
-    catch (cppcodec::parse_error &e) {
-      wxLogError(
-        "Could not load '%s' Malformed base32 encoding.",
-        entry.path().u8string()
-      );
       continue;
     }
 
     auto j = nlohmann::json::parse(buffer.str());
-    std::string name{decoded.begin(), decoded.end()};
-    mConnections.push_back(
-      new ConnectionInfo{
-        Types::Connection(j, name),
-        true
-      }
-    );
+    auto brokerOptions = ValueObjects::BrokerOptions::fromJson(j);
+
+    Types::Connection *connection = nullptr;
+    connection = new Types::Connection(name, brokerOptions, true);
+    mConnections.push_back(connection);
+    wxLogMessage("Success: %s", connection->getName());
   }
 
   return true;
 }
 
-bool Connections::updateConnection(
+bool Connections::updateBrokerOptions(
   wxDataViewItem &item,
-  const Types::Connection &data
+  const ValueObjects::BrokerOptions &brokerOptions
 ) {
-  auto info = reinterpret_cast<ConnectionInfo*>(item.GetID());
+  auto connection = reinterpret_cast<Types::Connection*>(item.GetID());
+  connection->setBrokerOptions(brokerOptions);
 
-  std::string dir = toDir(data.getName());
+  std::string dir = toDir(connection->getName());
 
-  if (info->saved)
-  {
-    if (info->connection.getName() != data.getName())
-    {
-      std::error_code ec;
-      fs::rename(
-        toDir(info->connection.getName()),
-        dir,
-        ec
-      );
-      if (ec)
-      {
-        wxLogError(
-          "Could not rename '%s' to '%s'",
-          info->connection.getName(),
-          data.getName()
-        );
-        return false;
-      }
-    }
-  }
-  else
-  {
-    if (!fs::create_directory(dir))
-    {
-      wxLogError("Could not create connection dir");
+  if (
+    !connection->getSaved()
+    && !fs::create_directory(dir)
+  ) {
+      wxLogError("Could not create connection directory");
       return false;
-    }
   }
 
-  std::ofstream file(dir + "/connection.json");
-  if (!file.is_open())
+  auto brokerOptionsFilepath = fmt::format(
+    "{}/{}",
+    dir,
+    BrokerOptionsFilename
+  );
+
+  std::ofstream brokerOptionsFile(brokerOptionsFilepath);
+  if (!brokerOptionsFile.is_open())
   {
-    wxLogError("Could not save connection");
+    wxLogError("Could not save broker options");
     return false;
   }
 
-  file << data.toJson().dump(2);
-  file.close();
+  brokerOptionsFile << brokerOptions.toJson().dump(2);
+  brokerOptionsFile.close();
 
-  info->connection = data;
-  info->saved = true;
+  connection->setBrokerOptions(brokerOptions);
+  connection->setSaved(true);
   ItemChanged(item);
 
   return true;
 }
 
-wxDataViewItem Connections::createConnection(const Types::Connection &data)
-{
-  if (data.getName().empty())
+bool Connections::updateName(
+  wxDataViewItem &item,
+  const std::string &name
+) {
+  auto connection = reinterpret_cast<Types::Connection*>(item.GetID());
+  if (connection->getName() == name)
   {
-    wxLogWarning("Refusing to create unnamed connection");
-    return {};
+    return true;
   }
 
-  std::string name = data.getName();
+  std::string before = toDir(connection->getName());
+  std::string after = toDir(name);
+
+  fs::rename(before, after);
+  if (errno != 0)
+  {
+    wxLogError("Could not rename connection to '%s'", name);
+    return false;
+  }
+
+  return true;
+}
+
+wxDataViewItem Connections::createConnection()
+{
+  auto connection = new Types::Connection;
   unsigned postfix = 0;
+
+  std::string uniqueName = connection->getName();
 
   while (std::any_of(
       std::begin(mConnections),
       std::end(mConnections),
-      [=](ConnectionInfo *connectionInfo)
+      [=](Types::Connection *connection)
       {
-        return connectionInfo->connection.getName() == name;
+        return connection->getName() == uniqueName;
       }
   )) {
     ++postfix;
-    name = fmt::format("{} - {}", data.getName(), postfix);
+    uniqueName = fmt::format("{} - {}", connection->getName(), postfix);
   }
 
-  mConnections.push_back(new ConnectionInfo{data, false});
-
-  if (postfix)
-  {
-    mConnections.back()->connection.setName(name);
-  }
+  connection->setName(uniqueName);
+  mConnections.push_back(connection);
 
   wxDataViewItem parent(nullptr);
   wxDataViewItem item(reinterpret_cast<void*>(mConnections.back()));
@@ -191,7 +194,7 @@ wxDataViewItem Connections::createConnection(const Types::Connection &data)
 
 Types::Connection Connections::getConnection(wxDataViewItem &item) const
 {
-  return static_cast<ConnectionInfo*>(item.GetID())->connection;
+  return *static_cast<Types::Connection*>(item.GetID());
 }
 
 unsigned Connections::GetColumnCount() const
@@ -214,17 +217,17 @@ void Connections::GetValue(
   const wxDataViewItem &item,
   unsigned int col
 ) const {
-  auto c = static_cast<ConnectionInfo*>(item.GetID());
+  auto c = static_cast<Types::Connection*>(item.GetID());
 
   switch ((Column)col) {
     case Column::Name: {
-      variant = c->connection.getName();
+      variant = c->getName();
     } break;
     case Column::URL: {
       variant =
-        c->connection.getHostname()
+        c->getBrokerOptions().getHostname()
         + ":"
-        + std::to_string(c->connection.getPort());
+        + std::to_string(c->getBrokerOptions().getPort());
     } break;
     default: {}
   }

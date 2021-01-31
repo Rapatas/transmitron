@@ -12,15 +12,16 @@ class BrokerOptions
 {
 public:
 
+  explicit BrokerOptions();
   explicit BrokerOptions(
-    bool autoReconnec,
-    std::string clientI,
-    std::string hostnam,
-    std::string passwor,
-    std::string usernam,
-    unsigned keepAliveInterva,
-    unsigned maxInFligh,
-    unsigned por,
+    bool autoReconnect,
+    std::string clientId,
+    std::string hostname,
+    std::string password,
+    std::string username,
+    unsigned keepAliveInterval,
+    unsigned maxInFlight,
+    unsigned port,
     unsigned timeout
   );
   virtual ~BrokerOptions() = default;
@@ -56,28 +57,7 @@ private:
   static std::optional<T> extract(
     const nlohmann::json &data,
     const std::string &key
-  ) {
-    auto it = data.find(key);
-    if (it == std::end(data)) { return std::nullopt; }
-
-    if (std::is_same<unsigned, T>::value)
-    {
-      if (it->type() != nlohmann::json::value_t::number_unsigned) { return std::nullopt; }
-      return it->get<unsigned>();
-    }
-    else if (std::is_same<std::string, T>::value)
-    {
-      if (it->type() != nlohmann::json::value_t::string) { return std::nullopt; }
-      return it->get<std::string>();
-    }
-    else if (std::is_same<bool, T>::value)
-    {
-      if (it->type() != nlohmann::json::value_t::boolean) { return std::nullopt; }
-      return it->get<bool>();
-    }
-
-    return std::nullopt;
-  }
+  );
 };
 
 }

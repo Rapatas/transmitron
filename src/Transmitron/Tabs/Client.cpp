@@ -15,7 +15,7 @@ Client::Client(
   const Types::Connection &connection
 ) :
   wxPanel(parent),
-  mConnectionInfo(connection)
+  mConnection(connection)
 {
   mClient = std::make_shared<MQTT::Client>();
   mClient->attachObserver(this);
@@ -40,7 +40,7 @@ Client::Client(
   setupPanelPreview(mSplitRight);
 
   auto s = new wxBoxSizer(wxVERTICAL);
-  s->Add(mConnection, 0, wxEXPAND);
+  s->Add(mConnectionBar, 0, wxEXPAND);
   s->Add(mSplitLeft, 1, wxEXPAND);
   SetSizer(s);
 
@@ -93,7 +93,7 @@ Client::Client(
   subscriptionsInfo.BestSize(wxSize(500, 0));
 
   mAuiMan.SetManagedWindow(this);
-  mAuiMan.AddPane(mConnection,    connectionInfo);
+  mAuiMan.AddPane(mConnectionBar,    connectionInfo);
   mAuiMan.AddPane(mSubscriptions, subscriptionsInfo);
   mAuiMan.AddPane(mPublish,    publishInfo);
   mAuiMan.AddPane(mHistory,       historyInfo);
@@ -165,13 +165,13 @@ void Client::setupPanelHistory(wxWindow *parent)
 
 void Client::setupPanelConnect(wxWindow *parent)
 {
-  mConnection = new wxPanel(parent, -1, wxDefaultPosition, wxDefaultSize);
+  mConnectionBar = new wxPanel(parent, -1, wxDefaultPosition, wxDefaultSize);
 
-  mConnect  = new wxButton(mConnection, -1, "Connect");
+  mConnect  = new wxButton(mConnectionBar, -1, "Connect");
 
   wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   hsizer->Add(mConnect,  0, wxEXPAND);
-  mConnection->SetSizer(hsizer);
+  mConnectionBar->SetSizer(hsizer);
 
   mConnect->Bind(wxEVT_BUTTON, &Client::onConnectClicked, this);
 }
@@ -295,8 +295,8 @@ void Client::onConnectClicked(wxCommandEvent &event)
   }
   else
   {
-    mClient->setHostname(mConnectionInfo.getHostname());
-    mClient->setPort(mConnectionInfo.getPort());
+    mClient->setHostname(mConnection.getBrokerOptions().getHostname());
+    mClient->setPort(mConnection.getBrokerOptions().getPort());
     mClient->connect();
   }
 }

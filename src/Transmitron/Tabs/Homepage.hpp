@@ -59,7 +59,7 @@ private:
   wxButton *mConnect;
 
   void fillPropertyGrid(const Types::Connection &c);
-  Types::Connection fromPropertyGrid() const;
+  ValueObjects::BrokerOptions optionsFromPropertyGrid() const;
 };
 
 }

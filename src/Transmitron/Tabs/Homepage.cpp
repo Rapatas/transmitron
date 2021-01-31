@@ -85,16 +85,16 @@ void Homepage::setupConnectionForm()
 
   mProp->Enable(false);
 
-  mNameProp          = mProp->Append(new wxStringProperty( "Name",                "", {}));
-  mHostnameProp      = mProp->Append(new wxStringProperty( "Hostname",            "", {}));
-  mPortProp          = mProp->Append(new wxUIntProperty(   "Port",                "", {}));
-  mTimeoutProp       = mProp->Append(new wxUIntProperty(   "Timeout (s)",         "", {}));
-  mMaxInFlightProp   = mProp->Append(new wxUIntProperty(   "Max in flight",       "", {}));
-  mKeepAliveProp     = mProp->Append(new wxUIntProperty(   "Keep alive interval", "", {}));
-  mClientIdProp      = mProp->Append(new wxStringProperty( "Client ID",           "", {}));
-  mUsernameProp      = mProp->Append(new wxStringProperty( "Username",            "", {}));
-  mPasswordProp      = mProp->Append(new wxStringProperty( "Password",            "", {}));
-  mAutoReconnectProp = mProp->Append(new wxBoolProperty(   "Auto Reconnect",      "", {}));
+  mNameProp = mProp->Append(new wxStringProperty("Name", "", {}));
+  mHostnameProp = mProp->Append(new wxStringProperty("Hostname", "", {}));
+  mPortProp = mProp->Append(new wxUIntProperty("Port", "", {}));
+  mTimeoutProp = mProp->Append(new wxUIntProperty("Timeout (s)", "", {}));
+  mMaxInFlightProp = mProp->Append(new wxUIntProperty("Max in flight", "", {}));
+  mKeepAliveProp = mProp->Append(new wxUIntProperty("Keep alive interval", "", {}));
+  mClientIdProp = mProp->Append(new wxStringProperty("Client ID", "", {}));
+  mUsernameProp = mProp->Append(new wxStringProperty("Username", "", {}));
+  mPasswordProp = mProp->Append(new wxStringProperty("Password", "", {}));
+  mAutoReconnectProp = mProp->Append(new wxBoolProperty("Auto Reconnect", "", {}));
 
   mSave    = new wxButton(mConnectionForm, -1, "Save");
   mConnect = new wxButton(mConnectionForm, -1, "Connect");
@@ -115,7 +115,11 @@ void Homepage::setupConnectionForm()
 void Homepage::onConnectionActivated(wxDataViewEvent &event)
 {
   auto conn = reinterpret_cast<Types::Connection*>(event.GetItem().GetID());
-  wxLogMessage("Queueing event for connection at %s:%d", conn->getHostname(), conn->getPort());
+  wxLogMessage(
+    "Queueing event for connection at %s:%d",
+    conn->getBrokerOptions().getHostname(),
+    conn->getBrokerOptions().getPort()
+  );
 
   auto ce = new Events::Connection();
   ce->setConnection(*conn);
@@ -133,32 +137,39 @@ void Homepage::onConnectionSelected(wxDataViewEvent &event)
 
 void Homepage::onConnectClicked(wxCommandEvent &event)
 {
-  auto c = fromPropertyGrid();
-  wxLogMessage("Queueing event for connection at %s:%d", c.getHostname(), c.getPort());
+  auto item = mConnectionsCtrl->GetSelection();
+  auto connection = mConnectionsModel->getConnection(item);
+
+  wxLogMessage(
+    "Queueing event for connection at %s:%d",
+    connection.getBrokerOptions().getHostname(),
+    connection.getBrokerOptions().getPort()
+  );
 
   auto ce = new Events::Connection();
-  ce->setConnection(c);
+  ce->setConnection(connection);
   wxQueueEvent(this, ce);
 }
 
 void Homepage::onSaveClicked(wxCommandEvent &event)
 {
   auto item = mConnectionsCtrl->GetSelection();
-  auto c = fromPropertyGrid();
 
   if (!item.IsOk())
   {
     return;
   }
 
-  mConnectionsModel->updateConnection(item, c);
+  auto options = optionsFromPropertyGrid();
+  auto name = mNameProp->GetValue();
+
+  mConnectionsModel->updateBrokerOptions(item, options);
+  mConnectionsModel->updateName(item, name);
 }
 
 void Homepage::onNewConnectionClicked(wxCommandEvent &event)
 {
-  Types::Connection c;
-  c.setName("New connection");
-  auto item = mConnectionsModel->createConnection(c);
+  auto item = mConnectionsModel->createConnection();
   mConnectionsCtrl->Select(item);
   mConnectionsCtrl->EnsureVisible(item);
   fillPropertyGrid(mConnectionsModel->getConnection(item));
@@ -167,33 +178,32 @@ void Homepage::onNewConnectionClicked(wxCommandEvent &event)
 void Homepage::fillPropertyGrid(const Types::Connection &c)
 {
   mNameProp->SetValue(c.getName());
-  mHostnameProp->SetValue(c.getHostname());
-  mPortProp->SetValue((int)c.getPort());
-  mTimeoutProp->SetValue((int)c.getTimeout());
-  mMaxInFlightProp->SetValue((int)c.getMaxInFlight());
-  mKeepAliveProp->SetValue((int)c.getKeepAliveInterval());
-  mClientIdProp->SetValue(c.getClientId());
-  mUsernameProp->SetValue(c.getUsername());
-  mPasswordProp->SetValue(c.getPassword());
-  mAutoReconnectProp->SetValue(c.getAutoReconnect());
+  mHostnameProp->SetValue(c.getBrokerOptions().getHostname());
+  mPortProp->SetValue((int)c.getBrokerOptions().getPort());
+  mTimeoutProp->SetValue((int)c.getBrokerOptions().getTimeout());
+  mMaxInFlightProp->SetValue((int)c.getBrokerOptions().getMaxInFlight());
+  mKeepAliveProp->SetValue((int)c.getBrokerOptions().getKeepAliveInterval());
+  mClientIdProp->SetValue(c.getBrokerOptions().getClientId());
+  mUsernameProp->SetValue(c.getBrokerOptions().getUsername());
+  mPasswordProp->SetValue(c.getBrokerOptions().getPassword());
+  mAutoReconnectProp->SetValue(c.getBrokerOptions().getAutoReconnect());
 
   mSave->Enable(true);
   mConnect->Enable(true);
   mProp->Enable(true);
 }
 
-Types::Connection Homepage::fromPropertyGrid() const
+ValueObjects::BrokerOptions Homepage::optionsFromPropertyGrid() const
 {
-  Types::Connection c;
-  c.setName(mNameProp->GetValue());
-  c.setHostname(mHostnameProp->GetValue());
-  c.setPort(mPortProp->GetValue().GetInteger());
-  c.setTimeout(mTimeoutProp->GetValue().GetInteger());
-  c.setMaxInFlight(mMaxInFlightProp->GetValue().GetInteger());
-  c.setKeepAliveInterval(mKeepAliveProp->GetValue().GetInteger());
-  c.setClientId(mClientIdProp->GetValue());
-  c.setUsername(mUsernameProp->GetValue());
-  c.setPassword(mPasswordProp->GetValue());
-  c.setAutoReconnect(mAutoReconnectProp->GetValue());
-  return c;
+  return ValueObjects::BrokerOptions {
+    mAutoReconnectProp->GetValue(),
+    mHostnameProp->GetValue(),
+    mClientIdProp->GetValue(),
+    mUsernameProp->GetValue(),
+    mPasswordProp->GetValue(),
+    (unsigned)mKeepAliveProp->GetValue().GetLong(),
+    (unsigned)mMaxInFlightProp->GetValue().GetInteger(),
+    (unsigned)mPortProp->GetValue().GetInteger(),
+    (unsigned)mTimeoutProp->GetValue().GetInteger(),
+  };
 }
