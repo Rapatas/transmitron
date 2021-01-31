@@ -197,8 +197,8 @@ ValueObjects::BrokerOptions Homepage::optionsFromPropertyGrid() const
 {
   return ValueObjects::BrokerOptions {
     mAutoReconnectProp->GetValue(),
-    mHostnameProp->GetValue(),
     mClientIdProp->GetValue(),
+    mHostnameProp->GetValue(),
     mUsernameProp->GetValue(),
     mPasswordProp->GetValue(),
     (unsigned)mKeepAliveProp->GetValue().GetLong(),
