@@ -69,7 +69,6 @@ private:
     unsigned int col
   ) override;
 
-
   // SubscriptionData::Observer interface.
   void onMessage(
     Types::SubscriptionData *subscriptionData,

@@ -8,30 +8,49 @@ using namespace Transmitron::Models;
 
 Snippets::Snippets()
 {
-  for (size_t i = 0; i != 10; ++i)
+  mRoot = new Types::SnippetNode(nullptr, "Root this is");
+  for (size_t p = 0; p != 10; ++p)
   {
-    mSnippets.push_back(new std::string("lorem ipsum"));
+    auto f = new Types::SnippetNode(mRoot, "Parent - " + std::to_string(p));
+
+    for (size_t i = 0; i != 10; ++i)
+    {
+      auto message = std::make_unique<MQTT::Message>();
+      message->topic = "sample/topic/here";
+      message->payload = R"({"lorem":{"key":"value"}})";
+      message->qos = MQTT::QoS::AtLeastOnce;
+      message->retained = false;
+
+      auto s = new Types::SnippetNode(
+        f,
+        "some name - " + std::to_string(i),
+        std::move(message)
+      );
+    }
   }
+
 }
 
 Snippets::~Snippets()
 {
-  for (const auto &s : mSnippets)
+  if (mRoot != nullptr)
   {
-    delete s;
+    delete mRoot;
   }
 }
 
 unsigned Snippets::GetColumnCount() const
 {
-  return mSnippets.size();
+  return static_cast<unsigned>(Column::Max);
 }
 
 wxString Snippets::GetColumnType(unsigned int col) const
 {
   switch ((Column)col)
   {
-    case Column::Name: { return wxDataViewTextRenderer::GetDefaultType(); } break;
+    case Column::Name: {
+      return wxDataViewTextRenderer::GetDefaultType();
+    } break;
     default: { return "string"; }
   }
 }
@@ -41,9 +60,8 @@ void Snippets::GetValue(
   const wxDataViewItem &item,
   unsigned int col
 ) const {
-  auto s = static_cast<std::string*>(item.GetID());
-  wxLogMessage("Giving %s", *s);
-  variant = *s;
+  auto s = static_cast<Types::SnippetNode*>(item.GetID());
+  variant = s->getName();
 }
 
 bool Snippets::SetValue(
@@ -64,24 +82,56 @@ bool Snippets::IsEnabled(
 wxDataViewItem Snippets::GetParent(
   const wxDataViewItem &item
 ) const {
-  return wxDataViewItem(nullptr);
+
+  if (!item.IsOk())
+  {
+    return wxDataViewItem(nullptr);
+  }
+
+  auto node = static_cast<Types::SnippetNode*>(item.GetID());
+
+  if (node == mRoot)
+  {
+    return wxDataViewItem(nullptr);
+  }
+
+  auto parent = node->getParent();
+  if (parent == mRoot)
+  {
+    parent = nullptr;
+  }
+  return wxDataViewItem(static_cast<void*>(parent));
 }
 
 bool Snippets::IsContainer(
   const wxDataViewItem &item
 ) const {
-  return false;
+
+  if (!item.IsOk())
+  {
+    return true;
+  }
+
+  auto node = static_cast<Types::SnippetNode*>(item.GetID());
+  return node->getType() == Types::SnippetNode::Type::Folder;
 }
 
 unsigned int Snippets::GetChildren(
   const wxDataViewItem &parent,
   wxDataViewItemArray &array
 ) const {
-  for (const auto &s : mSnippets)
-  {
-    array.Add(wxDataViewItem(static_cast<void*>(s)));
-  }
-  return mSnippets.size();
-}
 
+  Types::SnippetNode *current = mRoot;
+
+  if (parent.IsOk())
+  {
+    current = static_cast<Types::SnippetNode*>(parent.GetID());
+  }
+
+  for (const auto &c : current->getChildren())
+  {
+    array.Add(wxDataViewItem(static_cast<void*>(c)));
+  }
+  return current->getChildren().size();
+}
 

@@ -2,6 +2,7 @@
 #define TRANSMITRON_MODELS_SNIPPETS_HPP
 
 #include <wx/dataview.h>
+#include "Transmitron/Types/SnippetNode.hpp"
 
 namespace Transmitron::Models
 {
@@ -22,7 +23,7 @@ public:
 
 private:
 
-  std::vector<std::string*> mSnippets;
+  Types::SnippetNode* mRoot;
 
   virtual unsigned GetColumnCount() const override;
   virtual wxString GetColumnType(unsigned int col) const override;

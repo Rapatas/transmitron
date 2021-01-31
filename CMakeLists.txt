@@ -28,6 +28,7 @@ add_executable(
   src/Transmitron/Tabs/Homepage.cpp
   src/Transmitron/App.cpp
   src/Transmitron/Types/Connection.cpp
+  src/Transmitron/Types/SnippetNode.cpp
   src/Transmitron/Types/SubscriptionData.cpp
   src/Transmitron/Widgets/Edit.cpp
   src/main.cpp
