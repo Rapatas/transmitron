@@ -193,5 +193,3 @@ std::string BrokerOptions::getPassword() const
 {
   return mPassword;
 }
-
-

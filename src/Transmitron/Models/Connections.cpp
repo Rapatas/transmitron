@@ -59,11 +59,7 @@ bool Connections::load(const std::string &configDir)
     try { decoded = cppcodec::base32_rfc4648::decode(entry.path().stem().u8string()); }
     catch (cppcodec::parse_error &e)
     {
-      wxLogError(
-        "Could not load '%s': %s",
-        entry.path().u8string(),
-        e.what()
-      );
+      wxLogError("Could not load '%s': %s", entry.path().u8string(), e.what());
       continue;
     }
     std::string name{decoded.begin(), decoded.end()};
@@ -78,6 +74,7 @@ bool Connections::load(const std::string &configDir)
     std::ifstream brokerOptionsFile(brokerOptionsFilepath);
     if (!brokerOptionsFile.is_open())
     {
+      wxLogWarning("Could not open '%s'", entry.path().u8string());
       continue;
     }
 
@@ -85,6 +82,7 @@ bool Connections::load(const std::string &configDir)
     buffer << brokerOptionsFile.rdbuf();
     if (!nlohmann::json::accept(buffer.str()))
     {
+      wxLogWarning("Could not parse '%s'", entry.path().u8string());
       continue;
     }
 
@@ -94,7 +92,6 @@ bool Connections::load(const std::string &configDir)
     Types::Connection *connection = nullptr;
     connection = new Types::Connection(name, brokerOptions, true);
     mConnections.push_back(connection);
-    wxLogMessage("Success: %s", connection->getName());
   }
 
   return true;
