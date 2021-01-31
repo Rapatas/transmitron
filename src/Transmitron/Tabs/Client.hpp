@@ -10,6 +10,7 @@
 #include "Transmitron/Events/Message.hpp"
 #include "Transmitron/Models/History.hpp"
 #include "Transmitron/Models/Subscriptions.hpp"
+#include "Transmitron/Models/Snippets.hpp"
 #include "Transmitron/Types/Connection.hpp"
 #include "Transmitron/Widgets/Edit.hpp"
 
@@ -77,6 +78,11 @@ private:
   Models::Subscriptions *mSubscriptionsModel;
   wxDataViewCtrl *mSubscriptionsCtrl;
 
+  // Snippets:
+  wxPanel *mSnippets;
+  Models::Snippets *mSnippetsModel;
+  wxDataViewCtrl *mSnippetsCtrl;
+
   std::shared_ptr<MQTT::Client> mClient;
 
   void setupPanelConnect(wxWindow *parent);
@@ -84,6 +90,7 @@ private:
   void setupPanelHistory(wxWindow *parent);
   void setupPanelPreview(wxWindow *parent);
   void setupPanelPublish(wxWindow *parent);
+  void setupPanelSnippets(wxWindow *parent);
 
   void onClose(wxCloseEvent &event);
   void onConnectClicked(wxCommandEvent &event);
@@ -99,8 +106,9 @@ private:
   void onMessageAdded(Events::Message &event);
 
   wxSplitterWindow *mSplitLeft;
-  wxSplitterWindow *mSplitRight;
   wxSplitterWindow *mSplitCenter;
+  wxSplitterWindow *mSplitRight;
+  wxSplitterWindow *mSplitVertical;
 
 #if BUILD_DOCKING
 
