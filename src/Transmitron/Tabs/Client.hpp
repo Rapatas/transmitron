@@ -29,7 +29,7 @@ public:
 
   Client(
     wxWindow* parent = nullptr,
-    const Types::Connection &connection = {}
+    const Types::Connection &connection = Types::Connection{}
   );
   ~Client();
 
@@ -105,10 +105,10 @@ private:
   void onMessageAddedSync(Events::Message &event);
   void onMessageAdded(Events::Message &event);
 
-  wxSplitterWindow *mSplitLeft;
+  wxSplitterWindow *mSplitTop;
   wxSplitterWindow *mSplitCenter;
-  wxSplitterWindow *mSplitRight;
-  wxSplitterWindow *mSplitVertical;
+  wxSplitterWindow *mSplitBottom;
+  wxSplitterWindow *mSplitHistory;
 
 #if BUILD_DOCKING
 

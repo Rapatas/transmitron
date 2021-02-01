@@ -24,30 +24,30 @@ Client::Client(
 
 #if not BUILD_DOCKING
 
-  mSplitLeft = new wxSplitterWindow(this);
-  mSplitCenter = new wxSplitterWindow(mSplitLeft);
-  mSplitRight = new wxSplitterWindow(mSplitCenter);
-  mSplitVertical = new wxSplitterWindow(mSplitRight);
+  mSplitCenter = new wxSplitterWindow(this);
+  mSplitTop = new wxSplitterWindow(mSplitCenter);
+  mSplitBottom = new wxSplitterWindow(mSplitCenter);
+  mSplitHistory = new wxSplitterWindow(mSplitTop);
 
-  mSplitLeft->SetMinimumPaneSize(100);
+  mSplitTop->SetMinimumPaneSize(100);
   mSplitCenter->SetMinimumPaneSize(100);
-  mSplitRight->SetMinimumPaneSize(100);
-  mSplitVertical->SetMinimumPaneSize(100);
+  mSplitBottom->SetMinimumPaneSize(100);
+  mSplitHistory->SetMinimumPaneSize(100);
 
-  mSplitLeft->SetSashGravity(0.25);
-  mSplitCenter->SetSashGravity(0.3333);
-  mSplitRight->SetSashGravity(0.5);
+  mSplitCenter->SetSashGravity(0.5);
+  mSplitTop->SetSashGravity(0.5);
+  mSplitBottom->SetSashGravity(0.5);
 
   setupPanelConnect(this);
-  setupPanelPublish(mSplitCenter);
-  setupPanelHistory(mSplitVertical);
-  setupPanelSubscriptions(mSplitVertical);
-  setupPanelPreview(mSplitRight);
-  setupPanelSnippets(mSplitLeft);
+  setupPanelPublish(mSplitBottom);
+  setupPanelHistory(mSplitHistory);
+  setupPanelSubscriptions(mSplitHistory);
+  setupPanelPreview(mSplitTop);
+  setupPanelSnippets(mSplitBottom);
 
   auto s = new wxBoxSizer(wxVERTICAL);
   s->Add(mConnectionBar, 0, wxEXPAND);
-  s->Add(mSplitLeft, 1, wxEXPAND);
+  s->Add(mSplitCenter, 1, wxEXPAND);
   SetSizer(s);
 
 #else
@@ -57,42 +57,49 @@ Client::Client(
   setupPanelHistory(this);
   setupPanelSubscriptions(this);
   setupPanelPreview(this);
+  setupPanelSnippets(this);
 
   wxAuiPaneInfo connectionInfo;
   wxAuiPaneInfo historyInfo;
   wxAuiPaneInfo previewInfo;
   wxAuiPaneInfo publishInfo;
   wxAuiPaneInfo subscriptionsInfo;
+  wxAuiPaneInfo snippetsInfo;
 
   connectionInfo.Caption("Connection");
   historyInfo.Caption("History");
   previewInfo.Caption("Preview");
   publishInfo.Caption("Publish");
   subscriptionsInfo.Caption("Subscriptions");
+  snippetsInfo.Caption("Snippets");
 
   connectionInfo.Movable(true);
   historyInfo.Movable(true);
   previewInfo.Movable(true);
   publishInfo.Movable(true);
   subscriptionsInfo.Movable(true);
+  snippetsInfo.Movable(true);
 
   connectionInfo.Floatable(true);
   historyInfo.Floatable(true);
   previewInfo.Floatable(true);
   publishInfo.Floatable(true);
   subscriptionsInfo.Floatable(true);
+  snippetsInfo.Floatable(true);
 
   previewInfo.Center();
   connectionInfo.Left();
   historyInfo.Left();
   publishInfo.Left();
   subscriptionsInfo.Left();
+  snippetsInfo.Left();
 
   previewInfo.Layer(0);
   connectionInfo.Layer(1);
   historyInfo.Layer(1);
   publishInfo.Layer(2);
   subscriptionsInfo.Layer(1);
+  snippetsInfo.Layer(3);
 
   publishInfo.BestSize(wxSize(300, 500));
   connectionInfo.MaxSize(wxSize(300, 80));
@@ -104,6 +111,7 @@ Client::Client(
   mAuiMan.AddPane(mPublish,    publishInfo);
   mAuiMan.AddPane(mHistory,       historyInfo);
   mAuiMan.AddPane(mPreview,       previewInfo);
+  mAuiMan.AddPane(mSnippets,      snippetsInfo);
   mAuiMan.Update();
 
 #endif
@@ -140,7 +148,7 @@ void Client::setupPanelHistory(wxWindow *parent)
 
   wxFont font(wxFontInfo(9).FaceName("Consolas"));
 
-  mHistory = new wxPanel(parent, -1, wxDefaultPosition, wxSize(200, 150));
+  mHistory = new wxPanel(parent, -1, wxDefaultPosition);
 
   mHistoryCtrl = new wxDataViewCtrl(
     mHistory,
@@ -206,7 +214,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
   wxFont font(wxFontInfo(9).FaceName("Consolas"));
 
-  mSubscriptions = new wxPanel(parent, -1, wxDefaultPosition, wxSize(200, 150));
+  mSubscriptions = new wxPanel(parent, -1, wxDefaultPosition);
 
   mSubscriptionsCtrl = new wxDataViewListCtrl(mSubscriptions, -1, wxDefaultPosition, wxDefaultSize, wxDV_NO_HEADER);
   mSubscriptionsCtrl->AppendColumn(icon);
@@ -485,13 +493,12 @@ void Client::onMessageAdded(Events::Message &event)
 void Client::resize() const
 {
 #if not BUILD_DOCKING
-  int widthQuarter = GetSize().x / 4;
-  int heightThird = GetSize().y / 3;
 
-  mSplitLeft->SplitVertically(mSnippets, mSplitCenter, widthQuarter);
-  mSplitCenter->SplitVertically(mPublish, mSplitRight, widthQuarter);
-  mSplitVertical->SplitHorizontally(mSubscriptions, mHistory, heightThird);
-  mSplitRight->SplitVertically(mSplitVertical, mPreview);
+  mSplitCenter->SplitHorizontally(mSplitTop, mSplitBottom);
+  mSplitTop->SplitVertically(mSplitHistory, mPreview);
+  mSplitBottom->SplitVertically(mSnippets, mPublish);
+  mSplitHistory->SplitHorizontally(mSubscriptions, mHistory);
+
 #endif
 }
 

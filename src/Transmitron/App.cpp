@@ -38,7 +38,8 @@ bool App::OnInit()
   wxImageList * il = new wxImageList;
   il->Add(*bin2c_plus_18x18_png);
 
-  auto frame = new wxFrame(nullptr, -1, getProjectName(), wxDefaultPosition, wxSize(800, 500));
+  auto frame = new wxFrame(nullptr, -1, getProjectName(), wxDefaultPosition, wxSize(600, 600));
+  frame->SetMinSize(wxSize(400, 400));
 
   mNote = new wxAuiNotebook(frame, -1);
   mNote->SetImageList(il);
