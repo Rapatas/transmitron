@@ -25,19 +25,25 @@ Client::Client(
 #if not BUILD_DOCKING
 
   mSplitLeft = new wxSplitterWindow(this);
-  mSplitRight = new wxSplitterWindow(mSplitLeft);
-  mSplitCenter = new wxSplitterWindow(mSplitRight);
+  mSplitCenter = new wxSplitterWindow(mSplitLeft);
+  mSplitRight = new wxSplitterWindow(mSplitCenter);
+  mSplitVertical = new wxSplitterWindow(mSplitRight);
+
   mSplitLeft->SetMinimumPaneSize(100);
-  mSplitRight->SetMinimumPaneSize(100);
   mSplitCenter->SetMinimumPaneSize(100);
-  mSplitLeft->SetSashGravity(0.3333);
+  mSplitRight->SetMinimumPaneSize(100);
+  mSplitVertical->SetMinimumPaneSize(100);
+
+  mSplitLeft->SetSashGravity(0.25);
+  mSplitCenter->SetSashGravity(0.3333);
   mSplitRight->SetSashGravity(0.5);
 
   setupPanelConnect(this);
-  setupPanelPublish(mSplitLeft);
-  setupPanelHistory(mSplitCenter);
-  setupPanelSubscriptions(mSplitCenter);
+  setupPanelPublish(mSplitCenter);
+  setupPanelHistory(mSplitVertical);
+  setupPanelSubscriptions(mSplitVertical);
   setupPanelPreview(mSplitRight);
+  setupPanelSnippets(mSplitLeft);
 
   auto s = new wxBoxSizer(wxVERTICAL);
   s->Add(mConnectionBar, 0, wxEXPAND);
@@ -243,6 +249,32 @@ void Client::setupPanelPublish(wxWindow *parent)
   mPublish = new Widgets::Edit(parent);
 
   mPublish->Bind(wxEVT_BUTTON, &Client::onPublishClicked, this);
+}
+
+void Client::setupPanelSnippets(wxWindow *parent)
+{
+  wxDataViewColumn* const name = new wxDataViewColumn(
+    L"name",
+    new wxDataViewTextRenderer(),
+    (unsigned)Models::Snippets::Column::Name,
+    wxCOL_WIDTH_AUTOSIZE,
+    wxALIGN_LEFT
+  );
+
+  mSnippets = new wxPanel(parent, -1);
+
+  mSnippetsCtrl = new wxDataViewListCtrl(mSnippets, -1, wxDefaultPosition, wxDefaultSize, wxDV_NO_HEADER);
+  mSnippetsCtrl->AppendColumn(name);
+
+  mSnippetsModel = new Models::Snippets;
+  mSnippetsCtrl->AssociateModel(mSnippetsModel);
+
+  wxFont font(wxFontInfo(9).FaceName("Consolas"));
+  mSnippetsCtrl->SetFont(font);
+
+  wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
+  vsizer->Add(mSnippetsCtrl, 1, wxEXPAND);
+  mSnippets->SetSizer(vsizer);
 }
 
 void Client::onPublishClicked(wxCommandEvent &event)
@@ -453,12 +485,13 @@ void Client::onMessageAdded(Events::Message &event)
 void Client::resize() const
 {
 #if not BUILD_DOCKING
-  int widthThird = GetSize().x / 3;
+  int widthQuarter = GetSize().x / 4;
   int heightThird = GetSize().y / 3;
 
-  mSplitLeft->SplitVertically(mPublish, mSplitRight, widthThird);
-  mSplitCenter->SplitHorizontally(mSubscriptions, mHistory, heightThird);
-  mSplitRight->SplitVertically(mSplitCenter, mPreview);
+  mSplitLeft->SplitVertically(mSnippets, mSplitCenter, widthQuarter);
+  mSplitCenter->SplitVertically(mPublish, mSplitRight, widthQuarter);
+  mSplitVertical->SplitHorizontally(mSubscriptions, mHistory, heightThird);
+  mSplitRight->SplitVertically(mSplitVertical, mPreview);
 #endif
 }
 

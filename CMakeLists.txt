@@ -17,6 +17,7 @@ add_executable(
   src/Transmitron/Models/Connections.cpp
   src/Transmitron/Models/History.cpp
   src/Transmitron/Models/Subscriptions.cpp
+  src/Transmitron/Models/Snippets.cpp
   src/Transmitron/Resources/pin/not-pinned-18x18.cpp
   src/Transmitron/Resources/pin/pinned-18x18.cpp
   src/Transmitron/Resources/plus/plus-18x18.cpp
@@ -27,6 +28,7 @@ add_executable(
   src/Transmitron/Tabs/Client.cpp
   src/Transmitron/Tabs/Homepage.cpp
   src/Transmitron/Types/Connection.cpp
+  src/Transmitron/Types/SnippetNode.cpp
   src/Transmitron/Types/SubscriptionData.cpp
   src/Transmitron/ValueObjects/BrokerOptions.cpp
   src/Transmitron/Widgets/Edit.cpp
