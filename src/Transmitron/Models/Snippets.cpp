@@ -1,6 +1,7 @@
 #include "Snippets.hpp"
 
 #include <wx/log.h>
+#include <fmt/format.h>
 
 #define wxLOG_COMPONENT "models/snippets"
 
@@ -8,10 +9,28 @@ using namespace Transmitron::Models;
 
 Snippets::Snippets()
 {
-  mRoot = new Types::SnippetNode(nullptr, "Root this is");
+  Node root {
+    0,
+    "_",
+    Node::Type::Folder,
+    {},
+    nullptr
+  };
+
+  mNodes.push_back(std::move(root));
+
   for (size_t p = 0; p != 10; ++p)
   {
-    auto f = new Types::SnippetNode(mRoot, "Parent - " + std::to_string(p));
+    Node parent {
+      0,
+      fmt::format("Parent - {}", p),
+      Node::Type::Folder,
+      {},
+      nullptr
+    };
+    mNodes.push_back(std::move(parent));
+    Node::Index_t currentParent = mNodes.size() - 1;
+    mNodes.at(0).children.push_back(currentParent);
 
     for (size_t i = 0; i != 10; ++i)
     {
@@ -21,21 +40,17 @@ Snippets::Snippets()
       message->qos = MQTT::QoS::AtLeastOnce;
       message->retained = false;
 
-      auto s = new Types::SnippetNode(
-        f,
-        "some name - " + std::to_string(i),
+      Node snip {
+        currentParent,
+        fmt::format("Snippet - {}", i),
+        Node::Type::Snippet,
+        {},
         std::move(message)
-      );
+      };
+
+      mNodes.push_back(std::move(snip));
+      mNodes.at(currentParent).children.push_back(mNodes.size() - 1);
     }
-  }
-
-}
-
-Snippets::~Snippets()
-{
-  if (mRoot != nullptr)
-  {
-    delete mRoot;
   }
 }
 
@@ -60,8 +75,8 @@ void Snippets::GetValue(
   const wxDataViewItem &item,
   unsigned int col
 ) const {
-  auto s = static_cast<Types::SnippetNode*>(item.GetID());
-  variant = s->getName();
+  auto index = toIndex(item);
+  variant = mNodes.at(index).name;
 }
 
 bool Snippets::SetValue(
@@ -88,19 +103,16 @@ wxDataViewItem Snippets::GetParent(
     return wxDataViewItem(nullptr);
   }
 
-  auto node = static_cast<Types::SnippetNode*>(item.GetID());
+  auto index = toIndex(item);
 
-  if (node == mRoot)
+  if (index == 0)
   {
     return wxDataViewItem(nullptr);
   }
 
-  auto parent = node->getParent();
-  if (parent == mRoot)
-  {
-    parent = nullptr;
-  }
-  return wxDataViewItem(static_cast<void*>(parent));
+  auto parent = mNodes.at(index).parent;
+
+  return toItem(parent);
 }
 
 bool Snippets::IsContainer(
@@ -112,8 +124,8 @@ bool Snippets::IsContainer(
     return true;
   }
 
-  auto node = static_cast<Types::SnippetNode*>(item.GetID());
-  return node->getType() == Types::SnippetNode::Type::Folder;
+  const auto &node = mNodes.at(toIndex(item));
+  return node.type == Node::Type::Folder;
 }
 
 unsigned int Snippets::GetChildren(
@@ -121,17 +133,29 @@ unsigned int Snippets::GetChildren(
   wxDataViewItemArray &array
 ) const {
 
-  Types::SnippetNode *current = mRoot;
+  Node::Index_t index = 0;
 
   if (parent.IsOk())
   {
-    current = static_cast<Types::SnippetNode*>(parent.GetID());
+    index = toIndex(parent);
   }
 
-  for (const auto &c : current->getChildren())
+  const auto &node = mNodes.at(index);
+
+  for (auto i : node.children)
   {
-    array.Add(wxDataViewItem(static_cast<void*>(c)));
+    array.Add(toItem(i));
   }
-  return current->getChildren().size();
+  return node.children.size();
+}
+
+Snippets::Node::Index_t Snippets::toIndex(const wxDataViewItem &item) const
+{
+  return reinterpret_cast<Node::Index_t>(item.GetID());
+}
+
+wxDataViewItem Snippets::toItem(Node::Index_t index) const
+{
+  return wxDataViewItem(reinterpret_cast<void*>(index));
 }
 
