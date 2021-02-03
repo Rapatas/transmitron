@@ -1,5 +1,6 @@
 #include "BrokerOptions.hpp"
 #include <fmt/format.h>
+#include "Helpers/Helpers.hpp"
 
 using namespace Transmitron::ValueObjects;
 
@@ -47,53 +48,10 @@ BrokerOptions::BrokerOptions(
   }
 }
 
-template<>
-std::optional<unsigned> BrokerOptions::extract<unsigned>(
-  const nlohmann::json &data,
-  const std::string &key
-) {
-  auto it = data.find(key);
-  if (
-    it == std::end(data)
-    || it->type() != nlohmann::json::value_t::number_unsigned
-  ) {
-    return std::nullopt;
-  }
-  return it->get<unsigned>();
-}
-
-template<>
-std::optional<std::string> BrokerOptions::extract<std::string>(
-  const nlohmann::json &data,
-  const std::string &key
-) {
-  auto it = data.find(key);
-  if (
-    it == std::end(data)
-    || it->type() != nlohmann::json::value_t::string
-  ) {
-    return std::nullopt;
-  }
-  return it->get<std::string>();
-}
-
-template<>
-std::optional<bool> BrokerOptions::extract<bool>(
-  const nlohmann::json &data,
-  const std::string &key
-) {
-  auto it = data.find(key);
-  if (
-    it == std::end(data)
-    || it->type() != nlohmann::json::value_t::boolean
-  ) {
-    return std::nullopt;
-  }
-  return it->get<bool>();
-}
-
 BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data)
 {
+  using namespace Helpers;
+
   bool autoReconnect = extract<bool>(data, "autoReconnect")
     .value_or(defaults.getAutoReconnect());
 

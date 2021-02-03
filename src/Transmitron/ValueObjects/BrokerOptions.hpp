@@ -52,12 +52,6 @@ private:
   unsigned mMaxInFlight;
   unsigned mPort;
   unsigned mTimeout;
-
-  template<typename T>
-  static std::optional<T> extract(
-    const nlohmann::json &data,
-    const std::string &key
-  );
 };
 
 }

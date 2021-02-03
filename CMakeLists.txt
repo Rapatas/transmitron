@@ -11,13 +11,14 @@ set(INFO_POST_CONF ${CMAKE_CURRENT_BINARY_DIR}/Transmitron/Info.cpp)
 add_executable(
   ${PROJECT_NAME}
   ${INFO_POST_CONF}
+  src/Helpers/Helpers.cpp
   src/MQTT/Client.cpp
   src/MQTT/Subscription.cpp
   src/Transmitron/App.cpp
   src/Transmitron/Models/Connections.cpp
   src/Transmitron/Models/History.cpp
-  src/Transmitron/Models/Subscriptions.cpp
   src/Transmitron/Models/Snippets.cpp
+  src/Transmitron/Models/Subscriptions.cpp
   src/Transmitron/Resources/pin/not-pinned-18x18.cpp
   src/Transmitron/Resources/pin/pinned-18x18.cpp
   src/Transmitron/Resources/plus/plus-18x18.cpp
