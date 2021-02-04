@@ -16,13 +16,15 @@ public:
   explicit Connection(
     std::string name = "New connection",
     ValueObjects::BrokerOptions brokerOptions = ValueObjects::BrokerOptions{},
-    bool saved = false
+    bool saved = false,
+    std::filesystem::path path = {}
   );
   virtual ~Connection() = default;
 
   ValueObjects::BrokerOptions getBrokerOptions() const;
   bool getSaved() const;
   std::string getName() const;
+  std::filesystem::path getPath() const;
 
   void setBrokerOptions(ValueObjects::BrokerOptions brokerOptions);
   void setSaved(bool saved);
@@ -33,6 +35,7 @@ private:
   ValueObjects::BrokerOptions mBrokerOptions;
   bool mSaved;
   std::string mName;
+  std::filesystem::path mPath;
 
 };
 

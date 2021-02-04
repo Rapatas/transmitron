@@ -94,7 +94,7 @@ bool Connections::load(const std::string &configDir)
     auto brokerOptions = ValueObjects::BrokerOptions::fromJson(j);
 
     mConnections.push_back(
-      std::make_shared<Types::Connection>(name, brokerOptions, true)
+      std::make_shared<Types::Connection>(name, brokerOptions, true, entry.path())
     );
   }
 

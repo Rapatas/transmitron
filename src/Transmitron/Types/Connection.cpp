@@ -9,11 +9,13 @@ using namespace Transmitron;
 Connection::Connection(
   std::string name,
   ValueObjects::BrokerOptions brokerOptions,
-  bool saved
+  bool saved,
+  std::filesystem::path path
 ) :
   mSaved(saved),
   mName(std::move(name)),
-  mBrokerOptions(std::move(brokerOptions))
+  mBrokerOptions(std::move(brokerOptions)),
+  mPath(std::move(path))
 {}
 
 ValueObjects::BrokerOptions Connection::getBrokerOptions() const
@@ -31,6 +33,11 @@ std::string Connection::getName() const
   return mName;
 }
 
+std::filesystem::path Connection::getPath() const
+{
+  return mPath;
+}
+
 void Connection::setBrokerOptions(ValueObjects::BrokerOptions brokerOptions)
 {
   mBrokerOptions = std::move(brokerOptions);
@@ -45,3 +52,4 @@ void Connection::setName(std::string name)
 {
   mName = std::move(name);
 }
+
