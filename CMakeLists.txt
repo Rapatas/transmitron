@@ -11,7 +11,6 @@ set(INFO_POST_CONF ${CMAKE_CURRENT_BINARY_DIR}/Transmitron/Info.cpp)
 add_executable(
   ${PROJECT_NAME}
   ${INFO_POST_CONF}
-  src/Helpers/Helpers.cpp
   src/MQTT/Client.cpp
   src/MQTT/Subscription.cpp
   src/Transmitron/App.cpp
