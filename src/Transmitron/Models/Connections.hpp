@@ -21,7 +21,7 @@ public:
   };
 
   explicit Connections();
-  virtual ~Connections();
+  virtual ~Connections() = default;
 
   bool load(const std::string &configDir);
 
@@ -34,14 +34,14 @@ public:
     const std::string &name
   );
   wxDataViewItem createConnection();
-  Types::Connection getConnection(wxDataViewItem &item) const;
+  std::shared_ptr<Types::Connection> getConnection(const wxDataViewItem &item) const;
 
 private:
 
   static constexpr const char *BrokerOptionsFilename =
     "broker-options.json";
 
-  std::vector<Types::Connection*> mConnections;
+  std::vector<std::shared_ptr<Types::Connection>> mConnections;
   std::string mConnectionsDir;
 
   // wxDataViewModel interface.
@@ -73,6 +73,9 @@ private:
   ) const override;
 
   std::string toDir(const std::string &name) const;
+
+  static size_t toIndex(const wxDataViewItem &item);
+  static wxDataViewItem toItem(size_t index);
 };
 
 }

@@ -11,14 +11,9 @@ namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 using namespace Transmitron;
 
-Connections::Connections() {}
-
-Connections::~Connections()
+Connections::Connections()
 {
-  for (const auto &c : mConnections)
-  {
-    delete c;
-  }
+  mConnections.push_back(nullptr);
 }
 
 bool Connections::load(const std::string &configDir)
@@ -56,10 +51,19 @@ bool Connections::load(const std::string &configDir)
 
     // Get name.
     std::vector<uint8_t> decoded;
-    try { decoded = cppcodec::base32_rfc4648::decode(entry.path().stem().u8string()); }
+    try
+    {
+      decoded = cppcodec::base32_rfc4648::decode(
+        entry.path().stem().u8string()
+      );
+    }
     catch (cppcodec::parse_error &e)
     {
-      wxLogError("Could not load '%s': %s", entry.path().u8string(), e.what());
+      wxLogError(
+        "Could not decode '%s': %s",
+        entry.path().u8string(),
+        e.what()
+      );
       continue;
     }
     std::string name{decoded.begin(), decoded.end()};
@@ -89,9 +93,9 @@ bool Connections::load(const std::string &configDir)
     auto j = nlohmann::json::parse(buffer.str());
     auto brokerOptions = ValueObjects::BrokerOptions::fromJson(j);
 
-    Types::Connection *connection = nullptr;
-    connection = new Types::Connection(name, brokerOptions, true);
-    mConnections.push_back(connection);
+    mConnections.push_back(
+      std::make_shared<Types::Connection>(name, brokerOptions, true)
+    );
   }
 
   return true;
@@ -101,7 +105,7 @@ bool Connections::updateBrokerOptions(
   wxDataViewItem &item,
   const ValueObjects::BrokerOptions &brokerOptions
 ) {
-  auto connection = reinterpret_cast<Types::Connection*>(item.GetID());
+  const auto &connection =  mConnections.at(toIndex(item));
   connection->setBrokerOptions(brokerOptions);
 
   std::string dir = toDir(connection->getName());
@@ -141,7 +145,7 @@ bool Connections::updateName(
   wxDataViewItem &item,
   const std::string &name
 ) {
-  auto connection = reinterpret_cast<Types::Connection*>(item.GetID());
+  const auto &connection =  mConnections.at(toIndex(item));
   if (connection->getName() == name)
   {
     return true;
@@ -162,7 +166,7 @@ bool Connections::updateName(
 
 wxDataViewItem Connections::createConnection()
 {
-  auto connection = new Types::Connection;
+  auto connection = std::make_shared<Types::Connection>();
   unsigned postfix = 0;
 
   std::string uniqueName = connection->getName();
@@ -170,7 +174,7 @@ wxDataViewItem Connections::createConnection()
   while (std::any_of(
       std::begin(mConnections),
       std::end(mConnections),
-      [=](Types::Connection *connection)
+      [=](auto connection)
       {
         return connection->getName() == uniqueName;
       }
@@ -183,15 +187,15 @@ wxDataViewItem Connections::createConnection()
   mConnections.push_back(connection);
 
   wxDataViewItem parent(nullptr);
-  wxDataViewItem item(reinterpret_cast<void*>(mConnections.back()));
+  auto item = toItem(mConnections.size() - 1);
   ItemAdded(parent, item);
 
   return item;
 }
 
-Types::Connection Connections::getConnection(wxDataViewItem &item) const
+std::shared_ptr<Types::Connection> Connections::getConnection(const wxDataViewItem &item) const
 {
-  return *static_cast<Types::Connection*>(item.GetID());
+  return mConnections.at(toIndex(item));
 }
 
 unsigned Connections::GetColumnCount() const
@@ -214,17 +218,17 @@ void Connections::GetValue(
   const wxDataViewItem &item,
   unsigned int col
 ) const {
-  auto c = static_cast<Types::Connection*>(item.GetID());
+  const auto &connection = mConnections.at(toIndex(item));
 
   switch ((Column)col) {
     case Column::Name: {
-      variant = c->getName();
+      variant = connection->getName();
     } break;
     case Column::URL: {
       variant =
-        c->getBrokerOptions().getHostname()
+        connection->getBrokerOptions().getHostname()
         + ":"
-        + std::to_string(c->getBrokerOptions().getPort());
+        + std::to_string(connection->getBrokerOptions().getPort());
     } break;
     default: {}
   }
@@ -254,6 +258,10 @@ wxDataViewItem Connections::GetParent(
 bool Connections::IsContainer(
   const wxDataViewItem &item
 ) const {
+  if (!item.IsOk())
+  {
+    return true;
+  }
   return false;
 }
 
@@ -261,12 +269,11 @@ unsigned int Connections::GetChildren(
   const wxDataViewItem &parent,
   wxDataViewItemArray &array
 ) const {
-
-  for (const auto &s : mConnections)
+  for (size_t i = 1; i != mConnections.size(); ++i)
   {
-    array.Add(wxDataViewItem(static_cast<void*>(s)));
+    array.Add(toItem(i));
   }
-  return mConnections.size();
+  return mConnections.size() - 1;
 }
 
 std::string Connections::toDir(const std::string &name) const
@@ -275,3 +282,14 @@ std::string Connections::toDir(const std::string &name) const
   std::string encoded{std::begin(encV), std::end(encV)};
   return fmt::format("{}/{}", mConnectionsDir, encoded);
 }
+
+size_t Connections::toIndex(const wxDataViewItem &item)
+{
+  return reinterpret_cast<size_t>(item.GetID());
+}
+
+wxDataViewItem Connections::toItem(size_t index)
+{
+  return wxDataViewItem(reinterpret_cast<void*>(index));
+}
+

@@ -114,7 +114,7 @@ void Homepage::setupConnectionForm()
 
 void Homepage::onConnectionActivated(wxDataViewEvent &event)
 {
-  auto conn = reinterpret_cast<Types::Connection*>(event.GetItem().GetID());
+  auto conn = mConnectionsModel->getConnection(event.GetItem());
   wxLogMessage(
     "Queueing event for connection at %s:%d",
     conn->getBrokerOptions().getHostname(),
@@ -122,7 +122,7 @@ void Homepage::onConnectionActivated(wxDataViewEvent &event)
   );
 
   auto ce = new Events::Connection();
-  ce->setConnection(*conn);
+  ce->setConnection(conn);
   wxQueueEvent(this, ce);
 
   event.Skip();
@@ -130,8 +130,8 @@ void Homepage::onConnectionActivated(wxDataViewEvent &event)
 
 void Homepage::onConnectionSelected(wxDataViewEvent &event)
 {
-  auto c = reinterpret_cast<Types::Connection*>(event.GetItem().GetID());
-  fillPropertyGrid(*c);
+  auto conn = mConnectionsModel->getConnection(event.GetItem());
+  fillPropertyGrid(conn);
   event.Skip();
 }
 
@@ -142,8 +142,8 @@ void Homepage::onConnectClicked(wxCommandEvent &event)
 
   wxLogMessage(
     "Queueing event for connection at %s:%d",
-    connection.getBrokerOptions().getHostname(),
-    connection.getBrokerOptions().getPort()
+    connection->getBrokerOptions().getHostname(),
+    connection->getBrokerOptions().getPort()
   );
 
   auto ce = new Events::Connection();
@@ -175,18 +175,18 @@ void Homepage::onNewConnectionClicked(wxCommandEvent &event)
   fillPropertyGrid(mConnectionsModel->getConnection(item));
 }
 
-void Homepage::fillPropertyGrid(const Types::Connection &c)
+void Homepage::fillPropertyGrid(std::shared_ptr<Types::Connection> c)
 {
-  mNameProp->SetValue(c.getName());
-  mHostnameProp->SetValue(c.getBrokerOptions().getHostname());
-  mPortProp->SetValue((int)c.getBrokerOptions().getPort());
-  mTimeoutProp->SetValue((int)c.getBrokerOptions().getTimeout());
-  mMaxInFlightProp->SetValue((int)c.getBrokerOptions().getMaxInFlight());
-  mKeepAliveProp->SetValue((int)c.getBrokerOptions().getKeepAliveInterval());
-  mClientIdProp->SetValue(c.getBrokerOptions().getClientId());
-  mUsernameProp->SetValue(c.getBrokerOptions().getUsername());
-  mPasswordProp->SetValue(c.getBrokerOptions().getPassword());
-  mAutoReconnectProp->SetValue(c.getBrokerOptions().getAutoReconnect());
+  mNameProp->SetValue(c->getName());
+  mHostnameProp->SetValue(c->getBrokerOptions().getHostname());
+  mPortProp->SetValue((int)c->getBrokerOptions().getPort());
+  mTimeoutProp->SetValue((int)c->getBrokerOptions().getTimeout());
+  mMaxInFlightProp->SetValue((int)c->getBrokerOptions().getMaxInFlight());
+  mKeepAliveProp->SetValue((int)c->getBrokerOptions().getKeepAliveInterval());
+  mClientIdProp->SetValue(c->getBrokerOptions().getClientId());
+  mUsernameProp->SetValue(c->getBrokerOptions().getUsername());
+  mPasswordProp->SetValue(c->getBrokerOptions().getPassword());
+  mAutoReconnectProp->SetValue(c->getBrokerOptions().getAutoReconnect());
 
   mSave->Enable(true);
   mConnect->Enable(true);

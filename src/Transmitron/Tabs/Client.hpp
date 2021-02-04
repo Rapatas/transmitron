@@ -29,7 +29,7 @@ public:
 
   Client(
     wxWindow* parent = nullptr,
-    const Types::Connection &connection = Types::Connection{}
+    std::shared_ptr<Types::Connection> connection = nullptr
   );
   ~Client();
 
@@ -53,7 +53,7 @@ private:
     HistoryEdit,
   };
 
-  const Types::Connection mConnection;
+  std::shared_ptr<Types::Connection> mConnection;
 
   // Connection:
   wxPanel *mConnectionBar;

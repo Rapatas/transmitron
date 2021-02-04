@@ -12,7 +12,7 @@ using namespace Transmitron;
 
 Client::Client(
   wxWindow* parent,
-  const Types::Connection &connection
+  std::shared_ptr<Types::Connection> connection
 ) :
   wxPanel(parent),
   mConnection(connection)
@@ -335,8 +335,8 @@ void Client::onConnectClicked(wxCommandEvent &event)
   }
   else
   {
-    mClient->setHostname(mConnection.getBrokerOptions().getHostname());
-    mClient->setPort(mConnection.getBrokerOptions().getPort());
+    mClient->setHostname(mConnection->getBrokerOptions().getHostname());
+    mClient->setPort(mConnection->getBrokerOptions().getPort());
     mClient->connect();
   }
 }
