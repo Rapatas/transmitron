@@ -2,6 +2,7 @@
 #define TRANSMITRON_MODELS_SNIPPETS_HPP
 
 #include <memory>
+#include <filesystem>
 #include <wx/dataview.h>
 #include "MQTT/Message.hpp"
 
@@ -20,7 +21,8 @@ public:
   };
 
   explicit Snippets();
-  virtual ~Snippets() = default;
+
+  bool load(const std::string &connectionDir);
 
 private:
 
@@ -42,6 +44,9 @@ private:
   };
 
   std::vector<Node> mNodes;
+  std::string mSnippetsDir;
+
+  void loadRecursive(const std::filesystem::path &snippetsDir);
 
   virtual unsigned GetColumnCount() const override;
   virtual wxString GetColumnType(unsigned int col) const override;
@@ -70,8 +75,8 @@ private:
     wxDataViewItemArray &array
   ) const override;
 
-  Node::Index_t toIndex(const wxDataViewItem &item) const;
-  wxDataViewItem toItem(Node::Index_t index) const;
+  static Node::Index_t toIndex(const wxDataViewItem &item);
+  static wxDataViewItem toItem(Node::Index_t index);
 
 };
 

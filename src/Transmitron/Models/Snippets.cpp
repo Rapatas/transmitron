@@ -1,10 +1,15 @@
 #include "Snippets.hpp"
 
+#include <filesystem>
+#include <nlohmann/json.hpp>
+#include <fstream>
 #include <wx/log.h>
 #include <fmt/format.h>
+#include <cppcodec/base32_rfc4648.hpp>
 
 #define wxLOG_COMPONENT "models/snippets"
 
+namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 
 Snippets::Snippets()
@@ -18,38 +23,100 @@ Snippets::Snippets()
   };
 
   mNodes.push_back(std::move(root));
+}
 
-  for (size_t p = 0; p != 10; ++p)
+bool Snippets::load(const std::string &connectionDir)
+{
+  if (connectionDir.empty())
   {
-    Node parent {
-      0,
-      fmt::format("Parent - {}", p),
-      Node::Type::Folder,
-      {},
-      nullptr
-    };
-    mNodes.push_back(std::move(parent));
-    Node::Index_t currentParent = mNodes.size() - 1;
-    mNodes.at(0).children.push_back(currentParent);
+    wxLogWarning("No directory provided");
+    return false;
+  }
 
-    for (size_t i = 0; i != 10; ++i)
+  mSnippetsDir = connectionDir + "/snippets";
+
+  bool exists = fs::exists(mSnippetsDir);
+  bool isDir = fs::is_directory(mSnippetsDir);
+
+  if (exists && !isDir && !fs::remove(mSnippetsDir))
+  {
+    wxLogWarning("Could not remove file %s", mSnippetsDir);
+    return false;
+  }
+
+  if (!exists && !fs::create_directory(mSnippetsDir))
+  {
+    wxLogWarning(
+      "Could not create snippets directory: %s",
+      mSnippetsDir
+    );
+    return false;
+  }
+
+  loadRecursive(mSnippetsDir);
+
+  return true;
+}
+
+void Snippets::loadRecursive(const std::filesystem::path &snippetsDir)
+{
+  Node::Index_t currentParentIndex = mNodes.size() - 1;
+
+  for (const auto &entry : fs::directory_iterator(snippetsDir))
+  {
+    std::vector<uint8_t> decoded;
+    try { decoded = cppcodec::base32_rfc4648::decode(entry.path().stem().u8string()); }
+    catch (cppcodec::parse_error &e)
     {
-      auto message = std::make_unique<MQTT::Message>();
-      message->topic = "sample/topic/here";
-      message->payload = R"({"lorem":{"key":"value"}})";
-      message->qos = MQTT::QoS::AtLeastOnce;
-      message->retained = false;
+      wxLogError("Could not decode '%s': %s", entry.path().u8string(), e.what());
+      continue;
+    }
+    std::string name{decoded.begin(), decoded.end()};
 
-      Node snip {
-        currentParent,
-        fmt::format("Snippet - {}", i),
+    if (entry.status().type() == fs::file_type::directory)
+    {
+      Node newNode {
+        currentParentIndex,
+        name,
+        Node::Type::Folder,
+        {},
+        nullptr
+      };
+
+      mNodes.push_back(std::move(newNode));
+      mNodes[currentParentIndex].children.push_back(mNodes.size() - 1);
+      loadRecursive(entry.path());
+    }
+    else
+    {
+      std::ifstream snippetFile(entry.path());
+      if (!snippetFile.is_open())
+      {
+        wxLogWarning("Could not open '%s'", entry.path().c_str());
+        continue;
+      }
+
+      std::stringstream buffer;
+      buffer << snippetFile.rdbuf();
+      const std::string &sbuffer = buffer.str();
+      if (!nlohmann::json::accept(sbuffer))
+      {
+        wxLogWarning("Could not parse '%s'", entry.path().c_str());
+        continue;
+      }
+
+      auto j = nlohmann::json::parse(sbuffer);
+      auto message = std::make_unique<MQTT::Message>(MQTT::Message::fromJson(j));
+
+      Node newNode {
+        currentParentIndex,
+        name,
         Node::Type::Snippet,
         {},
         std::move(message)
       };
-
-      mNodes.push_back(std::move(snip));
-      mNodes.at(currentParent).children.push_back(mNodes.size() - 1);
+      mNodes.push_back(std::move(newNode));
+      mNodes[currentParentIndex].children.push_back(mNodes.size() - 1);
     }
   }
 }
@@ -149,12 +216,12 @@ unsigned int Snippets::GetChildren(
   return node.children.size();
 }
 
-Snippets::Node::Index_t Snippets::toIndex(const wxDataViewItem &item) const
+Snippets::Node::Index_t Snippets::toIndex(const wxDataViewItem &item)
 {
   return reinterpret_cast<Node::Index_t>(item.GetID());
 }
 
-wxDataViewItem Snippets::toItem(Node::Index_t index) const
+wxDataViewItem Snippets::toItem(Node::Index_t index)
 {
   return wxDataViewItem(reinterpret_cast<void*>(index));
 }

@@ -275,6 +275,7 @@ void Client::setupPanelSnippets(wxWindow *parent)
   mSnippetsCtrl->AppendColumn(name);
 
   mSnippetsModel = new Models::Snippets;
+  mSnippetsModel->load(mConnection->getPath());
   mSnippetsCtrl->AssociateModel(mSnippetsModel.get());
 
   wxFont font(wxFontInfo(9).FaceName("Consolas"));
