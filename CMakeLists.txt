@@ -12,6 +12,7 @@ add_executable(
   ${PROJECT_NAME}
   ${INFO_POST_CONF}
   src/MQTT/Client.cpp
+  src/MQTT/Message.cpp
   src/MQTT/Subscription.cpp
   src/Transmitron/App.cpp
   src/Transmitron/Models/Connections.cpp
