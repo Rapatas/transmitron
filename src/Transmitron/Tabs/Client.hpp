@@ -80,7 +80,7 @@ private:
 
   // Snippets:
   wxPanel *mSnippets;
-  Models::Snippets *mSnippetsModel;
+  wxObjectDataPtr<Models::Snippets> mSnippetsModel;
   wxDataViewCtrl *mSnippetsCtrl;
 
   std::shared_ptr<MQTT::Client> mClient;
