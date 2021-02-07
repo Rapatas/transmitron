@@ -1,5 +1,6 @@
 #include <nlohmann/json.hpp>
 #include <tinyxml2.h>
+#include <wx/clipbrd.h>
 #include "Edit.hpp"
 #include "Transmitron/Resources/send/send-18x18.hpp"
 #include "Transmitron/Resources/pin/pinned-18x18.hpp"
@@ -12,20 +13,21 @@ using namespace tinyxml2;
 using namespace nlohmann;
 using namespace Transmitron::Widgets;
 
-Edit::Edit(wxWindow* parent) :
-  wxPanel(parent)
+Edit::Edit(
+  wxWindow* parent,
+  wxWindowID id
+) :
+  wxPanel(parent, id)
 {
   mFont = wxFont(wxFontInfo(9).FaceName("Consolas"));
   setupScintilla();
+
+  mTopic = new TopicCtrl(this, -1);
 
   mFormatSelect = new wxComboBox(this, -1, "TEXT", wxDefaultPosition, wxSize(100, 25));
   mFormatSelect->Insert("TEXT", 0);
   mFormatSelect->Insert("XML", 0);
   mFormatSelect->Insert("JSON", 0);
-
-  mTopic = new wxTextCtrl(this, -1);
-  mTopic->SetHint("topic");
-  mTopic->SetFont(mFont);
 
   mTop = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   mVsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
@@ -34,7 +36,6 @@ Edit::Edit(wxWindow* parent) :
   mRetainedFalse = new wxStaticBitmap(this, -1, *bin2c_not_pinned_18x18_png);
   mRetainedFalse->SetToolTip("Not retained");
   mRetainedFalse->Bind(wxEVT_LEFT_UP, &Edit::onRetainedClicked, this);
-
   mRetainedTrue = new wxStaticBitmap(this, -1, *bin2c_pinned_18x18_png);
   mRetainedTrue->SetToolTip("Retained");
   mRetainedTrue->Bind(wxEVT_LEFT_UP, &Edit::onRetainedClicked, this);
@@ -78,9 +79,8 @@ Edit::Edit(wxWindow* parent) :
   mVsizer->Add(mBottom, 0, wxALIGN_RIGHT);
 
   SetSizer(mVsizer);
-}
 
-Edit::~Edit() {}
+}
 
 void Edit::setupScintilla()
 {
@@ -157,19 +157,8 @@ void Edit::setReadOnly(bool readonly)
   mReadOnly = readonly;
 
   mText->SetReadOnly(readonly);
+  mTopic->setReadOnly(readonly);
 
-  auto newTopic= new wxTextCtrl(this,
-    -1,
-    "",
-    wxDefaultPosition,
-    wxDefaultSize,
-    readonly ? wxTE_READONLY : 0
-  );
-  mTop->Replace(mTopic, newTopic);
-  delete mTopic;
-  mTopic = newTopic;
-  mTopic->SetHint("topic");
-  mTopic->SetFont(mFont);
 
   mPublish->Show(!readonly);
   mTop->Layout();
@@ -304,3 +293,4 @@ void Edit::onRetainedClicked(wxMouseEvent &e)
 
   setRetained(!mRetained);
 }
+

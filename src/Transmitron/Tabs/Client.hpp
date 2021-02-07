@@ -7,6 +7,7 @@
 #include <wx/tglbtn.h>
 
 #include "MQTT/Client.hpp"
+#include "Transmitron/Widgets/TopicCtrl.hpp"
 #include "Transmitron/Events/Message.hpp"
 #include "Transmitron/Models/History.hpp"
 #include "Transmitron/Models/Subscriptions.hpp"
@@ -73,7 +74,7 @@ private:
 
   // Subscriptions:
   wxBitmapButton *mSubscribe;
-  wxTextCtrl *mFilter;
+  Widgets::TopicCtrl *mFilter;
   wxPanel *mSubscriptions;
   Models::Subscriptions *mSubscriptionsModel;
   wxDataViewCtrl *mSubscriptionsCtrl;

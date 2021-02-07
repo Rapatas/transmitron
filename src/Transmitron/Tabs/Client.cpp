@@ -228,7 +228,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
   mSubscribe = new wxBitmapButton(mSubscriptions, -1, *bin2c_plus_18x18_png);
 
-  mFilter = new wxTextCtrl(mSubscriptions, -1);
+  mFilter = new Widgets::TopicCtrl(mSubscriptions, -1);
   mFilter->SetHint("subscribe");
   mFilter->SetFont(font);
 
@@ -248,13 +248,13 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
 void Client::setupPanelPreview(wxWindow *parent)
 {
-  mPreview = new Widgets::Edit(parent);
+  mPreview = new Widgets::Edit(parent, -1);
   mPreview->setReadOnly(true);
 }
 
 void Client::setupPanelPublish(wxWindow *parent)
 {
-  mPublish = new Widgets::Edit(parent);
+  mPublish = new Widgets::Edit(parent, -1);
 
   mPublish->Bind(wxEVT_BUTTON, &Client::onPublishClicked, this);
 }

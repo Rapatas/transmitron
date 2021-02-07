@@ -4,6 +4,7 @@
 #include <wx/stc/stc.h>
 #include <wx/wx.h>
 
+#include "TopicCtrl.hpp"
 #include "MQTT/Client.hpp"
 
 namespace Transmitron::Widgets
@@ -14,8 +15,11 @@ class Edit :
 {
 public:
 
-  explicit Edit(wxWindow* parent = nullptr);
-  virtual ~Edit();
+  explicit Edit(
+    wxWindow* parent,
+    wxWindowID id
+  );
+  virtual ~Edit() = default;
 
   void format();
 
@@ -43,7 +47,7 @@ private:
   wxBoxSizer *mVsizer;
   wxBoxSizer *mBottom;
 
-  wxTextCtrl *mTopic;
+  TopicCtrl *mTopic;
 
   bool mRetained;
   wxStaticBitmap *mRetainedTrue;

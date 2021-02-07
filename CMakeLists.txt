@@ -32,6 +32,7 @@ add_executable(
   src/Transmitron/Types/SubscriptionData.cpp
   src/Transmitron/ValueObjects/BrokerOptions.cpp
   src/Transmitron/Widgets/Edit.cpp
+  src/Transmitron/Widgets/TopicCtrl.cpp
   src/main.cpp
 )
 
