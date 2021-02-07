@@ -6,17 +6,24 @@
 #include "Transmitron/Resources/qos/qos-0.hpp"
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
-#include "Transmitron/Events/Message.hpp"
 
 #define wxLOG_COMPONENT "models/history"
 
 using namespace Transmitron::Models;
 using namespace Transmitron;
 
-wxDEFINE_EVENT(Events::MESSAGE_RECEIVED, Events::Message);
-
 History::History() {}
 History::~History() {}
+
+size_t History::attachObserver(Observer *observer)
+{
+  size_t id = 0;
+  do {
+    id = rand();
+  } while (mObservers.find(id) != std::end(mObservers));
+
+  return mObservers.insert(std::make_pair(id, observer)).first->first;
+}
 
 void History::insert(
   Types::SubscriptionData *sub,
@@ -31,9 +38,11 @@ void History::insert(
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
 
-    auto me = new Events::Message(Events::MESSAGE_RECEIVED);
-    me->setMessage(GetItem(mMessages.size() - 1));
-    wxQueueEvent(this, me);
+    auto item = GetItem(mMessages.size() - 1);
+    for (const auto &o : mObservers)
+    {
+      o.second->onMessage(item);
+    }
   }
 }
 

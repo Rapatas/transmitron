@@ -164,6 +164,7 @@ void Client::setupPanelHistory(wxWindow *parent)
   );
 
   mHistoryModel = new Models::History;
+  mHistoryModel->attachObserver(this);
   mHistoryCtrl->AssociateModel(mHistoryModel.get());
 
   mHistoryCtrl->SetFont(font);
@@ -179,7 +180,6 @@ void Client::setupPanelHistory(wxWindow *parent)
 
   mHistoryCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Client::onHistorySelected, this);
   mHistoryCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &Client::onHistoryContext, this);
-  mHistoryModel->Bind(Events::MESSAGE_RECEIVED, &Client::onMessageAdded, this);
 }
 
 void Client::setupPanelConnect(wxWindow *parent)
@@ -483,10 +483,8 @@ void Client::onClose(wxCloseEvent &event)
   Destroy();
 }
 
-void Client::onMessageAdded(Events::Message &event)
+void Client::onMessage(wxDataViewItem item)
 {
-  auto item = event.getMessage();
-
   mHistoryCtrl->Select(item);
   mHistoryCtrl->EnsureVisible(item);
 

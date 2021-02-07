@@ -9,7 +9,6 @@
 #include "MQTT/Client.hpp"
 #include "Transmitron/Events/Connection.hpp"
 #include "Transmitron/Widgets/TopicCtrl.hpp"
-#include "Transmitron/Events/Message.hpp"
 #include "Transmitron/Models/History.hpp"
 #include "Transmitron/Models/Subscriptions.hpp"
 #include "Transmitron/Models/Snippets.hpp"
@@ -25,6 +24,7 @@ namespace Transmitron::Tabs
 
 class Client :
   public wxPanel,
+  public Models::History::Observer,
   public MQTT::Client::Observer
 {
 public:
@@ -100,8 +100,6 @@ private:
   void onHistoryContext(wxDataViewEvent& event);
   void onContextSelected(wxCommandEvent& event);
   void onSubscriptionSelected(wxDataViewEvent &event);
-  void onMessageAddedSync(Events::Message &event);
-  void onMessageAdded(Events::Message &event);
 
   void onConnectedSync(Events::Connection &e);
   void onDisconnectedSync(Events::Connection &e);
@@ -114,6 +112,9 @@ private:
   // MQTT::Client::Observer interface.
   void onConnected() override;
   void onDisconnected() override;
+
+  // Models::History::Observer interface.
+  void onMessage(wxDataViewItem item) override;
 
 #if BUILD_DOCKING
 

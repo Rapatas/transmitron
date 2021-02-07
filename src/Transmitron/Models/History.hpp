@@ -16,6 +16,11 @@ class History :
 {
 public:
 
+  struct Observer
+  {
+    virtual void onMessage(wxDataViewItem item) {}
+  };
+
   struct Message
   {
     Types::SubscriptionData *sub;
@@ -33,6 +38,8 @@ public:
 
   explicit History();
   virtual ~History();
+
+  size_t attachObserver(Observer *observer);
 
   void insert(
     Types::SubscriptionData *sub,
@@ -72,6 +79,7 @@ private:
   std::vector<Message> mMessages;
   std::mutex mRemapMtx;
   std::vector<size_t> mRemap;
+  std::map<size_t, Observer *> mObservers;
 
 };
 
