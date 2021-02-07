@@ -9,6 +9,8 @@ namespace Transmitron::Events
 
 class Connection;
 wxDECLARE_EVENT(CONNECTION, Connection);
+wxDECLARE_EVENT(CONNECTED, Connection);
+wxDECLARE_EVENT(DISCONNECTED, Connection);
 
 class Connection : public wxCommandEvent
 {
