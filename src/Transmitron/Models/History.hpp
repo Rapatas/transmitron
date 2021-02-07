@@ -1,7 +1,6 @@
 #ifndef TRANSMITRON_MODELS_HISTORY_HPP
 #define TRANSMITRON_MODELS_HISTORY_HPP
 
-#include <mutex>
 #include <wx/dataview.h>
 #include <mqtt/message.h>
 #include "MQTT/Client.hpp"
@@ -77,7 +76,6 @@ public:
 private:
 
   std::vector<Message> mMessages;
-  std::mutex mRemapMtx;
   std::vector<size_t> mRemap;
   std::map<size_t, Observer *> mObservers;
 

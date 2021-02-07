@@ -34,7 +34,6 @@ void History::insert(
 
   if (!sub->getMuted())
   {
-    std::lock_guard<std::mutex> lock(mRemapMtx);
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
 
@@ -65,7 +64,6 @@ void History::remove(Types::SubscriptionData *sub)
 
 void History::remap()
 {
-  std::lock_guard<std::mutex> lock(mRemapMtx);
   size_t before = mRemap.size();
   mRemap.clear();
   mRemap.reserve(mMessages.size());
@@ -110,7 +108,6 @@ void History::remap()
 
 void History::refresh(Types::SubscriptionData *sub)
 {
-  std::lock_guard<std::mutex> lock(mRemapMtx);
   for (size_t i = 0; i < mRemap.size(); ++i)
   {
     if (mMessages[mRemap[i]].sub == sub)
