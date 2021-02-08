@@ -1,7 +1,6 @@
 #ifndef TRANSMITRON_MODELS_HISTORY_HPP
 #define TRANSMITRON_MODELS_HISTORY_HPP
 
-#include <mutex>
 #include <wx/dataview.h>
 #include <mqtt/message.h>
 #include "MQTT/Client.hpp"
@@ -15,6 +14,11 @@ class History :
   public wxDataViewVirtualListModel
 {
 public:
+
+  struct Observer
+  {
+    virtual void onMessage(wxDataViewItem item) {}
+  };
 
   struct Message
   {
@@ -33,6 +37,8 @@ public:
 
   explicit History();
   virtual ~History();
+
+  size_t attachObserver(Observer *observer);
 
   void insert(
     Types::SubscriptionData *sub,
@@ -70,8 +76,8 @@ public:
 private:
 
   std::vector<Message> mMessages;
-  std::mutex mRemapMtx;
   std::vector<size_t> mRemap;
+  std::map<size_t, Observer *> mObservers;
 
 };
 

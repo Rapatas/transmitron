@@ -7,8 +7,8 @@
 #include <wx/tglbtn.h>
 
 #include "MQTT/Client.hpp"
+#include "Transmitron/Events/Connection.hpp"
 #include "Transmitron/Widgets/TopicCtrl.hpp"
-#include "Transmitron/Events/Message.hpp"
 #include "Transmitron/Models/History.hpp"
 #include "Transmitron/Models/Subscriptions.hpp"
 #include "Transmitron/Models/Snippets.hpp"
@@ -24,6 +24,7 @@ namespace Transmitron::Tabs
 
 class Client :
   public wxPanel,
+  public Models::History::Observer,
   public MQTT::Client::Observer
 {
 public:
@@ -35,10 +36,6 @@ public:
   ~Client();
 
   void resize() const;
-
-  // MQTT::Client::Observer:
-  void onConnected() override;
-  void onDisconnected() override;
 
 private:
 
@@ -103,13 +100,21 @@ private:
   void onHistoryContext(wxDataViewEvent& event);
   void onContextSelected(wxCommandEvent& event);
   void onSubscriptionSelected(wxDataViewEvent &event);
-  void onMessageAddedSync(Events::Message &event);
-  void onMessageAdded(Events::Message &event);
+
+  void onConnectedSync(Events::Connection &e);
+  void onDisconnectedSync(Events::Connection &e);
 
   wxSplitterWindow *mSplitTop;
   wxSplitterWindow *mSplitCenter;
   wxSplitterWindow *mSplitBottom;
   wxSplitterWindow *mSplitHistory;
+
+  // MQTT::Client::Observer interface.
+  void onConnected() override;
+  void onDisconnected() override;
+
+  // Models::History::Observer interface.
+  void onMessage(wxDataViewItem item) override;
 
 #if BUILD_DOCKING
 

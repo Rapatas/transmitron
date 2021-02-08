@@ -4,8 +4,9 @@
 using namespace Transmitron::Types;
 using namespace Transmitron;
 
-wxDEFINE_EVENT(Events::SUB_SUBSCRIBED, Events::Subscription);
-wxDEFINE_EVENT(Events::SUB_UNSUBSCRIBED, Events::Subscription);
+wxDEFINE_EVENT(Events::SUBSCRIBED, Events::Subscription);
+wxDEFINE_EVENT(Events::UNSUBSCRIBED, Events::Subscription);
+wxDEFINE_EVENT(Events::RECEIVED, Events::Subscription);
 
 SubscriptionData::SubscriptionData(std::shared_ptr<MQTT::Subscription> sub) :
   mSub(sub),
@@ -15,36 +16,26 @@ SubscriptionData::SubscriptionData(std::shared_ptr<MQTT::Subscription> sub) :
   sub->attachObserver(this);
 }
 
-size_t SubscriptionData::attachObserver(Observer *o)
-{
-  size_t id = 0;
-  do {
-    id = rand();
-  } while (mObservers.find(id) != std::end(mObservers));
-
-  return mObservers.insert(std::make_pair(id, o)).first->first;
-}
-
 void SubscriptionData::onSubscribed()
 {
-  auto e = new Events::Subscription(Events::SUB_SUBSCRIBED);
+  auto e = new Events::Subscription(Events::SUBSCRIBED);
   e->setSubscription(this);
   wxQueueEvent(this, e);
 }
 
 void SubscriptionData::onUnsubscribed()
 {
-  auto e = new Events::Subscription(Events::SUB_UNSUBSCRIBED);
+  auto e = new Events::Subscription(Events::UNSUBSCRIBED);
   e->setSubscription(this);
   wxQueueEvent(this, e);
 }
 
 void SubscriptionData::onMessage(mqtt::const_message_ptr msg)
 {
-  for (const auto &o : mObservers)
-  {
-    o.second->onMessage(this, msg);
-  }
+  auto e = new Events::Subscription(Events::RECEIVED);
+  e->setMessage(msg);
+  e->setSubscription(this);
+  wxQueueEvent(this, e);
 }
 
 void SubscriptionData::setMuted(bool muted)

@@ -15,17 +15,7 @@ class SubscriptionData :
 {
 public:
 
-  struct Observer
-  {
-    virtual void onMessage(
-      SubscriptionData *subscriptionData,
-      mqtt::const_message_ptr msg
-    ) = 0;
-  };
-
   SubscriptionData(std::shared_ptr<MQTT::Subscription> sub);
-
-  size_t attachObserver(Observer *o);
 
   // MQTT::Subscription::Observer interface.
   void onSubscribed() override;
@@ -46,7 +36,6 @@ private:
   std::shared_ptr<MQTT::Subscription> mSub;
   wxColor mColor;
   bool mMuted;
-  std::map<size_t, Observer*> mObservers;
 
   static wxColor colorFromString(const std::string &data);
 };

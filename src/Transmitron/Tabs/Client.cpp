@@ -10,6 +10,9 @@
 using namespace Transmitron::Tabs;
 using namespace Transmitron;
 
+wxDEFINE_EVENT(Events::CONNECTED, Events::Connection);
+wxDEFINE_EVENT(Events::DISCONNECTED, Events::Connection);
+
 Client::Client(
   wxWindow* parent,
   std::shared_ptr<Types::Connection> connection
@@ -18,6 +21,8 @@ Client::Client(
   mConnection(connection)
 {
   mClient = std::make_shared<MQTT::Client>();
+  Bind(Events::CONNECTED, &Client::onConnectedSync, this);
+  Bind(Events::DISCONNECTED, &Client::onDisconnectedSync, this);
   mClient->attachObserver(this);
   Bind(wxEVT_CLOSE_WINDOW, &Client::onClose, this);
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Client::onContextSelected, this);
@@ -159,6 +164,7 @@ void Client::setupPanelHistory(wxWindow *parent)
   );
 
   mHistoryModel = new Models::History;
+  mHistoryModel->attachObserver(this);
   mHistoryCtrl->AssociateModel(mHistoryModel.get());
 
   mHistoryCtrl->SetFont(font);
@@ -174,7 +180,6 @@ void Client::setupPanelHistory(wxWindow *parent)
 
   mHistoryCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Client::onHistorySelected, this);
   mHistoryCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &Client::onHistoryContext, this);
-  mHistoryModel->Bind(Events::MESSAGE_RECEIVED, &Client::onMessageAdded, this);
 }
 
 void Client::setupPanelConnect(wxWindow *parent)
@@ -478,10 +483,8 @@ void Client::onClose(wxCloseEvent &event)
   Destroy();
 }
 
-void Client::onMessageAdded(Events::Message &event)
+void Client::onMessage(wxDataViewItem item)
 {
-  auto item = event.getMessage();
-
   mHistoryCtrl->Select(item);
   mHistoryCtrl->EnsureVisible(item);
 
@@ -505,11 +508,24 @@ void Client::resize() const
 
 void Client::onConnected()
 {
+  auto e = new Events::Connection(Events::CONNECTED);
+  wxQueueEvent(this, e);
+}
+
+void Client::onDisconnected()
+{
+  auto e = new Events::Connection(Events::DISCONNECTED);
+  wxQueueEvent(this, e);
+}
+
+void Client::onConnectedSync(Events::Connection &e)
+{
+  wxLogInfo("Handling connection in GUI thread");
   mConnect->Enable();
   mConnect->SetLabelText("Disconnect");
 }
 
-void Client::onDisconnected()
+void Client::onDisconnectedSync(Events::Connection &e)
 {
   mConnect->Enable();
   mConnect->SetLabelText("Connect");

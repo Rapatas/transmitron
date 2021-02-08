@@ -13,8 +13,7 @@ namespace Transmitron::Models
 {
 
 class Subscriptions :
-  public wxDataViewVirtualListModel,
-  public Types::SubscriptionData::Observer
+  public wxDataViewVirtualListModel
 {
 public:
 
@@ -69,14 +68,9 @@ private:
     unsigned int col
   ) override;
 
-  // SubscriptionData::Observer interface.
-  void onMessage(
-    Types::SubscriptionData *subscriptionData,
-    mqtt::const_message_ptr msg
-  ) override;
-
-  void onSubscribed(Events::Subscription&e);
-  void onUnsubscribed(Events::Subscription&e);
+  void onSubscribed(Events::Subscription &e);
+  void onUnsubscribed(Events::Subscription &e);
+  void onMessage(Events::Subscription &e);
 };
 
 }

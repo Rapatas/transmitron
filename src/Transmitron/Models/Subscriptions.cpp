@@ -96,9 +96,9 @@ void Subscriptions::subscribe(const std::string &topic, MQTT::QoS qos)
   auto sub = mClient->subscribe(topic);
   auto sd = new Types::SubscriptionData(sub);
   mSubscriptions.push_back(sd);
-  sd->Bind(Events::SUB_SUBSCRIBED, &Subscriptions::onSubscribed, this);
-  sd->Bind(Events::SUB_UNSUBSCRIBED, &Subscriptions::onUnsubscribed, this);
-  sd->attachObserver(this);
+  sd->Bind(Events::SUBSCRIBED, &Subscriptions::onSubscribed, this);
+  sd->Bind(Events::UNSUBSCRIBED, &Subscriptions::onUnsubscribed, this);
+  sd->Bind(Events::RECEIVED, &Subscriptions::onMessage, this);
 
   auto item = GetItem(mSubscriptions.size() - 1);
   ItemAdded(wxDataViewItem(0), item);
@@ -205,10 +205,8 @@ void Subscriptions::onUnsubscribed(Events::Subscription &e)
   mSubscriptions.erase(it);
 }
 
-void Subscriptions::onMessage(
-  Types::SubscriptionData *subscriptionData,
-  mqtt::const_message_ptr msg
-) {
-  mHistory->insert(subscriptionData, msg);
+void Subscriptions::onMessage(Events::Subscription &e)
+{
+  mHistory->insert(e.getSubscription(), e.getMessage());
 }
 

@@ -8,8 +8,9 @@ namespace Transmitron::Events
 {
 
 class Subscription;
-wxDECLARE_EVENT(SUB_SUBSCRIBED, Subscription);
-wxDECLARE_EVENT(SUB_UNSUBSCRIBED, Subscription);
+wxDECLARE_EVENT(SUBSCRIBED, Subscription);
+wxDECLARE_EVENT(UNSUBSCRIBED, Subscription);
+wxDECLARE_EVENT(RECEIVED, Subscription);
 
 class Subscription : public wxCommandEvent
 {
