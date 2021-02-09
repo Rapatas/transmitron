@@ -172,7 +172,7 @@ wxDataViewItem Connections::createConnection()
   std::string uniqueName = connection->getName();
 
   while (std::any_of(
-      std::begin(mConnections),
+      std::begin(mConnections) + 1,
       std::end(mConnections),
       [=](auto connection)
       {
