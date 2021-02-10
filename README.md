@@ -12,7 +12,7 @@
 
 ### Ubuntu 18.04
 
-**C++ 20**
+**C++ 17**
 
 ```bash
 sudo apt-get install -y gcc-8
