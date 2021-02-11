@@ -13,6 +13,21 @@ using namespace tinyxml2;
 using namespace nlohmann;
 using namespace Transmitron::Widgets;
 
+uint32_t foreground = (0   << 0) | (0   << 8) | (0   << 16);
+uint32_t backgound  = (250 << 0) | (250 << 8) | (250 << 16);
+uint32_t red        = (180 << 0) | (0   << 8) | (0   << 16);
+uint32_t orange     = (150 << 0) | (120 << 8) | (0   << 16);
+uint32_t green      = (0   << 0) | (150 << 8) | (0   << 16);
+uint32_t pink       = (200 << 0) | (0   << 8) | (150 << 16);
+uint32_t cyan       = (0   << 0) | (120 << 8) | (150 << 16);
+
+const std::map<std::string, Edit::Format> Edit::mFormats = {
+  {"Auto", Format::Auto},
+  {"Text", Format::Text},
+  {"Json", Format::Json},
+  {"Xml", Format::Xml},
+};
+
 Edit::Edit(
   wxWindow* parent,
   wxWindowID id
@@ -24,10 +39,11 @@ Edit::Edit(
 
   mTopic = new TopicCtrl(this, -1);
 
-  mFormatSelect = new wxComboBox(this, -1, "TEXT", wxDefaultPosition, wxSize(100, 25));
-  mFormatSelect->Insert("TEXT", 0);
-  mFormatSelect->Insert("XML", 0);
-  mFormatSelect->Insert("JSON", 0);
+  mFormatSelect = new wxComboBox(this, -1, mFormats.begin()->first, wxDefaultPosition, wxSize(100, 25));
+  for (const auto &format : mFormats)
+  {
+    mFormatSelect->Insert(format.first, 0);
+  }
 
   mTop = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   mVsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
@@ -79,19 +95,13 @@ Edit::Edit(
   mVsizer->Add(mBottom, 0, wxALIGN_RIGHT);
 
   SetSizer(mVsizer);
-
 }
 
 void Edit::setupScintilla()
 {
   mText = new wxStyledTextCtrl(this, wxID_ANY, wxDefaultPosition);
-  mText->SetLexer(wxSTC_LEX_JSON);
 
-  auto error      = (180 << 0) | (0   << 8) | (0   << 16);
-  auto backgound  = (0   << 0) | (0   << 8) | (0   << 16);
-  auto foreground = (200 << 0) | (200 << 8) | (200 << 16);
-  auto number     = (200 << 0) | (150 << 8) | (0   << 16);
-  auto green      = (0   << 0) | (200 << 8) | (0   << 16);
+  mText->StyleSetFont(wxSTC_STYLE_DEFAULT, mFont);
 
   mText->SetWrapMode(wxSTC_WRAP_WORD);
   mText->SetProperty("fold", "1");
@@ -99,14 +109,12 @@ void Edit::setupScintilla()
   mText->SetProperty("fold.comment", "1");
   mText->SetProperty("fold.preprocessor", "1");
 
-  // For JSON only.
-  mText->SetKeyWords(0, "true false null");
-
   static const int MARGIN_SCRIPT_FOLD_INDEX = 1;
   mText->SetMarginType(MARGIN_SCRIPT_FOLD_INDEX, wxSTC_MARGIN_SYMBOL);
   mText->SetMarginMask(MARGIN_SCRIPT_FOLD_INDEX, wxSTC_MASK_FOLDERS);
   mText->SetMarginWidth(MARGIN_SCRIPT_FOLD_INDEX, 20);
   mText->SetMarginSensitive(MARGIN_SCRIPT_FOLD_INDEX, 1);
+  mText->SetAutomaticFold(wxSTC_AUTOMATICFOLD_CLICK);
 
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDER,        wxSTC_MARK_PLUS);
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDEROPEN,    wxSTC_MARK_MINUS);
@@ -118,34 +126,73 @@ void Edit::setupScintilla()
 
   mText->SetScrollWidth(50);
   mText->SetScrollWidthTracking(true);
+}
 
-  mText->SetAutomaticFold(wxSTC_AUTOMATICFOLD_CLICK);
-
-  mText->StyleSetFont(wxSTC_STYLE_DEFAULT, mFont);
+void Edit::setStyle(Format format)
+{
+  if (mCurrentFormat == format)
+  {
+    return;
+  }
 
   mText->StyleSetBackground(wxSTC_STYLE_DEFAULT, backgound);
   mText->StyleSetForeground(wxSTC_STYLE_DEFAULT, foreground);
-
-  // Apply the defaults we just set.
   mText->StyleClearAll();
-
   mText->StyleSetForeground(wxSTC_STYLE_LINENUMBER, backgound);
   mText->StyleSetBackground(wxSTC_STYLE_LINENUMBER, foreground);
 
-  mText->StyleSetForeground(wxSTC_JSON_NUMBER,         number);
-  mText->StyleSetForeground(wxSTC_JSON_PROPERTYNAME,   green);
-  mText->StyleSetForeground(wxSTC_JSON_STRING,         number);
-  mText->StyleSetBackground(wxSTC_JSON_ERROR, error);
+  switch (format)
+  {
+    case Format::Json:
+    {
+      mText->SetLexer(wxSTC_LEX_JSON);
+      mText->SetKeyWords(0, "true false null");
+      mText->StyleSetBackground(wxSTC_JSON_ERROR,        red);
+      mText->StyleSetForeground(wxSTC_JSON_KEYWORD,      cyan);
+      mText->StyleSetForeground(wxSTC_JSON_NUMBER,       orange);
+      mText->StyleSetForeground(wxSTC_JSON_PROPERTYNAME, green);
+      mText->StyleSetForeground(wxSTC_JSON_STRING,       orange);
+      mText->StyleSetForeground(wxSTC_JSON_URI,          cyan);
+    }
+    break;
+
+    case Format::Xml:
+    {
+      mText->SetLexer(wxSTC_LEX_XML);
+      mText->StyleSetForeground(wxSTC_H_ATTRIBUTE,        green);
+      mText->StyleSetForeground(wxSTC_H_ATTRIBUTEUNKNOWN, red);
+      mText->StyleSetForeground(wxSTC_H_COMMENT,          foreground);
+      mText->StyleSetForeground(wxSTC_H_DOUBLESTRING,     orange);
+      mText->StyleSetForeground(wxSTC_H_NUMBER,           orange);
+      mText->StyleSetForeground(wxSTC_H_OTHER,            green);
+      mText->StyleSetForeground(wxSTC_H_SINGLESTRING,     orange);
+      mText->StyleSetForeground(wxSTC_H_TAG,              cyan);
+      mText->StyleSetForeground(wxSTC_H_TAGEND,           cyan);
+      mText->StyleSetForeground(wxSTC_H_TAGUNKNOWN,       red);
+      mText->StyleSetForeground(wxSTC_H_XMLEND,           pink);
+      mText->StyleSetForeground(wxSTC_H_XMLSTART,         pink);
+    }
+    break;
+
+    case Format::Text:
+    default:
+    {
+      mText->SetLexer(wxSTC_LEX_NULL);
+    }
+    break;
+  }
+
+  mCurrentFormat = format;
 }
 
 void Edit::setPayload(const std::string &text)
 {
-  auto format = mFormatSelect->GetValue();
+  auto format = mFormatSelect->GetValue().ToStdString();
   if (mReadOnly)
   {
     mText->SetReadOnly(false);
   }
-  mText->SetText(formatTry(text, format));
+  mText->SetText(formatTry(text, mFormats.at(format)));
   if (mReadOnly)
   {
     mText->SetReadOnly(true);
@@ -158,7 +205,6 @@ void Edit::setReadOnly(bool readonly)
 
   mText->SetReadOnly(readonly);
   mTopic->setReadOnly(readonly);
-
 
   mPublish->Show(!readonly);
   mTop->Layout();
@@ -182,7 +228,7 @@ void Edit::format()
   {
     mText->SetReadOnly(false);
   }
-  mText->SetText(formatTry(text, format));
+  mText->SetText(formatTry(text, mFormats.at(format)));
   if (mReadOnly)
   {
     mText->SetReadOnly(true);
@@ -191,25 +237,74 @@ void Edit::format()
 
 std::string Edit::formatTry(
   const std::string &text,
-  const wxString &format
+  Format format
 ) {
-  XMLDocument doc;
 
-  if (format == "JSON" && json::accept(text))
+  if (text.empty())
   {
-    auto j = json::parse(text);
-    return j.dump(2);
+    return "";
   }
-  else if (format == "XML" && doc.Parse(text.c_str()) == XMLError::XML_SUCCESS)
+
+  if (format == Format::Auto)
   {
-    XMLPrinter p;
-    doc.Print(&p);
-    return p.CStr();
+    return formatTry(text, formatGuess(text));
   }
-  else
+
+  setStyle(format);
+
+  if (format == Format::Json)
   {
-    return text;
+    try
+    {
+      auto j = json::parse(text);
+      return j.dump(2);
+    }
+    catch (std::exception &e)
+    {}
   }
+
+  if (format == Format::Xml)
+  {
+    XMLDocument doc;
+    auto res = doc.Parse(text.c_str());
+    if (res == XMLError::XML_SUCCESS)
+    {
+      XMLPrinter p;
+      doc.Print(&p);
+      return p.CStr();
+    }
+  }
+
+  return text;
+}
+
+Edit::Format Edit::formatGuess(const std::string &text)
+{
+  if (text.empty())
+  {
+    return Format::Text;
+  }
+
+  const char c = text[0];
+
+  if (c == '<')
+  {
+    return Format::Xml;
+  }
+
+  if (
+    isdigit(c)
+    || c == '"'
+    || c == '{'
+    || c == '['
+    || c == 't'
+    || c == 'f'
+    || c == 'n'
+  ) {
+    return Format::Json;
+  }
+
+  return Format::Text;
 }
 
 void Edit::onFormatSelected(wxCommandEvent &e)

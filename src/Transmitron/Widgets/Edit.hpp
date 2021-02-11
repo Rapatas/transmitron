@@ -65,16 +65,30 @@ private:
   wxButton *mFormat;
   wxComboBox *mFormatSelect;
 
+  enum class Format
+  {
+    Auto,
+    Text,
+    Json,
+    Xml
+  };
+  Format mCurrentFormat = Format::Auto;
+
+  static const std::map<std::string, Format> mFormats;
+
   void onQosClicked(wxMouseEvent &e);
   void onRetainedClicked(wxMouseEvent &e);
 
   void setupScintilla();
+  void setStyle(Format format);
   void onFormatSelected(wxCommandEvent& event);
 
-  static std::string formatTry(
+  std::string formatTry(
     const std::string &text,
-    const wxString &format
+    Format format
   );
+
+  static Format formatGuess(const std::string &text);
 };
 
 }
