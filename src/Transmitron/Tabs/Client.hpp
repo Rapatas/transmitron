@@ -62,6 +62,7 @@ private:
   wxPanel *mHistory;
   wxObjectDataPtr<Models::History> mHistoryModel;
   wxDataViewCtrl *mHistoryCtrl;
+  wxCheckBox *mAutoScroll;
 
   // Preview:
   Widgets::Edit *mPreview;

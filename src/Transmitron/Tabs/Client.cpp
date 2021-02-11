@@ -174,8 +174,14 @@ void Client::setupPanelHistory(wxWindow *parent)
   mHistoryCtrl->AppendColumn(retained);
   mHistoryCtrl->AppendColumn(topic);
 
-  wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
+  mAutoScroll = new wxCheckBox( mHistory, -1, "auto-scroll");
+  mAutoScroll->SetValue(true);
+
+  auto hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
+  hsizer->Add(mAutoScroll, 0, wxEXPAND);
+  auto vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(mHistoryCtrl, 1, wxEXPAND);
+  vsizer->Add(hsizer, 0, wxEXPAND);
   mHistory->SetSizer(vsizer);
 
   mHistoryCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Client::onHistorySelected, this);
@@ -485,6 +491,11 @@ void Client::onClose(wxCloseEvent &event)
 
 void Client::onMessage(wxDataViewItem item)
 {
+  if (!mAutoScroll->GetValue())
+  {
+    return;
+  }
+
   mHistoryCtrl->Select(item);
   mHistoryCtrl->EnsureVisible(item);
 
