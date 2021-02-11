@@ -51,6 +51,8 @@ private:
     HistoryEdit,
   };
 
+  static const size_t OptionsHeight = 26;
+
   std::shared_ptr<Types::Connection> mConnection;
 
   // Connection:

@@ -30,9 +30,11 @@ const std::map<std::string, Edit::Format> Edit::mFormats = {
 
 Edit::Edit(
   wxWindow* parent,
-  wxWindowID id
+  wxWindowID id,
+  size_t optionsHeight
 ) :
-  wxPanel(parent, id)
+  wxPanel(parent, id),
+  mOptionsHeight(optionsHeight)
 {
   mFont = wxFont(wxFontInfo(9).FaceName("Consolas"));
   setupScintilla();
@@ -48,6 +50,8 @@ Edit::Edit(
   mTop = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   mVsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   mBottom = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
+  mTop->SetMinSize(0, mOptionsHeight);
+  mBottom->SetMinSize(0, mOptionsHeight);
 
   mRetainedFalse = new wxStaticBitmap(this, -1, *bin2c_not_pinned_18x18_png);
   mRetainedFalse->SetToolTip("Not retained");
@@ -75,7 +79,13 @@ Edit::Edit(
   mQos2->Hide();
   mQoS = MQTT::QoS::AtLeastOnce;
 
-  mPublish = new wxBitmapButton(this, -1, *bin2c_send_18x18_png);
+  mPublish = new wxBitmapButton(
+    this,
+    -1,
+    *bin2c_send_18x18_png,
+    wxDefaultPosition,
+    wxSize(mOptionsHeight, mOptionsHeight)
+  );
 
   mFormatSelect->Bind(wxEVT_COMBOBOX, &Edit::onFormatSelected, this);
 

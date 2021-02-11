@@ -178,6 +178,7 @@ void Client::setupPanelHistory(wxWindow *parent)
   mAutoScroll->SetValue(true);
 
   auto hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
+  hsizer->SetMinSize(0, OptionsHeight);
   hsizer->Add(mAutoScroll, 0, wxEXPAND);
   auto vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(mHistoryCtrl, 1, wxEXPAND);
@@ -195,6 +196,7 @@ void Client::setupPanelConnect(wxWindow *parent)
   mConnect  = new wxButton(mConnectionBar, -1, "Connect");
 
   wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
+  hsizer->SetMinSize(0, OptionsHeight);
   hsizer->Add(mConnect,  0, wxEXPAND);
   mConnectionBar->SetSizer(hsizer);
 
@@ -237,14 +239,20 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
   mSubscriptionsCtrl->SetFont(font);
 
-  mSubscribe = new wxBitmapButton(mSubscriptions, -1, *bin2c_plus_18x18_png);
+  mSubscribe = new wxBitmapButton(
+    mSubscriptions,
+    -1,
+    *bin2c_plus_18x18_png,
+    wxDefaultPosition,
+    wxSize(OptionsHeight, OptionsHeight)
+  );
 
   mFilter = new Widgets::TopicCtrl(mSubscriptions, -1);
-  mFilter->SetHint("subscribe");
   mFilter->SetFont(font);
 
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
+  hsizer->SetMinSize(0, OptionsHeight);
   hsizer->Add(mFilter,  1, wxEXPAND);
   hsizer->Add(mSubscribe,  0, wxEXPAND);
   vsizer->Add(hsizer,  0, wxEXPAND);
@@ -259,14 +267,13 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
 void Client::setupPanelPreview(wxWindow *parent)
 {
-  mPreview = new Widgets::Edit(parent, -1);
+  mPreview = new Widgets::Edit(parent, -1, OptionsHeight);
   mPreview->setReadOnly(true);
 }
 
 void Client::setupPanelPublish(wxWindow *parent)
 {
-  mPublish = new Widgets::Edit(parent, -1);
-
+  mPublish = new Widgets::Edit(parent, -1, OptionsHeight);
   mPublish->Bind(wxEVT_BUTTON, &Client::onPublishClicked, this);
 }
 

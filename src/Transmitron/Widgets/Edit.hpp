@@ -17,7 +17,8 @@ public:
 
   explicit Edit(
     wxWindow* parent,
-    wxWindowID id
+    wxWindowID id,
+    size_t optionsHeight
   );
   virtual ~Edit() = default;
 
@@ -42,6 +43,7 @@ private:
   wxFont mFont;
 
   bool mReadOnly = false;
+  size_t mOptionsHeight;
 
   wxBoxSizer *mTop;
   wxBoxSizer *mVsizer;
