@@ -72,6 +72,13 @@ Client::Client(
   previewInfo.MinSize(wxSize(0, 200));
   publishInfo.MinSize(wxSize(0, 200));
 
+  historyInfo.CloseButton(false);
+  historyInfo.CloseButton(false);
+  subscriptionsInfo.CloseButton(false);
+  snippetsInfo.CloseButton(false);
+  previewInfo.CloseButton(false);
+  publishInfo.CloseButton(false);
+
   historyInfo.PaneBorder(false);
   historyInfo.PaneBorder(false);
   subscriptionsInfo.PaneBorder(false);
