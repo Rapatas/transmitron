@@ -15,10 +15,6 @@
 #include "Transmitron/Types/Connection.hpp"
 #include "Transmitron/Widgets/Edit.hpp"
 
-#ifndef BUILD_DOCKING
-#define BUILD_DOCKING false
-#endif
-
 namespace Transmitron::Tabs
 {
 
@@ -34,8 +30,6 @@ public:
     std::shared_ptr<Types::Connection> connection = nullptr
   );
   ~Client();
-
-  void resize() const;
 
 private:
 
@@ -54,6 +48,8 @@ private:
   static const size_t OptionsHeight = 26;
 
   std::shared_ptr<Types::Connection> mConnection;
+
+  wxBoxSizer *mMasterSizer;
 
   // Connection:
   wxPanel *mConnectionBar;
@@ -107,11 +103,6 @@ private:
   void onConnectedSync(Events::Connection &e);
   void onDisconnectedSync(Events::Connection &e);
 
-  wxSplitterWindow *mSplitTop;
-  wxSplitterWindow *mSplitCenter;
-  wxSplitterWindow *mSplitBottom;
-  wxSplitterWindow *mSplitHistory;
-
   // MQTT::Client::Observer interface.
   void onConnected() override;
   void onDisconnected() override;
@@ -119,11 +110,7 @@ private:
   // Models::History::Observer interface.
   void onMessage(wxDataViewItem item) override;
 
-#if BUILD_DOCKING
-
-  wxAuiManager mAuiMan;
-
-#endif
+  wxAuiManager *mAuiMan;
 
 };
 

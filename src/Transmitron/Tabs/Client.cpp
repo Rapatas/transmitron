@@ -27,99 +27,68 @@ Client::Client(
   Bind(wxEVT_CLOSE_WINDOW, &Client::onClose, this);
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Client::onContextSelected, this);
 
-#if not BUILD_DOCKING
-
-  mSplitCenter = new wxSplitterWindow(this);
-  mSplitTop = new wxSplitterWindow(mSplitCenter);
-  mSplitBottom = new wxSplitterWindow(mSplitCenter);
-  mSplitHistory = new wxSplitterWindow(mSplitTop);
-
-  mSplitTop->SetMinimumPaneSize(100);
-  mSplitCenter->SetMinimumPaneSize(100);
-  mSplitBottom->SetMinimumPaneSize(100);
-  mSplitHistory->SetMinimumPaneSize(100);
-
-  mSplitCenter->SetSashGravity(0.5);
-  mSplitTop->SetSashGravity(0.5);
-  mSplitBottom->SetSashGravity(0.5);
-
-  setupPanelConnect(this);
-  setupPanelPublish(mSplitBottom);
-  setupPanelHistory(mSplitHistory);
-  setupPanelSubscriptions(mSplitHistory);
-  setupPanelPreview(mSplitTop);
-  setupPanelSnippets(mSplitBottom);
-
-  auto s = new wxBoxSizer(wxVERTICAL);
-  s->Add(mConnectionBar, 0, wxEXPAND);
-  s->Add(mSplitCenter, 1, wxEXPAND);
-  SetSizer(s);
-
-#else
-
-  setupPanelConnect(this);
-  setupPanelPublish(this);
-  setupPanelHistory(this);
-  setupPanelSubscriptions(this);
-  setupPanelPreview(this);
-  setupPanelSnippets(this);
-
-  wxAuiPaneInfo connectionInfo;
   wxAuiPaneInfo historyInfo;
   wxAuiPaneInfo previewInfo;
   wxAuiPaneInfo publishInfo;
   wxAuiPaneInfo subscriptionsInfo;
   wxAuiPaneInfo snippetsInfo;
 
-  connectionInfo.Caption("Connection");
   historyInfo.Caption("History");
   previewInfo.Caption("Preview");
   publishInfo.Caption("Publish");
   subscriptionsInfo.Caption("Subscriptions");
   snippetsInfo.Caption("Snippets");
 
-  connectionInfo.Movable(true);
-  historyInfo.Movable(true);
+  historyInfo.Movable(false);
   previewInfo.Movable(true);
   publishInfo.Movable(true);
   subscriptionsInfo.Movable(true);
   snippetsInfo.Movable(true);
 
-  connectionInfo.Floatable(true);
-  historyInfo.Floatable(true);
+  historyInfo.Floatable(false);
   previewInfo.Floatable(true);
   publishInfo.Floatable(true);
   subscriptionsInfo.Floatable(true);
   snippetsInfo.Floatable(true);
 
-  previewInfo.Center();
-  connectionInfo.Left();
-  historyInfo.Left();
-  publishInfo.Left();
+  historyInfo.Center();
   subscriptionsInfo.Left();
   snippetsInfo.Left();
+  previewInfo.Bottom();
+  publishInfo.Bottom();
 
-  previewInfo.Layer(0);
-  connectionInfo.Layer(1);
-  historyInfo.Layer(1);
-  publishInfo.Layer(2);
   subscriptionsInfo.Layer(1);
-  snippetsInfo.Layer(3);
+  historyInfo.Layer(0);
+  snippetsInfo.Layer(1);
+  previewInfo.Layer(2);
+  publishInfo.Layer(2);
 
-  publishInfo.BestSize(wxSize(300, 500));
-  connectionInfo.MaxSize(wxSize(300, 80));
-  subscriptionsInfo.BestSize(wxSize(500, 0));
+  previewInfo.Row(2);
+  publishInfo.Row(2);
 
-  mAuiMan.SetManagedWindow(this);
-  mAuiMan.AddPane(mConnectionBar,    connectionInfo);
-  mAuiMan.AddPane(mSubscriptions, subscriptionsInfo);
-  mAuiMan.AddPane(mPublish,    publishInfo);
-  mAuiMan.AddPane(mHistory,       historyInfo);
-  mAuiMan.AddPane(mPreview,       previewInfo);
-  mAuiMan.AddPane(mSnippets,      snippetsInfo);
-  mAuiMan.Update();
+  auto wrapper = new wxPanel(this, -1);
 
-#endif
+  setupPanelPublish(wrapper);
+  setupPanelHistory(wrapper);
+  setupPanelSubscriptions(wrapper);
+  setupPanelPreview(wrapper);
+  setupPanelSnippets(wrapper);
+  setupPanelConnect(this);
+
+  mMasterSizer = new wxBoxSizer(wxVERTICAL);
+  mMasterSizer->Add(mConnectionBar, 0, wxEXPAND);
+  mMasterSizer->Add(wrapper, 1, wxEXPAND);
+  SetSizer(mMasterSizer);
+
+  mAuiMan = new wxAuiManager();
+  mAuiMan->SetManagedWindow(wrapper);
+  mAuiMan->AddPane(mSubscriptions, subscriptionsInfo);
+  mAuiMan->AddPane(mPublish, publishInfo);
+  mAuiMan->AddPane(mHistory, historyInfo);
+  mAuiMan->AddPane(mPreview, previewInfo);
+  mAuiMan->AddPane(mSnippets, snippetsInfo);
+  mAuiMan->Update();
+
 }
 
 void Client::setupPanelHistory(wxWindow *parent)
@@ -191,7 +160,7 @@ void Client::setupPanelHistory(wxWindow *parent)
 
 void Client::setupPanelConnect(wxWindow *parent)
 {
-  mConnectionBar = new wxPanel(parent, -1, wxDefaultPosition, wxDefaultSize);
+  mConnectionBar = new wxPanel(parent, -1);
 
   mConnect  = new wxButton(mConnectionBar, -1, "Connect");
 
@@ -362,11 +331,7 @@ void Client::onConnectClicked(wxCommandEvent &event)
 
 Client::~Client()
 {
-#if BUILD_DOCKING
-
-  mAuiMan.UnInit();
-
-#endif
+  mAuiMan->UnInit();
 }
 
 void Client::onHistorySelected(wxDataViewEvent &event)
@@ -510,18 +475,6 @@ void Client::onMessage(wxDataViewItem item)
   mPreview->setTopic(mHistoryModel->getTopic(item));
   mPreview->setQos(mHistoryModel->getQos(item));
   mPreview->setRetained(mHistoryModel->getRetained(item));
-}
-
-void Client::resize() const
-{
-#if not BUILD_DOCKING
-
-  mSplitCenter->SplitHorizontally(mSplitTop, mSplitBottom);
-  mSplitTop->SplitVertically(mSplitHistory, mPreview);
-  mSplitBottom->SplitVertically(mSnippets, mPublish);
-  mSplitHistory->SplitHorizontally(mSubscriptions, mHistory);
-
-#endif
 }
 
 void Client::onConnected()

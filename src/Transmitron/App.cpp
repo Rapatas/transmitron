@@ -102,7 +102,6 @@ void App::newConnectionTab()
     mNote->InsertPage(selected, client, "");
     mNote->SetSelection(selected);
     mNote->SetPageText(selected, c->getName());
-    client->resize();
   });
 }
 
