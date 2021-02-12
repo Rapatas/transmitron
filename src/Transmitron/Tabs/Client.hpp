@@ -51,6 +51,8 @@ private:
     HistoryEdit,
   };
 
+  static const size_t OptionsHeight = 26;
+
   std::shared_ptr<Types::Connection> mConnection;
 
   // Connection:
@@ -62,6 +64,7 @@ private:
   wxPanel *mHistory;
   wxObjectDataPtr<Models::History> mHistoryModel;
   wxDataViewCtrl *mHistoryCtrl;
+  wxCheckBox *mAutoScroll;
 
   // Preview:
   Widgets::Edit *mPreview;
