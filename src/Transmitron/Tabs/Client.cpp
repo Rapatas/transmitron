@@ -66,6 +66,19 @@ Client::Client(
   previewInfo.Row(2);
   publishInfo.Row(2);
 
+  historyInfo.MinSize(wxSize(100, 100));
+  subscriptionsInfo.MinSize(wxSize(300, 100));
+  snippetsInfo.MinSize(wxSize(300, 0));
+  previewInfo.MinSize(wxSize(0, 200));
+  publishInfo.MinSize(wxSize(0, 200));
+
+  historyInfo.PaneBorder(false);
+  historyInfo.PaneBorder(false);
+  subscriptionsInfo.PaneBorder(false);
+  snippetsInfo.PaneBorder(false);
+  previewInfo.PaneBorder(false);
+  publishInfo.PaneBorder(false);
+
   auto wrapper = new wxPanel(this, -1);
 
   setupPanelPublish(wrapper);
