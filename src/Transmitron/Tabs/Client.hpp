@@ -15,10 +15,6 @@
 #include "Transmitron/Types/Connection.hpp"
 #include "Transmitron/Widgets/Edit.hpp"
 
-#ifndef BUILD_DOCKING
-#define BUILD_DOCKING false
-#endif
-
 namespace Transmitron::Tabs
 {
 
@@ -35,8 +31,6 @@ public:
   );
   ~Client();
 
-  void resize() const;
-
 private:
 
   enum class ContextIDs : unsigned
@@ -51,36 +45,49 @@ private:
     HistoryEdit,
   };
 
+  enum class Panes : unsigned
+  {
+    History = 0,
+    Preview = 4,
+    Publish = 3,
+    Snippets = 2,
+    Subscriptions = 1,
+  };
+
+  struct Pane
+  {
+    std::string name;
+    wxAuiPaneInfo info;
+    wxPanel *panel;
+    wxBitmap *icon18x18;
+    wxBitmap *icon18x14;
+    wxButton *toggle;
+  };
+
+  std::map<Panes, Pane> mPanes;
+
   static const size_t OptionsHeight = 26;
 
   std::shared_ptr<Types::Connection> mConnection;
 
+  wxBoxSizer *mMasterSizer;
+
   // Connection:
   wxPanel *mConnectionBar;
   wxButton *mConnect;
-  wxStatusBar *mStatusBar;
 
   // History:
-  wxPanel *mHistory;
   wxObjectDataPtr<Models::History> mHistoryModel;
   wxDataViewCtrl *mHistoryCtrl;
   wxCheckBox *mAutoScroll;
 
-  // Preview:
-  Widgets::Edit *mPreview;
-
-  // Publish:
-  Widgets::Edit *mPublish;
-
   // Subscriptions:
   wxBitmapButton *mSubscribe;
   Widgets::TopicCtrl *mFilter;
-  wxPanel *mSubscriptions;
   Models::Subscriptions *mSubscriptionsModel;
   wxDataViewCtrl *mSubscriptionsCtrl;
 
   // Snippets:
-  wxPanel *mSnippets;
   wxObjectDataPtr<Models::Snippets> mSnippetsModel;
   wxDataViewCtrl *mSnippetsCtrl;
 
@@ -107,11 +114,6 @@ private:
   void onConnectedSync(Events::Connection &e);
   void onDisconnectedSync(Events::Connection &e);
 
-  wxSplitterWindow *mSplitTop;
-  wxSplitterWindow *mSplitCenter;
-  wxSplitterWindow *mSplitBottom;
-  wxSplitterWindow *mSplitHistory;
-
   // MQTT::Client::Observer interface.
   void onConnected() override;
   void onDisconnected() override;
@@ -119,11 +121,7 @@ private:
   // Models::History::Observer interface.
   void onMessage(wxDataViewItem item) override;
 
-#if BUILD_DOCKING
-
   wxAuiManager mAuiMan;
-
-#endif
 
 };
 

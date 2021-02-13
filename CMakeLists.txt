@@ -26,6 +26,15 @@ add_executable(
   src/Transmitron/Resources/qos/qos-1.cpp
   src/Transmitron/Resources/qos/qos-2.cpp
   src/Transmitron/Resources/send/send-18x18.cpp
+  src/Transmitron/Resources/history/history-18x18.cpp
+  src/Transmitron/Resources/preview/preview-18x18.cpp
+  src/Transmitron/Resources/snippets/snippets-18x18.cpp
+  src/Transmitron/Resources/subscription/subscription-18x18.cpp
+  src/Transmitron/Resources/history/history-18x14.cpp
+  src/Transmitron/Resources/preview/preview-18x14.cpp
+  src/Transmitron/Resources/snippets/snippets-18x14.cpp
+  src/Transmitron/Resources/subscription/subscription-18x14.cpp
+  src/Transmitron/Resources/send/send-18x14.cpp
   src/Transmitron/Tabs/Client.cpp
   src/Transmitron/Tabs/Homepage.cpp
   src/Transmitron/Types/Connection.cpp

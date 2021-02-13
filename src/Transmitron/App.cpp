@@ -12,6 +12,15 @@
 #include "Resources/qos/qos-1.hpp"
 #include "Resources/qos/qos-2.hpp"
 #include "Resources/send/send-18x18.hpp"
+#include "Resources/history/history-18x18.hpp"
+#include "Resources/preview/preview-18x18.hpp"
+#include "Resources/snippets/snippets-18x18.hpp"
+#include "Resources/subscription/subscription-18x18.hpp"
+#include "Resources/send/send-18x14.hpp"
+#include "Resources/history/history-18x14.hpp"
+#include "Resources/preview/preview-18x14.hpp"
+#include "Resources/snippets/snippets-18x14.hpp"
+#include "Resources/subscription/subscription-18x14.hpp"
 #include "Tabs/Client.hpp"
 #include "Tabs/Homepage.hpp"
 
@@ -23,13 +32,23 @@ namespace fs = std::filesystem;
 bool App::OnInit()
 {
   wxImage::AddHandler(new wxPNGHandler);
-  bin2c_init_SEND_18X18_HPP();
-  bin2c_init_PINNED_18X18_HPP();
+
+  bin2c_init_HISTORY_18X14_HPP();
+  bin2c_init_HISTORY_18X18_HPP();
   bin2c_init_NOT_PINNED_18X18_HPP();
+  bin2c_init_PINNED_18X18_HPP();
   bin2c_init_PLUS_18X18_HPP();
+  bin2c_init_PREVIEW_18X14_HPP();
+  bin2c_init_PREVIEW_18X18_HPP();
   bin2c_init_QOS_0_HPP();
   bin2c_init_QOS_1_HPP();
   bin2c_init_QOS_2_HPP();
+  bin2c_init_SEND_18X14_HPP();
+  bin2c_init_SEND_18X18_HPP();
+  bin2c_init_SNIPPETS_18X14_HPP();
+  bin2c_init_SNIPPETS_18X18_HPP();
+  bin2c_init_SUBSCRIPTION_18X14_HPP();
+  bin2c_init_SUBSCRIPTION_18X18_HPP();
 
   auto log = new wxLogStderr();
   log->SetFormatter(new LogFormat());
@@ -38,8 +57,14 @@ bool App::OnInit()
   wxImageList * il = new wxImageList;
   il->Add(*bin2c_plus_18x18_png);
 
-  auto frame = new wxFrame(nullptr, -1, getProjectName(), wxDefaultPosition, wxSize(600, 600));
-  frame->SetMinSize(wxSize(400, 400));
+  auto frame = new wxFrame(
+    nullptr,
+    -1,
+    getProjectName(),
+    wxDefaultPosition,
+    wxSize(800, 600)
+  );
+  frame->SetMinSize(wxSize(400, 300));
 
   mNote = new wxAuiNotebook(frame, -1);
   mNote->SetImageList(il);
@@ -102,7 +127,6 @@ void App::newConnectionTab()
     mNote->InsertPage(selected, client, "");
     mNote->SetSelection(selected);
     mNote->SetPageText(selected, c->getName());
-    client->resize();
   });
 }
 

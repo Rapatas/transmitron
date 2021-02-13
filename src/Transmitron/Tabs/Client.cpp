@@ -4,6 +4,16 @@
 #include <nlohmann/json.hpp>
 
 #include "Transmitron/Resources/plus/plus-18x18.hpp"
+#include "Transmitron/Resources/history/history-18x14.hpp"
+#include "Transmitron/Resources/history/history-18x18.hpp"
+#include "Transmitron/Resources/preview/preview-18x14.hpp"
+#include "Transmitron/Resources/preview/preview-18x18.hpp"
+#include "Transmitron/Resources/send/send-18x14.hpp"
+#include "Transmitron/Resources/send/send-18x18.hpp"
+#include "Transmitron/Resources/snippets/snippets-18x14.hpp"
+#include "Transmitron/Resources/snippets/snippets-18x18.hpp"
+#include "Transmitron/Resources/subscription/subscription-18x14.hpp"
+#include "Transmitron/Resources/subscription/subscription-18x18.hpp"
 
 #define wxLOG_COMPONENT "Client"
 
@@ -27,99 +37,107 @@ Client::Client(
   Bind(wxEVT_CLOSE_WINDOW, &Client::onClose, this);
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Client::onContextSelected, this);
 
-#if not BUILD_DOCKING
+  mPanes =
+  {
+    {Panes::History, {
+      "History",
+      {},
+      nullptr,
+      bin2c_history_18x18_png,
+      bin2c_history_18x14_png
+    }},
+    {Panes::Preview, {
+      "Preview",
+      {},
+      nullptr,
+      bin2c_preview_18x18_png,
+      bin2c_preview_18x14_png
+    }},
+    {Panes::Publish, {
+      "Publish",
+      {},
+      nullptr,
+      bin2c_send_18x18_png,
+      bin2c_send_18x14_png
+    }},
+    {Panes::Snippets, {
+      "Snippets",
+      {},
+      nullptr,
+      bin2c_snippets_18x18_png,
+      bin2c_snippets_18x14_png
+    }},
+    {Panes::Subscriptions, {
+      "Subscriptions",
+      {},
+      nullptr,
+      bin2c_subscription_18x18_png,
+      bin2c_subscription_18x14_png
+    }},
+  };
 
-  mSplitCenter = new wxSplitterWindow(this);
-  mSplitTop = new wxSplitterWindow(mSplitCenter);
-  mSplitBottom = new wxSplitterWindow(mSplitCenter);
-  mSplitHistory = new wxSplitterWindow(mSplitTop);
+  for (auto &pane : mPanes)
+  {
+    pane.second.info.Caption(pane.second.name);
+    pane.second.info.CloseButton(false);
+    pane.second.info.Icon(*pane.second.icon18x14);
+    pane.second.info.PaneBorder(false);
 
-  mSplitTop->SetMinimumPaneSize(100);
-  mSplitCenter->SetMinimumPaneSize(100);
-  mSplitBottom->SetMinimumPaneSize(100);
-  mSplitHistory->SetMinimumPaneSize(100);
+    if (pane.first == Panes::History)
+    {
+      pane.second.info.Movable(false);
+      pane.second.info.Floatable(false);
+    }
+    else
+    {
+      pane.second.info.Movable(true);
+      pane.second.info.Floatable(true);
+    }
+  }
 
-  mSplitCenter->SetSashGravity(0.5);
-  mSplitTop->SetSashGravity(0.5);
-  mSplitBottom->SetSashGravity(0.5);
+  mPanes.at(Panes::History).info.Center();
+  mPanes.at(Panes::Subscriptions).info.Left();
+  mPanes.at(Panes::Snippets).info.Left();
+  mPanes.at(Panes::Preview).info.Bottom();
+  mPanes.at(Panes::Publish).info.Bottom();
 
+  mPanes.at(Panes::History).info.Layer(0);
+  mPanes.at(Panes::Subscriptions).info.Layer(1);
+  mPanes.at(Panes::Snippets).info.Layer(1);
+  mPanes.at(Panes::Preview).info.Layer(2);
+  mPanes.at(Panes::Publish).info.Layer(2);
+
+  mPanes.at(Panes::History).info.MinSize(wxSize(100, 100));
+  mPanes.at(Panes::Subscriptions).info.MinSize(wxSize(300, 100));
+  mPanes.at(Panes::Snippets).info.MinSize(wxSize(150, 100));
+  mPanes.at(Panes::Preview).info.MinSize(wxSize(200, 200));
+  mPanes.at(Panes::Publish).info.MinSize(wxSize(200, 200));
+
+  auto wrapper = new wxPanel(this, -1);
+
+  setupPanelPublish(wrapper);
+  setupPanelHistory(wrapper);
+  setupPanelSubscriptions(wrapper);
+  setupPanelPreview(wrapper);
+  setupPanelSnippets(wrapper);
   setupPanelConnect(this);
-  setupPanelPublish(mSplitBottom);
-  setupPanelHistory(mSplitHistory);
-  setupPanelSubscriptions(mSplitHistory);
-  setupPanelPreview(mSplitTop);
-  setupPanelSnippets(mSplitBottom);
 
-  auto s = new wxBoxSizer(wxVERTICAL);
-  s->Add(mConnectionBar, 0, wxEXPAND);
-  s->Add(mSplitCenter, 1, wxEXPAND);
-  SetSizer(s);
+  mMasterSizer = new wxBoxSizer(wxVERTICAL);
+  mMasterSizer->Add(mConnectionBar, 0, wxEXPAND);
+  mMasterSizer->Add(wrapper, 1, wxEXPAND);
+  SetSizer(mMasterSizer);
 
-#else
-
-  setupPanelConnect(this);
-  setupPanelPublish(this);
-  setupPanelHistory(this);
-  setupPanelSubscriptions(this);
-  setupPanelPreview(this);
-  setupPanelSnippets(this);
-
-  wxAuiPaneInfo connectionInfo;
-  wxAuiPaneInfo historyInfo;
-  wxAuiPaneInfo previewInfo;
-  wxAuiPaneInfo publishInfo;
-  wxAuiPaneInfo subscriptionsInfo;
-  wxAuiPaneInfo snippetsInfo;
-
-  connectionInfo.Caption("Connection");
-  historyInfo.Caption("History");
-  previewInfo.Caption("Preview");
-  publishInfo.Caption("Publish");
-  subscriptionsInfo.Caption("Subscriptions");
-  snippetsInfo.Caption("Snippets");
-
-  connectionInfo.Movable(true);
-  historyInfo.Movable(true);
-  previewInfo.Movable(true);
-  publishInfo.Movable(true);
-  subscriptionsInfo.Movable(true);
-  snippetsInfo.Movable(true);
-
-  connectionInfo.Floatable(true);
-  historyInfo.Floatable(true);
-  previewInfo.Floatable(true);
-  publishInfo.Floatable(true);
-  subscriptionsInfo.Floatable(true);
-  snippetsInfo.Floatable(true);
-
-  previewInfo.Center();
-  connectionInfo.Left();
-  historyInfo.Left();
-  publishInfo.Left();
-  subscriptionsInfo.Left();
-  snippetsInfo.Left();
-
-  previewInfo.Layer(0);
-  connectionInfo.Layer(1);
-  historyInfo.Layer(1);
-  publishInfo.Layer(2);
-  subscriptionsInfo.Layer(1);
-  snippetsInfo.Layer(3);
-
-  publishInfo.BestSize(wxSize(300, 500));
-  connectionInfo.MaxSize(wxSize(300, 80));
-  subscriptionsInfo.BestSize(wxSize(500, 0));
-
-  mAuiMan.SetManagedWindow(this);
-  mAuiMan.AddPane(mConnectionBar,    connectionInfo);
-  mAuiMan.AddPane(mSubscriptions, subscriptionsInfo);
-  mAuiMan.AddPane(mPublish,    publishInfo);
-  mAuiMan.AddPane(mHistory,       historyInfo);
-  mAuiMan.AddPane(mPreview,       previewInfo);
-  mAuiMan.AddPane(mSnippets,      snippetsInfo);
+  mAuiMan.SetManagedWindow(wrapper);
+  for (const auto &pane : mPanes)
+  {
+    mAuiMan.AddPane(pane.second.panel, pane.second.info);
+  }
   mAuiMan.Update();
+}
 
-#endif
+Client::~Client()
+{
+  mAuiMan.UnInit();
 }
 
 void Client::setupPanelHistory(wxWindow *parent)
@@ -153,10 +171,11 @@ void Client::setupPanelHistory(wxWindow *parent)
 
   wxFont font(wxFontInfo(9).FaceName("Consolas"));
 
-  mHistory = new wxPanel(parent, -1, wxDefaultPosition);
+  auto panel = new wxPanel(parent, -1, wxDefaultPosition);
+  mPanes.at(Panes::History).panel = panel;
 
   mHistoryCtrl = new wxDataViewCtrl(
-    mHistory,
+    panel,
     -1,
     wxDefaultPosition,
     wxDefaultSize,
@@ -174,7 +193,7 @@ void Client::setupPanelHistory(wxWindow *parent)
   mHistoryCtrl->AppendColumn(retained);
   mHistoryCtrl->AppendColumn(topic);
 
-  mAutoScroll = new wxCheckBox( mHistory, -1, "auto-scroll");
+  mAutoScroll = new wxCheckBox(panel, -1, "auto-scroll");
   mAutoScroll->SetValue(true);
 
   auto hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
@@ -183,21 +202,81 @@ void Client::setupPanelHistory(wxWindow *parent)
   auto vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(mHistoryCtrl, 1, wxEXPAND);
   vsizer->Add(hsizer, 0, wxEXPAND);
-  mHistory->SetSizer(vsizer);
+  panel->SetSizer(vsizer);
 
-  mHistoryCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Client::onHistorySelected, this);
-  mHistoryCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &Client::onHistoryContext, this);
+  mHistoryCtrl->Bind(
+    wxEVT_DATAVIEW_SELECTION_CHANGED,
+    &Client::onHistorySelected,
+    this
+  );
+  mHistoryCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
+    &Client::onHistoryContext,
+    this
+  );
 }
 
 void Client::setupPanelConnect(wxWindow *parent)
 {
-  mConnectionBar = new wxPanel(parent, -1, wxDefaultPosition, wxDefaultSize);
+  mConnectionBar = new wxPanel(parent, -1);
 
   mConnect  = new wxButton(mConnectionBar, -1, "Connect");
 
+  auto cb = [this](Panes pane, wxCommandEvent &e)
+  {
+    auto widget = mPanes.at(pane);
+
+    auto currentInfo = mAuiMan.GetPane(widget.panel);
+
+    if (currentInfo.IsOk())
+    {
+      if (currentInfo.IsDocked())
+      {
+        mPanes.at(pane).info = currentInfo;
+      }
+      mAuiMan.DetachPane(widget.panel);
+      widget.panel->Show(false);
+      widget.toggle->SetBackgroundColour(wxColor(150, 150, 150));
+    }
+    else
+    {
+      widget.panel->Show(true);
+      mAuiMan.AddPane(widget.panel, mPanes.at(pane).info);
+      widget.toggle->SetBackgroundColour(wxNullColour);
+    }
+    mAuiMan.Update();
+  };
+
   wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   hsizer->SetMinSize(0, OptionsHeight);
-  hsizer->Add(mConnect,  0, wxEXPAND);
+  hsizer->Add(mConnect, 0, wxEXPAND);
+
+  for (auto &pane : mPanes)
+  {
+    if (pane.first == Panes::History)
+    {
+      continue;
+    }
+
+    auto bitmap = mPanes.at(pane.first).icon18x18;
+    auto button = new wxButton(
+      mConnectionBar,
+      -1,
+      "",
+      wxDefaultPosition,
+      wxSize(OptionsHeight, OptionsHeight)
+    );
+    button->SetToolTip(pane.second.name);
+    button->SetBitmap(*bitmap);
+    button->Bind(
+      wxEVT_BUTTON,
+      std::bind(cb, pane.first, std::placeholders::_1)
+    );
+    hsizer->Add(button, 0, wxEXPAND);
+
+    pane.second.toggle = button;
+  }
+
   mConnectionBar->SetSizer(hsizer);
 
   mConnect->Bind(wxEVT_BUTTON, &Client::onConnectClicked, this);
@@ -227,9 +306,16 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
   wxFont font(wxFontInfo(9).FaceName("Consolas"));
 
-  mSubscriptions = new wxPanel(parent, -1, wxDefaultPosition);
+  auto panel = new wxPanel(parent, -1, wxDefaultPosition);
+  mPanes.at(Panes::Subscriptions).panel = panel;
 
-  mSubscriptionsCtrl = new wxDataViewListCtrl(mSubscriptions, -1, wxDefaultPosition, wxDefaultSize, wxDV_NO_HEADER);
+  mSubscriptionsCtrl = new wxDataViewListCtrl(
+    panel,
+    -1,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxDV_NO_HEADER
+  );
   mSubscriptionsCtrl->AppendColumn(icon);
   mSubscriptionsCtrl->AppendColumn(qos);
   mSubscriptionsCtrl->AppendColumn(topic);
@@ -240,14 +326,14 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mSubscriptionsCtrl->SetFont(font);
 
   mSubscribe = new wxBitmapButton(
-    mSubscriptions,
+    panel,
     -1,
     *bin2c_plus_18x18_png,
     wxDefaultPosition,
     wxSize(OptionsHeight, OptionsHeight)
   );
 
-  mFilter = new Widgets::TopicCtrl(mSubscriptions, -1);
+  mFilter = new Widgets::TopicCtrl(panel, -1);
   mFilter->SetFont(font);
 
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
@@ -257,24 +343,34 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   hsizer->Add(mSubscribe,  0, wxEXPAND);
   vsizer->Add(hsizer,  0, wxEXPAND);
   vsizer->Add(mSubscriptionsCtrl,  1, wxEXPAND);
-  mSubscriptions->SetSizer(vsizer);
+  panel->SetSizer(vsizer);
 
-  mSubscriptionsCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Client::onSubscriptionSelected, this);
-  mSubscriptionsCtrl->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &Client::onSubscriptionContext, this);
+  mSubscriptionsCtrl->Bind(
+    wxEVT_DATAVIEW_SELECTION_CHANGED,
+    &Client::onSubscriptionSelected,
+    this
+  );
+  mSubscriptionsCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
+    &Client::onSubscriptionContext,
+    this
+  );
   mSubscribe->Bind(wxEVT_BUTTON, &Client::onSubscribeClicked, this);
   mFilter->Bind(wxEVT_KEY_DOWN, &Client::onSubscribeEnter, this);
 }
 
 void Client::setupPanelPreview(wxWindow *parent)
 {
-  mPreview = new Widgets::Edit(parent, -1, OptionsHeight);
-  mPreview->setReadOnly(true);
+  auto panel = new Widgets::Edit(parent, -1, OptionsHeight);
+  mPanes.at(Panes::Preview).panel = panel;
+  panel->setReadOnly(true);
 }
 
 void Client::setupPanelPublish(wxWindow *parent)
 {
-  mPublish = new Widgets::Edit(parent, -1, OptionsHeight);
-  mPublish->Bind(wxEVT_BUTTON, &Client::onPublishClicked, this);
+  auto panel = new Widgets::Edit(parent, -1, OptionsHeight);
+  mPanes.at(Panes::Publish).panel = panel;
+  panel->Bind(wxEVT_BUTTON, &Client::onPublishClicked, this);
 }
 
 void Client::setupPanelSnippets(wxWindow *parent)
@@ -287,9 +383,16 @@ void Client::setupPanelSnippets(wxWindow *parent)
     wxALIGN_LEFT
   );
 
-  mSnippets = new wxPanel(parent, -1);
+  auto panel = new wxPanel(parent, -1);
+  mPanes.at(Panes::Snippets).panel = panel;
 
-  mSnippetsCtrl = new wxDataViewListCtrl(mSnippets, -1, wxDefaultPosition, wxDefaultSize, wxDV_NO_HEADER);
+  mSnippetsCtrl = new wxDataViewListCtrl(
+    panel,
+    -1,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxDV_NO_HEADER
+  );
   mSnippetsCtrl->AppendColumn(name);
 
   mSnippetsModel = new Models::Snippets;
@@ -301,18 +404,20 @@ void Client::setupPanelSnippets(wxWindow *parent)
 
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(mSnippetsCtrl, 1, wxEXPAND);
-  mSnippets->SetSizer(vsizer);
+  panel->SetSizer(vsizer);
 }
 
 void Client::onPublishClicked(wxCommandEvent &event)
 {
+  auto publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
+
   if (!mClient->connected()) { return; }
-  auto topic = mPublish->getTopic();
+  auto topic = publish->getTopic();
   if (topic.empty()) { return; }
 
-  auto payload  = mPublish->getPayload();
-  auto qos      = mPublish->getQos();
-  bool retained = mPublish->getRetained();
+  auto payload  = publish->getPayload();
+  auto qos      = publish->getQos();
+  bool retained = publish->getRetained();
 
   mClient->publish(topic, payload, qos, retained);
 }
@@ -360,24 +465,17 @@ void Client::onConnectClicked(wxCommandEvent &event)
   }
 }
 
-Client::~Client()
-{
-#if BUILD_DOCKING
-
-  mAuiMan.UnInit();
-
-#endif
-}
-
 void Client::onHistorySelected(wxDataViewEvent &event)
 {
   if (!event.GetItem().IsOk()) { return; }
   auto item = event.GetItem();
 
-  mPreview->setPayload(mHistoryModel->getPayload(item));
-  mPreview->setTopic(mHistoryModel->getTopic(item));
-  mPreview->setQos(mHistoryModel->getQos(item));
-  mPreview->setRetained(mHistoryModel->getRetained(item));
+  auto preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
+
+  preview->setPayload(mHistoryModel->getPayload(item));
+  preview->setTopic(mHistoryModel->getTopic(item));
+  preview->setQos(mHistoryModel->getQos(item));
+  preview->setRetained(mHistoryModel->getRetained(item));
 }
 
 void Client::onSubscriptionContext(wxDataViewEvent& dve)
@@ -433,7 +531,10 @@ void Client::onContextSelected(wxCommandEvent& event)
       auto item = mSubscriptionsCtrl->GetSelection();
       mSubscriptionsModel->unsubscribe(item);
       auto selected = mHistoryCtrl->GetSelection();
-      mPreview->clear();
+      auto preview = dynamic_cast<Widgets::Edit*>(
+        mPanes.at(Panes::Preview).panel
+      );
+      preview->clear();
       mHistoryCtrl->Unselect(selected);
     } break;
     case ContextIDs::SubscriptionsSolo: {
@@ -476,11 +577,14 @@ void Client::onContextSelected(wxCommandEvent& event)
       wxLogMessage("Requesting edit");
       auto item = mHistoryCtrl->GetSelection();
       if (!item.IsOk()) { return; }
-      mPublish->clear();
-      mPublish->setTopic(mHistoryModel->getTopic(item));
-      mPublish->setQos(mHistoryModel->getQos(item));
-      mPublish->setPayload(mHistoryModel->getPayload(item));
-      mPublish->setRetained(mHistoryModel->getRetained(item));
+      auto publish = dynamic_cast<Widgets::Edit*>(
+        mPanes.at(Panes::Publish).panel
+      );
+      publish->clear();
+      publish->setTopic(mHistoryModel->getTopic(item));
+      publish->setQos(mHistoryModel->getQos(item));
+      publish->setPayload(mHistoryModel->getPayload(item));
+      publish->setRetained(mHistoryModel->getRetained(item));
     } break;
   }
   event.Skip(true);
@@ -490,7 +594,10 @@ void Client::onClose(wxCloseEvent &event)
 {
   if (mClient->connected())
   {
-    mPreview->setPayload("Closing...");
+    auto preview = dynamic_cast<Widgets::Edit*>(
+      mPanes.at(Panes::Preview).panel
+    );
+    preview->setPayload("Closing...");
     mClient->disconnect();
   }
   Destroy();
@@ -506,22 +613,11 @@ void Client::onMessage(wxDataViewItem item)
   mHistoryCtrl->Select(item);
   mHistoryCtrl->EnsureVisible(item);
 
-  mPreview->setPayload(mHistoryModel->getPayload(item));
-  mPreview->setTopic(mHistoryModel->getTopic(item));
-  mPreview->setQos(mHistoryModel->getQos(item));
-  mPreview->setRetained(mHistoryModel->getRetained(item));
-}
-
-void Client::resize() const
-{
-#if not BUILD_DOCKING
-
-  mSplitCenter->SplitHorizontally(mSplitTop, mSplitBottom);
-  mSplitTop->SplitVertically(mSplitHistory, mPreview);
-  mSplitBottom->SplitVertically(mSnippets, mPublish);
-  mSplitHistory->SplitHorizontally(mSubscriptions, mHistory);
-
-#endif
+  auto preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
+  preview->setPayload(mHistoryModel->getPayload(item));
+  preview->setTopic(mHistoryModel->getTopic(item));
+  preview->setQos(mHistoryModel->getQos(item));
+  preview->setRetained(mHistoryModel->getRetained(item));
 }
 
 void Client::onConnected()
