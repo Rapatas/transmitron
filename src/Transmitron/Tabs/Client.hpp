@@ -61,6 +61,7 @@ private:
     wxPanel *panel;
     wxBitmap *icon18x18;
     wxBitmap *icon18x14;
+    wxButton *toggle;
   };
 
   std::map<Panes, Pane> mPanes;
@@ -74,7 +75,6 @@ private:
   // Connection:
   wxPanel *mConnectionBar;
   wxButton *mConnect;
-  wxStatusBar *mStatusBar;
 
   // History:
   wxObjectDataPtr<Models::History> mHistoryModel;

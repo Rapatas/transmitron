@@ -224,30 +224,34 @@ void Client::setupPanelConnect(wxWindow *parent)
 
   auto cb = [this](Panes pane, wxCommandEvent &e)
   {
-    auto widget = mPanes.at(pane).panel;
+    auto widget = mPanes.at(pane);
 
-    auto currentInfo = mAuiMan.GetPane(widget);
+    auto currentInfo = mAuiMan.GetPane(widget.panel);
 
     if (currentInfo.IsOk())
     {
-      mPanes.at(pane).info = currentInfo;
-      mAuiMan.DetachPane(widget);
-      mAuiMan.Update();
-      widget->Show(false);
+      if (currentInfo.IsDocked())
+      {
+        mPanes.at(pane).info = currentInfo;
+      }
+      mAuiMan.DetachPane(widget.panel);
+      widget.panel->Show(false);
+      widget.toggle->SetBackgroundColour(wxColor(150, 150, 150));
     }
     else
     {
-      widget->Show(true);
-      mAuiMan.AddPane(widget, mPanes.at(pane).info);
-      mAuiMan.Update();
+      widget.panel->Show(true);
+      mAuiMan.AddPane(widget.panel, mPanes.at(pane).info);
+      widget.toggle->SetBackgroundColour(wxNullColour);
     }
+    mAuiMan.Update();
   };
 
   wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   hsizer->SetMinSize(0, OptionsHeight);
   hsizer->Add(mConnect, 0, wxEXPAND);
 
-  for (const auto &pane : mPanes)
+  for (auto &pane : mPanes)
   {
     if (pane.first == Panes::History)
     {
@@ -265,6 +269,8 @@ void Client::setupPanelConnect(wxWindow *parent)
       std::bind(cb, pane.first, std::placeholders::_1)
     );
     hsizer->Add(button, 0, wxEXPAND);
+
+    pane.second.toggle = button;
   }
 
   mConnectionBar->SetSizer(hsizer);
