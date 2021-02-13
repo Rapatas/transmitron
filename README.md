@@ -1,6 +1,6 @@
 # Transmitron
 
-![Preview](https://i.imgur.com/eGsQBel.png "2 connections, 4 subscriptions, homepage")
+![Preview](https://i.imgur.com/1whe3Pf.png "2 connections, 4 subscriptions, homepage")
 
 ## Build
 
