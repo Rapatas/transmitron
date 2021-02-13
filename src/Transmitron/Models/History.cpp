@@ -151,11 +151,25 @@ wxString History::GetColumnType(unsigned int col) const
 {
   switch ((Column)col)
   {
-    case Column::Icon:  { return "wxColour";                                 } break;
-    case Column::Retained:
-    case Column::Qos:   { return wxDataViewBitmapRenderer::GetDefaultType(); } break;
-    case Column::Topic: { return wxDataViewTextRenderer::GetDefaultType();   } break;
-    default: { return "string"; }
+    case Column::Icon:
+    {
+      return "wxColour";
+    } break;
+
+    case Column::Qos:
+    {
+      return wxDataViewBitmapRenderer::GetDefaultType();
+    } break;
+
+    case Column::Topic:
+    {
+      return wxDataViewIconTextRenderer::GetDefaultType();
+    } break;
+
+    default:
+    {
+      return "string";
+    }
   }
 }
 
@@ -180,14 +194,15 @@ void History::GetValueByRow(
       variant << b;
     } break;
     case Column::Topic: {
-      variant = m.msg->get_topic();
-    } break;
-    case Column::Retained: {
-      wxBitmap *result;
-      result = m.msg->is_retained()
-        ? bin2c_pinned_18x18_png
-        : bin2c_not_pinned_18x18_png;
-      variant << *result;
+      wxDataViewIconText result;
+      result.SetText(m.msg->get_topic());
+      if (m.msg->is_retained())
+      {
+        wxIcon icon;
+        icon.CopyFromBitmap(*bin2c_pinned_18x18_png);
+        result.SetIcon(icon);
+      }
+      variant << result;
     } break;
     case Column::Qos: {
       wxBitmap *result;

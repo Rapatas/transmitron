@@ -151,7 +151,7 @@ void Client::setupPanelHistory(wxWindow *parent)
   );
   wxDataViewColumn* const topic = new wxDataViewColumn(
     L"topic",
-    new wxDataViewTextRenderer(),
+    new wxDataViewIconTextRenderer(),
     (unsigned)Models::History::Column::Topic,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
@@ -161,12 +161,6 @@ void Client::setupPanelHistory(wxWindow *parent)
     new wxDataViewBitmapRenderer(),
     (unsigned)Models::History::Column::Qos,
     wxCOL_WIDTH_AUTOSIZE
-  );
-  wxDataViewColumn* const retained = new wxDataViewColumn(
-    L"retained",
-    new wxDataViewBitmapRenderer(),
-    (unsigned)Models::History::Column::Retained,
-    25
   );
 
   wxFont font(wxFontInfo(9).FaceName("Consolas"));
@@ -190,7 +184,6 @@ void Client::setupPanelHistory(wxWindow *parent)
 
   mHistoryCtrl->AppendColumn(icon);
   mHistoryCtrl->AppendColumn(qos);
-  mHistoryCtrl->AppendColumn(retained);
   mHistoryCtrl->AppendColumn(topic);
 
   mAutoScroll = new wxCheckBox(panel, -1, "auto-scroll");

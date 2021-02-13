@@ -30,7 +30,6 @@ public:
   {
     Icon,
     Qos,
-    Retained,
     Topic,
     Max
   };
