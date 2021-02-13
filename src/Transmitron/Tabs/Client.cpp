@@ -259,11 +259,14 @@ void Client::setupPanelConnect(wxWindow *parent)
     }
 
     auto bitmap = mPanes.at(pane.first).icon18x18;
-    auto button = new wxBitmapButton(
+    auto button = new wxButton(
       mConnectionBar,
       -1,
-      *bitmap
+      "",
+      wxDefaultPosition,
+      wxSize(OptionsHeight, OptionsHeight)
     );
+    button->SetBitmap(*bitmap);
     button->Bind(
       wxEVT_BUTTON,
       std::bind(cb, pane.first, std::placeholders::_1)
