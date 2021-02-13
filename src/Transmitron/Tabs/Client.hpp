@@ -45,6 +45,18 @@ private:
     HistoryEdit,
   };
 
+  enum class Panes : unsigned
+  {
+    History,
+    Subscriptions,
+    Snippets,
+    Publish,
+    Preview,
+  };
+
+  std::map<Panes, wxAuiPaneInfo> mPaneInfos;
+  std::map<Panes, wxWindow*> mPanes;
+
   static const size_t OptionsHeight = 26;
 
   std::shared_ptr<Types::Connection> mConnection;
@@ -57,26 +69,17 @@ private:
   wxStatusBar *mStatusBar;
 
   // History:
-  wxPanel *mHistory;
   wxObjectDataPtr<Models::History> mHistoryModel;
   wxDataViewCtrl *mHistoryCtrl;
   wxCheckBox *mAutoScroll;
 
-  // Preview:
-  Widgets::Edit *mPreview;
-
-  // Publish:
-  Widgets::Edit *mPublish;
-
   // Subscriptions:
   wxBitmapButton *mSubscribe;
   Widgets::TopicCtrl *mFilter;
-  wxPanel *mSubscriptions;
   Models::Subscriptions *mSubscriptionsModel;
   wxDataViewCtrl *mSubscriptionsCtrl;
 
   // Snippets:
-  wxPanel *mSnippets;
   wxObjectDataPtr<Models::Snippets> mSnippetsModel;
   wxDataViewCtrl *mSnippetsCtrl;
 
