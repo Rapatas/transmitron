@@ -266,6 +266,7 @@ void Client::setupPanelConnect(wxWindow *parent)
       wxDefaultPosition,
       wxSize(OptionsHeight, OptionsHeight)
     );
+    button->SetToolTip(pane.second.name);
     button->SetBitmap(*bitmap);
     button->Bind(
       wxEVT_BUTTON,
