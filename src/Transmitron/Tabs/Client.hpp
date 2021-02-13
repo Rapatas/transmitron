@@ -47,15 +47,23 @@ private:
 
   enum class Panes : unsigned
   {
-    History,
-    Subscriptions,
-    Snippets,
-    Publish,
-    Preview,
+    History = 0,
+    Preview = 4,
+    Publish = 3,
+    Snippets = 2,
+    Subscriptions = 1,
   };
 
-  std::map<Panes, wxAuiPaneInfo> mPaneInfos;
-  std::map<Panes, wxWindow*> mPanes;
+  struct Pane
+  {
+    std::string name;
+    wxAuiPaneInfo info;
+    wxPanel *panel;
+    wxBitmap *icon18x18;
+    wxBitmap *icon18x14;
+  };
+
+  std::map<Panes, Pane> mPanes;
 
   static const size_t OptionsHeight = 26;
 
@@ -113,7 +121,7 @@ private:
   // Models::History::Observer interface.
   void onMessage(wxDataViewItem item) override;
 
-  wxAuiManager *mAuiMan;
+  wxAuiManager mAuiMan;
 
 };
 
