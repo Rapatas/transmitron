@@ -43,6 +43,7 @@ private:
     HistoryRetainedClear,
     HistoryResend,
     HistoryEdit,
+    HistorySaveSnippet,
   };
 
   enum class Panes : unsigned

@@ -14,6 +14,7 @@
 #include "Transmitron/Resources/snippets/snippets-18x18.hpp"
 #include "Transmitron/Resources/subscription/subscription-18x14.hpp"
 #include "Transmitron/Resources/subscription/subscription-18x18.hpp"
+#include "Transmitron/Widgets/SnippetDialog.hpp"
 
 #define wxLOG_COMPONENT "Client"
 
@@ -505,6 +506,7 @@ void Client::onHistoryContext(wxDataViewEvent& dve)
   menu.Append((unsigned)ContextIDs::HistoryEdit, "Edit");
   menu.Append((unsigned)ContextIDs::HistoryResend, "Re-Send");
   menu.Append((unsigned)ContextIDs::HistoryRetainedClear, "Clear retained");
+  menu.Append((unsigned)ContextIDs::HistorySaveSnippet, "Save snippet");
   PopupMenu(&menu);
 }
 
@@ -578,6 +580,15 @@ void Client::onContextSelected(wxCommandEvent& event)
       publish->setQos(mHistoryModel->getQos(item));
       publish->setPayload(mHistoryModel->getPayload(item));
       publish->setRetained(mHistoryModel->getRetained(item));
+    } break;
+    case ContextIDs::HistorySaveSnippet: {
+      wxLogMessage("Requesting save snippet");
+      wxObjectDataPtr<Models::SnippetFolders> snippetFoldersModel;
+      snippetFoldersModel = new Models::SnippetFolders;
+      snippetFoldersModel->load(mSnippetsModel);
+      auto dialog = new Widgets::SnippetDialog(this, -1, snippetFoldersModel);
+      dialog->CenterOnParent();
+      dialog->Show();
     } break;
   }
   event.Skip(true);

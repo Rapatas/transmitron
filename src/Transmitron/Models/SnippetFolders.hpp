@@ -1,15 +1,16 @@
-#ifndef TRANSMITRON_MODELS_SNIPPETS_HPP
-#define TRANSMITRON_MODELS_SNIPPETS_HPP
+#ifndef TRANSMITRON_MODELS_SNIPPETFOLDERS_HPP
+#define TRANSMITRON_MODELS_SNIPPETFOLDERS_HPP
 
 #include <memory>
 #include <filesystem>
 #include <wx/dataview.h>
+#include "Snippets.hpp"
 #include "MQTT/Message.hpp"
 
 namespace Transmitron::Models
 {
 
-class Snippets :
+class SnippetFolders :
   public wxDataViewModel
 {
 public:
@@ -20,9 +21,11 @@ public:
     Max
   };
 
-  explicit Snippets();
+  explicit SnippetFolders();
 
-  bool load(const std::string &connectionDir);
+  bool load(const wxObjectDataPtr<Snippets> snippetsModel);
+
+  wxDataViewItem getRootItem() const;
 
   virtual unsigned GetColumnCount() const override;
   virtual wxString GetColumnType(unsigned int col) const override;
@@ -55,25 +58,21 @@ private:
 
   struct Node
   {
-    enum class Type
-    {
-      Folder,
-      Snippet,
-    };
-
     using Index_t = size_t;
 
     Index_t parent;
     std::string name;
-    Type type;
     std::vector<Index_t> children;
-    std::unique_ptr<MQTT::Message> mMessage;
+    wxDataViewItem snippetItem;
   };
 
   std::vector<Node> mNodes;
-  std::string mSnippetsDir;
+  std::string mSnippetFoldersDir;
 
-  void loadRecursive(const std::filesystem::path &snippetsDir);
+  void loadRecursive(
+    const wxDataViewItem &parent,
+    wxObjectDataPtr<Snippets> snippetsModel
+  );
 
   static Node::Index_t toIndex(const wxDataViewItem &item);
   static wxDataViewItem toItem(Node::Index_t index);
@@ -82,4 +81,4 @@ private:
 
 }
 
-#endif // TRANSMITRON_MODELS_SNIPPETS_HPP
+#endif // TRANSMITRON_MODELS_SNIPPETFOLDERS_HPP
