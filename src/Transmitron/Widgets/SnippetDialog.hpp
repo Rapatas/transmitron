@@ -18,12 +18,14 @@ public:
   explicit SnippetDialog(
     wxWindow *parent,
     wxWindowID id,
-    wxObjectDataPtr<Models::SnippetFolders> snippetFoldersModel
+    wxObjectDataPtr<Models::SnippetFolders> snippetFoldersModel,
+    size_t optionsHeight
   );
   virtual ~SnippetDialog() = default;
 
 private:
 
+  const size_t OptionsHeight;
   wxObjectDataPtr<Models::SnippetFolders> mSnippetFoldersModel;
   wxDataViewCtrl *mSnippetsCtrl;
   wxTextCtrl *mSnippetName;

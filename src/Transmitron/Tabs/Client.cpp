@@ -586,7 +586,7 @@ void Client::onContextSelected(wxCommandEvent& event)
       wxObjectDataPtr<Models::SnippetFolders> snippetFoldersModel;
       snippetFoldersModel = new Models::SnippetFolders;
       snippetFoldersModel->load(mSnippetsModel);
-      auto dialog = new Widgets::SnippetDialog(this, -1, snippetFoldersModel);
+      auto dialog = new Widgets::SnippetDialog(this, -1, snippetFoldersModel, OptionsHeight);
       dialog->CenterOnParent();
       dialog->Show();
     } break;
