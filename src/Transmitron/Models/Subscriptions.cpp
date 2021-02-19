@@ -201,7 +201,7 @@ void Subscriptions::onUnsubscribed(Events::Subscription &e)
   }
 
   mHistory->remove(e.getSubscription());
-  ItemDeleted(wxDataViewItem(0), GetItem(std::begin(mSubscriptions) - it));
+  ItemDeleted(wxDataViewItem(0), GetItem(it - std::begin(mSubscriptions)));
   mSubscriptions.erase(it);
 }
 
