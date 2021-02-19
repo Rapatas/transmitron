@@ -37,7 +37,7 @@ void History::insert(
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
 
-    auto item = GetItem(mMessages.size() - 1);
+    auto item = GetItem(mRemap.size() - 1);
     for (const auto &o : mObservers)
     {
       o.second->onMessage(item);
