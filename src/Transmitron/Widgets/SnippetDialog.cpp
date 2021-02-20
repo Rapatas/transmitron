@@ -11,7 +11,7 @@ SnippetDialog::SnippetDialog(
   wxWindowID id,
   wxObjectDataPtr<Models::SnippetFolders> snippetFoldersModel,
   size_t optionsHeight,
-  MQTT::Message message
+  std::shared_ptr<MQTT::Message> message
 ) :
   wxDialog(
     parent,

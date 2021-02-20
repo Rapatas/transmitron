@@ -67,7 +67,7 @@ private:
     std::string name;
     Type type;
     std::vector<Index_t> children;
-    std::unique_ptr<MQTT::Message> mMessage;
+    std::shared_ptr<MQTT::Message> message;
   };
 
   std::vector<Node> mNodes;

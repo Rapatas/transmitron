@@ -21,7 +21,7 @@ public:
     wxWindowID id,
     wxObjectDataPtr<Models::SnippetFolders> snippetFoldersModel,
     size_t optionsHeight,
-    MQTT::Message message
+    std::shared_ptr<MQTT::Message> message
   );
   virtual ~SnippetDialog() = default;
 
@@ -32,7 +32,7 @@ private:
   wxObjectDataPtr<Models::SnippetFolders> mSnippetFoldersModel;
   wxDataViewCtrl *mSnippetsCtrl;
   wxTextCtrl *mSnippetName;
-  MQTT::Message mMessage;
+  std::shared_ptr<MQTT::Message> mMessage;
 
   void onSaveClicked(wxMouseEvent &e);
   void onCancelClicked(wxMouseEvent &e);

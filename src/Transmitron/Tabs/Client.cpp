@@ -592,7 +592,7 @@ void Client::onContextSelected(wxCommandEvent& event)
         -1,
         snippetFoldersModel,
         OptionsHeight,
-        std::move(message)
+        message
       );
       dialog->CenterOnParent();
       dialog->Show();

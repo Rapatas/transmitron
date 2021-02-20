@@ -52,7 +52,7 @@ public:
   std::string getTopic(const wxDataViewItem &item) const;
   MQTT::QoS getQos(const wxDataViewItem &item) const;
   bool getRetained(const wxDataViewItem &item) const;
-  MQTT::Message getMessage(const wxDataViewItem &item) const;
+  std::shared_ptr<MQTT::Message> getMessage(const wxDataViewItem &item) const;
 
   // wxDataViewVirtualListModel interface.
   virtual unsigned GetColumnCount() const override;
