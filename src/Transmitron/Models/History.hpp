@@ -4,6 +4,7 @@
 #include <wx/dataview.h>
 #include <mqtt/message.h>
 #include "MQTT/Client.hpp"
+#include "MQTT/Message.hpp"
 #include "Transmitron/Types/SubscriptionData.hpp"
 
 namespace Transmitron::Models
@@ -51,6 +52,7 @@ public:
   std::string getTopic(const wxDataViewItem &item) const;
   MQTT::QoS getQos(const wxDataViewItem &item) const;
   bool getRetained(const wxDataViewItem &item) const;
+  MQTT::Message getMessage(const wxDataViewItem &item) const;
 
   // wxDataViewVirtualListModel interface.
   virtual unsigned GetColumnCount() const override;
