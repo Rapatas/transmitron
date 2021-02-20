@@ -10,7 +10,8 @@ SnippetDialog::SnippetDialog(
   wxWindow *parent,
   wxWindowID id,
   wxObjectDataPtr<Models::SnippetFolders> snippetFoldersModel,
-  size_t optionsHeight
+  size_t optionsHeight,
+  MQTT::Message message
 ) :
   wxDialog(
     parent,
@@ -21,7 +22,8 @@ SnippetDialog::SnippetDialog(
     wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER | wxSTAY_ON_TOP
   ),
   mSnippetFoldersModel(snippetFoldersModel),
-  OptionsHeight(optionsHeight)
+  OptionsHeight(optionsHeight),
+  mMessage(std::move(message))
 {
   wxFont font(wxFontInfo(9).FaceName("Consolas"));
 
@@ -86,4 +88,54 @@ SnippetDialog::SnippetDialog(
   wrapper->Add(vsizer, 1, wxEXPAND | wxALL, 10);
 
   SetSizer(wrapper);
+
+  mSnippetName->Bind(
+    wxEVT_KEY_DOWN,
+    &SnippetDialog::onKeyPressed,
+    this
+  );
+  save->Bind(
+    wxEVT_LEFT_DOWN,
+    &SnippetDialog::onSaveClicked,
+    this
+  );
+  cancel->Bind(
+    wxEVT_LEFT_DOWN,
+    &SnippetDialog::onCancelClicked,
+    this
+  );
+  newGroup->Bind(
+    wxEVT_LEFT_DOWN,
+    &SnippetDialog::onNewGroupClicked,
+    this
+  );
+}
+
+void SnippetDialog::onSaveClicked(wxMouseEvent &e)
+{
+  e.Skip();
+}
+
+void SnippetDialog::onCancelClicked(wxMouseEvent &e)
+{
+
+  e.Skip();
+}
+
+void SnippetDialog::onNewGroupClicked(wxMouseEvent &e)
+{
+
+  e.Skip();
+}
+
+void SnippetDialog::onKeyPressed(wxKeyEvent &e)
+{
+  if (e.GetKeyCode() == wxKeyCode::WXK_RETURN)
+  {
+
+  }
+  else
+  {
+    e.Skip();
+  }
 }

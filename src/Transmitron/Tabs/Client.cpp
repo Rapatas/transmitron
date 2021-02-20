@@ -583,10 +583,17 @@ void Client::onContextSelected(wxCommandEvent& event)
     } break;
     case ContextIDs::HistorySaveSnippet: {
       wxLogMessage("Requesting save snippet");
+      auto item = mHistoryCtrl->GetSelection();
+      auto message = mHistoryModel->getMessage(item);
       wxObjectDataPtr<Models::SnippetFolders> snippetFoldersModel;
-      snippetFoldersModel = new Models::SnippetFolders;
-      snippetFoldersModel->load(mSnippetsModel);
-      auto dialog = new Widgets::SnippetDialog(this, -1, snippetFoldersModel, OptionsHeight);
+      snippetFoldersModel = new Models::SnippetFolders(mSnippetsModel);
+      auto dialog = new Widgets::SnippetDialog(
+        this,
+        -1,
+        snippetFoldersModel,
+        OptionsHeight,
+        std::move(message)
+      );
       dialog->CenterOnParent();
       dialog->Show();
     } break;
