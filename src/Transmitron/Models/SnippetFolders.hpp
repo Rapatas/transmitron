@@ -21,11 +21,10 @@ public:
     Max
   };
 
-  explicit SnippetFolders();
-
-  bool load(const wxObjectDataPtr<Snippets> snippetsModel);
+  explicit SnippetFolders(const wxObjectDataPtr<Snippets> snippetsModel);
 
   wxDataViewItem getRootItem() const;
+  bool insert(const MQTT::Message &message, wxDataViewItem parent);
 
   virtual unsigned GetColumnCount() const override;
   virtual wxString GetColumnType(unsigned int col) const override;
@@ -56,26 +55,12 @@ public:
 
 private:
 
-  struct Node
-  {
-    using Index_t = size_t;
+  static constexpr size_t FakeRootId = std::numeric_limits<size_t>::max();
 
-    Index_t parent;
-    std::string name;
-    std::vector<Index_t> children;
-    wxDataViewItem snippetItem;
-  };
+  wxObjectDataPtr<Snippets> mSnippetsModel;
 
-  std::vector<Node> mNodes;
-  std::string mSnippetFoldersDir;
-
-  void loadRecursive(
-    const wxDataViewItem &parent,
-    wxObjectDataPtr<Snippets> snippetsModel
-  );
-
-  static Node::Index_t toIndex(const wxDataViewItem &item);
-  static wxDataViewItem toItem(Node::Index_t index);
+  static size_t toIndex(const wxDataViewItem &item);
+  static wxDataViewItem toItem(size_t index);
 
 };
 

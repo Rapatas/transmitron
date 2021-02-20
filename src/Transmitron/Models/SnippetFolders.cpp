@@ -1,78 +1,25 @@
 #include "SnippetFolders.hpp"
 
-#include <filesystem>
-#include <nlohmann/json.hpp>
-#include <fstream>
 #include <wx/log.h>
-#include <fmt/format.h>
-#include <cppcodec/base32_rfc4648.hpp>
 
-#define wxLOG_COMPONENT "models/snippets"
+#define wxLOG_COMPONENT "models/snippetFolders"
 
-namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 
-SnippetFolders::SnippetFolders()
-{
-  mNodes.emplace_back();
+SnippetFolders::SnippetFolders(const wxObjectDataPtr<Snippets> snippetsModel) :
+  mSnippetsModel(std::move(snippetsModel))
+{}
 
-  Node root {
-    0,
-    "root",
-    {}
-  };
-  mNodes.push_back(std::move(root));
-}
-
-bool SnippetFolders::load(const wxObjectDataPtr<Snippets> snippetsModel)
-{
-  loadRecursive(toItem(0), snippetsModel);
+bool SnippetFolders::insert(
+  const MQTT::Message &message,
+  wxDataViewItem parent
+) {
   return true;
 }
 
 wxDataViewItem SnippetFolders::getRootItem() const
 {
-  return toItem(1);
-}
-
-void SnippetFolders::loadRecursive(
-  const wxDataViewItem &parent,
-  wxObjectDataPtr<Snippets> snippetsModel
-) {
-  auto currentParentIndex = mNodes.size() - 1;
-  wxDataViewItemArray array;
-  snippetsModel->GetChildren(parent, array);
-
-  if (array.empty())
-  {
-    return;
-  }
-
-  for (const auto &item : array)
-  {
-    if (!snippetsModel->IsContainer(item))
-    {
-      continue;
-    }
-
-    wxVariant name;
-    snippetsModel->GetValue(
-      name,
-      item,
-      static_cast<unsigned>(Snippets::Column::Name)
-    );
-    Node newNode {
-      currentParentIndex,
-      name,
-      {},
-      item
-    };
-    mNodes.push_back(std::move(newNode));
-
-    mNodes[currentParentIndex].children.push_back(mNodes.size() - 1);
-
-    loadRecursive(item, snippetsModel);
-  }
+  return toItem(FakeRootId);
 }
 
 unsigned SnippetFolders::GetColumnCount() const
@@ -96,8 +43,14 @@ void SnippetFolders::GetValue(
   const wxDataViewItem &item,
   unsigned int col
 ) const {
-  auto index = toIndex(item);
-  variant = mNodes.at(index).name;
+  if (toIndex(item) == FakeRootId)
+  {
+    variant = "root";
+  }
+  else
+  {
+    mSnippetsModel->GetValue(variant, item, col);
+  }
 }
 
 bool SnippetFolders::SetValue(
@@ -118,17 +71,20 @@ bool SnippetFolders::IsEnabled(
 wxDataViewItem SnippetFolders::GetParent(
   const wxDataViewItem &item
 ) const {
-
-  if (!item.IsOk())
+  if (toIndex(item) == FakeRootId)
   {
-    return wxDataViewItem(0);
+    return wxDataViewItem(nullptr);
   }
 
-  auto index = toIndex(item);
-
-  auto parent = mNodes.at(index).parent;
-
-  return toItem(parent);
+  auto result = mSnippetsModel->GetParent(item);
+  if (!result.IsOk())
+  {
+    return toItem(FakeRootId);
+  }
+  else
+  {
+    return result;
+  }
 }
 
 bool SnippetFolders::IsContainer(
@@ -138,34 +94,42 @@ bool SnippetFolders::IsContainer(
 }
 
 unsigned int SnippetFolders::GetChildren(
-  const wxDataViewItem &parent,
+  const wxDataViewItem &requestedParent,
   wxDataViewItemArray &array
 ) const {
 
-  if (!parent.IsOk())
+  if (!requestedParent.IsOk())
   {
-    array.Add(toItem(1));
+    array.Add(toItem(FakeRootId));
     return 1;
   }
 
-  auto index = toIndex(parent);
+  wxDataViewItem parent = requestedParent;
 
-  const auto &node = mNodes.at(index);
-
-  for (auto i : node.children)
+  if (toIndex(requestedParent) == FakeRootId)
   {
-    array.Add(toItem(i));
+    parent = wxDataViewItem(nullptr);
   }
-  return node.children.size();
+
+  wxDataViewItemArray result;
+  mSnippetsModel->GetChildren(parent, result);
+  for (const auto &child : result)
+  {
+    if (mSnippetsModel->IsContainer(child))
+    {
+      array.Add(child);
+    }
+  }
+
+  return array.size();
 }
 
-SnippetFolders::Node::Index_t SnippetFolders::toIndex(const wxDataViewItem &item)
+size_t SnippetFolders::toIndex(const wxDataViewItem &item)
 {
-  return reinterpret_cast<Node::Index_t>(item.GetID());
+  return reinterpret_cast<size_t>(item.GetID());
 }
 
-wxDataViewItem SnippetFolders::toItem(Node::Index_t index)
+wxDataViewItem SnippetFolders::toItem(size_t index)
 {
   return wxDataViewItem(reinterpret_cast<void*>(index));
 }
-
