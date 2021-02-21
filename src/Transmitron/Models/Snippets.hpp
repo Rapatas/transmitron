@@ -25,6 +25,22 @@ public:
 
   bool load(const std::string &connectionDir);
 
+  wxDataViewItem createFolder(
+    wxDataViewItem parent
+  );
+  wxDataViewItem insert(
+    const std::string &name,
+    std::shared_ptr<MQTT::Message> message,
+    wxDataViewItem parent
+  );
+  wxDataViewItem replace(
+    wxDataViewItem item,
+    std::shared_ptr<MQTT::Message> message
+  );
+  bool remove(wxDataViewItem item);
+
+  bool hasChildNamed(wxDataViewItem parent, const std::string &name) const;
+
   virtual unsigned GetColumnCount() const override;
   virtual wxString GetColumnType(unsigned int col) const override;
   virtual void GetValue(
@@ -77,7 +93,10 @@ private:
   std::map<Node::Index_t, Node> mNodes;
   std::string mSnippetsDir;
 
-  void loadRecursive(const std::filesystem::path &snippetsDir);
+  void loadRecursive(
+    Node::Index_t parentIndex,
+    const std::filesystem::path &parentFullpath
+  );
   void saveAll();
   bool save(Node::Index_t index);
   Node::Index_t getNextIndex();

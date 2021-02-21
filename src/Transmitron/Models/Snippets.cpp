@@ -64,22 +64,192 @@ bool Snippets::load(const std::string &connectionDir)
 
   mNodes.at(0).fullpath = mSnippetsDir;
 
-  loadRecursive(mSnippetsDir);
+  loadRecursive(0, mSnippetsDir);
 
   return true;
 }
 
-void Snippets::loadRecursive(const std::filesystem::path &snippetsDir)
-{
-  Node::Index_t currentParentIndex = mNodes.size() - 1;
+wxDataViewItem Snippets::createFolder(
+  wxDataViewItem parentItem
+) {
+  const constexpr char *newName = "New Folder";
 
-  for (const auto &entry : fs::directory_iterator(snippetsDir))
+  auto parentIndex = toIndex(parentItem);
+  Node &parentNode = mNodes.at(parentIndex);
+  if (parentNode.type != Node::Type::Folder)
+  {
+    return wxDataViewItem(nullptr);
+  }
+
+  // Find a unique name.
+  std::string uniqueName = newName;
+  size_t postfix = 0;
+  while (hasChildNamed(parentItem, uniqueName)) {
+    ++postfix;
+    uniqueName = fmt::format("{} - {}", newName, postfix);
+  }
+
+  wxLogInfo(
+    "Creating folder '%s' under [%zu]'%s'",
+    uniqueName,
+    parentIndex,
+    parentNode.name
+  );
+
+  std::string encoded;
+  try { encoded = cppcodec::base32_rfc4648::encode(uniqueName); }
+  catch (cppcodec::parse_error &e)
+  {
+    wxLogError("Could not encode '%s': %s", uniqueName, e.what());
+    return wxDataViewItem(nullptr);
+  }
+
+  const std::string fullpath = fmt::format(
+    "{}/{}",
+    parentNode.fullpath.c_str(),
+    encoded
+  );
+
+  Node newNode {
+    parentIndex,
+    uniqueName,
+    Node::Type::Folder,
+    {},
+    nullptr,
+    false,
+    fullpath
+  };
+  const auto newIndex = getNextIndex();
+  mNodes.insert({newIndex, std::move(newNode)});
+  mNodes[parentIndex].children.insert(newIndex);
+
+  save(newIndex);
+
+  const auto item = toItem(newIndex);
+  ItemAdded(parentItem, item);
+
+  return item;
+}
+
+wxDataViewItem Snippets::insert(
+  const std::string &name,
+  std::shared_ptr<MQTT::Message> message,
+  wxDataViewItem parentItem
+) {
+  const auto parentIndex = toIndex(parentItem);
+  const auto &parentNode = mNodes.at(parentIndex);
+
+  if (parentNode.type != Node::Type::Folder)
+  {
+    return wxDataViewItem(nullptr);
+  }
+
+  if (hasChildNamed(parentItem, name))
+  {
+    return wxDataViewItem(nullptr);
+  }
+
+  wxLogInfo(
+    "Creating snippet '%s' under [%zu]'%s'",
+    name,
+    parentIndex,
+    parentNode.name
+  );
+
+  std::string encoded;
+  try { encoded = cppcodec::base32_rfc4648::encode(name); }
+  catch (cppcodec::parse_error &e)
+  {
+    wxLogError("Could not encode '%s': %s", name, e.what());
+    return wxDataViewItem(nullptr);
+  }
+
+  const std::string fullpath = fmt::format(
+    "{}/{}",
+    parentNode.fullpath.c_str(),
+    encoded
+  );
+
+  Node newNode {
+    parentIndex,
+    name,
+    Node::Type::Snippet,
+    {},
+    message,
+    false,
+    fullpath
+  };
+  const auto newIndex = getNextIndex();
+  mNodes.insert({newIndex, std::move(newNode)});
+  mNodes[parentIndex].children.insert(newIndex);
+
+  save(newIndex);
+
+  const auto item = toItem(newIndex);
+  ItemAdded(parentItem, item);
+
+  return item;
+}
+
+wxDataViewItem Snippets::replace(
+  wxDataViewItem item,
+  std::shared_ptr<MQTT::Message> message
+) {
+  const auto index = toIndex(item);
+  auto &node = mNodes.at(index);
+  if (node.type != Node::Type::Snippet)
+  {
+    wxLogWarning("Can only replace snippets");
+    return wxDataViewItem(nullptr);
+  }
+
+  std::ofstream output(node.fullpath);
+  if (!output.is_open())
+  {
+    wxLogWarning("Could not open '%s'", node.fullpath.c_str());
+    return wxDataViewItem(nullptr);
+  }
+
+  output << MQTT::Message::toJson(*message);
+  node.message = message;
+  return item;
+}
+
+bool Snippets::remove(wxDataViewItem item)
+{
+  const auto index = toIndex(item);
+  auto &node = mNodes.at(index);
+  const auto parent = GetParent(item);
+
+  std::error_code ec;
+  fs::remove_all(node.fullpath, ec);
+  if (ec)
+  {
+    wxLogError("Could not delete '%s': %s", node.name, ec.message());
+    return false;
+  }
+
+  mNodes.at(toIndex(parent)).children.erase(index);
+  mNodes.erase(index);
+  ItemDeleted(parent, item);
+
+  return true;
+}
+
+void Snippets::loadRecursive(
+  Node::Index_t parentIndex,
+  const std::filesystem::path &parentFullpath
+) {
+  for (const auto &entry : fs::directory_iterator(parentFullpath))
   {
     std::vector<uint8_t> decoded;
-    try { decoded = cppcodec::base32_rfc4648::decode(entry.path().stem().u8string()); }
+    const auto stem = entry.path().stem().u8string();
+    try {
+      decoded = cppcodec::base32_rfc4648::decode(stem);
+    }
     catch (cppcodec::parse_error &e)
     {
-      wxLogError("Could not decode '%s': %s", entry.path().u8string(), e.what());
+      wxLogError("Could not decode '%s': %s", stem, e.what());
       continue;
     }
     std::string name{decoded.begin(), decoded.end()};
@@ -87,7 +257,7 @@ void Snippets::loadRecursive(const std::filesystem::path &snippetsDir)
     if (entry.status().type() == fs::file_type::directory)
     {
       Node newNode {
-        currentParentIndex,
+        parentIndex,
         name,
         Node::Type::Folder,
         {},
@@ -97,8 +267,8 @@ void Snippets::loadRecursive(const std::filesystem::path &snippetsDir)
       };
       const auto newIndex = getNextIndex();
       mNodes.insert({newIndex, std::move(newNode)});
-      mNodes[currentParentIndex].children.insert(newIndex);
-      loadRecursive(entry.path());
+      mNodes[parentIndex].children.insert(newIndex);
+      loadRecursive(newIndex, entry.path());
     }
     else
     {
@@ -122,7 +292,7 @@ void Snippets::loadRecursive(const std::filesystem::path &snippetsDir)
       auto message = std::make_unique<MQTT::Message>(MQTT::Message::fromJson(j));
 
       Node newNode {
-        currentParentIndex,
+        parentIndex,
         name,
         Node::Type::Snippet,
         {},
@@ -132,9 +302,25 @@ void Snippets::loadRecursive(const std::filesystem::path &snippetsDir)
       };
       const auto newIndex = getNextIndex();
       mNodes.insert({newIndex, std::move(newNode)});
-      mNodes[currentParentIndex].children.insert(newIndex);
+      mNodes[parentIndex].children.insert(newIndex);
     }
   }
+}
+
+bool Snippets::hasChildNamed(
+  wxDataViewItem parent,
+  const std::string &name
+) const {
+  const auto index = toIndex(parent);
+  const auto children = mNodes.at(index).children;
+  for (const auto &child : children)
+  {
+    if (mNodes.at(child).name == name)
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 unsigned Snippets::GetColumnCount() const
@@ -163,10 +349,60 @@ void Snippets::GetValue(
 }
 
 bool Snippets::SetValue(
-  const wxVariant &variant,
+  const wxVariant &value,
   const wxDataViewItem &item,
   unsigned int col
 ) {
+  if (!item.IsOk())
+  {
+    return false;
+  }
+  if (static_cast<Column>(col) != Column::Name)
+  {
+    return false;
+  }
+  const std::string newName = value.GetString().ToStdString();
+  auto index = toIndex(item);
+  auto &node = mNodes.at(index);
+  if (node.name == newName) { return true; }
+  if (newName.empty()) { return false; }
+
+  wxLogInfo("Renaming '%zu' to '%s'", index, newName);
+
+  std::string encoded;
+  try { encoded = cppcodec::base32_rfc4648::encode(newName); }
+  catch (cppcodec::parse_error &e)
+  {
+    wxLogError("Could not encode '%s': %s", newName, e.what());
+    return false;
+  }
+
+  const std::string fullpath = fmt::format(
+    "{}/{}",
+    mNodes.at(node.parent).fullpath.c_str(),
+    encoded
+  );
+
+  std::error_code ec;
+  fs::rename(node.fullpath, fullpath, ec);
+  if (ec)
+  {
+    wxLogError(
+      "Failed to rename '%s' to '%s': %s",
+      node.fullpath.c_str(),
+      fullpath,
+      ec.message()
+    );
+    return false;
+  }
+
+  node.name = newName;
+  node.fullpath = fullpath;
+  node.saved = false;
+  save(index);
+  ItemChanged(item);
+  return true;
+
   return false;
 }
 
