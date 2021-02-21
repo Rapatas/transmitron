@@ -14,6 +14,7 @@ using namespace Transmitron::Models;
 
 Snippets::Snippets()
 {
+  const auto index = getNextIndex();
   Node root {
     0,
     "_",
@@ -22,7 +23,7 @@ Snippets::Snippets()
     nullptr
   };
 
-  mNodes.push_back(std::move(root));
+  mNodes.insert({index, std::move(root)});
 }
 
 bool Snippets::load(const std::string &connectionDir)
@@ -37,6 +38,12 @@ bool Snippets::load(const std::string &connectionDir)
 
   bool exists = fs::exists(mSnippetsDir);
   bool isDir = fs::is_directory(mSnippetsDir);
+
+  wxLogDebug(
+    "exists=%s, isDir=%s",
+    (exists ? "yes" : "no"),
+    (isDir ? "yes" : "no")
+  );
 
   if (exists && !isDir && !fs::remove(mSnippetsDir))
   {
@@ -82,9 +89,9 @@ void Snippets::loadRecursive(const std::filesystem::path &snippetsDir)
         {},
         nullptr
       };
-
-      mNodes.push_back(std::move(newNode));
-      mNodes[currentParentIndex].children.push_back(mNodes.size() - 1);
+      const auto newIndex = getNextIndex();
+      mNodes.insert({newIndex, std::move(newNode)});
+      mNodes[currentParentIndex].children.insert(newIndex);
       loadRecursive(entry.path());
     }
     else
@@ -115,8 +122,9 @@ void Snippets::loadRecursive(const std::filesystem::path &snippetsDir)
         {},
         std::move(message)
       };
-      mNodes.push_back(std::move(newNode));
-      mNodes[currentParentIndex].children.push_back(mNodes.size() - 1);
+      const auto newIndex = getNextIndex();
+      mNodes.insert({newIndex, std::move(newNode)});
+      mNodes[currentParentIndex].children.insert(newIndex);
     }
   }
 }
@@ -226,3 +234,7 @@ wxDataViewItem Snippets::toItem(Node::Index_t index)
   return wxDataViewItem(reinterpret_cast<void*>(index));
 }
 
+Snippets::Node::Index_t Snippets::getNextIndex()
+{
+  return mNextAvailableIndex++;
+}

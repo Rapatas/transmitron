@@ -2,6 +2,7 @@
 #define TRANSMITRON_MODELS_SNIPPETS_HPP
 
 #include <memory>
+#include <set>
 #include <filesystem>
 #include <wx/dataview.h>
 #include "MQTT/Message.hpp"
@@ -66,14 +67,16 @@ private:
     Index_t parent;
     std::string name;
     Type type;
-    std::vector<Index_t> children;
+    std::set<Index_t> children;
     std::shared_ptr<MQTT::Message> message;
   };
 
-  std::vector<Node> mNodes;
+  Node::Index_t mNextAvailableIndex = 0;
+  std::map<Node::Index_t, Node> mNodes;
   std::string mSnippetsDir;
 
   void loadRecursive(const std::filesystem::path &snippetsDir);
+  Node::Index_t getNextIndex();
 
   static Node::Index_t toIndex(const wxDataViewItem &item);
   static wxDataViewItem toItem(Node::Index_t index);
