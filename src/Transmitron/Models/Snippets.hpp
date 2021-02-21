@@ -69,6 +69,8 @@ private:
     Type type;
     std::set<Index_t> children;
     std::shared_ptr<MQTT::Message> message;
+    bool saved;
+    std::filesystem::path fullpath;
   };
 
   Node::Index_t mNextAvailableIndex = 0;
@@ -76,6 +78,8 @@ private:
   std::string mSnippetsDir;
 
   void loadRecursive(const std::filesystem::path &snippetsDir);
+  void saveAll();
+  bool save(Node::Index_t index);
   Node::Index_t getNextIndex();
 
   static Node::Index_t toIndex(const wxDataViewItem &item);
