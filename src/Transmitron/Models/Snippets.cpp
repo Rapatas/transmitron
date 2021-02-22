@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <wx/log.h>
+#include <wx/artprov.h>
 #include <fmt/format.h>
 #include <cppcodec/base32_rfc4648.hpp>
 
@@ -333,7 +334,7 @@ wxString Snippets::GetColumnType(unsigned int col) const
   switch ((Column)col)
   {
     case Column::Name: {
-      return wxDataViewTextRenderer::GetDefaultType();
+      return wxDataViewIconTextRenderer::GetDefaultType();
     } break;
     default: { return "string"; }
   }
@@ -345,7 +346,19 @@ void Snippets::GetValue(
   unsigned int col
 ) const {
   auto index = toIndex(item);
-  variant = mNodes.at(index).name;
+  const auto &node = mNodes.at(index);
+  wxDataViewIconText value;
+  value.SetText(node.name);
+  switch (node.type)
+  {
+    case Node::Type::Folder: {
+      value.SetIcon(wxArtProvider::GetIcon(wxART_FOLDER));
+    } break;
+    case Node::Type::Snippet: {
+      value.SetIcon(wxArtProvider::GetIcon(wxART_NORMAL_FILE));
+    } break;
+  }
+  variant << value;
 }
 
 bool Snippets::SetValue(
@@ -361,7 +374,9 @@ bool Snippets::SetValue(
   {
     return false;
   }
-  const std::string newName = value.GetString().ToStdString();
+  wxDataViewIconText iconText;
+  iconText << value;
+  const std::string newName = iconText.GetText().ToStdString();
   auto index = toIndex(item);
   auto &node = mNodes.at(index);
   if (node.name == newName) { return true; }

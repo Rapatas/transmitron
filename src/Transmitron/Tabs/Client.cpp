@@ -371,7 +371,7 @@ void Client::setupPanelSnippets(wxWindow *parent)
 {
   wxDataViewColumn* const name = new wxDataViewColumn(
     L"name",
-    new wxDataViewTextRenderer(),
+    new wxDataViewIconTextRenderer(),
     (unsigned)Models::Snippets::Column::Name,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT

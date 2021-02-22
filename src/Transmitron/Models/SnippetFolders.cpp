@@ -1,6 +1,7 @@
 #include "SnippetFolders.hpp"
 
 #include <wx/log.h>
+#include <wx/artprov.h>
 
 #define wxLOG_COMPONENT "models/snippetFolders"
 
@@ -32,7 +33,7 @@ wxString SnippetFolders::GetColumnType(unsigned int col) const
   switch ((Column)col)
   {
     case Column::Name: {
-      return wxDataViewTextRenderer::GetDefaultType();
+      return wxDataViewIconTextRenderer::GetDefaultType();
     } break;
     default: { return "string"; }
   }
@@ -45,7 +46,10 @@ void SnippetFolders::GetValue(
 ) const {
   if (toIndex(item) == FakeRootId)
   {
-    variant = "root";
+    variant << wxDataViewIconText {
+      "root",
+      wxArtProvider::GetIcon(wxART_FOLDER)
+    };
   }
   else
   {
@@ -54,11 +58,19 @@ void SnippetFolders::GetValue(
 }
 
 bool SnippetFolders::SetValue(
-  const wxVariant &variant,
+  const wxVariant &value,
   const wxDataViewItem &item,
   unsigned int col
 ) {
-  return false;
+  if (!item.IsOk())
+  {
+    return false;
+  }
+  if (toIndex(item) == FakeRootId)
+  {
+    return false;
+  }
+  return mSnippetsModel->SetValue(value, item, col);
 }
 
 bool SnippetFolders::IsEnabled(
