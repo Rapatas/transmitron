@@ -11,11 +11,65 @@ SnippetFolders::SnippetFolders(const wxObjectDataPtr<Snippets> snippetsModel) :
   mSnippetsModel(std::move(snippetsModel))
 {}
 
-bool SnippetFolders::insert(
-  const MQTT::Message &message,
-  wxDataViewItem parent
+wxDataViewItem SnippetFolders::createFolder(
+  wxDataViewItem requestedParent
 ) {
-  return true;
+  wxDataViewItem parent = requestedParent;
+  if (toIndex(requestedParent) == FakeRootId)
+  {
+    parent = wxDataViewItem(nullptr);
+  }
+
+  auto inserted = mSnippetsModel->createFolder(parent);
+  if (inserted.IsOk())
+  {
+    ItemAdded(requestedParent, inserted);
+  }
+
+  return inserted;
+}
+
+wxDataViewItem SnippetFolders::insert(
+  const std::string &name,
+  std::shared_ptr<MQTT::Message> message,
+  wxDataViewItem requestedParent
+) {
+  wxDataViewItem parent = requestedParent;
+  if (toIndex(requestedParent) == FakeRootId)
+  {
+    parent = wxDataViewItem(nullptr);
+  }
+
+  auto inserted = mSnippetsModel->insert(name, message, parent);
+  if (inserted.IsOk())
+  {
+    wxLogInfo("ready");
+    ItemAdded(requestedParent, inserted);
+    wxLogInfo("ok");
+  }
+
+  return inserted;
+}
+
+bool SnippetFolders::remove(wxDataViewItem item)
+{
+  if (toIndex(item) == FakeRootId)
+  {
+    return false;
+  }
+
+  auto parent = GetParent(item);
+  wxLogMessage("Removing %zu under %zu", toIndex(item), toIndex(parent));
+  bool done = mSnippetsModel->remove(item);
+
+  if (done)
+  {
+    wxLogMessage("Notifying");
+    ItemDeleted(parent, item);
+    wxLogMessage("done");
+  }
+
+  return done;
 }
 
 wxDataViewItem SnippetFolders::getRootItem() const
@@ -30,13 +84,12 @@ unsigned SnippetFolders::GetColumnCount() const
 
 wxString SnippetFolders::GetColumnType(unsigned int col) const
 {
-  switch ((Column)col)
+  if (col > Column::Max)
   {
-    case Column::Name: {
-      return wxDataViewIconTextRenderer::GetDefaultType();
-    } break;
-    default: { return "string"; }
+    return mSnippetsModel->GetColumnType(col);
   }
+
+  return "string";
 }
 
 void SnippetFolders::GetValue(
@@ -77,7 +130,7 @@ bool SnippetFolders::IsEnabled(
   const wxDataViewItem &item,
   unsigned int col
 ) const {
-  return true;
+  return mSnippetsModel->IsEnabled(item, col);
 }
 
 wxDataViewItem SnippetFolders::GetParent(
@@ -102,7 +155,14 @@ wxDataViewItem SnippetFolders::GetParent(
 bool SnippetFolders::IsContainer(
   const wxDataViewItem &item
 ) const {
-  return true;
+  if (toIndex(item) == FakeRootId)
+  {
+    return true;
+  }
+  else
+  {
+    return mSnippetsModel->IsContainer(item);
+  }
 }
 
 unsigned int SnippetFolders::GetChildren(
@@ -110,9 +170,12 @@ unsigned int SnippetFolders::GetChildren(
   wxDataViewItemArray &array
 ) const {
 
+  wxLogInfo("GetChildren of %zu", toIndex(requestedParent));
+
   if (!requestedParent.IsOk())
   {
     array.Add(toItem(FakeRootId));
+    wxLogInfo("  - %zu", FakeRootId);
     return 1;
   }
 
@@ -123,17 +186,7 @@ unsigned int SnippetFolders::GetChildren(
     parent = wxDataViewItem(nullptr);
   }
 
-  wxDataViewItemArray result;
-  mSnippetsModel->GetChildren(parent, result);
-  for (const auto &child : result)
-  {
-    if (mSnippetsModel->IsContainer(child))
-    {
-      array.Add(child);
-    }
-  }
-
-  return array.size();
+  return mSnippetsModel->GetChildren(parent, array);
 }
 
 size_t SnippetFolders::toIndex(const wxDataViewItem &item)

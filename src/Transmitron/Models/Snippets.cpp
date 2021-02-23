@@ -122,7 +122,7 @@ wxDataViewItem Snippets::createFolder(
   };
   const auto newIndex = getNextIndex();
   mNodes.insert({newIndex, std::move(newNode)});
-  mNodes[parentIndex].children.insert(newIndex);
+  mNodes.at(parentIndex).children.insert(newIndex);
 
   save(newIndex);
 
@@ -182,12 +182,18 @@ wxDataViewItem Snippets::insert(
   };
   const auto newIndex = getNextIndex();
   mNodes.insert({newIndex, std::move(newNode)});
-  mNodes[parentIndex].children.insert(newIndex);
+  mNodes.at(parentIndex).children.insert(newIndex);
 
   save(newIndex);
 
+  wxLogInfo("Parent: [%zu]'%s'", parentIndex, mNodes.at(parentIndex).name);
+  wxLogInfo("Created: [%zu]'%s'", newIndex, name);
+
   const auto item = toItem(newIndex);
+  wxLogInfo("Item: %zu", toIndex(item));
+  wxLogInfo("ready");
   ItemAdded(parentItem, item);
+  wxLogInfo("ok");
 
   return item;
 }
@@ -268,7 +274,7 @@ void Snippets::loadRecursive(
       };
       const auto newIndex = getNextIndex();
       mNodes.insert({newIndex, std::move(newNode)});
-      mNodes[parentIndex].children.insert(newIndex);
+      mNodes.at(parentIndex).children.insert(newIndex);
       loadRecursive(newIndex, entry.path());
     }
     else
@@ -303,7 +309,7 @@ void Snippets::loadRecursive(
       };
       const auto newIndex = getNextIndex();
       mNodes.insert({newIndex, std::move(newNode)});
-      mNodes[parentIndex].children.insert(newIndex);
+      mNodes.at(parentIndex).children.insert(newIndex);
     }
   }
 }
@@ -346,6 +352,7 @@ void Snippets::GetValue(
   unsigned int col
 ) const {
   auto index = toIndex(item);
+  wxLogInfo("GetValue of %zu", index);
   const auto &node = mNodes.at(index);
   wxDataViewIconText value;
   value.SetText(node.name);
@@ -468,8 +475,10 @@ unsigned int Snippets::GetChildren(
 
   const auto &node = mNodes.at(index);
 
+  wxLogInfo("GetChildren of %zu", index);
   for (auto i : node.children)
   {
+    wxLogInfo("  - %zu", i);
     array.Add(toItem(i));
   }
   return node.children.size();

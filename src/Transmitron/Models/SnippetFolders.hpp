@@ -15,7 +15,7 @@ class SnippetFolders :
 {
 public:
 
-  enum class Column : unsigned
+  enum Column : unsigned
   {
     Name,
     Max
@@ -24,7 +24,15 @@ public:
   explicit SnippetFolders(const wxObjectDataPtr<Snippets> snippetsModel);
 
   wxDataViewItem getRootItem() const;
-  bool insert(const MQTT::Message &message, wxDataViewItem parent);
+  wxDataViewItem createFolder(
+    wxDataViewItem parent
+  );
+  wxDataViewItem insert(
+    const std::string &name,
+    std::shared_ptr<MQTT::Message> message,
+    wxDataViewItem parent
+  );
+  bool remove(wxDataViewItem item);
 
   virtual unsigned GetColumnCount() const override;
   virtual wxString GetColumnType(unsigned int col) const override;
