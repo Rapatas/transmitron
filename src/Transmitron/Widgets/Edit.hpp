@@ -6,6 +6,7 @@
 
 #include "TopicCtrl.hpp"
 #include "MQTT/Client.hpp"
+#include "MQTT/Message.hpp"
 
 namespace Transmitron::Widgets
 {
@@ -24,6 +25,7 @@ public:
 
   void format();
 
+  MQTT::Message getMessage() const;
   std::string getPayload() const;
   bool getReadOnly() const;
   std::string getTopic() const;
@@ -33,6 +35,7 @@ public:
   void setReadOnly(bool readonly);
   void clear();
 
+  void setMessage(const MQTT::Message &message);
   void setPayload(const std::string &text);
   void setRetained(bool retained);
   void setTopic(const std::string &topic);

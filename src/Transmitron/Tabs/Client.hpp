@@ -119,6 +119,7 @@ private:
   void onSubscriptionSelected(wxDataViewEvent &event);
   void onSnippetsEdit(wxDataViewEvent &e);
   void onSnippetsContext(wxDataViewEvent &e);
+  void onSnippetsSelected(wxDataViewEvent &e);
 
   void onConnectedSync(Events::Connection &e);
   void onDisconnectedSync(Events::Connection &e);

@@ -195,6 +195,14 @@ void Edit::setStyle(Format format)
   mCurrentFormat = format;
 }
 
+void Edit::setMessage(const MQTT::Message &message)
+{
+  setTopic(message.topic);
+  setPayload(message.payload);
+  setQos(message.qos);
+  setRetained(message.retained);
+}
+
 void Edit::setPayload(const std::string &text)
 {
   auto format = mFormatSelect->GetValue().ToStdString();
@@ -218,6 +226,16 @@ void Edit::setReadOnly(bool readonly)
 
   mPublish->Show(!readonly);
   mTop->Layout();
+}
+
+MQTT::Message Edit::getMessage() const
+{
+  return {
+    mTopic->GetValue().ToStdString(),
+    mText->GetText().ToStdString(),
+    mQoS,
+    mRetained
+  };;
 }
 
 std::string Edit::getPayload() const

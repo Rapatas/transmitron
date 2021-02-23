@@ -29,6 +29,24 @@ Snippets::Snippets()
   mNodes.insert({index, std::move(root)});
 }
 
+MQTT::Message Snippets::getMessage(wxDataViewItem item) const
+{
+  if (!item.IsOk())
+  {
+    return {};
+  }
+
+  const auto index = toIndex(item);
+  const auto &node = mNodes.at(index);
+
+  if (!node.message)
+  {
+    return {};
+  }
+
+  return *node.message;
+}
+
 wxDataViewItem Snippets::getRootItem() const
 {
   return toItem(0);
@@ -360,7 +378,7 @@ void Snippets::loadRecursive(
         }
 
         auto j = nlohmann::json::parse(sbuffer);
-        auto message = std::make_unique<MQTT::Message>(MQTT::Message::fromJson(j));
+        message = std::make_unique<MQTT::Message>(MQTT::Message::fromJson(j));
       }
 
       Node newNode {

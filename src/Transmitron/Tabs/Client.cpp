@@ -415,6 +415,11 @@ void Client::setupPanelSnippets(wxWindow *parent)
     &Client::onSnippetsEdit,
     this
   );
+  mSnippetsCtrl->Bind(
+    wxEVT_DATAVIEW_SELECTION_CHANGED,
+    &Client::onSnippetsSelected,
+    this
+  );
 }
 
 void Client::onPublishClicked(wxCommandEvent &event)
@@ -661,6 +666,11 @@ void Client::onContextSelected(wxCommandEvent& event)
       auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
       if (inserted.IsOk())
       {
+        auto publish = dynamic_cast<Widgets::Edit*>(
+          mPanes.at(Panes::Publish).panel
+        );
+        publish->setMessage(mSnippetsModel->getMessage(inserted));
+
         mSnippetsCtrl->Select(inserted);
         mSnippetsCtrl->EnsureVisible(inserted);
         auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
@@ -698,6 +708,11 @@ void Client::onContextSelected(wxCommandEvent& event)
       auto inserted = mSnippetsModel->createSnippet(item, nullptr);
       if (inserted.IsOk())
       {
+        auto publish = dynamic_cast<Widgets::Edit*>(
+          mPanes.at(Panes::Publish).panel
+        );
+        publish->setMessage(mSnippetsModel->getMessage(inserted));
+
         mSnippetsCtrl->Select(inserted);
         mSnippetsCtrl->EnsureVisible(inserted);
         auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
@@ -723,6 +738,26 @@ void Client::onContextSelected(wxCommandEvent& event)
     } break;
   }
   event.Skip(true);
+}
+
+void Client::onSnippetsSelected(wxDataViewEvent &e)
+{
+  auto item = e.GetItem();
+  if (!item.IsOk())
+  {
+    e.Skip();
+    return;
+  }
+
+  auto publish = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Publish).panel
+  );
+
+  if (!mSnippetsModel->IsContainer(item))
+  {
+    const auto &message = mSnippetsModel->getMessage(item);
+    publish->setMessage(message);
+  }
 }
 
 void Client::onSnippetsEdit(wxDataViewEvent &e)
