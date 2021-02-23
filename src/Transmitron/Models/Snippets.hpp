@@ -15,7 +15,7 @@ class Snippets :
 {
 public:
 
-  enum class Column : unsigned
+  enum Column : unsigned
   {
     Name,
     Max
@@ -25,8 +25,13 @@ public:
 
   bool load(const std::string &connectionDir);
 
+  wxDataViewItem getRootItem() const;
   wxDataViewItem createFolder(
     wxDataViewItem parent
+  );
+  wxDataViewItem createSnippet(
+    wxDataViewItem parent,
+    std::shared_ptr<MQTT::Message> message
   );
   wxDataViewItem insert(
     const std::string &name,

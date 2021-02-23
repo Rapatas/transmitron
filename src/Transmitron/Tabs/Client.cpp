@@ -1,6 +1,7 @@
 #include "Client.hpp"
 
 #include <sstream>
+#include <wx/artprov.h>
 #include <nlohmann/json.hpp>
 
 #include "Transmitron/Resources/plus/plus-18x18.hpp"
@@ -14,11 +15,11 @@
 #include "Transmitron/Resources/snippets/snippets-18x18.hpp"
 #include "Transmitron/Resources/subscription/subscription-18x14.hpp"
 #include "Transmitron/Resources/subscription/subscription-18x18.hpp"
-#include "Transmitron/Widgets/SnippetDialog.hpp"
 
 #define wxLOG_COMPONENT "Client"
 
 using namespace Transmitron::Tabs;
+using namespace Transmitron::Models;
 using namespace Transmitron;
 
 wxDEFINE_EVENT(Events::CONNECTED, Events::Connection);
@@ -369,9 +370,14 @@ void Client::setupPanelPublish(wxWindow *parent)
 
 void Client::setupPanelSnippets(wxWindow *parent)
 {
-  wxDataViewColumn* const name = new wxDataViewColumn(
+  auto renderer = new wxDataViewIconTextRenderer(
+    wxDataViewIconTextRenderer::GetDefaultType(),
+    wxDATAVIEW_CELL_EDITABLE
+  );
+
+  mSnippetColumns.at(Snippets::Column::Name) = new wxDataViewColumn(
     L"name",
-    new wxDataViewIconTextRenderer(),
+    renderer,
     (unsigned)Models::Snippets::Column::Name,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
@@ -387,7 +393,7 @@ void Client::setupPanelSnippets(wxWindow *parent)
     wxDefaultSize,
     wxDV_NO_HEADER
   );
-  mSnippetsCtrl->AppendColumn(name);
+  mSnippetsCtrl->AppendColumn(mSnippetColumns.at(Snippets::Column::Name));
 
   mSnippetsModel = new Models::Snippets;
   mSnippetsModel->load(mConnection->getPath());
@@ -399,6 +405,16 @@ void Client::setupPanelSnippets(wxWindow *parent)
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(mSnippetsCtrl, 1, wxEXPAND);
   panel->SetSizer(vsizer);
+  mSnippetsCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
+    &Client::onSnippetsContext,
+    this
+  );
+  mSnippetsCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_START_EDITING,
+    &Client::onSnippetsEdit,
+    this
+  );
 }
 
 void Client::onPublishClicked(wxCommandEvent &event)
@@ -496,17 +512,68 @@ void Client::onSubscriptionContext(wxDataViewEvent& dve)
   PopupMenu(&menu);
 }
 
-void Client::onHistoryContext(wxDataViewEvent& dve)
+void Client::onHistoryContext(wxDataViewEvent& e)
 {
-  if (!dve.GetItem().IsOk()) { return; }
+  if (!e.GetItem().IsOk()) { return; }
 
-  mHistoryCtrl->Select(dve.GetItem());
+  mHistoryCtrl->Select(e.GetItem());
 
   wxMenu menu;
   menu.Append((unsigned)ContextIDs::HistoryEdit, "Edit");
   menu.Append((unsigned)ContextIDs::HistoryResend, "Re-Send");
   menu.Append((unsigned)ContextIDs::HistoryRetainedClear, "Clear retained");
   menu.Append((unsigned)ContextIDs::HistorySaveSnippet, "Save snippet");
+  PopupMenu(&menu);
+}
+
+void Client::onSnippetsContext(wxDataViewEvent& e)
+{
+  wxMenu menu;
+
+  auto newFolder = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::SnippetNewFolder,
+    "New Folder"
+  );
+  newFolder->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW_DIR));
+  menu.Append(newFolder);
+
+  auto newSnippet = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::SnippetNewSnippet,
+    "New Snippet"
+  );
+  newSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE));
+  menu.Append(newSnippet);
+
+  if (e.GetItem().IsOk())
+  {
+    auto item = mSnippetsCtrl->GetSelection();
+
+    if (item != mSnippetsModel->getRootItem())
+    {
+      auto rename = new wxMenuItem(
+        nullptr,
+        (unsigned)ContextIDs::SnippetRename,
+        "Rename"
+      );
+      rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
+      menu.Append(rename);
+
+      auto del = new wxMenuItem(
+        nullptr,
+        (unsigned)ContextIDs::SnippetDelete,
+        "Delete"
+      );
+      del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+      menu.Append(del);
+    }
+  }
+  else
+  {
+    mSnippetsCtrl->UnselectAll();
+  }
+
   PopupMenu(&menu);
 }
 
@@ -583,22 +650,92 @@ void Client::onContextSelected(wxCommandEvent& event)
     } break;
     case ContextIDs::HistorySaveSnippet: {
       wxLogMessage("Requesting save snippet");
-      auto item = mHistoryCtrl->GetSelection();
-      auto message = mHistoryModel->getMessage(item);
-      wxObjectDataPtr<Models::SnippetFolders> snippetFoldersModel;
-      snippetFoldersModel = new Models::SnippetFolders(mSnippetsModel);
-      auto dialog = new Widgets::SnippetDialog(
-        this,
-        -1,
-        snippetFoldersModel,
-        OptionsHeight,
-        message
-      );
-      dialog->CenterOnParent();
-      dialog->Show();
+      auto historyItem = mHistoryCtrl->GetSelection();
+      auto snippetItem = mSnippetsCtrl->GetSelection();
+      if (!mSnippetsModel->IsContainer(snippetItem))
+      {
+        wxLogInfo("Selecting parent");
+        snippetItem = mSnippetsModel->GetParent(snippetItem);
+      }
+      auto message = mHistoryModel->getMessage(historyItem);
+      auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
+      if (inserted.IsOk())
+      {
+        mSnippetsCtrl->Select(inserted);
+        mSnippetsCtrl->EnsureVisible(inserted);
+        auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+        mSnippetExplicitEditRequest = true;
+        mSnippetsCtrl->EditItem(inserted, nameColumn);
+      }
+
+    } break;
+    case ContextIDs::SnippetNewFolder: {
+      wxLogMessage("Requesting new folder");
+      auto item = mSnippetsCtrl->GetSelection();
+      if (!mSnippetsModel->IsContainer(item))
+      {
+        wxLogInfo("Selecting parent");
+        item = mSnippetsModel->GetParent(item);
+      }
+      auto inserted = mSnippetsModel->createFolder(item);
+      if (inserted.IsOk())
+      {
+        mSnippetsCtrl->Select(inserted);
+        mSnippetsCtrl->EnsureVisible(inserted);
+        auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+        mSnippetExplicitEditRequest = true;
+        mSnippetsCtrl->EditItem(inserted, nameColumn);
+      }
+    } break;
+    case ContextIDs::SnippetNewSnippet: {
+      wxLogMessage("Requesting new snippet");
+      auto item = mSnippetsCtrl->GetSelection();
+      if (!mSnippetsModel->IsContainer(item))
+      {
+        wxLogInfo("Selecting parent");
+        item = mSnippetsModel->GetParent(item);
+      }
+      auto inserted = mSnippetsModel->createSnippet(item, nullptr);
+      if (inserted.IsOk())
+      {
+        mSnippetsCtrl->Select(inserted);
+        mSnippetsCtrl->EnsureVisible(inserted);
+        auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+        mSnippetExplicitEditRequest = true;
+        mSnippetsCtrl->EditItem(inserted, nameColumn);
+      }
+    } break;
+    case ContextIDs::SnippetDelete: {
+      wxLogMessage("Requesting delete");
+      auto item = mSnippetsCtrl->GetSelection();
+      bool done = mSnippetsModel->remove(item);
+      if (done)
+      {
+        auto root = mSnippetsModel->getRootItem();
+        mSnippetsCtrl->Select(root);
+      }
+    } break;
+    case ContextIDs::SnippetRename: {
+      wxLogMessage("Requesting rename");
+      mSnippetExplicitEditRequest = true;
+      auto item = mSnippetsCtrl->GetSelection();
+      mSnippetsCtrl->EditItem(item, mSnippetColumns.at(Snippets::Column::Name));
     } break;
   }
   event.Skip(true);
+}
+
+void Client::onSnippetsEdit(wxDataViewEvent &e)
+{
+  if (mSnippetExplicitEditRequest)
+  {
+    mSnippetExplicitEditRequest = false;
+    e.Skip();
+  }
+  else
+  {
+    e.Veto();
+  }
 }
 
 void Client::onClose(wxCloseEvent &event)

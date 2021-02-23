@@ -29,6 +29,11 @@ Snippets::Snippets()
   mNodes.insert({index, std::move(root)});
 }
 
+wxDataViewItem Snippets::getRootItem() const
+{
+  return toItem(0);
+}
+
 bool Snippets::load(const std::string &connectionDir)
 {
   if (connectionDir.empty())
@@ -132,6 +137,69 @@ wxDataViewItem Snippets::createFolder(
   return item;
 }
 
+wxDataViewItem Snippets::createSnippet(
+  wxDataViewItem parentItem,
+  std::shared_ptr<MQTT::Message> message
+) {
+  const constexpr char *newName = "New Snippet";
+
+  auto parentIndex = toIndex(parentItem);
+  Node &parentNode = mNodes.at(parentIndex);
+  if (parentNode.type != Node::Type::Folder)
+  {
+    return wxDataViewItem(nullptr);
+  }
+
+  // Find a unique name.
+  std::string uniqueName = newName;
+  size_t postfix = 0;
+  while (hasChildNamed(parentItem, uniqueName)) {
+    ++postfix;
+    uniqueName = fmt::format("{} - {}", newName, postfix);
+  }
+
+  wxLogInfo(
+    "Creating snippet '%s' under [%zu]'%s'",
+    uniqueName,
+    parentIndex,
+    parentNode.name
+  );
+
+  std::string encoded;
+  try { encoded = cppcodec::base32_rfc4648::encode(uniqueName); }
+  catch (cppcodec::parse_error &e)
+  {
+    wxLogError("Could not encode '%s': %s", uniqueName, e.what());
+    return wxDataViewItem(nullptr);
+  }
+
+  const std::string fullpath = fmt::format(
+    "{}/{}",
+    parentNode.fullpath.c_str(),
+    encoded
+  );
+
+  Node newNode {
+    parentIndex,
+    uniqueName,
+    Node::Type::Snippet,
+    {},
+    message,
+    false,
+    fullpath
+  };
+  const auto newIndex = getNextIndex();
+  mNodes.insert({newIndex, std::move(newNode)});
+  mNodes.at(parentIndex).children.insert(newIndex);
+
+  save(newIndex);
+
+  const auto item = toItem(newIndex);
+  ItemAdded(parentItem, item);
+
+  return item;
+}
+
 wxDataViewItem Snippets::insert(
   const std::string &name,
   std::shared_ptr<MQTT::Message> message,
@@ -217,7 +285,10 @@ wxDataViewItem Snippets::replace(
     return wxDataViewItem(nullptr);
   }
 
-  output << MQTT::Message::toJson(*message);
+  if (message)
+  {
+    output << MQTT::Message::toJson(*message);
+  }
   node.message = message;
   return item;
 }
@@ -289,14 +360,20 @@ void Snippets::loadRecursive(
       std::stringstream buffer;
       buffer << snippetFile.rdbuf();
       const std::string &sbuffer = buffer.str();
-      if (!nlohmann::json::accept(sbuffer))
-      {
-        wxLogWarning("Could not parse '%s'", entry.path().c_str());
-        continue;
-      }
 
-      auto j = nlohmann::json::parse(sbuffer);
-      auto message = std::make_unique<MQTT::Message>(MQTT::Message::fromJson(j));
+      std::unique_ptr<MQTT::Message> message;
+
+      if (!sbuffer.empty())
+      {
+        if (!nlohmann::json::accept(sbuffer))
+        {
+          wxLogWarning("Could not parse '%s'", entry.path().c_str());
+          continue;
+        }
+
+        auto j = nlohmann::json::parse(sbuffer);
+        auto message = std::make_unique<MQTT::Message>(MQTT::Message::fromJson(j));
+      }
 
       Node newNode {
         parentIndex,
@@ -384,6 +461,13 @@ bool Snippets::SetValue(
   wxDataViewIconText iconText;
   iconText << value;
   const std::string newName = iconText.GetText().ToStdString();
+
+  auto parentItem = GetParent(item);
+  if (hasChildNamed(parentItem, newName))
+  {
+    return false;
+  }
+
   auto index = toIndex(item);
   auto &node = mNodes.at(index);
   if (node.name == newName) { return true; }
@@ -529,7 +613,10 @@ bool Snippets::save(Node::Index_t index)
       return false;
     }
 
-    output << MQTT::Message::toJson(*node.message);
+    if (node.message)
+    {
+      output << MQTT::Message::toJson(*node.message);
+    }
   }
   else if (node.type == Node::Type::Folder)
   {
