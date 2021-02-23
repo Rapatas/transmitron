@@ -47,12 +47,6 @@ bool Snippets::load(const std::string &connectionDir)
   bool exists = fs::exists(mSnippetsDir);
   bool isDir = fs::is_directory(mSnippetsDir);
 
-  wxLogDebug(
-    "exists=%s, isDir=%s",
-    (exists ? "yes" : "no"),
-    (isDir ? "yes" : "no")
-  );
-
   if (exists && !isDir && !fs::remove(mSnippetsDir))
   {
     wxLogWarning("Could not remove file %s", mSnippetsDir);
@@ -254,14 +248,8 @@ wxDataViewItem Snippets::insert(
 
   save(newIndex);
 
-  wxLogInfo("Parent: [%zu]'%s'", parentIndex, mNodes.at(parentIndex).name);
-  wxLogInfo("Created: [%zu]'%s'", newIndex, name);
-
   const auto item = toItem(newIndex);
-  wxLogInfo("Item: %zu", toIndex(item));
-  wxLogInfo("ready");
   ItemAdded(parentItem, item);
-  wxLogInfo("ok");
 
   return item;
 }
@@ -429,7 +417,6 @@ void Snippets::GetValue(
   unsigned int col
 ) const {
   auto index = toIndex(item);
-  wxLogInfo("GetValue of %zu", index);
   const auto &node = mNodes.at(index);
   wxDataViewIconText value;
   value.SetText(node.name);
@@ -559,10 +546,8 @@ unsigned int Snippets::GetChildren(
 
   const auto &node = mNodes.at(index);
 
-  wxLogInfo("GetChildren of %zu", index);
   for (auto i : node.children)
   {
-    wxLogInfo("  - %zu", i);
     array.Add(toItem(i));
   }
   return node.children.size();
@@ -622,12 +607,6 @@ bool Snippets::save(Node::Index_t index)
   {
     bool exists = fs::exists(node.fullpath);
     bool isDir = fs::is_directory(node.fullpath);
-
-    wxLogDebug(
-      "exists=%s, isDir=%s",
-      (exists ? "yes" : "no"),
-      (isDir ? "yes" : "no")
-    );
 
     if (exists && !isDir && !fs::remove(node.fullpath))
     {
