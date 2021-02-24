@@ -7,7 +7,7 @@
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
 
-#define wxLOG_COMPONENT "models/history"
+#define wxLOG_COMPONENT "Models/History"
 
 using namespace Transmitron::Models;
 using namespace Transmitron;
@@ -64,7 +64,7 @@ void History::remove(Types::SubscriptionData *sub)
 
 void History::remap()
 {
-  size_t before = mRemap.size();
+  const size_t before = mRemap.size();
   mRemap.clear();
   mRemap.reserve(mMessages.size());
 
@@ -77,31 +77,30 @@ void History::remap()
   }
 
   mRemap.shrink_to_fit();
+  const size_t after = mRemap.size();
 
-  for (size_t i = 0; i < mRemap.size(); ++i)
+  const auto common = std::min(before, after);
+  for (size_t i = 0; i < common; ++i)
   {
     RowChanged(i);
   }
 
-  if (before < mRemap.size())
+  if (after > before)
   {
-    size_t diff = mRemap.size() - before;
-
+    size_t diff = after - common;
     for (size_t i = 0; i < diff; ++i)
     {
       RowAppended();
     }
   }
-  else if (before > mRemap.size())
+  else if (after < before)
   {
     wxArrayInt rows;
-    size_t diff = before - mRemap.size();
-
+    size_t diff = before - common;
     for (size_t i = 0; i < diff; ++i)
     {
-      rows.Add(mRemap.size() + i);
+      rows.Add(after + i);
     }
-
     RowsDeleted(rows);
   }
 }
