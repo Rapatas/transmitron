@@ -111,6 +111,8 @@ private:
   void onConnectClicked(wxCommandEvent &event);
   void onHistorySelected(wxDataViewEvent& event);
   void onPublishClicked(wxCommandEvent &event);
+  void onPublishSaveSnippet(Events::Edit &e);
+  void onPreviewSaveSnippet(Events::Edit &e);
   void onSubscribeClicked(wxCommandEvent &event);
   void onSubscribeEnter(wxKeyEvent &event);
   void onSubscriptionContext(wxDataViewEvent& event);

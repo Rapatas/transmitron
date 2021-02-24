@@ -1,7 +1,9 @@
 #include <nlohmann/json.hpp>
 #include <tinyxml2.h>
 #include <wx/clipbrd.h>
+#include <wx/artprov.h>
 #include "Edit.hpp"
+#include "Transmitron/Events/Edit.hpp"
 #include "Transmitron/Resources/send/send-18x18.hpp"
 #include "Transmitron/Resources/pin/pinned-18x18.hpp"
 #include "Transmitron/Resources/pin/not-pinned-18x18.hpp"
@@ -11,6 +13,7 @@
 
 using namespace tinyxml2;
 using namespace nlohmann;
+using namespace Transmitron;
 using namespace Transmitron::Widgets;
 
 uint32_t foreground = (0   << 0) | (0   << 8) | (0   << 16);
@@ -21,12 +24,15 @@ uint32_t green      = (0   << 0) | (150 << 8) | (0   << 16);
 uint32_t pink       = (200 << 0) | (0   << 8) | (150 << 16);
 uint32_t cyan       = (0   << 0) | (120 << 8) | (150 << 16);
 
-const std::map<std::string, Edit::Format> Edit::mFormats = {
+const std::map<std::string, Widgets::Edit::Format> Widgets::Edit::mFormats = {
   {"Auto", Format::Auto},
   {"Text", Format::Text},
   {"Json", Format::Json},
   {"Xml", Format::Xml},
 };
+
+wxDEFINE_EVENT(Events::EDIT_PUBLISH, Events::Edit);
+wxDEFINE_EVENT(Events::EDIT_SAVE_SNIPPET, Events::Edit);
 
 Edit::Edit(
   wxWindow* parent,
@@ -41,7 +47,26 @@ Edit::Edit(
 
   mTopic = new TopicCtrl(this, -1);
 
-  mFormatSelect = new wxComboBox(this, -1, mFormats.begin()->first, wxDefaultPosition, wxSize(100, 25));
+  mSaveSnippet = new wxButton(
+    this,
+    -1,
+    "",
+    wxDefaultPosition,
+    wxSize(optionsHeight, optionsHeight)
+  );
+  mSaveSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
+  mSaveSnippet->Bind(wxEVT_BUTTON, [this](wxCommandEvent &){
+    auto e = new Events::Edit(Events::EDIT_SAVE_SNIPPET);
+    wxQueueEvent(this, e);
+  });
+
+  mFormatSelect = new wxComboBox(
+    this,
+    -1,
+    mFormats.begin()->first,
+    wxDefaultPosition,
+    wxSize(100, 25)
+  );
   for (const auto &format : mFormats)
   {
     mFormatSelect->Insert(format.first, 0);
@@ -86,6 +111,10 @@ Edit::Edit(
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
+  mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &){
+    auto e = new Events::Edit(Events::EDIT_PUBLISH);
+    wxQueueEvent(this, e);
+  });
 
   mFormatSelect->Bind(wxEVT_COMBOBOX, &Edit::onFormatSelected, this);
 
@@ -99,10 +128,12 @@ Edit::Edit(
   mTop->Add(mQos2, 0, wxEXPAND);
   mTop->AddSpacer(2);
   mTop->Add(mPublish, 0, wxEXPAND);
+  mBottom->Add(mSaveSnippet, 0, wxEXPAND);
+  mBottom->AddStretchSpacer(1);
   mBottom->Add(mFormatSelect, 0, wxEXPAND);
   mVsizer->Add(mTop, 0, wxEXPAND);
   mVsizer->Add(mText, 1, wxEXPAND);
-  mVsizer->Add(mBottom, 0, wxALIGN_RIGHT);
+  mVsizer->Add(mBottom, 0, wxEXPAND);
 
   SetSizer(mVsizer);
 }

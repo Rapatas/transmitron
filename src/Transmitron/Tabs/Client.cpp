@@ -334,9 +334,9 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   hsizer->SetMinSize(0, OptionsHeight);
-  hsizer->Add(mFilter,  1, wxEXPAND);
-  hsizer->Add(mSubscribe,  0, wxEXPAND);
-  vsizer->Add(hsizer,  0, wxEXPAND);
+  hsizer->Add(mFilter, 1, wxEXPAND);
+  hsizer->Add(mSubscribe, 0, wxEXPAND);
+  vsizer->Add(hsizer, 0, wxEXPAND);
   vsizer->Add(mSubscriptionsCtrl,  1, wxEXPAND);
   panel->SetSizer(vsizer);
 
@@ -359,13 +359,15 @@ void Client::setupPanelPreview(wxWindow *parent)
   auto panel = new Widgets::Edit(parent, -1, OptionsHeight);
   mPanes.at(Panes::Preview).panel = panel;
   panel->setReadOnly(true);
+  panel->Bind(Events::EDIT_SAVE_SNIPPET, &Client::onPreviewSaveSnippet, this);
 }
 
 void Client::setupPanelPublish(wxWindow *parent)
 {
   auto panel = new Widgets::Edit(parent, -1, OptionsHeight);
   mPanes.at(Panes::Publish).panel = panel;
-  panel->Bind(wxEVT_BUTTON, &Client::onPublishClicked, this);
+  panel->Bind(Events::EDIT_PUBLISH, &Client::onPublishClicked, this);
+  panel->Bind(Events::EDIT_SAVE_SNIPPET, &Client::onPublishSaveSnippet, this);
 }
 
 void Client::setupPanelSnippets(wxWindow *parent)
@@ -435,6 +437,65 @@ void Client::onPublishClicked(wxCommandEvent &event)
   bool retained = publish->getRetained();
 
   mClient->publish(topic, payload, qos, retained);
+}
+
+void Client::onPublishSaveSnippet(Events::Edit &e)
+{
+  wxLogInfo("Saving current message");
+  auto snippetItem = mSnippetsCtrl->GetSelection();
+  if (!mSnippetsModel->IsContainer(snippetItem))
+  {
+    wxLogInfo("Selecting parent");
+    snippetItem = mSnippetsModel->GetParent(snippetItem);
+  }
+
+  auto publish = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Publish).panel
+  );
+
+  auto message = std::make_shared<MQTT::Message>(publish->getMessage());
+  wxLogInfo("Storing %s", message->topic);
+  auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
+  if (inserted.IsOk())
+  {
+    auto publish = dynamic_cast<Widgets::Edit*>(
+      mPanes.at(Panes::Publish).panel
+    );
+    publish->setMessage(mSnippetsModel->getMessage(inserted));
+
+    mSnippetsCtrl->Select(inserted);
+    mSnippetsCtrl->EnsureVisible(inserted);
+    auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+    mSnippetExplicitEditRequest = true;
+    mSnippetsCtrl->EditItem(inserted, nameColumn);
+  }
+}
+
+void Client::onPreviewSaveSnippet(Events::Edit &e)
+{
+  wxLogInfo("Saving current message");
+  auto snippetItem = mSnippetsCtrl->GetSelection();
+  if (!mSnippetsModel->IsContainer(snippetItem))
+  {
+    wxLogInfo("Selecting parent");
+    snippetItem = mSnippetsModel->GetParent(snippetItem);
+  }
+
+  auto preview = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Preview).panel
+  );
+
+  auto message = std::make_shared<MQTT::Message>(preview->getMessage());
+  wxLogInfo("Storing %s", message->topic);
+  auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
+  if (inserted.IsOk())
+  {
+    mSnippetsCtrl->Select(inserted);
+    mSnippetsCtrl->EnsureVisible(inserted);
+    auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+    mSnippetExplicitEditRequest = true;
+    mSnippetsCtrl->EditItem(inserted, nameColumn);
+  }
 }
 
 void Client::onSubscribeClicked(wxCommandEvent &event)

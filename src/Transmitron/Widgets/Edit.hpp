@@ -7,6 +7,7 @@
 #include "TopicCtrl.hpp"
 #include "MQTT/Client.hpp"
 #include "MQTT/Message.hpp"
+#include "Transmitron/Events/Edit.hpp"
 
 namespace Transmitron::Widgets
 {
@@ -67,7 +68,7 @@ private:
 
   wxStyledTextCtrl *mText;
 
-  wxButton *mFormat;
+  wxButton *mSaveSnippet;
   wxComboBox *mFormatSelect;
 
   enum class Format
