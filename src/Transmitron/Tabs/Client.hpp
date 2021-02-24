@@ -43,6 +43,11 @@ private:
     HistoryRetainedClear,
     HistoryResend,
     HistoryEdit,
+    HistorySaveSnippet,
+    SnippetRename,
+    SnippetDelete,
+    SnippetNewSnippet,
+    SnippetNewFolder,
   };
 
   enum class Panes : unsigned
@@ -90,6 +95,8 @@ private:
   // Snippets:
   wxObjectDataPtr<Models::Snippets> mSnippetsModel;
   wxDataViewCtrl *mSnippetsCtrl;
+  std::array<wxDataViewColumn*, Models::Snippets::Column::Max> mSnippetColumns;
+  bool mSnippetExplicitEditRequest = false;
 
   std::shared_ptr<MQTT::Client> mClient;
 
@@ -104,15 +111,22 @@ private:
   void onConnectClicked(wxCommandEvent &event);
   void onHistorySelected(wxDataViewEvent& event);
   void onPublishClicked(wxCommandEvent &event);
+  void onPublishSaveSnippet(Events::Edit &e);
+  void onPreviewSaveSnippet(Events::Edit &e);
   void onSubscribeClicked(wxCommandEvent &event);
   void onSubscribeEnter(wxKeyEvent &event);
   void onSubscriptionContext(wxDataViewEvent& event);
   void onHistoryContext(wxDataViewEvent& event);
   void onContextSelected(wxCommandEvent& event);
   void onSubscriptionSelected(wxDataViewEvent &event);
+  void onSnippetsEdit(wxDataViewEvent &e);
+  void onSnippetsContext(wxDataViewEvent &e);
+  void onSnippetsSelected(wxDataViewEvent &e);
 
   void onConnectedSync(Events::Connection &e);
   void onDisconnectedSync(Events::Connection &e);
+
+  void handleInserted(wxDataViewItem &inserted);
 
   // MQTT::Client::Observer interface.
   void onConnected() override;

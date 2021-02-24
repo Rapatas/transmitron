@@ -428,8 +428,6 @@ bool Client::match(const std::string &filter, const std::string &topic)
       return strings;
     };
 
-  wxLogMessage(">> %s vs %s", topic, filter);
-
   if (filter == topic)
   {
     return true;

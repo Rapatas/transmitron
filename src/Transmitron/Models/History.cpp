@@ -137,6 +137,18 @@ bool History::getRetained(const wxDataViewItem &item) const
   return mMessages.at(mRemap.at(GetRow(item))).msg->is_retained();
 }
 
+std::shared_ptr<MQTT::Message> History::getMessage(const wxDataViewItem &item) const
+{
+  auto msg = mMessages.at(mRemap.at(GetRow(item))).msg;
+  MQTT::Message m {
+    msg->get_topic(),
+    msg->get_payload(),
+    static_cast<MQTT::QoS>(msg->get_qos()),
+    msg->is_retained()
+  };
+  return std::make_shared<MQTT::Message>(std::move(m));
+}
+
 unsigned History::GetColumnCount() const
 {
   return (unsigned)Column::Max;

@@ -1,6 +1,7 @@
 #include "Client.hpp"
 
 #include <sstream>
+#include <wx/artprov.h>
 #include <nlohmann/json.hpp>
 
 #include "Transmitron/Resources/plus/plus-18x18.hpp"
@@ -18,6 +19,7 @@
 #define wxLOG_COMPONENT "Client"
 
 using namespace Transmitron::Tabs;
+using namespace Transmitron::Models;
 using namespace Transmitron;
 
 wxDEFINE_EVENT(Events::CONNECTED, Events::Connection);
@@ -332,9 +334,9 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   hsizer->SetMinSize(0, OptionsHeight);
-  hsizer->Add(mFilter,  1, wxEXPAND);
-  hsizer->Add(mSubscribe,  0, wxEXPAND);
-  vsizer->Add(hsizer,  0, wxEXPAND);
+  hsizer->Add(mFilter, 1, wxEXPAND);
+  hsizer->Add(mSubscribe, 0, wxEXPAND);
+  vsizer->Add(hsizer, 0, wxEXPAND);
   vsizer->Add(mSubscriptionsCtrl,  1, wxEXPAND);
   panel->SetSizer(vsizer);
 
@@ -357,20 +359,27 @@ void Client::setupPanelPreview(wxWindow *parent)
   auto panel = new Widgets::Edit(parent, -1, OptionsHeight);
   mPanes.at(Panes::Preview).panel = panel;
   panel->setReadOnly(true);
+  panel->Bind(Events::EDIT_SAVE_SNIPPET, &Client::onPreviewSaveSnippet, this);
 }
 
 void Client::setupPanelPublish(wxWindow *parent)
 {
   auto panel = new Widgets::Edit(parent, -1, OptionsHeight);
   mPanes.at(Panes::Publish).panel = panel;
-  panel->Bind(wxEVT_BUTTON, &Client::onPublishClicked, this);
+  panel->Bind(Events::EDIT_PUBLISH, &Client::onPublishClicked, this);
+  panel->Bind(Events::EDIT_SAVE_SNIPPET, &Client::onPublishSaveSnippet, this);
 }
 
 void Client::setupPanelSnippets(wxWindow *parent)
 {
-  wxDataViewColumn* const name = new wxDataViewColumn(
+  auto renderer = new wxDataViewIconTextRenderer(
+    wxDataViewIconTextRenderer::GetDefaultType(),
+    wxDATAVIEW_CELL_EDITABLE
+  );
+
+  mSnippetColumns.at(Snippets::Column::Name) = new wxDataViewColumn(
     L"name",
-    new wxDataViewTextRenderer(),
+    renderer,
     (unsigned)Models::Snippets::Column::Name,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
@@ -386,7 +395,7 @@ void Client::setupPanelSnippets(wxWindow *parent)
     wxDefaultSize,
     wxDV_NO_HEADER
   );
-  mSnippetsCtrl->AppendColumn(name);
+  mSnippetsCtrl->AppendColumn(mSnippetColumns.at(Snippets::Column::Name));
 
   mSnippetsModel = new Models::Snippets;
   mSnippetsModel->load(mConnection->getPath());
@@ -398,6 +407,21 @@ void Client::setupPanelSnippets(wxWindow *parent)
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(mSnippetsCtrl, 1, wxEXPAND);
   panel->SetSizer(vsizer);
+  mSnippetsCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
+    &Client::onSnippetsContext,
+    this
+  );
+  mSnippetsCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_START_EDITING,
+    &Client::onSnippetsEdit,
+    this
+  );
+  mSnippetsCtrl->Bind(
+    wxEVT_DATAVIEW_SELECTION_CHANGED,
+    &Client::onSnippetsSelected,
+    this
+  );
 }
 
 void Client::onPublishClicked(wxCommandEvent &event)
@@ -413,6 +437,65 @@ void Client::onPublishClicked(wxCommandEvent &event)
   bool retained = publish->getRetained();
 
   mClient->publish(topic, payload, qos, retained);
+}
+
+void Client::onPublishSaveSnippet(Events::Edit &e)
+{
+  wxLogInfo("Saving current message");
+  auto snippetItem = mSnippetsCtrl->GetSelection();
+  if (!mSnippetsModel->IsContainer(snippetItem))
+  {
+    wxLogInfo("Selecting parent");
+    snippetItem = mSnippetsModel->GetParent(snippetItem);
+  }
+
+  auto publish = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Publish).panel
+  );
+
+  auto message = std::make_shared<MQTT::Message>(publish->getMessage());
+  wxLogInfo("Storing %s", message->topic);
+  auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
+  if (inserted.IsOk())
+  {
+    auto publish = dynamic_cast<Widgets::Edit*>(
+      mPanes.at(Panes::Publish).panel
+    );
+    publish->setMessage(mSnippetsModel->getMessage(inserted));
+
+    mSnippetsCtrl->Select(inserted);
+    mSnippetsCtrl->EnsureVisible(inserted);
+    auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+    mSnippetExplicitEditRequest = true;
+    mSnippetsCtrl->EditItem(inserted, nameColumn);
+  }
+}
+
+void Client::onPreviewSaveSnippet(Events::Edit &e)
+{
+  wxLogInfo("Saving current message");
+  auto snippetItem = mSnippetsCtrl->GetSelection();
+  if (!mSnippetsModel->IsContainer(snippetItem))
+  {
+    wxLogInfo("Selecting parent");
+    snippetItem = mSnippetsModel->GetParent(snippetItem);
+  }
+
+  auto preview = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Preview).panel
+  );
+
+  auto message = std::make_shared<MQTT::Message>(preview->getMessage());
+  wxLogInfo("Storing %s", message->topic);
+  auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
+  if (inserted.IsOk())
+  {
+    mSnippetsCtrl->Select(inserted);
+    mSnippetsCtrl->EnsureVisible(inserted);
+    auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+    mSnippetExplicitEditRequest = true;
+    mSnippetsCtrl->EditItem(inserted, nameColumn);
+  }
 }
 
 void Client::onSubscribeClicked(wxCommandEvent &event)
@@ -495,16 +578,68 @@ void Client::onSubscriptionContext(wxDataViewEvent& dve)
   PopupMenu(&menu);
 }
 
-void Client::onHistoryContext(wxDataViewEvent& dve)
+void Client::onHistoryContext(wxDataViewEvent& e)
 {
-  if (!dve.GetItem().IsOk()) { return; }
+  if (!e.GetItem().IsOk()) { return; }
 
-  mHistoryCtrl->Select(dve.GetItem());
+  mHistoryCtrl->Select(e.GetItem());
 
   wxMenu menu;
   menu.Append((unsigned)ContextIDs::HistoryEdit, "Edit");
   menu.Append((unsigned)ContextIDs::HistoryResend, "Re-Send");
   menu.Append((unsigned)ContextIDs::HistoryRetainedClear, "Clear retained");
+  menu.Append((unsigned)ContextIDs::HistorySaveSnippet, "Save snippet");
+  PopupMenu(&menu);
+}
+
+void Client::onSnippetsContext(wxDataViewEvent& e)
+{
+  wxMenu menu;
+
+  auto newFolder = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::SnippetNewFolder,
+    "New Folder"
+  );
+  newFolder->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW_DIR));
+  menu.Append(newFolder);
+
+  auto newSnippet = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::SnippetNewSnippet,
+    "New Snippet"
+  );
+  newSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE));
+  menu.Append(newSnippet);
+
+  if (e.GetItem().IsOk())
+  {
+    auto item = mSnippetsCtrl->GetSelection();
+
+    if (item != mSnippetsModel->getRootItem())
+    {
+      auto rename = new wxMenuItem(
+        nullptr,
+        (unsigned)ContextIDs::SnippetRename,
+        "Rename"
+      );
+      rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
+      menu.Append(rename);
+
+      auto del = new wxMenuItem(
+        nullptr,
+        (unsigned)ContextIDs::SnippetDelete,
+        "Delete"
+      );
+      del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+      menu.Append(del);
+    }
+  }
+  else
+  {
+    mSnippetsCtrl->UnselectAll();
+  }
+
   PopupMenu(&menu);
 }
 
@@ -579,8 +714,124 @@ void Client::onContextSelected(wxCommandEvent& event)
       publish->setPayload(mHistoryModel->getPayload(item));
       publish->setRetained(mHistoryModel->getRetained(item));
     } break;
+    case ContextIDs::HistorySaveSnippet: {
+      wxLogMessage("Requesting save snippet");
+      auto historyItem = mHistoryCtrl->GetSelection();
+      auto snippetItem = mSnippetsCtrl->GetSelection();
+      if (!mSnippetsModel->IsContainer(snippetItem))
+      {
+        wxLogInfo("Selecting parent");
+        snippetItem = mSnippetsModel->GetParent(snippetItem);
+      }
+      auto message = mHistoryModel->getMessage(historyItem);
+      auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
+      if (inserted.IsOk())
+      {
+        auto publish = dynamic_cast<Widgets::Edit*>(
+          mPanes.at(Panes::Publish).panel
+        );
+        publish->setMessage(mSnippetsModel->getMessage(inserted));
+
+        mSnippetsCtrl->Select(inserted);
+        mSnippetsCtrl->EnsureVisible(inserted);
+        auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+        mSnippetExplicitEditRequest = true;
+        mSnippetsCtrl->EditItem(inserted, nameColumn);
+      }
+
+    } break;
+    case ContextIDs::SnippetNewFolder: {
+      wxLogMessage("Requesting new folder");
+      auto item = mSnippetsCtrl->GetSelection();
+      if (!mSnippetsModel->IsContainer(item))
+      {
+        wxLogInfo("Selecting parent");
+        item = mSnippetsModel->GetParent(item);
+      }
+      auto inserted = mSnippetsModel->createFolder(item);
+      if (inserted.IsOk())
+      {
+        mSnippetsCtrl->Select(inserted);
+        mSnippetsCtrl->EnsureVisible(inserted);
+        auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+        mSnippetExplicitEditRequest = true;
+        mSnippetsCtrl->EditItem(inserted, nameColumn);
+      }
+    } break;
+    case ContextIDs::SnippetNewSnippet: {
+      wxLogMessage("Requesting new snippet");
+      auto item = mSnippetsCtrl->GetSelection();
+      if (!mSnippetsModel->IsContainer(item))
+      {
+        wxLogInfo("Selecting parent");
+        item = mSnippetsModel->GetParent(item);
+      }
+      auto inserted = mSnippetsModel->createSnippet(item, nullptr);
+      if (inserted.IsOk())
+      {
+        auto publish = dynamic_cast<Widgets::Edit*>(
+          mPanes.at(Panes::Publish).panel
+        );
+        publish->setMessage(mSnippetsModel->getMessage(inserted));
+
+        mSnippetsCtrl->Select(inserted);
+        mSnippetsCtrl->EnsureVisible(inserted);
+        auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+        mSnippetExplicitEditRequest = true;
+        mSnippetsCtrl->EditItem(inserted, nameColumn);
+      }
+    } break;
+    case ContextIDs::SnippetDelete: {
+      wxLogMessage("Requesting delete");
+      auto item = mSnippetsCtrl->GetSelection();
+      bool done = mSnippetsModel->remove(item);
+      if (done)
+      {
+        auto root = mSnippetsModel->getRootItem();
+        mSnippetsCtrl->Select(root);
+      }
+    } break;
+    case ContextIDs::SnippetRename: {
+      wxLogMessage("Requesting rename");
+      mSnippetExplicitEditRequest = true;
+      auto item = mSnippetsCtrl->GetSelection();
+      mSnippetsCtrl->EditItem(item, mSnippetColumns.at(Snippets::Column::Name));
+    } break;
   }
   event.Skip(true);
+}
+
+void Client::onSnippetsSelected(wxDataViewEvent &e)
+{
+  auto item = e.GetItem();
+  if (!item.IsOk())
+  {
+    e.Skip();
+    return;
+  }
+
+  auto publish = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Publish).panel
+  );
+
+  if (!mSnippetsModel->IsContainer(item))
+  {
+    const auto &message = mSnippetsModel->getMessage(item);
+    publish->setMessage(message);
+  }
+}
+
+void Client::onSnippetsEdit(wxDataViewEvent &e)
+{
+  if (mSnippetExplicitEditRequest)
+  {
+    mSnippetExplicitEditRequest = false;
+    e.Skip();
+  }
+  else
+  {
+    e.Veto();
+  }
 }
 
 void Client::onClose(wxCloseEvent &event)
