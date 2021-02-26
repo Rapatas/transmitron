@@ -29,6 +29,8 @@ void Client::connect()
   {
     mClient = std::make_shared<mqtt::async_client>(address, mId);
     mClient->set_callback(*this);
+    wxLogMessage("Username: %s", mOptions.get_user_name());
+    wxLogMessage("Password: %s", mOptions.get_password_str());
     mClient->connect(mOptions, nullptr, *this);
   }
   catch (const mqtt::exception& e)
@@ -111,6 +113,18 @@ void Client::setId(const std::string &id)
 {
   if (connected()) { return; }
   mId = id;
+}
+
+void Client::setUsername(const std::string &username)
+{
+  if (connected()) { return; }
+  mOptions.set_user_name(username);
+}
+
+void Client::setPassword(const std::string &password)
+{
+  if (connected()) { return; }
+  mOptions.set_password(password);
 }
 
 std::string Client::hostname() const

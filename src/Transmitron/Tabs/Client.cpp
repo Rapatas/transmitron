@@ -537,6 +537,8 @@ void Client::onConnectClicked(wxCommandEvent &event)
   {
     mClient->setHostname(mConnection->getBrokerOptions().getHostname());
     mClient->setPort(mConnection->getBrokerOptions().getPort());
+    mClient->setUsername(mConnection->getBrokerOptions().getUsername());
+    mClient->setPassword(mConnection->getBrokerOptions().getPassword());
     mClient->connect();
   }
 }

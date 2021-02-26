@@ -40,6 +40,8 @@ public:
   void setHostname(const std::string &hostname);
   void setPort(unsigned port);
   void setId(const std::string &id);
+  void setUsername(const std::string &username);
+  void setPassword(const std::string &password);
 
   void publish(
     const std::string &topic,
