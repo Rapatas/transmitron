@@ -241,7 +241,13 @@ void Edit::setPayload(const std::string &text)
   {
     mText->SetReadOnly(false);
   }
-  mText->SetText(formatTry(text, mFormats.at(format)));
+  auto payloadUtf8 = formatTry(text, mFormats.at(format));
+  mText->SetText(
+    wxString::FromUTF8(
+      payloadUtf8.data(),
+      payloadUtf8.length()
+    )
+  );
   if (mReadOnly)
   {
     mText->SetReadOnly(true);
@@ -262,16 +268,19 @@ void Edit::setReadOnly(bool readonly)
 MQTT::Message Edit::getMessage() const
 {
   return {
-    mTopic->GetValue().ToStdString(),
-    mText->GetText().ToStdString(),
+    getTopic(),
+    getPayload(),
     mQoS,
     mRetained
-  };;
+  };
 }
 
 std::string Edit::getPayload() const
 {
-  return mText->GetText().ToStdString();
+  return {
+    mText->GetValue().ToUTF8().data(),
+    mText->GetValue().ToUTF8().length()
+  };
 }
 
 bool Edit::getReadOnly() const
@@ -281,13 +290,18 @@ bool Edit::getReadOnly() const
 
 void Edit::format()
 {
-  auto text = mText->GetText().ToStdString();
+  auto text = getPayload();
   auto format = mFormatSelect->GetValue().ToStdString();
   if (mReadOnly)
   {
     mText->SetReadOnly(false);
   }
-  mText->SetText(formatTry(text, mFormats.at(format)));
+  auto payloadUtf8 = formatTry(text, mFormats.at(format));
+  mText->SetText(
+    wxString::FromUTF8(
+      payloadUtf8.data(),
+      payloadUtf8.length())
+  );
   if (mReadOnly)
   {
     mText->SetReadOnly(true);
@@ -373,7 +387,10 @@ void Edit::onFormatSelected(wxCommandEvent &e)
 
 std::string Edit::getTopic() const
 {
-  return mTopic->GetValue().ToStdString();
+  return {
+    mTopic->GetValue().ToUTF8().data(),
+    mTopic->GetValue().ToUTF8().length()
+  };
 }
 
 MQTT::QoS Edit::getQos() const
@@ -404,7 +421,12 @@ void Edit::setRetained(bool retained)
 
 void Edit::setTopic(const std::string &topic)
 {
-  mTopic->SetValue(topic);
+  mTopic->SetValue(
+    wxString::FromUTF8(
+      topic.data(),
+      topic.length()
+    )
+  );
 }
 
 void Edit::setQos(MQTT::QoS qos)
