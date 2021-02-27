@@ -14,7 +14,7 @@ class Connection
 public:
 
   explicit Connection(
-    std::string name = "New connection",
+    std::string name,
     ValueObjects::BrokerOptions brokerOptions = ValueObjects::BrokerOptions{},
     bool saved = false,
     std::filesystem::path path = {}

@@ -166,11 +166,9 @@ bool Connections::updateName(
 
 wxDataViewItem Connections::createConnection()
 {
-  auto connection = std::make_shared<Types::Connection>();
+  const char *newConnectionName = "New Connection";
+  std::string uniqueName{newConnectionName};
   unsigned postfix = 0;
-
-  std::string uniqueName = connection->getName();
-
   while (std::any_of(
       std::begin(mConnections) + 1,
       std::end(mConnections),
@@ -180,10 +178,10 @@ wxDataViewItem Connections::createConnection()
       }
   )) {
     ++postfix;
-    uniqueName = fmt::format("{} - {}", connection->getName(), postfix);
+    uniqueName = fmt::format("{} - {}", newConnectionName, postfix);
   }
 
-  connection->setName(uniqueName);
+  auto connection = std::make_shared<Types::Connection>(uniqueName);
   mConnections.push_back(connection);
 
   wxDataViewItem parent(nullptr);
