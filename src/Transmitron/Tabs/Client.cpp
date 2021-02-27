@@ -118,8 +118,8 @@ Client::Client(
   auto wrapper = new wxPanel(this, -1);
 
   setupPanelPublish(wrapper);
-  setupPanelHistory(wrapper);
   setupPanelSubscriptions(wrapper);
+  setupPanelHistory(wrapper);
   setupPanelPreview(wrapper);
   setupPanelSnippets(wrapper);
   setupPanelConnect(this);
@@ -178,7 +178,7 @@ void Client::setupPanelHistory(wxWindow *parent)
     wxDV_NO_HEADER | wxDV_ROW_LINES
   );
 
-  mHistoryModel = new Models::History;
+  mHistoryModel = new Models::History(mSubscriptionsModel);
   mHistoryModel->attachObserver(this);
   mHistoryCtrl->AssociateModel(mHistoryModel.get());
 
@@ -315,8 +315,8 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mSubscriptionsCtrl->AppendColumn(qos);
   mSubscriptionsCtrl->AppendColumn(topic);
 
-  mSubscriptionsModel = new Models::Subscriptions(mClient, mHistoryModel);
-  mSubscriptionsCtrl->AssociateModel(mSubscriptionsModel);
+  mSubscriptionsModel = new Models::Subscriptions(mClient);
+  mSubscriptionsCtrl->AssociateModel(mSubscriptionsModel.get());
 
   mSubscriptionsCtrl->SetFont(font);
 

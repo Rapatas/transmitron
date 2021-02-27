@@ -4,7 +4,6 @@
 #include <memory>
 #include <wx/dataview.h>
 
-#include "History.hpp"
 #include "MQTT/Client.hpp"
 #include "Transmitron/Types/SubscriptionData.hpp"
 #include "Transmitron/Events/Subscription.hpp"
@@ -17,6 +16,19 @@ class Subscriptions :
 {
 public:
 
+  struct Observer
+  {
+    virtual void onMuted(wxDataViewItem subscription) {};
+    virtual void onUnmuted(wxDataViewItem subscription) {};
+    virtual void onSolo(wxDataViewItem subscription) {};
+    virtual void onColorSet(wxDataViewItem subscription, wxColor color) {};
+    virtual void onUnsubscribed(wxDataViewItem subscription) {};
+    virtual void onMessage(
+      wxDataViewItem subscription,
+      mqtt::const_message_ptr message
+    ) {}
+  };
+
   enum class Column : unsigned
   {
     Icon,
@@ -25,11 +37,11 @@ public:
     Max
   };
 
-  explicit Subscriptions(
-    std::shared_ptr<MQTT::Client> client,
-    wxObjectDataPtr<History> history
-  );
+  explicit Subscriptions(std::shared_ptr<MQTT::Client> client);
   virtual ~Subscriptions();
+
+  size_t attachObserver(Observer *observer);
+  bool detachObserver(size_t id);
 
   void subscribe(const std::string &topic, MQTT::QoS qos);
 
@@ -41,12 +53,13 @@ public:
 
   std::string getFilter(const wxDataViewItem &item) const;
   bool getMuted(const wxDataViewItem &item) const;
+  wxColor getColor(const wxDataViewItem &item) const;
 
 private:
 
   std::shared_ptr<MQTT::Client> mClient;
-  wxObjectDataPtr<History> mHistory;
   std::vector<Types::SubscriptionData*> mSubscriptions;
+  std::map<size_t, Observer *> mObservers;
 
   // wxDataViewVirtualListModel interface.
   virtual unsigned GetColumnCount() const override;

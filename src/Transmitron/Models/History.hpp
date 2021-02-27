@@ -5,14 +5,15 @@
 #include <mqtt/message.h>
 #include "MQTT/Client.hpp"
 #include "MQTT/Message.hpp"
-#include "Transmitron/Types/SubscriptionData.hpp"
+#include "Transmitron/Models/Subscriptions.hpp"
 
 namespace Transmitron::Models
 {
 
 class History :
   public wxEvtHandler,
-  public wxDataViewVirtualListModel
+  public wxDataViewVirtualListModel,
+  public Subscriptions::Observer
 {
 public:
 
@@ -23,8 +24,8 @@ public:
 
   struct Message
   {
-    Types::SubscriptionData *sub;
-    mqtt::const_message_ptr msg;
+    wxDataViewItem subscription;
+    mqtt::const_message_ptr message;
   };
 
   enum class Column : unsigned
@@ -35,18 +36,10 @@ public:
     Max
   };
 
-  explicit History();
-  virtual ~History();
+  explicit History(const wxObjectDataPtr<Subscriptions> subscriptions);
 
   size_t attachObserver(Observer *observer);
-
-  void insert(
-    Types::SubscriptionData *sub,
-    mqtt::const_message_ptr msg
-  );
-  void remove(Types::SubscriptionData *sub);
-  void remap();
-  void refresh(Types::SubscriptionData *sub);
+  bool detachObserver(size_t id);
 
   std::string getPayload(const wxDataViewItem &item) const;
   std::string getTopic(const wxDataViewItem &item) const;
@@ -74,11 +67,26 @@ public:
     unsigned int col
   ) override;
 
+  // Models::Subscriptions::Observer interface.
+  void onMuted(wxDataViewItem subscription) override;
+  void onUnmuted(wxDataViewItem subscription) override;
+  void onSolo(wxDataViewItem subscription) override;
+  void onColorSet(wxDataViewItem subscription, wxColor color) override;
+  void onUnsubscribed(wxDataViewItem subscription) override;
+  void onMessage(
+    wxDataViewItem subscription,
+    mqtt::const_message_ptr message
+  ) override;
+
 private:
 
   std::vector<Message> mMessages;
   std::vector<size_t> mRemap;
+  wxObjectDataPtr<Subscriptions> mSubscriptions;
   std::map<size_t, Observer *> mObservers;
+
+  void remap();
+  void refresh(wxDataViewItem subscription);
 
 };
 

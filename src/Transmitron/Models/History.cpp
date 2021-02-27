@@ -12,8 +12,11 @@
 using namespace Transmitron::Models;
 using namespace Transmitron;
 
-History::History() {}
-History::~History() {}
+History::History(const wxObjectDataPtr<Subscriptions> subscriptions) :
+  mSubscriptions(std::move(subscriptions))
+{
+  mSubscriptions->attachObserver(this);
+}
 
 size_t History::attachObserver(Observer *observer)
 {
@@ -25,14 +28,27 @@ size_t History::attachObserver(Observer *observer)
   return mObservers.insert(std::make_pair(id, observer)).first->first;
 }
 
-void History::insert(
-  Types::SubscriptionData *sub,
-  mqtt::const_message_ptr msg
-) {
-  Message m{sub, msg};
-  mMessages.push_back(m);
+bool History::detachObserver(size_t id)
+{
+  auto it = mObservers.find(id);
+  if (it == std::end(mObservers))
+  {
+    return false;
+  }
 
-  if (!sub->getMuted())
+  mObservers.erase(it);
+  return true;
+}
+
+void History::onMessage(
+  wxDataViewItem subscription,
+  mqtt::const_message_ptr message
+) {
+  Message m{subscription, message};
+  mMessages.push_back(m);
+  bool muted = mSubscriptions->getMuted(subscription);
+
+  if (!mSubscriptions->getMuted(subscription))
   {
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
@@ -45,11 +61,31 @@ void History::insert(
   }
 }
 
-void History::remove(Types::SubscriptionData *sub)
+void History::onMuted(wxDataViewItem subscription)
+{
+  remap();
+}
+
+void History::onUnmuted(wxDataViewItem subscription)
+{
+  remap();
+}
+
+void History::onSolo(wxDataViewItem subscription)
+{
+  remap();
+}
+
+void History::onColorSet(wxDataViewItem subscription, wxColor color)
+{
+  refresh(subscription);
+}
+
+void History::onUnsubscribed(wxDataViewItem subscription)
 {
   for (auto it = std::begin(mMessages); it != std::end(mMessages); )
   {
-    if (it->sub == sub)
+    if (it->subscription == subscription)
     {
       it = mMessages.erase(it);
     }
@@ -70,7 +106,7 @@ void History::remap()
 
   for (size_t i = 0; i < mMessages.size(); ++i)
   {
-    if (!mMessages[i].sub->getMuted())
+    if (!mSubscriptions->getMuted(mMessages[i].subscription))
     {
       mRemap.push_back(i);
     }
@@ -105,11 +141,11 @@ void History::remap()
   }
 }
 
-void History::refresh(Types::SubscriptionData *sub)
+void History::refresh(wxDataViewItem subscription)
 {
   for (size_t i = 0; i < mRemap.size(); ++i)
   {
-    if (mMessages[mRemap[i]].sub == sub)
+    if (mMessages[mRemap[i]].subscription == subscription)
     {
       RowChanged(i);
     }
@@ -118,32 +154,32 @@ void History::refresh(Types::SubscriptionData *sub)
 
 std::string History::getPayload(const wxDataViewItem &item) const
 {
-  return mMessages.at(mRemap.at(GetRow(item))).msg->get_payload();
+  return mMessages.at(mRemap.at(GetRow(item))).message->get_payload();
 }
 
 std::string History::getTopic(const wxDataViewItem &item) const
 {
-  return mMessages.at(mRemap.at(GetRow(item))).msg->get_topic();
+  return mMessages.at(mRemap.at(GetRow(item))).message->get_topic();
 }
 
 MQTT::QoS History::getQos(const wxDataViewItem &item) const
 {
-  return (MQTT::QoS)mMessages.at(mRemap.at(GetRow(item))).msg->get_qos();
+  return (MQTT::QoS)mMessages.at(mRemap.at(GetRow(item))).message->get_qos();
 }
 
 bool History::getRetained(const wxDataViewItem &item) const
 {
-  return mMessages.at(mRemap.at(GetRow(item))).msg->is_retained();
+  return mMessages.at(mRemap.at(GetRow(item))).message->is_retained();
 }
 
 std::shared_ptr<MQTT::Message> History::getMessage(const wxDataViewItem &item) const
 {
-  auto msg = mMessages.at(mRemap.at(GetRow(item))).msg;
+  auto message = mMessages.at(mRemap.at(GetRow(item))).message;
   MQTT::Message m {
-    msg->get_topic(),
-    msg->get_payload(),
-    static_cast<MQTT::QoS>(msg->get_qos()),
-    msg->is_retained()
+    message->get_topic(),
+    message->get_payload(),
+    static_cast<MQTT::QoS>(message->get_qos()),
+    message->is_retained()
   };
   return std::make_shared<MQTT::Message>(std::move(m));
 }
@@ -195,10 +231,12 @@ void History::GetValueByRow(
   switch ((Column)col) {
     case Column::Icon: {
 
+      auto color = mSubscriptions->getColor(m.subscription);
+
       wxBitmap b(10, 20);
       wxMemoryDC mem;
       mem.SelectObject(b);
-      mem.SetBackground(wxBrush(m.sub->getColor()));
+      mem.SetBackground(wxBrush(color));
       mem.Clear();
       mem.SelectObject(wxNullBitmap);
 
@@ -206,8 +244,8 @@ void History::GetValueByRow(
     } break;
     case Column::Topic: {
       wxDataViewIconText result;
-      result.SetText(m.msg->get_topic());
-      if (m.msg->is_retained())
+      result.SetText(m.message->get_topic());
+      if (m.message->is_retained())
       {
         wxIcon icon;
         icon.CopyFromBitmap(*bin2c_pinned_18x18_png);
@@ -217,7 +255,7 @@ void History::GetValueByRow(
     } break;
     case Column::Qos: {
       wxBitmap *result;
-      switch ((MQTT::QoS)m.msg->get_qos()) {
+      switch ((MQTT::QoS)m.message->get_qos()) {
         case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0_png; } break;
         case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1_png; } break;
         case MQTT::QoS::ExactlyOnce: { result = bin2c_qos_2_png; } break;

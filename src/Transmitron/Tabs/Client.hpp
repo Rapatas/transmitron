@@ -89,7 +89,7 @@ private:
   // Subscriptions:
   wxBitmapButton *mSubscribe;
   Widgets::TopicCtrl *mFilter;
-  Models::Subscriptions *mSubscriptionsModel;
+  wxObjectDataPtr<Models::Subscriptions> mSubscriptionsModel;
   wxDataViewCtrl *mSubscriptionsCtrl;
 
   // Snippets:
