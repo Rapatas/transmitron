@@ -5,7 +5,7 @@
 using namespace MQTT;
 
 Subscription::Subscription(
-  size_t id,
+  Id_t id,
   const std::string &filter,
   QoS qos,
   std::shared_ptr<Client> client
@@ -79,6 +79,11 @@ QoS Subscription::getQos() const
 Subscription::State Subscription::getState() const
 {
   return mState;
+}
+
+Subscription::Id_t Subscription::getId() const
+{
+  return mId;
 }
 
 void Subscription::setState(State newState)

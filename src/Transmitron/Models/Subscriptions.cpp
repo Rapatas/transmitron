@@ -14,14 +14,6 @@ Subscriptions::Subscriptions(std::shared_ptr<MQTT::Client> client) :
   mClient(client)
 {}
 
-Subscriptions::~Subscriptions()
-{
-  for (const auto &s : mSubscriptions)
-  {
-    delete s;
-  }
-}
-
 size_t Subscriptions::attachObserver(Observer *observer)
 {
   size_t id = 0;
@@ -44,58 +36,70 @@ bool Subscriptions::detachObserver(size_t id)
   return true;
 }
 
-std::string Subscriptions::getFilter(const wxDataViewItem &item) const
+std::string Subscriptions::getFilter(wxDataViewItem item) const
 {
-  auto sub = mSubscriptions.at(GetRow(item));
+  auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   return sub->getFilter();
 }
 
-bool Subscriptions::getMuted(const wxDataViewItem &item) const
+std::string Subscriptions::getFilter(MQTT::Subscription::Id_t subscriptionId) const
 {
-  auto sub = mSubscriptions.at(GetRow(item));
+  auto &sub = mSubscriptions.at(subscriptionId);
+  return sub->getFilter();
+}
+
+bool Subscriptions::getMuted(wxDataViewItem item) const
+{
+  auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   return sub->getMuted();
 }
 
-wxColor Subscriptions::getColor(const wxDataViewItem &item) const
+bool Subscriptions::getMuted(MQTT::Subscription::Id_t subscriptionId) const
 {
-  auto sub = mSubscriptions.at(GetRow(item));
+  auto &sub = mSubscriptions.at(subscriptionId);
+  return sub->getMuted();
+}
+
+wxColor Subscriptions::getColor(MQTT::Subscription::Id_t subscriptionId) const
+{
+  auto &sub = mSubscriptions.at(subscriptionId);
   return sub->getColor();
 }
 
-void Subscriptions::setColor(const wxDataViewItem &item, const wxColor &color)
+void Subscriptions::setColor(wxDataViewItem item, const wxColor &color)
 {
-  auto sub = mSubscriptions.at(GetRow(item));
+  auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   sub->setColor(color);
   for (const auto &o : mObservers)
   {
-    o.second->onColorSet(item, color);
+    o.second->onColorSet(sub->getId(), color);
   }
   ValueChanged(item, (unsigned)Column::Icon);
 }
 
-void Subscriptions::unmute(const wxDataViewItem &item)
+void Subscriptions::unmute(wxDataViewItem item)
 {
-  auto sub = mSubscriptions.at(GetRow(item));
+  auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   sub->setMuted(false);
   for (const auto &o : mObservers)
   {
-    o.second->onUnmuted(item);
+    o.second->onUnmuted(sub->getId());
   }
   ItemChanged(item);
 }
 
-void Subscriptions::mute(const wxDataViewItem &item)
+void Subscriptions::mute(wxDataViewItem item)
 {
-  auto sub = mSubscriptions.at(GetRow(item));
+  auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   sub->setMuted(true);
   for (const auto &o : mObservers)
   {
-    o.second->onMuted(item);
+    o.second->onMuted(sub->getId());
   }
   ItemChanged(item);
 }
 
-void Subscriptions::solo(const wxDataViewItem &item)
+void Subscriptions::solo(wxDataViewItem item)
 {
   for (size_t i = 0; i < mSubscriptions.size(); ++i)
   {
@@ -103,11 +107,11 @@ void Subscriptions::solo(const wxDataViewItem &item)
     ItemChanged(GetItem(i));
   }
 
-  auto sub = mSubscriptions.at(GetRow(item));
+  auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   sub->setMuted(false);
   for (const auto &o : mObservers)
   {
-    o.second->onSolo(item);
+    o.second->onSolo(sub->getId());
   }
   ItemChanged(item);
 }
@@ -117,9 +121,9 @@ void Subscriptions::subscribe(const std::string &topic, MQTT::QoS qos)
   auto it = std::find_if(
     std::begin(mSubscriptions),
     std::end(mSubscriptions),
-    [&topic](Types::SubscriptionData *sub)
+    [&topic](auto &sub)
     {
-      return sub->getFilter() == topic;
+      return sub.second->getFilter() == topic;
     }
   );
 
@@ -129,20 +133,21 @@ void Subscriptions::subscribe(const std::string &topic, MQTT::QoS qos)
     return;
   }
 
-  auto sub = mClient->subscribe(topic);
-  auto sd = new Types::SubscriptionData(sub);
-  mSubscriptions.push_back(sd);
-  sd->Bind(Events::SUBSCRIBED, &Subscriptions::onSubscribed, this);
-  sd->Bind(Events::UNSUBSCRIBED, &Subscriptions::onUnsubscribed, this);
-  sd->Bind(Events::RECEIVED, &Subscriptions::onMessage, this);
-
-  auto item = GetItem(mSubscriptions.size() - 1);
+  auto mqttSubscription = mClient->subscribe(topic);
+  auto sub = std::make_unique<Types::SubscriptionData>(mqttSubscription);
+  const auto id = sub->getId();
+  sub->Bind(Events::SUBSCRIBED, &Subscriptions::onSubscribed, this);
+  sub->Bind(Events::UNSUBSCRIBED, &Subscriptions::onUnsubscribed, this);
+  sub->Bind(Events::RECEIVED, &Subscriptions::onMessage, this);
+  mSubscriptions.insert({id, std::move(sub)});
+  mRemap.push_back(id);
+  auto item = GetItem(mRemap.size() - 1);
   ItemAdded(wxDataViewItem(0), item);
 }
 
-void Subscriptions::unsubscribe(const wxDataViewItem &item)
+void Subscriptions::unsubscribe(wxDataViewItem item)
 {
-  auto sub = mSubscriptions.at(GetRow(item));
+  auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   sub->unsubscribe();
 }
 
@@ -172,7 +177,7 @@ void Subscriptions::GetValueByRow(
   unsigned int row,
   unsigned int col
 ) const {
-  auto s = mSubscriptions.at(row);
+  auto &sub = mSubscriptions.at(mRemap.at(row));
 
   switch ((Column)col) {
     case Column::Icon: {
@@ -180,18 +185,18 @@ void Subscriptions::GetValueByRow(
       wxBitmap b(10, 20);
       wxMemoryDC mem;
       mem.SelectObject(b);
-      mem.SetBackground(wxBrush(s->getColor()));
+      mem.SetBackground(wxBrush(sub->getColor()));
       mem.Clear();
       mem.SelectObject(wxNullBitmap);
 
       variant << b;
     } break;
     case Column::Topic: {
-      variant = s->getFilter();
+      variant = sub->getFilter();
     } break;
     case Column::Qos: {
       wxBitmap *result;
-      switch (s->getQos()) {
+      switch (sub->getQos()) {
         case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0_png; } break;
         case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1_png; } break;
         case MQTT::QoS::ExactlyOnce: { result = bin2c_qos_2_png; } break;
@@ -225,45 +230,36 @@ void Subscriptions::onSubscribed(Events::Subscription &e)
 
 void Subscriptions::onUnsubscribed(Events::Subscription &e)
 {
-  auto it = std::find(
-    std::begin(mSubscriptions),
-    std::end(mSubscriptions),
-    e.getSubscription()
+  const auto id = e.getSubscription()->getId();
+  auto it = std::find_if(
+    std::begin(mRemap),
+    std::end(mRemap),
+    [id](auto subId)
+    {
+      return subId == id;
+    }
   );
-  if (it == std::end(mSubscriptions))
+  if (it == std::end(mRemap))
   {
     wxLogError("Could not find subscription");
     return;
   }
-
-  auto index = it - std::begin(mSubscriptions);
-  auto item = GetItem(index);
+  const auto row = it - std::begin(mRemap);
+  const auto item = GetItem(row);
   for (const auto &o : mObservers)
   {
-    o.second->onUnsubscribed(item);
+    o.second->onUnsubscribed(id);
   }
+  mSubscriptions.erase(id);
+  mRemap.erase(it);
   ItemDeleted(wxDataViewItem(0), item);
-  mSubscriptions.erase(it);
 }
 
 void Subscriptions::onMessage(Events::Subscription &e)
 {
-  auto it = std::find(
-    std::begin(mSubscriptions),
-    std::end(mSubscriptions),
-    e.getSubscription()
-  );
-  if (it == std::end(mSubscriptions))
-  {
-    wxLogError("Could not find subscription");
-    return;
-  }
-
-  auto index = it - std::begin(mSubscriptions);
-  auto item = GetItem(index);
   for (const auto &o : mObservers)
   {
-    o.second->onMessage(item, e.getMessage());
+    o.second->onMessage(e.getSubscription()->getId(), e.getMessage());
   }
 }
 

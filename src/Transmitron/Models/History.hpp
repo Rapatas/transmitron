@@ -24,7 +24,7 @@ public:
 
   struct Message
   {
-    wxDataViewItem subscription;
+    MQTT::Subscription::Id_t subscriptionId;
     mqtt::const_message_ptr message;
   };
 
@@ -68,13 +68,13 @@ public:
   ) override;
 
   // Models::Subscriptions::Observer interface.
-  void onMuted(wxDataViewItem subscription) override;
-  void onUnmuted(wxDataViewItem subscription) override;
-  void onSolo(wxDataViewItem subscription) override;
-  void onColorSet(wxDataViewItem subscription, wxColor color) override;
-  void onUnsubscribed(wxDataViewItem subscription) override;
+  void onMuted(MQTT::Subscription::Id_t subscriptionId) override;
+  void onUnmuted(MQTT::Subscription::Id_t subscriptionId) override;
+  void onSolo(MQTT::Subscription::Id_t subscriptionId) override;
+  void onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor color) override;
+  void onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) override;
   void onMessage(
-    wxDataViewItem subscription,
+    MQTT::Subscription::Id_t subscriptionId,
     mqtt::const_message_ptr message
   ) override;
 
@@ -86,7 +86,7 @@ private:
   std::map<size_t, Observer *> mObservers;
 
   void remap();
-  void refresh(wxDataViewItem subscription);
+  void refresh(MQTT::Subscription::Id_t subscriptionId);
 
 };
 

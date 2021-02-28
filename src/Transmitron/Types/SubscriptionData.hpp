@@ -30,6 +30,7 @@ public:
   wxColor getColor() const;
   MQTT::QoS getQos() const;
   bool getMuted() const;
+  size_t getId() const;
 
 private:
 

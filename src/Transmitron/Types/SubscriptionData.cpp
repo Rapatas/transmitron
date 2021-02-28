@@ -38,6 +38,11 @@ void SubscriptionData::onMessage(mqtt::const_message_ptr msg)
   wxQueueEvent(this, e);
 }
 
+size_t SubscriptionData::getId() const
+{
+  return mSub->getId();
+}
+
 void SubscriptionData::setMuted(bool muted)
 {
   mMuted = muted;

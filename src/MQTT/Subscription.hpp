@@ -17,6 +17,8 @@ class Subscription :
 {
 public:
 
+  using Id_t = size_t;
+
   enum class State
   {
     PendingSubscription,
@@ -34,7 +36,7 @@ public:
   };
 
   explicit Subscription(
-    size_t id,
+    Id_t id,
     const std::string &filter,
     QoS qos,
     std::shared_ptr<Client> client
@@ -52,10 +54,11 @@ public:
   std::string getFilter() const;
   State getState() const;
   QoS getQos() const;
+  Id_t getId() const;
 
 private:
 
-  size_t mId;
+  Id_t mId;
   std::string mFilter;
   QoS mQos;
   State mState;

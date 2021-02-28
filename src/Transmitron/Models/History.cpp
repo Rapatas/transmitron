@@ -41,14 +41,14 @@ bool History::detachObserver(size_t id)
 }
 
 void History::onMessage(
-  wxDataViewItem subscription,
+  MQTT::Subscription::Id_t subscriptionId,
   mqtt::const_message_ptr message
 ) {
-  Message m{subscription, message};
+  Message m{subscriptionId, message};
   mMessages.push_back(m);
-  bool muted = mSubscriptions->getMuted(subscription);
+  bool muted = mSubscriptions->getMuted(subscriptionId);
 
-  if (!mSubscriptions->getMuted(subscription))
+  if (!mSubscriptions->getMuted(subscriptionId))
   {
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
@@ -61,31 +61,31 @@ void History::onMessage(
   }
 }
 
-void History::onMuted(wxDataViewItem subscription)
+void History::onMuted(MQTT::Subscription::Id_t subscriptionId)
 {
   remap();
 }
 
-void History::onUnmuted(wxDataViewItem subscription)
+void History::onUnmuted(MQTT::Subscription::Id_t subscriptionId)
 {
   remap();
 }
 
-void History::onSolo(wxDataViewItem subscription)
+void History::onSolo(MQTT::Subscription::Id_t subscriptionId)
 {
   remap();
 }
 
-void History::onColorSet(wxDataViewItem subscription, wxColor color)
+void History::onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor color)
 {
-  refresh(subscription);
+  refresh(subscriptionId);
 }
 
-void History::onUnsubscribed(wxDataViewItem subscription)
+void History::onUnsubscribed(MQTT::Subscription::Id_t subscriptionId)
 {
   for (auto it = std::begin(mMessages); it != std::end(mMessages); )
   {
-    if (it->subscription == subscription)
+    if (it->subscriptionId == subscriptionId)
     {
       it = mMessages.erase(it);
     }
@@ -106,7 +106,7 @@ void History::remap()
 
   for (size_t i = 0; i < mMessages.size(); ++i)
   {
-    if (!mSubscriptions->getMuted(mMessages[i].subscription))
+    if (!mSubscriptions->getMuted(mMessages[i].subscriptionId))
     {
       mRemap.push_back(i);
     }
@@ -141,11 +141,11 @@ void History::remap()
   }
 }
 
-void History::refresh(wxDataViewItem subscription)
+void History::refresh(MQTT::Subscription::Id_t subscriptionId)
 {
   for (size_t i = 0; i < mRemap.size(); ++i)
   {
-    if (mMessages[mRemap[i]].subscription == subscription)
+    if (mMessages[mRemap[i]].subscriptionId == subscriptionId)
     {
       RowChanged(i);
     }
@@ -231,7 +231,7 @@ void History::GetValueByRow(
   switch ((Column)col) {
     case Column::Icon: {
 
-      auto color = mSubscriptions->getColor(m.subscription);
+      auto color = mSubscriptions->getColor(m.subscriptionId);
 
       wxBitmap b(10, 20);
       wxMemoryDC mem;
