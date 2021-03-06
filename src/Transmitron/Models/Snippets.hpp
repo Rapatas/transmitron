@@ -84,31 +84,31 @@ private:
       Snippet,
     };
 
-    using Index_t = size_t;
+    using Id_t = size_t;
 
-    Index_t parent;
+    Id_t parent;
     std::string name;
     Type type;
-    std::set<Index_t> children;
+    std::set<Id_t> children;
     std::shared_ptr<MQTT::Message> message;
     bool saved;
     std::filesystem::path fullpath;
   };
 
-  Node::Index_t mNextAvailableIndex = 0;
-  std::map<Node::Index_t, Node> mNodes;
+  Node::Id_t mNextAvailableId = 0;
+  std::map<Node::Id_t, Node> mNodes;
   std::string mSnippetsDir;
 
   void loadRecursive(
-    Node::Index_t parentIndex,
+    Node::Id_t parentId,
     const std::filesystem::path &parentFullpath
   );
   void saveAll();
-  bool save(Node::Index_t index);
-  Node::Index_t getNextIndex();
+  bool save(Node::Id_t id);
+  Node::Id_t getNextId();
 
-  static Node::Index_t toIndex(const wxDataViewItem &item);
-  static wxDataViewItem toItem(Node::Index_t index);
+  static Node::Id_t toId(const wxDataViewItem &item);
+  static wxDataViewItem toItem(Node::Id_t id);
 
 };
 

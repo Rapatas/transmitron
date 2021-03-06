@@ -15,7 +15,7 @@ using namespace Transmitron::Models;
 
 Snippets::Snippets()
 {
-  const auto index = getNextIndex();
+  const auto id = getNextId();
   Node root {
     0,
     "_",
@@ -26,7 +26,7 @@ Snippets::Snippets()
     {}
   };
 
-  mNodes.insert({index, std::move(root)});
+  mNodes.insert({id, std::move(root)});
 }
 
 MQTT::Message Snippets::getMessage(wxDataViewItem item) const
@@ -36,8 +36,8 @@ MQTT::Message Snippets::getMessage(wxDataViewItem item) const
     return {};
   }
 
-  const auto index = toIndex(item);
-  const auto &node = mNodes.at(index);
+  const auto id = toId(item);
+  const auto &node = mNodes.at(id);
 
   if (!node.message)
   {
@@ -92,8 +92,8 @@ wxDataViewItem Snippets::createFolder(
 ) {
   const constexpr char *newName = "New Folder";
 
-  auto parentIndex = toIndex(parentItem);
-  Node &parentNode = mNodes.at(parentIndex);
+  auto parentId = toId(parentItem);
+  Node &parentNode = mNodes.at(parentId);
   if (parentNode.type != Node::Type::Folder)
   {
     return wxDataViewItem(nullptr);
@@ -110,7 +110,7 @@ wxDataViewItem Snippets::createFolder(
   wxLogInfo(
     "Creating folder '%s' under [%zu]'%s'",
     uniqueName,
-    parentIndex,
+    parentId,
     parentNode.name
   );
 
@@ -129,7 +129,7 @@ wxDataViewItem Snippets::createFolder(
   );
 
   Node newNode {
-    parentIndex,
+    parentId,
     uniqueName,
     Node::Type::Folder,
     {},
@@ -137,13 +137,13 @@ wxDataViewItem Snippets::createFolder(
     false,
     fullpath
   };
-  const auto newIndex = getNextIndex();
-  mNodes.insert({newIndex, std::move(newNode)});
-  mNodes.at(parentIndex).children.insert(newIndex);
+  const auto newId = getNextId();
+  mNodes.insert({newId, std::move(newNode)});
+  mNodes.at(parentId).children.insert(newId);
 
-  save(newIndex);
+  save(newId);
 
-  const auto item = toItem(newIndex);
+  const auto item = toItem(newId);
   ItemAdded(parentItem, item);
 
   return item;
@@ -155,8 +155,8 @@ wxDataViewItem Snippets::createSnippet(
 ) {
   const constexpr char *newName = "New Snippet";
 
-  auto parentIndex = toIndex(parentItem);
-  Node &parentNode = mNodes.at(parentIndex);
+  auto parentId = toId(parentItem);
+  Node &parentNode = mNodes.at(parentId);
   if (parentNode.type != Node::Type::Folder)
   {
     return wxDataViewItem(nullptr);
@@ -173,7 +173,7 @@ wxDataViewItem Snippets::createSnippet(
   wxLogInfo(
     "Creating snippet '%s' under [%zu]'%s'",
     uniqueName,
-    parentIndex,
+    parentId,
     parentNode.name
   );
 
@@ -192,7 +192,7 @@ wxDataViewItem Snippets::createSnippet(
   );
 
   Node newNode {
-    parentIndex,
+    parentId,
     uniqueName,
     Node::Type::Snippet,
     {},
@@ -200,13 +200,13 @@ wxDataViewItem Snippets::createSnippet(
     false,
     fullpath
   };
-  const auto newIndex = getNextIndex();
-  mNodes.insert({newIndex, std::move(newNode)});
-  mNodes.at(parentIndex).children.insert(newIndex);
+  const auto newId = getNextId();
+  mNodes.insert({newId, std::move(newNode)});
+  mNodes.at(parentId).children.insert(newId);
 
-  save(newIndex);
+  save(newId);
 
-  const auto item = toItem(newIndex);
+  const auto item = toItem(newId);
   ItemAdded(parentItem, item);
 
   return item;
@@ -217,8 +217,8 @@ wxDataViewItem Snippets::insert(
   std::shared_ptr<MQTT::Message> message,
   wxDataViewItem parentItem
 ) {
-  const auto parentIndex = toIndex(parentItem);
-  const auto &parentNode = mNodes.at(parentIndex);
+  const auto parentId = toId(parentItem);
+  const auto &parentNode = mNodes.at(parentId);
 
   if (parentNode.type != Node::Type::Folder)
   {
@@ -233,7 +233,7 @@ wxDataViewItem Snippets::insert(
   wxLogInfo(
     "Creating snippet '%s' under [%zu]'%s'",
     name,
-    parentIndex,
+    parentId,
     parentNode.name
   );
 
@@ -252,7 +252,7 @@ wxDataViewItem Snippets::insert(
   );
 
   Node newNode {
-    parentIndex,
+    parentId,
     name,
     Node::Type::Snippet,
     {},
@@ -260,13 +260,13 @@ wxDataViewItem Snippets::insert(
     false,
     fullpath
   };
-  const auto newIndex = getNextIndex();
-  mNodes.insert({newIndex, std::move(newNode)});
-  mNodes.at(parentIndex).children.insert(newIndex);
+  const auto newId = getNextId();
+  mNodes.insert({newId, std::move(newNode)});
+  mNodes.at(parentId).children.insert(newId);
 
-  save(newIndex);
+  save(newId);
 
-  const auto item = toItem(newIndex);
+  const auto item = toItem(newId);
   ItemAdded(parentItem, item);
 
   return item;
@@ -276,8 +276,8 @@ wxDataViewItem Snippets::replace(
   wxDataViewItem item,
   std::shared_ptr<MQTT::Message> message
 ) {
-  const auto index = toIndex(item);
-  auto &node = mNodes.at(index);
+  const auto id = toId(item);
+  auto &node = mNodes.at(id);
   if (node.type != Node::Type::Snippet)
   {
     wxLogWarning("Can only replace snippets");
@@ -301,8 +301,8 @@ wxDataViewItem Snippets::replace(
 
 bool Snippets::remove(wxDataViewItem item)
 {
-  const auto index = toIndex(item);
-  auto &node = mNodes.at(index);
+  const auto id = toId(item);
+  auto &node = mNodes.at(id);
   const auto parent = GetParent(item);
 
   std::error_code ec;
@@ -313,15 +313,15 @@ bool Snippets::remove(wxDataViewItem item)
     return false;
   }
 
-  mNodes.at(toIndex(parent)).children.erase(index);
-  mNodes.erase(index);
+  mNodes.at(toId(parent)).children.erase(id);
+  mNodes.erase(id);
   ItemDeleted(parent, item);
 
   return true;
 }
 
 void Snippets::loadRecursive(
-  Node::Index_t parentIndex,
+  Node::Id_t parentId,
   const std::filesystem::path &parentFullpath
 ) {
   for (const auto &entry : fs::directory_iterator(parentFullpath))
@@ -341,7 +341,7 @@ void Snippets::loadRecursive(
     if (entry.status().type() == fs::file_type::directory)
     {
       Node newNode {
-        parentIndex,
+        parentId,
         name,
         Node::Type::Folder,
         {},
@@ -349,10 +349,10 @@ void Snippets::loadRecursive(
         true,
         entry.path()
       };
-      const auto newIndex = getNextIndex();
-      mNodes.insert({newIndex, std::move(newNode)});
-      mNodes.at(parentIndex).children.insert(newIndex);
-      loadRecursive(newIndex, entry.path());
+      const auto newId = getNextId();
+      mNodes.insert({newId, std::move(newNode)});
+      mNodes.at(parentId).children.insert(newId);
+      loadRecursive(newId, entry.path());
     }
     else
     {
@@ -382,7 +382,7 @@ void Snippets::loadRecursive(
       }
 
       Node newNode {
-        parentIndex,
+        parentId,
         name,
         Node::Type::Snippet,
         {},
@@ -390,9 +390,9 @@ void Snippets::loadRecursive(
         true,
         entry.path()
       };
-      const auto newIndex = getNextIndex();
-      mNodes.insert({newIndex, std::move(newNode)});
-      mNodes.at(parentIndex).children.insert(newIndex);
+      const auto newId = getNextId();
+      mNodes.insert({newId, std::move(newNode)});
+      mNodes.at(parentId).children.insert(newId);
     }
   }
 }
@@ -401,8 +401,8 @@ bool Snippets::hasChildNamed(
   wxDataViewItem parent,
   const std::string &name
 ) const {
-  const auto index = toIndex(parent);
-  const auto children = mNodes.at(index).children;
+  const auto id = toId(parent);
+  const auto children = mNodes.at(id).children;
   for (const auto &child : children)
   {
     if (mNodes.at(child).name == name)
@@ -434,8 +434,8 @@ void Snippets::GetValue(
   const wxDataViewItem &item,
   unsigned int col
 ) const {
-  auto index = toIndex(item);
-  const auto &node = mNodes.at(index);
+  auto id = toId(item);
+  const auto &node = mNodes.at(id);
   wxDataViewIconText value;
   value.SetText(node.name);
   switch (node.type)
@@ -473,12 +473,12 @@ bool Snippets::SetValue(
     return false;
   }
 
-  auto index = toIndex(item);
-  auto &node = mNodes.at(index);
+  auto id = toId(item);
+  auto &node = mNodes.at(id);
   if (node.name == newName) { return true; }
   if (newName.empty()) { return false; }
 
-  wxLogInfo("Renaming '%zu' to '%s'", index, newName);
+  wxLogInfo("Renaming '%zu' to '%s'", id, newName);
 
   std::string encoded;
   try { encoded = cppcodec::base32_rfc4648::encode(newName); }
@@ -510,7 +510,7 @@ bool Snippets::SetValue(
   node.name = newName;
   node.fullpath = fullpath;
   node.saved = false;
-  save(index);
+  save(id);
   ItemChanged(item);
   return true;
 
@@ -533,8 +533,8 @@ wxDataViewItem Snippets::GetParent(
     return wxDataViewItem(nullptr);
   }
 
-  auto index = toIndex(item);
-  auto parent = mNodes.at(index).parent;
+  auto id = toId(item);
+  auto parent = mNodes.at(id).parent;
   return toItem(parent);
 }
 
@@ -547,7 +547,7 @@ bool Snippets::IsContainer(
     return true;
   }
 
-  const auto &node = mNodes.at(toIndex(item));
+  const auto &node = mNodes.at(toId(item));
   return node.type == Node::Type::Folder;
 }
 
@@ -555,14 +555,14 @@ unsigned int Snippets::GetChildren(
   const wxDataViewItem &parent,
   wxDataViewItemArray &array
 ) const {
-  Node::Index_t index = 0;
+  Node::Id_t id = 0;
 
   if (parent.IsOk())
   {
-    index = toIndex(parent);
+    id = toId(parent);
   }
 
-  const auto &node = mNodes.at(index);
+  const auto &node = mNodes.at(id);
 
   for (auto i : node.children)
   {
@@ -571,26 +571,26 @@ unsigned int Snippets::GetChildren(
   return node.children.size();
 }
 
-Snippets::Node::Index_t Snippets::toIndex(const wxDataViewItem &item)
+Snippets::Node::Id_t Snippets::toId(const wxDataViewItem &item)
 {
-  return reinterpret_cast<Node::Index_t>(item.GetID());
+  return reinterpret_cast<Node::Id_t>(item.GetID());
 }
 
-wxDataViewItem Snippets::toItem(Node::Index_t index)
+wxDataViewItem Snippets::toItem(Node::Id_t id)
 {
-  return wxDataViewItem(reinterpret_cast<void*>(index));
+  return wxDataViewItem(reinterpret_cast<void*>(id));
 }
 
-Snippets::Node::Index_t Snippets::getNextIndex()
+Snippets::Node::Id_t Snippets::getNextId()
 {
-  return mNextAvailableIndex++;
+  return mNextAvailableId++;
 }
 
 void Snippets::saveAll()
 {
   // Traverse backwards.
   // If we save a child, the parents are saved with it.
-  for (Node::Index_t i = mNodes.size() - 1; i >= 0; --i)
+  for (Node::Id_t i = mNodes.size() - 1; i >= 0; --i)
   {
     if (!mNodes.at(i).saved)
     {
@@ -599,11 +599,11 @@ void Snippets::saveAll()
   }
 }
 
-bool Snippets::save(Node::Index_t index)
+bool Snippets::save(Node::Id_t id)
 {
-  if (index == 0) { return true; }
+  if (id == 0) { return true; }
 
-  auto &node = mNodes.at(index);
+  auto &node = mNodes.at(id);
   if (node.saved) { return true; }
   if (!save(node.parent)) { return false; }
 
