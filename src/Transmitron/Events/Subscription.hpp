@@ -2,7 +2,7 @@
 #define TRANSMITRON_EVENTS_SUBSCRIPTION_HPP
 
 #include <wx/event.h>
-#include "Transmitron/Types/SubscriptionData.hpp"
+#include "MQTT/Subscription.hpp"
 
 namespace Transmitron::Events
 {
@@ -22,7 +22,7 @@ public:
   Subscription(const Subscription& event) :
     wxCommandEvent(event)
   {
-    this->setSubscription(event.getSubscription());
+    this->setId(event.getId());
     this->setMessage(event.getMessage());
   }
 
@@ -31,9 +31,9 @@ public:
     return new Subscription(*this);
   }
 
-  Transmitron::Types::SubscriptionData *getSubscription() const
+  MQTT::Subscription::Id_t getId() const
   {
-    return mSubscriptionData;
+    return mId;
   }
 
   mqtt::const_message_ptr getMessage() const
@@ -46,14 +46,14 @@ public:
     mMsg = msg;
   }
 
-  void setSubscription(Transmitron::Types::SubscriptionData *subscriptionData)
+  void setId(MQTT::Subscription::Id_t id)
   {
-    mSubscriptionData = subscriptionData;
+    mId = id;
   }
 
 private:
 
-  Transmitron::Types::SubscriptionData *mSubscriptionData;
+  MQTT::Subscription::Id_t mId;
   mqtt::const_message_ptr mMsg;
 };
 

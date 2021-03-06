@@ -134,7 +134,7 @@ void Subscriptions::subscribe(const std::string &topic, MQTT::QoS qos)
   }
 
   auto mqttSubscription = mClient->subscribe(topic);
-  auto sub = std::make_unique<Types::SubscriptionData>(mqttSubscription);
+  auto sub = std::make_unique<Types::Subscription>(mqttSubscription);
   const auto id = sub->getId();
   sub->Bind(Events::SUBSCRIBED, &Subscriptions::onSubscribed, this);
   sub->Bind(Events::UNSUBSCRIBED, &Subscriptions::onUnsubscribed, this);
@@ -230,7 +230,7 @@ void Subscriptions::onSubscribed(Events::Subscription &e)
 
 void Subscriptions::onUnsubscribed(Events::Subscription &e)
 {
-  const auto id = e.getSubscription()->getId();
+  const auto id = e.getId();
   auto it = std::find_if(
     std::begin(mRemap),
     std::end(mRemap),
@@ -259,7 +259,7 @@ void Subscriptions::onMessage(Events::Subscription &e)
 {
   for (const auto &o : mObservers)
   {
-    o.second->onMessage(e.getSubscription()->getId(), e.getMessage());
+    o.second->onMessage(e.getId(), e.getMessage());
   }
 }
 

@@ -5,7 +5,7 @@
 #include <wx/dataview.h>
 
 #include "MQTT/Client.hpp"
-#include "Transmitron/Types/SubscriptionData.hpp"
+#include "Transmitron/Types/Subscription.hpp"
 #include "Transmitron/Events/Subscription.hpp"
 
 namespace Transmitron::Models
@@ -61,7 +61,7 @@ public:
 private:
 
   std::shared_ptr<MQTT::Client> mClient;
-  std::map<MQTT::Subscription::Id_t, std::unique_ptr<Types::SubscriptionData>> mSubscriptions;
+  std::map<MQTT::Subscription::Id_t, std::unique_ptr<Types::Subscription>> mSubscriptions;
   std::vector<MQTT::Subscription::Id_t> mRemap;
   std::map<size_t, Observer *> mObservers;
 

@@ -1,5 +1,5 @@
-#ifndef TRANSMITRON_TYPES_SUBSCRIPTIONDATA_HPP
-#define TRANSMITRON_TYPES_SUBSCRIPTIONDATA_HPP
+#ifndef TRANSMITRON_TYPES_SUBSCRIPTION_HPP
+#define TRANSMITRON_TYPES_SUBSCRIPTION_HPP
 
 #include <map>
 #include <wx/colour.h>
@@ -9,13 +9,13 @@
 namespace Transmitron::Types
 {
 
-class SubscriptionData :
+class Subscription :
   public wxEvtHandler,
   public MQTT::Subscription::Observer
 {
 public:
 
-  SubscriptionData(std::shared_ptr<MQTT::Subscription> sub);
+  Subscription(std::shared_ptr<MQTT::Subscription> sub);
 
   // MQTT::Subscription::Observer interface.
   void onSubscribed() override;
@@ -43,4 +43,4 @@ private:
 
 }
 
-#endif // TRANSMITRON_TYPES_SUBSCRIPTIONDATA_HPP
+#endif // TRANSMITRON_TYPES_SUBSCRIPTION_HPP
