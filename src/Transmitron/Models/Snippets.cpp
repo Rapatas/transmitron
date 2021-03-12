@@ -19,11 +19,11 @@ Snippets::Snippets()
   Node root {
     0,
     "_",
+    {},
     Node::Type::Folder,
     {},
     nullptr,
-    true,
-    {}
+    true
   };
 
   mNodes.insert({id, std::move(root)});
@@ -80,9 +80,9 @@ bool Snippets::load(const std::string &connectionDir)
     return false;
   }
 
-  mNodes.at(0).fullpath = mSnippetsDir;
+  mNodes.at(0).encoded = mSnippetsDir;
 
-  loadRecursive(0, mSnippetsDir);
+  loadDirectoryRecursive(mSnippetsDir, std::numeric_limits<Node::Id_t>::max());
 
   return true;
 }
@@ -122,20 +122,20 @@ wxDataViewItem Snippets::createFolder(
     return wxDataViewItem(nullptr);
   }
 
-  const std::string fullpath = fmt::format(
+  const std::string path = fmt::format(
     "{}/{}",
-    parentNode.fullpath.c_str(),
+    parentNode.encoded,
     encoded
   );
 
   Node newNode {
     parentId,
     uniqueName,
+    encoded,
     Node::Type::Folder,
     {},
     nullptr,
     false,
-    fullpath
   };
   const auto newId = getNextId();
   mNodes.insert({newId, std::move(newNode)});
@@ -185,20 +185,21 @@ wxDataViewItem Snippets::createSnippet(
     return wxDataViewItem(nullptr);
   }
 
-  const std::string fullpath = fmt::format(
+  const auto parentPath = getNodePath(parentId);
+  const std::string path = fmt::format(
     "{}/{}",
-    parentNode.fullpath.c_str(),
+    parentPath,
     encoded
   );
 
   Node newNode {
     parentId,
     uniqueName,
+    encoded,
     Node::Type::Snippet,
     {},
     message,
     false,
-    fullpath
   };
   const auto newId = getNextId();
   mNodes.insert({newId, std::move(newNode)});
@@ -245,20 +246,21 @@ wxDataViewItem Snippets::insert(
     return wxDataViewItem(nullptr);
   }
 
-  const std::string fullpath = fmt::format(
+  const auto parentPath = getNodePath(parentId);
+  const std::string path = fmt::format(
     "{}/{}",
-    parentNode.fullpath.c_str(),
+    parentPath.c_str(),
     encoded
   );
 
   Node newNode {
     parentId,
     name,
+    encoded,
     Node::Type::Snippet,
     {},
     message,
     false,
-    fullpath
   };
   const auto newId = getNextId();
   mNodes.insert({newId, std::move(newNode)});
@@ -284,10 +286,11 @@ wxDataViewItem Snippets::replace(
     return wxDataViewItem(nullptr);
   }
 
-  std::ofstream output(node.fullpath);
+  const auto path = getNodePath(id);
+  std::ofstream output(path);
   if (!output.is_open())
   {
-    wxLogWarning("Could not open '%s'", node.fullpath.c_str());
+    wxLogWarning("Could not open '%s'", path.c_str());
     return wxDataViewItem(nullptr);
   }
 
@@ -306,7 +309,8 @@ bool Snippets::remove(wxDataViewItem item)
   const auto parent = GetParent(item);
 
   std::error_code ec;
-  fs::remove_all(node.fullpath, ec);
+  const auto path = getNodePath(id);
+  fs::remove_all(path, ec);
   if (ec)
   {
     wxLogError("Could not delete '%s': %s", node.name, ec.message());
@@ -320,81 +324,88 @@ bool Snippets::remove(wxDataViewItem item)
   return true;
 }
 
-void Snippets::loadRecursive(
-  Node::Id_t parentId,
-  const std::filesystem::path &parentFullpath
+void Snippets::loadDirectoryRecursive(
+  const std::filesystem::path &path,
+  Node::Id_t parentId
 ) {
-  for (const auto &entry : fs::directory_iterator(parentFullpath))
-  {
-    std::vector<uint8_t> decoded;
-    const auto stem = entry.path().stem().u8string();
-    try {
-      decoded = cppcodec::base32_rfc4648::decode(stem);
-    }
-    catch (cppcodec::parse_error &e)
-    {
-      wxLogError("Could not decode '%s': %s", stem, e.what());
-      continue;
-    }
-    std::string name{decoded.begin(), decoded.end()};
+  const bool isRoot = parentId == std::numeric_limits<Node::Id_t>::max();
 
+  const auto currentId = isRoot ? 0   : getNextId();
+  const auto name      = isRoot ? "_" : decode(path.stem());
+
+  if (!isRoot)
+  {
+    Node newNode {
+      parentId,
+      name,
+      path.filename(),
+      Node::Type::Folder,
+      {},
+      nullptr,
+      true,
+    };
+
+    mNodes.insert({currentId, std::move(newNode)});
+    mNodes.at(parentId).children.insert(currentId);
+  }
+
+  for (const auto &entry : fs::directory_iterator(path))
+  {
     if (entry.status().type() == fs::file_type::directory)
     {
-      Node newNode {
-        parentId,
-        name,
-        Node::Type::Folder,
-        {},
-        nullptr,
-        true,
-        entry.path()
-      };
-      const auto newId = getNextId();
-      mNodes.insert({newId, std::move(newNode)});
-      mNodes.at(parentId).children.insert(newId);
-      loadRecursive(newId, entry.path());
+      loadDirectoryRecursive(entry.path(), currentId);
     }
     else
     {
-      std::ifstream snippetFile(entry.path());
-      if (!snippetFile.is_open())
-      {
-        wxLogWarning("Could not open '%s'", entry.path().c_str());
-        continue;
-      }
-
-      std::stringstream buffer;
-      buffer << snippetFile.rdbuf();
-      const std::string &sbuffer = buffer.str();
-
-      std::unique_ptr<MQTT::Message> message;
-
-      if (!sbuffer.empty())
-      {
-        if (!nlohmann::json::accept(sbuffer))
-        {
-          wxLogWarning("Could not parse '%s'", entry.path().c_str());
-          continue;
-        }
-
-        auto j = nlohmann::json::parse(sbuffer);
-        message = std::make_unique<MQTT::Message>(MQTT::Message::fromJson(j));
-      }
-
-      Node newNode {
-        parentId,
-        name,
-        Node::Type::Snippet,
-        {},
-        std::move(message),
-        true,
-        entry.path()
-      };
-      const auto newId = getNextId();
-      mNodes.insert({newId, std::move(newNode)});
-      mNodes.at(parentId).children.insert(newId);
+      loadSnippet(entry.path(), currentId);
     }
   }
+}
+
+void Snippets::loadSnippet(
+  const std::filesystem::path &entry,
+  Node::Id_t parentId
+) {
+  const auto stem = entry.stem().u8string();
+  const std::string name = decode(stem);
+
+  std::ifstream snippetFile(entry);
+  if (!snippetFile.is_open())
+  {
+    wxLogWarning("Could not load '%s': failed to open", entry.c_str());
+    return;
+  }
+
+  std::stringstream buffer;
+  buffer << snippetFile.rdbuf();
+  const std::string &sbuffer = buffer.str();
+
+  std::unique_ptr<MQTT::Message> message;
+
+  if (!sbuffer.empty())
+  {
+    if (!nlohmann::json::accept(sbuffer))
+    {
+      wxLogWarning("Could not load '%s': malformed json", entry.c_str());
+      return;
+    }
+
+    auto j = nlohmann::json::parse(sbuffer);
+    message = std::make_unique<MQTT::Message>(MQTT::Message::fromJson(j));
+  }
+
+  Node newNode {
+    parentId,
+    name,
+    entry.filename(),
+    Node::Type::Snippet,
+    {},
+    std::move(message),
+    true,
+  };
+  const auto newId = getNextId();
+  mNodes.insert({newId, std::move(newNode)});
+  mNodes.at(parentId).children.insert(newId);
 }
 
 bool Snippets::hasChildNamed(
@@ -484,31 +495,37 @@ bool Snippets::SetValue(
   try { encoded = cppcodec::base32_rfc4648::encode(newName); }
   catch (cppcodec::parse_error &e)
   {
-    wxLogError("Could not encode '%s': %s", newName, e.what());
+    wxLogError("Could not rename '%s': %s", newName, e.what());
     return false;
   }
 
-  const std::string fullpath = fmt::format(
+  const auto parentPath = getNodePath(node.parent);
+  const std::string pathOld = fmt::format(
     "{}/{}",
-    mNodes.at(node.parent).fullpath.c_str(),
+    parentPath,
+    node.encoded
+  );
+  const std::string pathNew = fmt::format(
+    "{}/{}",
+    parentPath,
     encoded
   );
 
   std::error_code ec;
-  fs::rename(node.fullpath, fullpath, ec);
+  fs::rename(pathOld, pathNew, ec);
   if (ec)
   {
     wxLogError(
-      "Failed to rename '%s' to '%s': %s",
-      node.fullpath.c_str(),
-      fullpath,
+      "Could not rename '%s' to '%s': %s",
+      pathOld,
+      pathNew,
       ec.message()
     );
     return false;
   }
 
   node.name = newName;
-  node.fullpath = fullpath;
+  node.encoded = encoded;
   node.saved = false;
   save(id);
   ItemChanged(item);
@@ -586,6 +603,30 @@ Snippets::Node::Id_t Snippets::getNextId()
   return mNextAvailableId++;
 }
 
+std::string Snippets::getNodePath(Node::Id_t id) const
+{
+  Node::Id_t currentId = id;
+  std::vector<std::string> parts;
+  while (currentId != 0)
+  {
+    auto &node = mNodes.at(currentId);
+    parts.push_back(node.encoded);
+    currentId = mNodes.at(currentId).parent;
+  }
+
+  parts.push_back(mNodes.at(0).encoded);
+
+  std::string result;
+  for (auto it = parts.rbegin(); it != parts.rend(); ++it)
+  {
+    result += *it + "/";
+  }
+
+  result.pop_back();
+
+  return result;
+}
+
 void Snippets::saveAll()
 {
   // Traverse backwards.
@@ -601,15 +642,15 @@ void Snippets::saveAll()
 
 bool Snippets::save(Node::Id_t id)
 {
-  if (id == 0) { return true; }
-
   auto &node = mNodes.at(id);
   if (node.saved) { return true; }
-  if (!save(node.parent)) { return false; }
+  if (id != 0 && !save(node.parent)) { return false; }
+
+  const auto nodePath = getNodePath(id);
 
   if (node.type == Node::Type::Snippet)
   {
-    std::ofstream output(node.fullpath);
+    std::ofstream output(nodePath);
     if (!output.is_open())
     {
       wxLogError("Could not save '%s'", node.name);
@@ -623,20 +664,20 @@ bool Snippets::save(Node::Id_t id)
   }
   else if (node.type == Node::Type::Folder)
   {
-    bool exists = fs::exists(node.fullpath);
-    bool isDir = fs::is_directory(node.fullpath);
+    bool exists = fs::exists(nodePath);
+    bool isDir = fs::is_directory(nodePath);
 
-    if (exists && !isDir && !fs::remove(node.fullpath))
+    if (exists && !isDir && !fs::remove(nodePath))
     {
-      wxLogWarning("Could not remove file %s", node.fullpath.c_str());
+      wxLogWarning("Could not remove file %s", nodePath.c_str());
       return false;
     }
 
-    if (!exists && !fs::create_directory(node.fullpath))
+    if (!exists && !fs::create_directory(nodePath))
     {
       wxLogWarning(
         "Could not create directory: %s",
-        node.fullpath.c_str()
+        nodePath.c_str()
       );
       return false;
     }
@@ -645,4 +686,21 @@ bool Snippets::save(Node::Id_t id)
   node.saved = true;
 
   return true;
+}
+
+std::string Snippets::decode(const std::string &encoded)
+{
+  std::vector<uint8_t> decoded;
+
+  try
+  {
+    decoded = cppcodec::base32_rfc4648::decode(encoded);
+  }
+  catch (cppcodec::parse_error &e)
+  {
+    wxLogError("Could not decode '%s': %s", encoded, e.what());
+    return encoded;
+  }
+
+  return {decoded.begin(), decoded.end()};
 }
