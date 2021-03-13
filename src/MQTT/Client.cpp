@@ -45,7 +45,7 @@ void Client::disconnect()
   wxLogMessage("Disconnecting from %s", mHostname);
   try
   {
-    mClient->disconnect();
+    mClient->disconnect(200, nullptr, *this);
     cleanSubscriptions();
   }
   catch (const mqtt::exception& exc)
