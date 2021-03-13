@@ -141,6 +141,7 @@ wxDataViewItem Snippets::createFolder(
   mNodes.insert({newId, std::move(newNode)});
   mNodes.at(parentId).children.push_back(newId);
 
+  mNodes.at(parentId).saved = false;
   save(newId);
 
   const auto item = toItem(newId);
@@ -205,6 +206,7 @@ wxDataViewItem Snippets::createSnippet(
   mNodes.insert({newId, std::move(newNode)});
   mNodes.at(parentId).children.push_back(newId);
 
+  mNodes.at(parentId).saved = false;
   save(newId);
 
   const auto item = toItem(newId);
@@ -328,6 +330,154 @@ bool Snippets::remove(wxDataViewItem item)
   ItemDeleted(parent, item);
 
   return true;
+}
+
+wxDataViewItem Snippets::moveBefore(
+  wxDataViewItem item,
+  wxDataViewItem sibling
+) {
+  return move(item, GetParent(sibling), sibling);
+}
+
+wxDataViewItem Snippets::moveInside(
+  wxDataViewItem item,
+  wxDataViewItem parent
+) {
+  return move(item, parent, wxDataViewItem(0));
+}
+
+wxDataViewItem Snippets::move(
+  wxDataViewItem item,
+  wxDataViewItem parent,
+  wxDataViewItem sibling
+) {
+  if (!item.IsOk())
+  {
+    wxLogInfo("Could not move item: Item is null");
+    return wxDataViewItem(0);
+  }
+
+  if (!parent.IsOk() && !sibling.IsOk())
+  {
+    wxLogInfo("Could not move item: Target it null");
+    return wxDataViewItem(0);
+  }
+
+  if (item == parent)
+  {
+    wxLogInfo("Could not move item: Item is Target");
+    return wxDataViewItem(0);
+  }
+
+  if (isRecursive(parent, item))
+  {
+    wxLogInfo("Could not move item: Target is recursive");
+    return wxDataViewItem(0);
+  }
+
+  const auto nodeId = toId(item);
+  auto &node = mNodes.at(nodeId);
+  const auto newParentId = toId(parent);
+  const auto oldParentId = node.parent;
+  auto &newParentNode = mNodes.at(newParentId);
+  auto &oldParentNode = mNodes.at(oldParentId);
+
+  wxLogInfo(
+    "Moving %zu in %zu before %zu",
+    nodeId,
+    newParentId,
+    toId(sibling)
+  );
+
+  if (parent != GetParent(item))
+  {
+    const std::string pathNew = fmt::format(
+      "{}/{}",
+      getNodePath(newParentId),
+      node.encoded
+    );
+
+    if (fs::exists(pathNew))
+    {
+      wxLogError("Could not move item: target exists");
+      return wxDataViewItem(0);
+    }
+
+    const auto pathOld = getNodePath(nodeId);
+    std::error_code ec;
+    fs::rename(pathOld, pathNew, ec);
+    if (ec)
+    {
+      wxLogError(
+        "Could not move item: failed to rename '%s' to '%s': %s",
+        pathOld,
+        pathNew,
+        ec.message()
+      );
+      return wxDataViewItem(0);
+    }
+
+    auto &children = oldParentNode.children;
+    auto removeIt = std::remove(
+      std::begin(children),
+      std::end(children),
+      nodeId
+    );
+    children.erase(removeIt);
+
+    node.parent = newParentId;
+
+    mNodes.at(oldParentId).saved = false;
+    save(oldParentId);
+  }
+
+  ItemDeleted(toItem(oldParentId), item);
+  mNodes.at(newParentId).saved = false;
+
+  if (!sibling.IsOk())
+  {
+    newParentNode.children.push_front(nodeId);
+  }
+  else if (oldParentId != newParentId)
+  {
+    auto &children = newParentNode.children;
+    auto it = std::find(
+      std::begin(children),
+      std::end(children),
+      toId(sibling)
+    );
+    children.insert(it, nodeId);
+  }
+  else
+  {
+    auto &siblings = newParentNode.children;
+
+    std::list<Node::Id_t> temp;
+
+    const auto oldIt = std::find(
+      std::begin(siblings),
+      std::end(siblings),
+      nodeId
+    );
+    const auto newIt = std::find(
+      std::begin(siblings),
+      std::end(siblings),
+      toId(sibling)
+    );
+
+    temp.splice(std::end(temp), siblings, oldIt);
+
+    siblings.splice(newIt, temp);
+  }
+
+  ItemAdded(parent, item);
+  for (const auto &child : node.children)
+  {
+    ItemAdded(item, toItem(child));
+  }
+  save(newParentId);
+
+  return item;
 }
 
 void Snippets::loadDirectoryRecursive(
@@ -533,6 +683,7 @@ bool Snippets::SetValue(
   node.name = newName;
   node.encoded = encoded;
   node.saved = false;
+  mNodes.at(node.parent).saved = false;
   save(id);
   ItemChanged(item);
   return true;
@@ -607,6 +758,13 @@ wxDataViewItem Snippets::toItem(Node::Id_t id)
 Snippets::Node::Id_t Snippets::getNextId()
 {
   return mNextAvailableId++;
+}
+
+bool Snippets::isRecursive(wxDataViewItem parent, wxDataViewItem item) const
+{
+  if (!parent.IsOk()) { return false; }
+  if (parent == item) { return true; }
+  return isRecursive(GetParent(parent), item);
 }
 
 std::string Snippets::getNodePath(Node::Id_t id) const

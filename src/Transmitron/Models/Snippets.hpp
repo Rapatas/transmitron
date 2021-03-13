@@ -45,6 +45,14 @@ public:
   );
   bool remove(wxDataViewItem item);
 
+  wxDataViewItem moveBefore(wxDataViewItem item, wxDataViewItem sibling);
+  wxDataViewItem moveInside(wxDataViewItem item, wxDataViewItem parent);
+  wxDataViewItem move(
+    wxDataViewItem item,
+    wxDataViewItem parent,
+    wxDataViewItem sibling
+  );
+
   bool hasChildNamed(wxDataViewItem parent, const std::string &name) const;
 
   virtual unsigned GetColumnCount() const override;
@@ -110,6 +118,7 @@ private:
   void saveAll();
   bool save(Node::Id_t id);
   Node::Id_t getNextId();
+  bool isRecursive(wxDataViewItem parent, wxDataViewItem item) const;
   std::string getNodePath(Node::Id_t id) const;
 
   static std::string decode(const std::string &encoded);
