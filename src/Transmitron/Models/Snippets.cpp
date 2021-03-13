@@ -507,6 +507,8 @@ void Snippets::loadDirectoryRecursive(
 
   for (const auto &entry : fs::directory_iterator(path))
   {
+    if (entry.path().stem() == "index") { continue; }
+
     if (entry.status().type() == fs::file_type::directory)
     {
       loadDirectoryRecursive(entry.path(), currentId);
@@ -516,6 +518,56 @@ void Snippets::loadDirectoryRecursive(
       loadSnippet(entry.path(), currentId);
     }
   }
+
+  if (mNodes.at(currentId).children.empty())
+  {
+    return;
+  }
+
+  const auto indexPath = path.native() + "/index.json";
+  if (!fs::exists(indexPath))
+  {
+    wxLogError("Could not sort '%s': No index.json found", name);
+    return;
+  }
+
+  std::ifstream indexFile(indexPath);
+  if (!indexFile.is_open())
+  {
+    wxLogError("Could not sort '%s': Failed to open index.json", name);
+    return;
+  }
+
+  nlohmann::json indexes;
+  indexFile >> indexes;
+
+  if (indexes.type() != nlohmann::json::value_t::array)
+  {
+    wxLogError("Could not sort '%s': index.json is not an array", name);
+    fs::remove(indexPath);
+    return;
+  }
+
+  mNodes.at(currentId).children.sort(
+    [this, &indexes](const Node::Id_t &lhs, const Node::Id_t &rhs) -> bool
+    {
+      const auto &lhsEnc = mNodes.at(lhs).encoded;
+      const auto &rhsEnc = mNodes.at(rhs).encoded;
+
+      auto lhsIt = std::find(
+        std::begin(indexes),
+        std::end(indexes),
+        lhsEnc
+      );
+      auto rhsIt = std::find(
+        std::begin(indexes),
+        std::end(indexes),
+        rhsEnc
+      );
+
+      return lhsIt < rhsIt;
+    }
+  );
 }
 
 void Snippets::loadSnippet(
@@ -844,6 +896,22 @@ bool Snippets::save(Node::Id_t id)
         nodePath.c_str()
       );
       return false;
+    }
+
+    const auto indexPath = nodePath + "/index.json";
+    std::ofstream output(indexPath);
+    if (!output.is_open())
+    {
+      wxLogWarning("Could not save '%s'", indexPath);
+    }
+    else
+    {
+      nlohmann::json data;
+      for (const auto &child : node.children)
+      {
+        data.push_back(mNodes.at(child).encoded);
+      }
+      output << data;
     }
   }
 
