@@ -2,7 +2,7 @@
 #define TRANSMITRON_MODELS_SNIPPETS_HPP
 
 #include <memory>
-#include <set>
+#include <list>
 #include <filesystem>
 #include <wx/dataview.h>
 #include "MQTT/Message.hpp"
@@ -90,7 +90,7 @@ private:
     std::string name;
     std::string encoded;
     Type type;
-    std::set<Id_t> children;
+    std::list<Id_t> children;
     std::shared_ptr<MQTT::Message> message;
     bool saved;
   };

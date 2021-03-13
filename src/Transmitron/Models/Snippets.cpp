@@ -139,7 +139,7 @@ wxDataViewItem Snippets::createFolder(
   };
   const auto newId = getNextId();
   mNodes.insert({newId, std::move(newNode)});
-  mNodes.at(parentId).children.insert(newId);
+  mNodes.at(parentId).children.push_back(newId);
 
   save(newId);
 
@@ -203,7 +203,7 @@ wxDataViewItem Snippets::createSnippet(
   };
   const auto newId = getNextId();
   mNodes.insert({newId, std::move(newNode)});
-  mNodes.at(parentId).children.insert(newId);
+  mNodes.at(parentId).children.push_back(newId);
 
   save(newId);
 
@@ -264,7 +264,7 @@ wxDataViewItem Snippets::insert(
   };
   const auto newId = getNextId();
   mNodes.insert({newId, std::move(newNode)});
-  mNodes.at(parentId).children.insert(newId);
+  mNodes.at(parentId).children.push_back(newId);
 
   save(newId);
 
@@ -317,7 +317,13 @@ bool Snippets::remove(wxDataViewItem item)
     return false;
   }
 
-  mNodes.at(toId(parent)).children.erase(id);
+  auto &children = mNodes.at(toId(parent)).children;
+  auto removeIt = std::remove(
+    std::begin(children),
+    std::end(children),
+    id
+  );
+  children.erase(removeIt);
   mNodes.erase(id);
   ItemDeleted(parent, item);
 
@@ -346,7 +352,7 @@ void Snippets::loadDirectoryRecursive(
     };
 
     mNodes.insert({currentId, std::move(newNode)});
-    mNodes.at(parentId).children.insert(currentId);
+    mNodes.at(parentId).children.push_back(currentId);
   }
 
   for (const auto &entry : fs::directory_iterator(path))
@@ -405,7 +411,7 @@ void Snippets::loadSnippet(
   };
   const auto newId = getNextId();
   mNodes.insert({newId, std::move(newNode)});
-  mNodes.at(parentId).children.insert(newId);
+  mNodes.at(parentId).children.push_back(newId);
 }
 
 bool Snippets::hasChildNamed(
