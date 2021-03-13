@@ -87,7 +87,8 @@ private:
 
   void setupScintilla();
   void setStyle(Format format);
-  void onFormatSelected(wxCommandEvent& event);
+  void onFormatSelected(wxCommandEvent &e);
+  void onTopicKeyDown(wxKeyEvent &e);
 
   std::string formatTry(
     const std::string &text,

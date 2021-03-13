@@ -46,6 +46,7 @@ Edit::Edit(
   setupScintilla();
 
   mTopic = new TopicCtrl(this, -1);
+  mTopic->Bind(wxEVT_KEY_UP, &Edit::onTopicKeyDown, this);
 
   mSaveSnippet = new wxButton(
     this,
@@ -383,6 +384,17 @@ Edit::Format Edit::formatGuess(const std::string &text)
 void Edit::onFormatSelected(wxCommandEvent &e)
 {
   format();
+}
+
+void Edit::onTopicKeyDown(wxKeyEvent &e)
+{
+  if (
+    e.GetKeyCode() == WXK_RETURN
+    && !mTopic->IsEmpty()
+  ) {
+    auto e = new Events::Edit(Events::EDIT_PUBLISH);
+    wxQueueEvent(this, e);
+  }
 }
 
 std::string Edit::getTopic() const
