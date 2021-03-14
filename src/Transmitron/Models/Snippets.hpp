@@ -2,7 +2,7 @@
 #define TRANSMITRON_MODELS_SNIPPETS_HPP
 
 #include <memory>
-#include <set>
+#include <list>
 #include <filesystem>
 #include <wx/dataview.h>
 #include "MQTT/Message.hpp"
@@ -44,6 +44,14 @@ public:
     std::shared_ptr<MQTT::Message> message
   );
   bool remove(wxDataViewItem item);
+
+  wxDataViewItem moveBefore(wxDataViewItem item, wxDataViewItem sibling);
+  wxDataViewItem moveInside(wxDataViewItem item, wxDataViewItem parent);
+  wxDataViewItem move(
+    wxDataViewItem item,
+    wxDataViewItem parent,
+    wxDataViewItem sibling
+  );
 
   bool hasChildNamed(wxDataViewItem parent, const std::string &name) const;
 
@@ -88,25 +96,32 @@ private:
 
     Id_t parent;
     std::string name;
+    std::string encoded;
     Type type;
-    std::set<Id_t> children;
+    std::list<Id_t> children;
     std::shared_ptr<MQTT::Message> message;
     bool saved;
-    std::filesystem::path fullpath;
   };
 
   Node::Id_t mNextAvailableId = 0;
   std::map<Node::Id_t, Node> mNodes;
   std::string mSnippetsDir;
 
-  void loadRecursive(
-    Node::Id_t parentId,
-    const std::filesystem::path &parentFullpath
+  void loadDirectoryRecursive(
+    const std::filesystem::path &path,
+    Node::Id_t parentId
+  );
+  void loadSnippet(
+    const std::filesystem::path &path,
+    Node::Id_t parentId
   );
   void saveAll();
   bool save(Node::Id_t id);
   Node::Id_t getNextId();
+  bool isRecursive(wxDataViewItem parent, wxDataViewItem item) const;
+  std::string getNodePath(Node::Id_t id) const;
 
+  static std::string decode(const std::string &encoded);
   static Node::Id_t toId(const wxDataViewItem &item);
   static wxDataViewItem toItem(Node::Id_t id);
 

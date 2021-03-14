@@ -97,6 +97,8 @@ private:
   wxDataViewCtrl *mSnippetsCtrl;
   std::array<wxDataViewColumn*, Models::Snippets::Column::Max> mSnippetColumns;
   bool mSnippetExplicitEditRequest = false;
+  bool mSnippetsWasExpanded = false;
+  std::pair<bool, wxDataViewItem> mSnippetsPossible;
 
   std::shared_ptr<MQTT::Client> mClient;
 
@@ -122,6 +124,10 @@ private:
   void onSnippetsEdit(wxDataViewEvent &e);
   void onSnippetsContext(wxDataViewEvent &e);
   void onSnippetsSelected(wxDataViewEvent &e);
+  void onSnippetsActivated(wxDataViewEvent &e);
+  void onSnippetsDrag(wxDataViewEvent &e);
+  void onSnippetsDrop(wxDataViewEvent &e);
+  void onSnippetsDropPossible(wxDataViewEvent &e);
 
   void onConnectedSync(Events::Connection &e);
   void onDisconnectedSync(Events::Connection &e);

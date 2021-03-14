@@ -400,6 +400,8 @@ void Client::setupPanelSnippets(wxWindow *parent)
   mSnippetsModel = new Models::Snippets;
   mSnippetsModel->load(mConnection->getPath());
   mSnippetsCtrl->AssociateModel(mSnippetsModel.get());
+  mSnippetsCtrl->EnableDropTarget(wxDataFormat(wxDF_TEXT));
+  mSnippetsCtrl->EnableDragSource(wxDataFormat(wxDF_TEXT));
 
   wxFont font(wxFontInfo(9).FaceName("Consolas"));
   mSnippetsCtrl->SetFont(font);
@@ -420,6 +422,26 @@ void Client::setupPanelSnippets(wxWindow *parent)
   mSnippetsCtrl->Bind(
     wxEVT_DATAVIEW_SELECTION_CHANGED,
     &Client::onSnippetsSelected,
+    this
+  );
+  mSnippetsCtrl->Bind(
+    wxEVT_COMMAND_DATAVIEW_ITEM_ACTIVATED,
+    &Client::onSnippetsActivated,
+    this
+  );
+  mSnippetsCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_BEGIN_DRAG,
+    &Client::onSnippetsDrag,
+    this
+  );
+  mSnippetsCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_DROP,
+    &Client::onSnippetsDrop,
+    this
+  );
+  mSnippetsCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE,
+    &Client::onSnippetsDropPossible,
     this
   );
 }
@@ -834,6 +856,92 @@ void Client::onSnippetsEdit(wxDataViewEvent &e)
   {
     e.Veto();
   }
+}
+
+void Client::onSnippetsActivated(wxDataViewEvent &e)
+{
+  const auto item = e.GetItem();
+  if (!item.IsOk()) { return; }
+
+  if (mSnippetsCtrl->IsExpanded(item))
+  {
+    mSnippetsCtrl->Collapse(item);
+  }
+  else
+  {
+    mSnippetsCtrl->Expand(item);
+  }
+}
+
+void Client::onSnippetsDrag(wxDataViewEvent &e)
+{
+  auto item = e.GetItem();
+  mSnippetsWasExpanded = mSnippetsCtrl->IsExpanded(item);
+
+  const size_t id = reinterpret_cast<size_t>(item.GetID());
+  auto o = new wxTextDataObject(std::to_string(id));
+
+  e.SetDataFormat(o->GetFormat());
+  e.SetDataSize(o->GetDataSize());
+  e.SetDataObject(o);
+
+  e.Skip(false);
+}
+
+void Client::onSnippetsDrop(wxDataViewEvent &e)
+{
+  const auto target = e.GetItem();
+  auto targetId = reinterpret_cast<size_t>(target.GetID());
+
+  wxTextDataObject object;
+  object.SetData(e.GetDataFormat(), e.GetDataSize(), e.GetDataBuffer());
+  size_t id = std::stoul(object.GetText().ToStdString());
+  auto item = wxDataViewItem((void*)id);
+
+  wxDataViewItem moved;
+
+  if (
+    mSnippetsPossible.first
+    && (
+      // Moving in an empty dir.
+      mSnippetsPossible.second == wxDataViewItem(0)
+      // Moving in a full dir.
+      || mSnippetsModel->GetParent(mSnippetsPossible.second) == target
+    )
+  ) {
+    moved = mSnippetsModel->moveInside(item, target);
+  }
+  else
+  {
+    moved = mSnippetsModel->moveBefore(item, target);
+  }
+
+  mSnippetsPossible = {false, wxDataViewItem(nullptr)};
+
+  if (!moved.IsOk())
+  {
+    return;
+  }
+
+  mSnippetsCtrl->Refresh();
+  mSnippetsCtrl->EnsureVisible(moved);
+  if (mSnippetsWasExpanded)
+  {
+    mSnippetsCtrl->Expand(moved);
+  }
+  mSnippetsCtrl->Select(moved);
+}
+
+void Client::onSnippetsDropPossible(wxDataViewEvent &e)
+{
+  // This event contains the first element of the target directory.
+  // If this skips, the drop event target is the hovered item.
+  // If this does not skip, the drop event target is this event's target.
+
+  // If possible is parent of drop target, the target is a folder.
+
+  mSnippetsPossible = {true, e.GetItem()};
+  e.Skip(true);
 }
 
 void Client::onClose(wxCloseEvent &event)
