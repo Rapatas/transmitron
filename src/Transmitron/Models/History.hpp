@@ -47,6 +47,16 @@ public:
   bool getRetained(const wxDataViewItem &item) const;
   std::shared_ptr<MQTT::Message> getMessage(const wxDataViewItem &item) const;
 
+private:
+
+  std::vector<Message> mMessages;
+  std::vector<size_t> mRemap;
+  wxObjectDataPtr<Subscriptions> mSubscriptions;
+  std::map<size_t, Observer *> mObservers;
+
+  void remap();
+  void refresh(MQTT::Subscription::Id_t subscriptionId);
+
   // wxDataViewVirtualListModel interface.
   virtual unsigned GetColumnCount() const override;
   virtual wxString GetColumnType(unsigned int col) const override;
@@ -73,20 +83,11 @@ public:
   void onSolo(MQTT::Subscription::Id_t subscriptionId) override;
   void onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor color) override;
   void onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) override;
+  void onCleared(MQTT::Subscription::Id_t subscriptionId) override;
   void onMessage(
     MQTT::Subscription::Id_t subscriptionId,
     mqtt::const_message_ptr message
   ) override;
-
-private:
-
-  std::vector<Message> mMessages;
-  std::vector<size_t> mRemap;
-  wxObjectDataPtr<Subscriptions> mSubscriptions;
-  std::map<size_t, Observer *> mObservers;
-
-  void remap();
-  void refresh(MQTT::Subscription::Id_t subscriptionId);
 
 };
 

@@ -40,6 +40,7 @@ private:
     SubscriptionsMute,
     SubscriptionsUnmute,
     SubscriptionsSolo,
+    SubscriptionsClear,
     HistoryRetainedClear,
     HistoryResend,
     HistoryEdit,

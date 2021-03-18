@@ -98,6 +98,24 @@ void History::onUnsubscribed(MQTT::Subscription::Id_t subscriptionId)
   remap();
 }
 
+void History::onCleared(MQTT::Subscription::Id_t subscriptionId)
+{
+  for (auto it = std::begin(mMessages); it != std::end(mMessages); )
+  {
+    if (it->subscriptionId == subscriptionId)
+    {
+      it = mMessages.erase(it);
+    }
+    else
+    {
+      ++it;
+    }
+  }
+
+  remap();
+}
+
+
 void History::remap()
 {
   const size_t before = mRemap.size();

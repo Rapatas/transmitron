@@ -30,6 +30,7 @@ public:
     virtual void onSolo(MQTT::Subscription::Id_t subscriptionId) {};
     virtual void onUnmuted(MQTT::Subscription::Id_t subscriptionId) {};
     virtual void onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) {};
+    virtual void onCleared(MQTT::Subscription::Id_t subscriptionId) {};
   };
 
   enum class Column : unsigned
@@ -51,6 +52,7 @@ public:
   void subscribe(const std::string &topic, MQTT::QoS qos);
   void unmute(wxDataViewItem item);
   void unsubscribe(wxDataViewItem item);
+  void clear(wxDataViewItem item);
 
   bool getMuted(MQTT::Subscription::Id_t subscriptionId) const;
   bool getMuted(wxDataViewItem item) const;

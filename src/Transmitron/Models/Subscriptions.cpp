@@ -88,6 +88,16 @@ void Subscriptions::unmute(wxDataViewItem item)
   ItemChanged(item);
 }
 
+void Subscriptions::clear(wxDataViewItem item)
+{
+  auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
+  for (const auto &o : mObservers)
+  {
+    o.second->onCleared(sub->getId());
+  }
+  ItemChanged(item);
+}
+
 void Subscriptions::mute(wxDataViewItem item)
 {
   auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));

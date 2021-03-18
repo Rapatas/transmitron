@@ -591,6 +591,7 @@ void Client::onSubscriptionContext(wxDataViewEvent& dve)
   menu.Append((unsigned)ContextIDs::SubscriptionsUnsubscribe, "Unsubscribe");
   menu.Append((unsigned)ContextIDs::SubscriptionsChangeColor, "Color change");
   menu.Append((unsigned)ContextIDs::SubscriptionsSolo, "Solo");
+  menu.Append((unsigned)ContextIDs::SubscriptionsClear, "Clear");
   if (muted)
   {
     menu.Append((unsigned)ContextIDs::SubscriptionsUnmute, "Unmute");
@@ -693,6 +694,11 @@ void Client::onContextSelected(wxCommandEvent& event)
       wxLogMessage("Requesting solo");
       auto item = mSubscriptionsCtrl->GetSelection();
       mSubscriptionsModel->solo(item);
+    } break;
+    case ContextIDs::SubscriptionsClear: {
+      wxLogMessage("Requesting clear");
+      const auto item = mSubscriptionsCtrl->GetSelection();
+      mSubscriptionsModel->clear(item);
     } break;
     case ContextIDs::SubscriptionsMute: {
       wxLogMessage("Requesting mute");
