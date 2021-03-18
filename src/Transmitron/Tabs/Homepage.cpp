@@ -136,9 +136,16 @@ void Homepage::onProfileActivated(wxDataViewEvent &e)
 
 void Homepage::onProfileSelected(wxDataViewEvent &e)
 {
+  const auto item = e.GetItem();
+  if (!item.IsOk())
+  {
+    e.Skip();
+    return;
+  }
+
   fillPropertyGrid(
-    mProfilesModel->getBrokerOptions(e.GetItem()),
-    mProfilesModel->getName(e.GetItem())
+    mProfilesModel->getBrokerOptions(item),
+    mProfilesModel->getName(item)
   );
   e.Skip();
 }
