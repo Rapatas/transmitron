@@ -16,9 +16,12 @@ Connection::Connection(
   mName(std::move(name)),
   mBrokerOptions(std::move(brokerOptions)),
   mPath(std::move(path))
-{}
+{
+  mSnippetsModel = new Models::Snippets;
+  mSnippetsModel->load(mPath);
+}
 
-ValueObjects::BrokerOptions Connection::getBrokerOptions() const
+const ValueObjects::BrokerOptions &Connection::getBrokerOptions() const
 {
   return mBrokerOptions;
 }
@@ -31,6 +34,11 @@ bool Connection::getSaved() const
 std::string Connection::getName() const
 {
   return mName;
+}
+
+const wxObjectDataPtr<Models::Snippets> Connection::getSnippetsModel()
+{
+  return mSnippetsModel;
 }
 
 std::filesystem::path Connection::getPath() const

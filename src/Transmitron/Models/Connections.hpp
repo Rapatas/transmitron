@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <wx/dataview.h>
+#include "Snippets.hpp"
 #include "Transmitron/Types/Connection.hpp"
 
 namespace Transmitron::Models
@@ -34,14 +35,18 @@ public:
     const std::string &name
   );
   wxDataViewItem createConnection();
-  std::shared_ptr<Types::Connection> getConnection(const wxDataViewItem &item) const;
+
+  const ValueObjects::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
+  std::string getName(wxDataViewItem item) const;
+
+  const wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
 
 private:
 
   static constexpr const char *BrokerOptionsFilename =
     "broker-options.json";
 
-  std::vector<std::shared_ptr<Types::Connection>> mConnections;
+  std::vector<std::unique_ptr<Types::Connection>> mConnections;
   std::string mConnectionsDir;
 
   // wxDataViewModel interface.

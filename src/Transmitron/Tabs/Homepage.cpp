@@ -112,43 +112,46 @@ void Homepage::setupConnectionForm()
   mSave->Bind(wxEVT_BUTTON, &Homepage::onSaveClicked, this);
 }
 
-void Homepage::onConnectionActivated(wxDataViewEvent &event)
+void Homepage::onConnectionActivated(wxDataViewEvent &e)
 {
-  auto conn = mConnectionsModel->getConnection(event.GetItem());
+  const auto &connectionItem = e.GetItem();
+  const auto &brokerOptions = mConnectionsModel->getBrokerOptions(connectionItem);
   wxLogMessage(
     "Queueing event for connection at %s:%d",
-    conn->getBrokerOptions().getHostname(),
-    conn->getBrokerOptions().getPort()
+    brokerOptions.getHostname(),
+    brokerOptions.getPort()
   );
 
-  auto ce = new Events::Connection();
-  ce->setConnection(conn);
-  wxQueueEvent(this, ce);
+  auto connectionEvent = new Events::Connection();
+  connectionEvent->setConnection(connectionItem);
+  wxQueueEvent(this, connectionEvent);
 
-  event.Skip();
+  e.Skip();
 }
 
-void Homepage::onConnectionSelected(wxDataViewEvent &event)
+void Homepage::onConnectionSelected(wxDataViewEvent &e)
 {
-  auto conn = mConnectionsModel->getConnection(event.GetItem());
-  fillPropertyGrid(conn);
-  event.Skip();
+  fillPropertyGrid(
+    mConnectionsModel->getBrokerOptions(e.GetItem()),
+    mConnectionsModel->getName(e.GetItem())
+  );
+  e.Skip();
 }
 
-void Homepage::onConnectClicked(wxCommandEvent &event)
+void Homepage::onConnectClicked(wxCommandEvent &e)
 {
-  auto item = mConnectionsCtrl->GetSelection();
-  auto connection = mConnectionsModel->getConnection(item);
+  const auto connectionItem = mConnectionsCtrl->GetSelection();
+  const auto &brokerOptions = mConnectionsModel->getBrokerOptions(connectionItem);
 
   wxLogMessage(
     "Queueing event for connection at %s:%d",
-    connection->getBrokerOptions().getHostname(),
-    connection->getBrokerOptions().getPort()
+    brokerOptions.getHostname(),
+    brokerOptions.getPort()
   );
 
-  auto ce = new Events::Connection();
-  ce->setConnection(connection);
-  wxQueueEvent(this, ce);
+  auto connectionEvent = new Events::Connection();
+  connectionEvent->setConnection(connectionItem);
+  wxQueueEvent(this, connectionEvent);
 }
 
 void Homepage::onSaveClicked(wxCommandEvent &event)
@@ -172,21 +175,26 @@ void Homepage::onNewConnectionClicked(wxCommandEvent &event)
   auto item = mConnectionsModel->createConnection();
   mConnectionsCtrl->Select(item);
   mConnectionsCtrl->EnsureVisible(item);
-  fillPropertyGrid(mConnectionsModel->getConnection(item));
+  fillPropertyGrid(
+    mConnectionsModel->getBrokerOptions(item),
+    mConnectionsModel->getName(item)
+  );
 }
 
-void Homepage::fillPropertyGrid(std::shared_ptr<Types::Connection> c)
-{
-  mNameProp->SetValue(c->getName());
-  mHostnameProp->SetValue(c->getBrokerOptions().getHostname());
-  mPortProp->SetValue((int)c->getBrokerOptions().getPort());
-  mTimeoutProp->SetValue((int)c->getBrokerOptions().getTimeout());
-  mMaxInFlightProp->SetValue((int)c->getBrokerOptions().getMaxInFlight());
-  mKeepAliveProp->SetValue((int)c->getBrokerOptions().getKeepAliveInterval());
-  mClientIdProp->SetValue(c->getBrokerOptions().getClientId());
-  mUsernameProp->SetValue(c->getBrokerOptions().getUsername());
-  mPasswordProp->SetValue(c->getBrokerOptions().getPassword());
-  mAutoReconnectProp->SetValue(c->getBrokerOptions().getAutoReconnect());
+void Homepage::fillPropertyGrid(
+  const ValueObjects::BrokerOptions &brokerOptions,
+  const std::string &name
+) {
+  mNameProp->SetValue(name);
+  mHostnameProp->SetValue(brokerOptions.getHostname());
+  mPortProp->SetValue((int)brokerOptions.getPort());
+  mTimeoutProp->SetValue((int)brokerOptions.getTimeout());
+  mMaxInFlightProp->SetValue((int)brokerOptions.getMaxInFlight());
+  mKeepAliveProp->SetValue((int)brokerOptions.getKeepAliveInterval());
+  mClientIdProp->SetValue(brokerOptions.getClientId());
+  mUsernameProp->SetValue(brokerOptions.getUsername());
+  mPasswordProp->SetValue(brokerOptions.getPassword());
+  mAutoReconnectProp->SetValue(brokerOptions.getAutoReconnect());
 
   mSave->Enable(true);
   mConnect->Enable(true);

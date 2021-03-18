@@ -58,7 +58,10 @@ private:
   wxButton *mSave;
   wxButton *mConnect;
 
-  void fillPropertyGrid(std::shared_ptr<Types::Connection> c);
+  void fillPropertyGrid(
+    const ValueObjects::BrokerOptions &brokerOptions,
+    const std::string &name
+  );
   ValueObjects::BrokerOptions optionsFromPropertyGrid() const;
 };
 

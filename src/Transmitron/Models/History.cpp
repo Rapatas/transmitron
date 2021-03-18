@@ -12,7 +12,7 @@
 using namespace Transmitron::Models;
 using namespace Transmitron;
 
-History::History(const wxObjectDataPtr<Subscriptions> subscriptions) :
+History::History(wxObjectDataPtr<Subscriptions> subscriptions) :
   mSubscriptions(std::move(subscriptions))
 {
   mSubscriptions->attachObserver(this);

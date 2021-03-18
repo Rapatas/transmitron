@@ -119,14 +119,18 @@ void App::newConnectionTab()
   mNote->SetSelection(mCount - 2);
 
   homepage->Bind(Events::CONNECTION, [this, &homepage](Events::Connection e){
-    auto c = e.getConnection();
-    size_t selected = mNote->GetSelection();
+    const auto connectionItem = e.getConnection();
+    const size_t selected = mNote->GetSelection();
 
-    auto client = new Tabs::Client(mNote, c);
+    auto client = new Tabs::Client(
+      mNote,
+      mConnectionsModel->getBrokerOptions(connectionItem),
+      mConnectionsModel->getSnippetsModel(connectionItem)
+    );
     mNote->RemovePage(selected);
     mNote->InsertPage(selected, client, "");
     mNote->SetSelection(selected);
-    mNote->SetPageText(selected, c->getName());
+    mNote->SetPageText(selected, mConnectionsModel->getName(connectionItem));
   });
 }
 

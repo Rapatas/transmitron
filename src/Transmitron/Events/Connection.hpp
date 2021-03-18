@@ -26,11 +26,11 @@ public:
   }
 
   wxEvent* Clone() const { return new Connection(*this); }
-  std::shared_ptr<Types::Connection> getConnection() const { return mConnection; }
-  void setConnection(std::shared_ptr<Types::Connection> connection) { mConnection = connection; }
+  wxDataViewItem getConnection() const { return mConnection; }
+  void setConnection(wxDataViewItem connection) { mConnection = connection; }
 
 private:
-  std::shared_ptr<Types::Connection> mConnection;
+  wxDataViewItem mConnection;
 };
 
 typedef void (wxEvtHandler::*ConnectionEventFunction)(Connection &);

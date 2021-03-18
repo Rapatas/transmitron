@@ -93,9 +93,13 @@ bool Connections::load(const std::string &configDir)
     auto j = nlohmann::json::parse(buffer.str());
     auto brokerOptions = ValueObjects::BrokerOptions::fromJson(j);
 
-    mConnections.push_back(
-      std::make_shared<Types::Connection>(name, brokerOptions, true, entry.path())
+    auto connection = std::make_unique<Types::Connection>(
+      name,
+      brokerOptions,
+      true,
+      entry.path()
     );
+    mConnections.push_back(std::move(connection));
   }
 
   return true;
@@ -172,7 +176,7 @@ wxDataViewItem Connections::createConnection()
   while (std::any_of(
       std::begin(mConnections) + 1,
       std::end(mConnections),
-      [=](auto connection)
+      [=](const auto &connection)
       {
         return connection->getName() == uniqueName;
       }
@@ -181,8 +185,8 @@ wxDataViewItem Connections::createConnection()
     uniqueName = fmt::format("{} - {}", newConnectionName, postfix);
   }
 
-  auto connection = std::make_shared<Types::Connection>(uniqueName);
-  mConnections.push_back(connection);
+  auto connection = std::make_unique<Types::Connection>(uniqueName);
+  mConnections.push_back(std::move(connection));
 
   wxDataViewItem parent(nullptr);
   auto item = toItem(mConnections.size() - 1);
@@ -191,9 +195,19 @@ wxDataViewItem Connections::createConnection()
   return item;
 }
 
-std::shared_ptr<Types::Connection> Connections::getConnection(const wxDataViewItem &item) const
+const ValueObjects::BrokerOptions &Connections::getBrokerOptions(wxDataViewItem item) const
 {
-  return mConnections.at(toIndex(item));
+  return mConnections.at(toIndex(item))->getBrokerOptions();
+}
+
+std::string Connections::getName(wxDataViewItem item) const
+{
+  return mConnections.at(toIndex(item))->getName();
+}
+
+const wxObjectDataPtr<Snippets> Connections::getSnippetsModel(wxDataViewItem item)
+{
+  return mConnections.at(toIndex(item))->getSnippetsModel();
 }
 
 unsigned Connections::GetColumnCount() const

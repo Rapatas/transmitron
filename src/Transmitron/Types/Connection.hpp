@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <wx/log.h>
+#include "Transmitron/Models/Snippets.hpp"
 #include "Transmitron/ValueObjects/BrokerOptions.hpp"
 
 namespace Transmitron::Types
@@ -21,10 +22,11 @@ public:
   );
   virtual ~Connection() = default;
 
-  ValueObjects::BrokerOptions getBrokerOptions() const;
+  const ValueObjects::BrokerOptions &getBrokerOptions() const;
   bool getSaved() const;
   std::string getName() const;
   std::filesystem::path getPath() const;
+  const wxObjectDataPtr<Models::Snippets> getSnippetsModel();
 
   void setBrokerOptions(ValueObjects::BrokerOptions brokerOptions);
   void setSaved(bool saved);
@@ -32,6 +34,7 @@ public:
 
 private:
 
+  wxObjectDataPtr<Models::Snippets> mSnippetsModel;
   ValueObjects::BrokerOptions mBrokerOptions;
   bool mSaved;
   std::string mName;

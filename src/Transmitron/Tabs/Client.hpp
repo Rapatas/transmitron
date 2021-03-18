@@ -26,8 +26,9 @@ class Client :
 public:
 
   Client(
-    wxWindow* parent = nullptr,
-    std::shared_ptr<Types::Connection> connection = nullptr
+    wxWindow* parent,
+    ValueObjects::BrokerOptions brokerOptions,
+    wxObjectDataPtr<Models::Snippets> snippetsModel
   );
   ~Client();
 
@@ -74,7 +75,7 @@ private:
 
   static const size_t OptionsHeight = 26;
 
-  std::shared_ptr<Types::Connection> mConnection;
+  const ValueObjects::BrokerOptions mBrokerOptions;
 
   wxBoxSizer *mMasterSizer;
 
