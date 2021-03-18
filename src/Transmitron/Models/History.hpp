@@ -40,6 +40,7 @@ public:
 
   size_t attachObserver(Observer *observer);
   bool detachObserver(size_t id);
+  void clear();
 
   std::string getPayload(const wxDataViewItem &item) const;
   std::string getTopic(const wxDataViewItem &item) const;

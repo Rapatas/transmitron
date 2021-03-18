@@ -86,6 +86,7 @@ private:
   wxObjectDataPtr<Models::History> mHistoryModel;
   wxDataViewCtrl *mHistoryCtrl;
   wxCheckBox *mAutoScroll;
+  wxButton *mHistoryClear;
 
   // Subscriptions:
   wxBitmapButton *mSubscribe;

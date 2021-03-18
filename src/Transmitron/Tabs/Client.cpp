@@ -191,9 +191,19 @@ void Client::setupPanelHistory(wxWindow *parent)
   mAutoScroll = new wxCheckBox(panel, -1, "auto-scroll");
   mAutoScroll->SetValue(true);
 
+  mHistoryClear = new wxButton(
+    panel,
+    -1,
+    "Clear",
+    wxDefaultPosition,
+    wxSize(50, OptionsHeight)
+  );
+
   auto hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   hsizer->SetMinSize(0, OptionsHeight);
   hsizer->Add(mAutoScroll, 0, wxEXPAND);
+  hsizer->AddStretchSpacer(1);
+  hsizer->Add(mHistoryClear, 0, wxEXPAND);
   auto vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(mHistoryCtrl, 1, wxEXPAND);
   vsizer->Add(hsizer, 0, wxEXPAND);
@@ -208,6 +218,13 @@ void Client::setupPanelHistory(wxWindow *parent)
     wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
     &Client::onHistoryContext,
     this
+  );
+  mHistoryClear->Bind(
+    wxEVT_BUTTON,
+    [this](wxCommandEvent &)
+    {
+      mHistoryModel->clear();
+    }
   );
 }
 

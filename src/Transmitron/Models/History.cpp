@@ -40,6 +40,12 @@ bool History::detachObserver(size_t id)
   return true;
 }
 
+void History::clear()
+{
+  mMessages.clear();
+  remap();
+}
+
 void History::onMessage(
   MQTT::Subscription::Id_t subscriptionId,
   mqtt::const_message_ptr message
@@ -114,7 +120,6 @@ void History::onCleared(MQTT::Subscription::Id_t subscriptionId)
 
   remap();
 }
-
 
 void History::remap()
 {
