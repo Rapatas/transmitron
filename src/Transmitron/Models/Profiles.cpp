@@ -3,20 +3,20 @@
 #include <fmt/core.h>
 #include <cppcodec/base32_rfc4648.hpp>
 #include "Transmitron/Info.hpp"
-#include "Connections.hpp"
+#include "Profiles.hpp"
 
-#define wxLOG_COMPONENT "models/connections"
+#define wxLOG_COMPONENT "models/profiles"
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 using namespace Transmitron;
 
-Connections::Connections()
+Profiles::Profiles()
 {
-  mConnections.push_back(nullptr);
+  mProfiles.push_back(nullptr);
 }
 
-bool Connections::load(const std::string &configDir)
+bool Profiles::load(const std::string &configDir)
 {
   if (configDir.empty())
   {
@@ -24,27 +24,27 @@ bool Connections::load(const std::string &configDir)
     return false;
   }
 
-  mConnectionsDir = configDir + "/connections";
+  mProfilesDir = configDir + "/profiles";
 
-  bool exists = fs::exists(mConnectionsDir);
-  bool isDir = fs::is_directory(mConnectionsDir);
+  bool exists = fs::exists(mProfilesDir);
+  bool isDir = fs::is_directory(mProfilesDir);
 
-  if (exists && !isDir && !fs::remove(mConnectionsDir))
+  if (exists && !isDir && !fs::remove(mProfilesDir))
   {
-    wxLogWarning("Could not remove file %s", mConnectionsDir);
+    wxLogWarning("Could not remove file %s", mProfilesDir);
     return false;
   }
 
-  if (!exists && !fs::create_directory(mConnectionsDir))
+  if (!exists && !fs::create_directory(mProfilesDir))
   {
     wxLogWarning(
-      "Could not create connections directory: %s",
-      mConnectionsDir
+      "Could not create profiles directory: %s",
+      mProfilesDir
     );
     return false;
   }
 
-  for (const auto &entry : fs::directory_iterator(mConnectionsDir))
+  for (const auto &entry : fs::directory_iterator(mProfilesDir))
   {
     wxLogMessage("Checking %s", entry.path().u8string());
     if (entry.status().type() != fs::file_type::directory) { continue; }
@@ -96,33 +96,33 @@ bool Connections::load(const std::string &configDir)
     wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
     snippetsModel->load(entry.path());
 
-    auto connection = std::make_unique<Connection>(Connection{
+    auto profile = std::make_unique<Profile>(Profile{
       name,
       brokerOptions,
       entry.path(),
       std::move(snippetsModel),
       true
     });
-    mConnections.push_back(std::move(connection));
+    mProfiles.push_back(std::move(profile));
   }
 
   return true;
 }
 
-bool Connections::updateBrokerOptions(
+bool Profiles::updateBrokerOptions(
   wxDataViewItem &item,
   const ValueObjects::BrokerOptions &brokerOptions
 ) {
-  const auto &connection =  mConnections.at(toIndex(item));
-  connection->brokerOptions = brokerOptions;
+  const auto &profile =  mProfiles.at(toIndex(item));
+  profile->brokerOptions = brokerOptions;
 
-  std::string dir = toDir(connection->name);
+  std::string dir = toDir(profile->name);
 
   if (
-    !connection->saved
+    !profile->saved
     && !fs::create_directory(dir)
   ) {
-      wxLogError("Could not create connection directory");
+      wxLogError("Could not create profile directory");
       return false;
   }
 
@@ -142,86 +142,86 @@ bool Connections::updateBrokerOptions(
   brokerOptionsFile << brokerOptions.toJson().dump(2);
   brokerOptionsFile.close();
 
-  connection->brokerOptions = brokerOptions;
-  connection->saved = true;
+  profile->brokerOptions = brokerOptions;
+  profile->saved = true;
   ItemChanged(item);
 
   return true;
 }
 
-bool Connections::updateName(
+bool Profiles::updateName(
   wxDataViewItem &item,
   const std::string &name
 ) {
-  const auto &connection =  mConnections.at(toIndex(item));
-  if (connection->name == name)
+  const auto &profile =  mProfiles.at(toIndex(item));
+  if (profile->name == name)
   {
     return true;
   }
 
-  std::string before = toDir(connection->name);
+  std::string before = toDir(profile->name);
   std::string after = toDir(name);
 
   fs::rename(before, after);
   if (errno != 0)
   {
-    wxLogError("Could not rename connection to '%s'", name);
+    wxLogError("Could not rename profile to '%s'", name);
     return false;
   }
 
   return true;
 }
 
-wxDataViewItem Connections::createConnection()
+wxDataViewItem Profiles::createProfile()
 {
-  const char *newConnectionName = "New Connection";
-  std::string uniqueName{newConnectionName};
+  const char *newProfileName = "New Profile";
+  std::string uniqueName{newProfileName};
   unsigned postfix = 0;
   while (std::any_of(
-      std::begin(mConnections) + 1,
-      std::end(mConnections),
-      [=](const auto &connection)
+      std::begin(mProfiles) + 1,
+      std::end(mProfiles),
+      [=](const auto &profile)
       {
-        return connection->name == uniqueName;
+        return profile->name == uniqueName;
       }
   )) {
     ++postfix;
-    uniqueName = fmt::format("{} - {}", newConnectionName, postfix);
+    uniqueName = fmt::format("{} - {}", newProfileName, postfix);
   }
 
-  auto connection = std::make_unique<Connection>();
-  connection->name = uniqueName;
-  connection->saved = false;
-  mConnections.push_back(std::move(connection));
+  auto profile = std::make_unique<Profile>();
+  profile->name = uniqueName;
+  profile->saved = false;
+  mProfiles.push_back(std::move(profile));
 
   wxDataViewItem parent(nullptr);
-  auto item = toItem(mConnections.size() - 1);
+  auto item = toItem(mProfiles.size() - 1);
   ItemAdded(parent, item);
 
   return item;
 }
 
-const ValueObjects::BrokerOptions &Connections::getBrokerOptions(wxDataViewItem item) const
+const ValueObjects::BrokerOptions &Profiles::getBrokerOptions(wxDataViewItem item) const
 {
-  return mConnections.at(toIndex(item))->brokerOptions;
+  return mProfiles.at(toIndex(item))->brokerOptions;
 }
 
-std::string Connections::getName(wxDataViewItem item) const
+std::string Profiles::getName(wxDataViewItem item) const
 {
-  return mConnections.at(toIndex(item))->name;
+  return mProfiles.at(toIndex(item))->name;
 }
 
-const wxObjectDataPtr<Snippets> Connections::getSnippetsModel(wxDataViewItem item)
+const wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
 {
-  return mConnections.at(toIndex(item))->snippetsModel;
+  return mProfiles.at(toIndex(item))->snippetsModel;
 }
 
-unsigned Connections::GetColumnCount() const
+unsigned Profiles::GetColumnCount() const
 {
   return (unsigned)Column::Max;
 }
 
-wxString Connections::GetColumnType(unsigned int col) const
+wxString Profiles::GetColumnType(unsigned int col) const
 {
   switch ((Column)col)
   {
@@ -231,28 +231,28 @@ wxString Connections::GetColumnType(unsigned int col) const
   }
 }
 
-void Connections::GetValue(
+void Profiles::GetValue(
   wxVariant &variant,
   const wxDataViewItem &item,
   unsigned int col
 ) const {
-  const auto &connection = mConnections.at(toIndex(item));
+  const auto &profile = mProfiles.at(toIndex(item));
 
   switch ((Column)col) {
     case Column::Name: {
-      variant = connection->name;
+      variant = profile->name;
     } break;
     case Column::URL: {
       variant =
-        connection->brokerOptions.getHostname()
+        profile->brokerOptions.getHostname()
         + ":"
-        + std::to_string(connection->brokerOptions.getPort());
+        + std::to_string(profile->brokerOptions.getPort());
     } break;
     default: {}
   }
 }
 
-bool Connections::SetValue(
+bool Profiles::SetValue(
   const wxVariant &variant,
   const wxDataViewItem &item,
   unsigned int col
@@ -260,20 +260,20 @@ bool Connections::SetValue(
   return false;
 }
 
-bool Connections::IsEnabled(
+bool Profiles::IsEnabled(
   const wxDataViewItem &item,
   unsigned int col
 ) const {
   return true;
 }
 
-wxDataViewItem Connections::GetParent(
+wxDataViewItem Profiles::GetParent(
   const wxDataViewItem &item
 ) const {
   return wxDataViewItem(nullptr);
 }
 
-bool Connections::IsContainer(
+bool Profiles::IsContainer(
   const wxDataViewItem &item
 ) const {
   if (!item.IsOk())
@@ -283,30 +283,30 @@ bool Connections::IsContainer(
   return false;
 }
 
-unsigned int Connections::GetChildren(
+unsigned int Profiles::GetChildren(
   const wxDataViewItem &parent,
   wxDataViewItemArray &array
 ) const {
-  for (size_t i = 1; i != mConnections.size(); ++i)
+  for (size_t i = 1; i != mProfiles.size(); ++i)
   {
     array.Add(toItem(i));
   }
-  return mConnections.size() - 1;
+  return mProfiles.size() - 1;
 }
 
-std::string Connections::toDir(const std::string &name) const
+std::string Profiles::toDir(const std::string &name) const
 {
   auto encV = cppcodec::base32_rfc4648::encode(name);
   std::string encoded{std::begin(encV), std::end(encV)};
-  return fmt::format("{}/{}", mConnectionsDir, encoded);
+  return fmt::format("{}/{}", mProfilesDir, encoded);
 }
 
-size_t Connections::toIndex(const wxDataViewItem &item)
+size_t Profiles::toIndex(const wxDataViewItem &item)
 {
   return reinterpret_cast<size_t>(item.GetID());
 }
 
-wxDataViewItem Connections::toItem(size_t index)
+wxDataViewItem Profiles::toItem(size_t index)
 {
   return wxDataViewItem(reinterpret_cast<void*>(index));
 }

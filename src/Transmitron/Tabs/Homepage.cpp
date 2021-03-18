@@ -13,67 +13,67 @@ wxDEFINE_EVENT(Events::CONNECTION, Events::Connection);
 
 Homepage::Homepage(
   wxWindow *parent,
-  wxObjectDataPtr<Models::Connections> connectionsModel
+  wxObjectDataPtr<Models::Profiles> profilesModel
 ) :
   wxPanel(parent),
-  mConnectionsModel(connectionsModel)
+  mProfilesModel(profilesModel)
 {
   mSizer = new wxBoxSizer(wxHORIZONTAL);
   this->SetSizer(mSizer);
 
-  setupConnections();
-  setupConnectionForm();
+  setupProfiles();
+  setupProfileForm();
 
-  mSizer->Add(mConnections,      1, wxEXPAND);
-  mSizer->Add(mConnectionForm,   1, wxEXPAND);
+  mSizer->Add(mProfiles,      1, wxEXPAND);
+  mSizer->Add(mProfileForm,   1, wxEXPAND);
 
   mSizer->Layout();
 }
 
 Homepage::~Homepage() {}
 
-void Homepage::setupConnections()
+void Homepage::setupProfiles()
 {
   wxDataViewColumn* const name = new wxDataViewColumn(
     "name",
     new wxDataViewTextRenderer(),
-    (unsigned)Models::Connections::Column::Name,
+    (unsigned)Models::Profiles::Column::Name,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
   wxDataViewColumn* const url = new wxDataViewColumn(
     "url",
     new wxDataViewTextRenderer(),
-    (unsigned)Models::Connections::Column::URL,
+    (unsigned)Models::Profiles::Column::URL,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
 
-  mConnections = new wxPanel(this, -1);
+  mProfiles = new wxPanel(this, -1);
 
-  auto newConnection = new wxButton(mConnections, -1, "New Connection");
+  auto newProfile = new wxButton(mProfiles, -1, "New Profile");
 
-  mConnectionsCtrl = new wxDataViewCtrl(mConnections, -1);
-  mConnectionsCtrl->AssociateModel(mConnectionsModel.get());
-  mConnectionsCtrl->AppendColumn(name);
-  mConnectionsCtrl->AppendColumn(url);
+  mProfilesCtrl = new wxDataViewCtrl(mProfiles, -1);
+  mProfilesCtrl->AssociateModel(mProfilesModel.get());
+  mProfilesCtrl->AppendColumn(name);
+  mProfilesCtrl->AppendColumn(url);
 
   auto vsizer = new wxBoxSizer(wxVERTICAL);
-  vsizer->Add(mConnectionsCtrl, 1, wxEXPAND);
-  vsizer->Add(newConnection,    0, wxEXPAND);
-  mConnections->SetSizer(vsizer);
+  vsizer->Add(mProfilesCtrl, 1, wxEXPAND);
+  vsizer->Add(newProfile,    0, wxEXPAND);
+  mProfiles->SetSizer(vsizer);
 
-  mConnectionsCtrl->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &Homepage::onConnectionActivated, this);
-  mConnectionsCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Homepage::onConnectionSelected, this);
-  newConnection->Bind(wxEVT_BUTTON, &Homepage::onNewConnectionClicked, this);
+  mProfilesCtrl->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &Homepage::onProfileActivated, this);
+  mProfilesCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Homepage::onProfileSelected, this);
+  newProfile->Bind(wxEVT_BUTTON, &Homepage::onNewProfileClicked, this);
 }
 
-void Homepage::setupConnectionForm()
+void Homepage::setupProfileForm()
 {
-  mConnectionForm = new wxPanel(this, -1);
+  mProfileForm = new wxPanel(this, -1);
 
   mProp = new wxPropertyGrid(
-    mConnectionForm,
+    mProfileForm,
     -1,
     wxDefaultPosition,
     wxDefaultSize,
@@ -96,8 +96,8 @@ void Homepage::setupConnectionForm()
   mPasswordProp = mProp->Append(new wxStringProperty("Password", "", {}));
   mAutoReconnectProp = mProp->Append(new wxBoolProperty("Auto Reconnect", "", {}));
 
-  mSave    = new wxButton(mConnectionForm, -1, "Save");
-  mConnect = new wxButton(mConnectionForm, -1, "Connect");
+  mSave    = new wxButton(mProfileForm, -1, "Save");
+  mConnect = new wxButton(mProfileForm, -1, "Connect");
 
   mSave->Enable(false);
   mConnect->Enable(false);
@@ -106,57 +106,57 @@ void Homepage::setupConnectionForm()
   sizer->Add(mProp, 1, wxEXPAND);
   sizer->Add(mConnect, 0, wxEXPAND);
   sizer->Add(mSave, 0, wxEXPAND);
-  mConnectionForm->SetSizer(sizer);
+  mProfileForm->SetSizer(sizer);
 
   mConnect->Bind(wxEVT_BUTTON, &Homepage::onConnectClicked, this);
   mSave->Bind(wxEVT_BUTTON, &Homepage::onSaveClicked, this);
 }
 
-void Homepage::onConnectionActivated(wxDataViewEvent &e)
+void Homepage::onProfileActivated(wxDataViewEvent &e)
 {
-  const auto &connectionItem = e.GetItem();
-  const auto &brokerOptions = mConnectionsModel->getBrokerOptions(connectionItem);
+  const auto &profileItem = e.GetItem();
+  const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
   wxLogMessage(
-    "Queueing event for connection at %s:%d",
+    "Queueing event for profile at %s:%d",
     brokerOptions.getHostname(),
     brokerOptions.getPort()
   );
 
   auto connectionEvent = new Events::Connection();
-  connectionEvent->setConnection(connectionItem);
+  connectionEvent->setProfile(profileItem);
   wxQueueEvent(this, connectionEvent);
 
   e.Skip();
 }
 
-void Homepage::onConnectionSelected(wxDataViewEvent &e)
+void Homepage::onProfileSelected(wxDataViewEvent &e)
 {
   fillPropertyGrid(
-    mConnectionsModel->getBrokerOptions(e.GetItem()),
-    mConnectionsModel->getName(e.GetItem())
+    mProfilesModel->getBrokerOptions(e.GetItem()),
+    mProfilesModel->getName(e.GetItem())
   );
   e.Skip();
 }
 
 void Homepage::onConnectClicked(wxCommandEvent &e)
 {
-  const auto connectionItem = mConnectionsCtrl->GetSelection();
-  const auto &brokerOptions = mConnectionsModel->getBrokerOptions(connectionItem);
+  const auto profileItem = mProfilesCtrl->GetSelection();
+  const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
 
   wxLogMessage(
-    "Queueing event for connection at %s:%d",
+    "Queueing event for profile at %s:%d",
     brokerOptions.getHostname(),
     brokerOptions.getPort()
   );
 
   auto connectionEvent = new Events::Connection();
-  connectionEvent->setConnection(connectionItem);
+  connectionEvent->setProfile(profileItem);
   wxQueueEvent(this, connectionEvent);
 }
 
 void Homepage::onSaveClicked(wxCommandEvent &event)
 {
-  auto item = mConnectionsCtrl->GetSelection();
+  auto item = mProfilesCtrl->GetSelection();
 
   if (!item.IsOk())
   {
@@ -166,18 +166,18 @@ void Homepage::onSaveClicked(wxCommandEvent &event)
   auto options = optionsFromPropertyGrid();
   auto name = mNameProp->GetValue();
 
-  mConnectionsModel->updateBrokerOptions(item, options);
-  mConnectionsModel->updateName(item, name);
+  mProfilesModel->updateBrokerOptions(item, options);
+  mProfilesModel->updateName(item, name);
 }
 
-void Homepage::onNewConnectionClicked(wxCommandEvent &event)
+void Homepage::onNewProfileClicked(wxCommandEvent &event)
 {
-  auto item = mConnectionsModel->createConnection();
-  mConnectionsCtrl->Select(item);
-  mConnectionsCtrl->EnsureVisible(item);
+  auto item = mProfilesModel->createProfile();
+  mProfilesCtrl->Select(item);
+  mProfilesCtrl->EnsureVisible(item);
   fillPropertyGrid(
-    mConnectionsModel->getBrokerOptions(item),
-    mConnectionsModel->getName(item)
+    mProfilesModel->getBrokerOptions(item),
+    mProfilesModel->getName(item)
   );
 }
 

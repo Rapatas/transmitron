@@ -79,8 +79,8 @@ private:
 
   wxBoxSizer *mMasterSizer;
 
-  // Connection:
-  wxPanel *mConnectionBar;
+  // Profile:
+  wxPanel *mProfileBar;
   wxButton *mConnect;
 
   // History:

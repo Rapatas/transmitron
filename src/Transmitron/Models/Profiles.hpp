@@ -1,5 +1,5 @@
-#ifndef TRANSMITRON_MODELS_CONNECTIONS_HPP
-#define TRANSMITRON_MODELS_CONNECTIONS_HPP
+#ifndef TRANSMITRON_MODELS_PROFILES_HPP
+#define TRANSMITRON_MODELS_PROFILES_HPP
 
 #include <filesystem>
 #include <wx/dataview.h>
@@ -9,7 +9,7 @@
 namespace Transmitron::Models
 {
 
-class Connections :
+class Profiles :
   public wxDataViewModel
 {
 public:
@@ -21,8 +21,8 @@ public:
     Max
   };
 
-  explicit Connections();
-  virtual ~Connections() = default;
+  explicit Profiles();
+  virtual ~Profiles() = default;
 
   bool load(const std::string &configDir);
 
@@ -34,7 +34,7 @@ public:
     wxDataViewItem &item,
     const std::string &name
   );
-  wxDataViewItem createConnection();
+  wxDataViewItem createProfile();
 
   const ValueObjects::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
   std::string getName(wxDataViewItem item) const;
@@ -43,7 +43,7 @@ public:
 
 private:
 
-  struct Connection
+  struct Profile
   {
     std::string name;
     ValueObjects::BrokerOptions brokerOptions;
@@ -55,8 +55,8 @@ private:
   static constexpr const char *BrokerOptionsFilename =
     "broker-options.json";
 
-  std::vector<std::unique_ptr<Connection>> mConnections;
-  std::string mConnectionsDir;
+  std::vector<std::unique_ptr<Profile>> mProfiles;
+  std::string mProfilesDir;
 
   // wxDataViewModel interface.
   virtual unsigned GetColumnCount() const override;
@@ -94,4 +94,4 @@ private:
 
 }
 
-#endif // TRANSMITRON_MODELS_CONNECTIONS_HPP
+#endif // TRANSMITRON_MODELS_PROFILES_HPP
