@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <wx/dataview.h>
 #include "Snippets.hpp"
-#include "Transmitron/Types/Connection.hpp"
+#include "Transmitron/ValueObjects/BrokerOptions.hpp"
 
 namespace Transmitron::Models
 {
@@ -43,10 +43,19 @@ public:
 
 private:
 
+  struct Connection
+  {
+    std::string name;
+    ValueObjects::BrokerOptions brokerOptions;
+    std::filesystem::path path;
+    wxObjectDataPtr<Models::Snippets> snippetsModel;
+    bool saved;
+  };
+
   static constexpr const char *BrokerOptionsFilename =
     "broker-options.json";
 
-  std::vector<std::unique_ptr<Types::Connection>> mConnections;
+  std::vector<std::unique_ptr<Connection>> mConnections;
   std::string mConnectionsDir;
 
   // wxDataViewModel interface.

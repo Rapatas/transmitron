@@ -12,8 +12,8 @@
 #include "Transmitron/Models/History.hpp"
 #include "Transmitron/Models/Subscriptions.hpp"
 #include "Transmitron/Models/Snippets.hpp"
-#include "Transmitron/Types/Connection.hpp"
 #include "Transmitron/Widgets/Edit.hpp"
+#include "Transmitron/ValueObjects/BrokerOptions.hpp"
 
 namespace Transmitron::Tabs
 {

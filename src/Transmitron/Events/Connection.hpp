@@ -1,8 +1,8 @@
 #ifndef TRANSMITRON_EVENTS_CONNECTION_HPP
 #define TRANSMITRON_EVENTS_CONNECTION_HPP
 
+#include <wx/dataview.h>
 #include <wx/event.h>
-#include "Transmitron/Types/Connection.hpp"
 
 namespace Transmitron::Events
 {

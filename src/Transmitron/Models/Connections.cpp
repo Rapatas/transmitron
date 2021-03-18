@@ -93,12 +93,16 @@ bool Connections::load(const std::string &configDir)
     auto j = nlohmann::json::parse(buffer.str());
     auto brokerOptions = ValueObjects::BrokerOptions::fromJson(j);
 
-    auto connection = std::make_unique<Types::Connection>(
+    wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
+    snippetsModel->load(entry.path());
+
+    auto connection = std::make_unique<Connection>(Connection{
       name,
       brokerOptions,
-      true,
-      entry.path()
-    );
+      entry.path(),
+      std::move(snippetsModel),
+      true
+    });
     mConnections.push_back(std::move(connection));
   }
 
@@ -110,12 +114,12 @@ bool Connections::updateBrokerOptions(
   const ValueObjects::BrokerOptions &brokerOptions
 ) {
   const auto &connection =  mConnections.at(toIndex(item));
-  connection->setBrokerOptions(brokerOptions);
+  connection->brokerOptions = brokerOptions;
 
-  std::string dir = toDir(connection->getName());
+  std::string dir = toDir(connection->name);
 
   if (
-    !connection->getSaved()
+    !connection->saved
     && !fs::create_directory(dir)
   ) {
       wxLogError("Could not create connection directory");
@@ -138,8 +142,8 @@ bool Connections::updateBrokerOptions(
   brokerOptionsFile << brokerOptions.toJson().dump(2);
   brokerOptionsFile.close();
 
-  connection->setBrokerOptions(brokerOptions);
-  connection->setSaved(true);
+  connection->brokerOptions = brokerOptions;
+  connection->saved = true;
   ItemChanged(item);
 
   return true;
@@ -150,12 +154,12 @@ bool Connections::updateName(
   const std::string &name
 ) {
   const auto &connection =  mConnections.at(toIndex(item));
-  if (connection->getName() == name)
+  if (connection->name == name)
   {
     return true;
   }
 
-  std::string before = toDir(connection->getName());
+  std::string before = toDir(connection->name);
   std::string after = toDir(name);
 
   fs::rename(before, after);
@@ -178,14 +182,16 @@ wxDataViewItem Connections::createConnection()
       std::end(mConnections),
       [=](const auto &connection)
       {
-        return connection->getName() == uniqueName;
+        return connection->name == uniqueName;
       }
   )) {
     ++postfix;
     uniqueName = fmt::format("{} - {}", newConnectionName, postfix);
   }
 
-  auto connection = std::make_unique<Types::Connection>(uniqueName);
+  auto connection = std::make_unique<Connection>();
+  connection->name = uniqueName;
+  connection->saved = false;
   mConnections.push_back(std::move(connection));
 
   wxDataViewItem parent(nullptr);
@@ -197,17 +203,17 @@ wxDataViewItem Connections::createConnection()
 
 const ValueObjects::BrokerOptions &Connections::getBrokerOptions(wxDataViewItem item) const
 {
-  return mConnections.at(toIndex(item))->getBrokerOptions();
+  return mConnections.at(toIndex(item))->brokerOptions;
 }
 
 std::string Connections::getName(wxDataViewItem item) const
 {
-  return mConnections.at(toIndex(item))->getName();
+  return mConnections.at(toIndex(item))->name;
 }
 
 const wxObjectDataPtr<Snippets> Connections::getSnippetsModel(wxDataViewItem item)
 {
-  return mConnections.at(toIndex(item))->getSnippetsModel();
+  return mConnections.at(toIndex(item))->snippetsModel;
 }
 
 unsigned Connections::GetColumnCount() const
@@ -234,13 +240,13 @@ void Connections::GetValue(
 
   switch ((Column)col) {
     case Column::Name: {
-      variant = connection->getName();
+      variant = connection->name;
     } break;
     case Column::URL: {
       variant =
-        connection->getBrokerOptions().getHostname()
+        connection->brokerOptions.getHostname()
         + ":"
-        + std::to_string(connection->getBrokerOptions().getPort());
+        + std::to_string(connection->brokerOptions.getPort());
     } break;
     default: {}
   }
