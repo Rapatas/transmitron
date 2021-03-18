@@ -2,6 +2,7 @@
 
 #include <wx/button.h>
 #include <wx/wx.h>
+#include <wx/artprov.h>
 #include <wx/propgrid/propgrid.h>
 
 #define wxLOG_COMPONENT "Homepage"
@@ -52,20 +53,29 @@ void Homepage::setupProfiles()
   mProfiles = new wxPanel(this, -1);
 
   auto newProfile = new wxButton(mProfiles, -1, "New Profile");
+  newProfile->Bind(wxEVT_BUTTON, &Homepage::onNewProfileClicked, this);
+  newProfile->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
 
   mProfilesCtrl = new wxDataViewCtrl(mProfiles, -1);
   mProfilesCtrl->AssociateModel(mProfilesModel.get());
   mProfilesCtrl->AppendColumn(name);
   mProfilesCtrl->AppendColumn(url);
-
-  auto vsizer = new wxBoxSizer(wxVERTICAL);
-  vsizer->Add(mProfilesCtrl, 1, wxEXPAND);
-  vsizer->Add(newProfile,    0, wxEXPAND);
-  mProfiles->SetSizer(vsizer);
-
   mProfilesCtrl->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &Homepage::onProfileActivated, this);
   mProfilesCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Homepage::onProfileSelected, this);
-  newProfile->Bind(wxEVT_BUTTON, &Homepage::onNewProfileClicked, this);
+
+  mConnect = new wxButton(mProfiles, -1, "Connect");
+  mConnect->Enable(false);
+  mConnect->Bind(wxEVT_BUTTON, &Homepage::onConnectClicked, this);
+  mConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
+
+  auto hsizer = new wxBoxSizer(wxHORIZONTAL);
+  hsizer->Add(newProfile, 0, wxEXPAND);
+  hsizer->AddStretchSpacer(1);
+  hsizer->Add(mConnect, 0, wxEXPAND);
+  auto vsizer = new wxBoxSizer(wxVERTICAL);
+  vsizer->Add(mProfilesCtrl, 1, wxEXPAND);
+  vsizer->Add(hsizer, 0, wxEXPAND);
+  mProfiles->SetSizer(vsizer);
 }
 
 void Homepage::setupProfileForm()
@@ -96,19 +106,14 @@ void Homepage::setupProfileForm()
   mPasswordProp = mProp->Append(new wxStringProperty("Password", "", {}));
   mAutoReconnectProp = mProp->Append(new wxBoolProperty("Auto Reconnect", "", {}));
 
-  mSave    = new wxButton(mProfileForm, -1, "Save");
-  mConnect = new wxButton(mProfileForm, -1, "Connect");
-
+  mSave = new wxButton(mProfileForm, -1, "Save");
   mSave->Enable(false);
-  mConnect->Enable(false);
 
   auto sizer = new wxBoxSizer(wxVERTICAL);
   sizer->Add(mProp, 1, wxEXPAND);
-  sizer->Add(mConnect, 0, wxEXPAND);
   sizer->Add(mSave, 0, wxEXPAND);
   mProfileForm->SetSizer(sizer);
 
-  mConnect->Bind(wxEVT_BUTTON, &Homepage::onConnectClicked, this);
   mSave->Bind(wxEVT_BUTTON, &Homepage::onSaveClicked, this);
 }
 
@@ -163,11 +168,11 @@ void Homepage::onSaveClicked(wxCommandEvent &event)
     return;
   }
 
-  auto options = optionsFromPropertyGrid();
   auto name = mNameProp->GetValue();
-
-  mProfilesModel->updateBrokerOptions(item, options);
   mProfilesModel->updateName(item, name);
+
+  auto options = optionsFromPropertyGrid();
+  mProfilesModel->updateBrokerOptions(item, options);
 }
 
 void Homepage::onNewProfileClicked(wxCommandEvent &event)

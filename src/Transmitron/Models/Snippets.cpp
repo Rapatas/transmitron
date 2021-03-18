@@ -74,7 +74,7 @@ bool Snippets::load(const std::string &connectionDir)
   if (!exists && !fs::create_directory(mSnippetsDir))
   {
     wxLogWarning(
-      "Could not create directory: %s",
+      "Could not create snippets directory: %s",
       mSnippetsDir
     );
     return false;
@@ -736,11 +736,11 @@ bool Snippets::SetValue(
   node.encoded = encoded;
   node.saved = false;
   mNodes.at(node.parent).saved = false;
+
   save(id);
   ItemChanged(item);
-  return true;
 
-  return false;
+  return true;
 }
 
 bool Snippets::IsEnabled(

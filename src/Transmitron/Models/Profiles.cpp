@@ -66,10 +66,10 @@ bool Profiles::load(const std::string &configDir)
       );
       continue;
     }
-    std::string name{decoded.begin(), decoded.end()};
+    const std::string name{decoded.begin(), decoded.end()};
 
     // Get BrokerOptions.
-    auto brokerOptionsFilepath = fmt::format(
+    const auto brokerOptionsFilepath = fmt::format(
       "{}/{}",
       entry.path().c_str(),
       BrokerOptionsFilename
@@ -110,42 +110,21 @@ bool Profiles::load(const std::string &configDir)
 }
 
 bool Profiles::updateBrokerOptions(
-  wxDataViewItem &item,
-  const ValueObjects::BrokerOptions &brokerOptions
+  wxDataViewItem item,
+  ValueObjects::BrokerOptions brokerOptions
 ) {
-  const auto &profile =  mProfiles.at(toIndex(item));
-  profile->brokerOptions = brokerOptions;
-
-  std::string dir = toDir(profile->name);
-
-  if (
-    !profile->saved
-    && !fs::create_directory(dir)
-  ) {
-      wxLogError("Could not create profile directory");
-      return false;
-  }
-
-  auto brokerOptionsFilepath = fmt::format(
-    "{}/{}",
-    dir,
-    BrokerOptionsFilename
-  );
-
-  std::ofstream brokerOptionsFile(brokerOptionsFilepath);
-  if (!brokerOptionsFile.is_open())
+  if (!item.IsOk())
   {
-    wxLogError("Could not save broker options");
     return false;
   }
 
-  brokerOptionsFile << brokerOptions.toJson().dump(2);
-  brokerOptionsFile.close();
+  const auto index = toIndex(item);
+  auto &profile = mProfiles.at(index);
+  profile->brokerOptions = std::move(brokerOptions);
+  profile->saved = false;
 
-  profile->brokerOptions = brokerOptions;
-  profile->saved = true;
+  save(index);
   ItemChanged(item);
-
   return true;
 }
 
@@ -153,28 +132,73 @@ bool Profiles::updateName(
   wxDataViewItem &item,
   const std::string &name
 ) {
-  const auto &profile =  mProfiles.at(toIndex(item));
+  if (!item.IsOk())
+  {
+    return false;
+  }
+
+  const auto index = toIndex(item);
+  auto &profile = mProfiles.at(index);
+
   if (profile->name == name)
   {
     return true;
   }
 
-  std::string before = toDir(profile->name);
-  std::string after = toDir(name);
-
-  fs::rename(before, after);
-  if (errno != 0)
+  const bool nameExists = std::any_of(
+    std::begin(mProfiles) + 1,
+    std::end(mProfiles),
+    [this, &name](const auto &profile)
+    {
+      return profile->name == name;
+    }
+  );
+  if (nameExists)
   {
-    wxLogError("Could not rename profile to '%s'", name);
+    wxLogError("Could not rename '%s': file exists", profile->name);
     return false;
   }
+
+  std::string encoded;
+  try { encoded = cppcodec::base32_rfc4648::encode(name); }
+  catch (cppcodec::parse_error &e)
+  {
+    wxLogError("Could not rename '%s': %s", profile->name, e.what());
+    return false;
+  }
+
+  const std::string pathNew = fmt::format(
+    "{}/{}",
+    mProfilesDir,
+    encoded
+  );
+
+  std::error_code ec;
+  fs::rename(profile->path, pathNew, ec);
+  if (ec)
+  {
+    wxLogError(
+      "Could not rename '%s' to '%s': %s",
+      profile->name,
+      name,
+      ec.message()
+    );
+    return false;
+  }
+
+  profile->name = name;
+  profile->path = pathNew;
+  profile->saved = false;
+
+  save(index);
+  ItemChanged(item);
 
   return true;
 }
 
 wxDataViewItem Profiles::createProfile()
 {
-  const char *newProfileName = "New Profile";
+  const constexpr char *newProfileName = "New Profile";
   std::string uniqueName{newProfileName};
   unsigned postfix = 0;
   while (std::any_of(
@@ -189,13 +213,36 @@ wxDataViewItem Profiles::createProfile()
     uniqueName = fmt::format("{} - {}", newProfileName, postfix);
   }
 
+  std::string encoded;
+  try { encoded = cppcodec::base32_rfc4648::encode(uniqueName); }
+  catch (cppcodec::parse_error &e)
+  {
+    wxLogError("Could not encode '%s': %s", uniqueName, e.what());
+    return wxDataViewItem(0);
+  }
+
+  const std::string path = fmt::format(
+    "{}/{}",
+    mProfilesDir,
+    encoded
+  );
+
+  if (!fs::exists(path) && !fs::create_directory(path))
+  {
+    wxLogWarning("Could not create profile '%s' directory", path);
+    return wxDataViewItem(0);
+  }
+
   auto profile = std::make_unique<Profile>();
   profile->name = uniqueName;
+  profile->path = path;
   profile->saved = false;
   mProfiles.push_back(std::move(profile));
 
   wxDataViewItem parent(nullptr);
-  auto item = toItem(mProfiles.size() - 1);
+  const auto index = mProfiles.size() - 1;
+  const auto item = toItem(index);
+  save(index);
   ItemAdded(parent, item);
 
   return item;
@@ -294,11 +341,31 @@ unsigned int Profiles::GetChildren(
   return mProfiles.size() - 1;
 }
 
-std::string Profiles::toDir(const std::string &name) const
+bool Profiles::save(size_t index)
 {
-  auto encV = cppcodec::base32_rfc4648::encode(name);
-  std::string encoded{std::begin(encV), std::end(encV)};
-  return fmt::format("{}/{}", mProfilesDir, encoded);
+  auto &profile = mProfiles.at(index);
+  if (profile->saved) { return true; }
+
+  const auto brokerOptionsFilepath = fmt::format(
+    "{}/{}",
+    profile->path.c_str(),
+    BrokerOptionsFilename
+  );
+
+  std::ofstream output(brokerOptionsFilepath);
+  if (!output.is_open())
+  {
+    wxLogError(
+      "Could not save '%s':",
+      brokerOptionsFilepath,
+      std::strerror(errno)
+    );
+    return false;
+  }
+
+  output << profile->brokerOptions.toJson();
+  profile->saved = true;
+  return true;
 }
 
 size_t Profiles::toIndex(const wxDataViewItem &item)

@@ -22,13 +22,12 @@ public:
   };
 
   explicit Profiles();
-  virtual ~Profiles() = default;
 
   bool load(const std::string &configDir);
 
   bool updateBrokerOptions(
-    wxDataViewItem &item,
-    const ValueObjects::BrokerOptions &brokerOptions
+    wxDataViewItem item,
+    ValueObjects::BrokerOptions brokerOptions
   );
   bool updateName(
     wxDataViewItem &item,
@@ -86,7 +85,7 @@ private:
     wxDataViewItemArray &array
   ) const override;
 
-  std::string toDir(const std::string &name) const;
+  bool save(size_t index);
 
   static size_t toIndex(const wxDataViewItem &item);
   static wxDataViewItem toItem(size_t index);
