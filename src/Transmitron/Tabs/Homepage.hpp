@@ -27,6 +27,11 @@ public:
 
 private:
 
+  enum class ContextIDs : unsigned
+  {
+    ProfilesDelete,
+  };
+
   wxDataViewCtrl *mProfilesCtrl;
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
 
@@ -39,6 +44,9 @@ private:
   void onConnectClicked(wxCommandEvent &event);
   void onSaveClicked(wxCommandEvent &event);
   void onNewProfileClicked(wxCommandEvent &event);
+  void onProfileContext(wxDataViewEvent &event);
+  void onContextSelected(wxCommandEvent &event);
+  void onProfileDelete(wxCommandEvent &event);
 
   wxPanel *mProfileForm;
   void setupProfileForm();

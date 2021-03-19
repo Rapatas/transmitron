@@ -29,6 +29,8 @@ Homepage::Homepage(
   mSizer->Add(mProfileForm,   1, wxEXPAND);
 
   mSizer->Layout();
+
+  Bind(wxEVT_COMMAND_MENU_SELECTED, &Homepage::onContextSelected, this);
 }
 
 Homepage::~Homepage() {}
@@ -60,8 +62,21 @@ void Homepage::setupProfiles()
   mProfilesCtrl->AssociateModel(mProfilesModel.get());
   mProfilesCtrl->AppendColumn(name);
   mProfilesCtrl->AppendColumn(url);
-  mProfilesCtrl->Bind(wxEVT_DATAVIEW_ITEM_ACTIVATED, &Homepage::onProfileActivated, this);
-  mProfilesCtrl->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Homepage::onProfileSelected, this);
+  mProfilesCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_ACTIVATED,
+    &Homepage::onProfileActivated,
+    this
+   );
+  mProfilesCtrl->Bind(
+    wxEVT_DATAVIEW_SELECTION_CHANGED,
+    &Homepage::onProfileSelected,
+    this
+   );
+  mProfilesCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
+    &Homepage::onProfileContext,
+    this
+  );
 
   mConnect = new wxButton(mProfiles, -1, "Connect");
   mConnect->Enable(false);
@@ -191,6 +206,43 @@ void Homepage::onNewProfileClicked(wxCommandEvent &event)
     mProfilesModel->getBrokerOptions(item),
     mProfilesModel->getName(item)
   );
+}
+
+void Homepage::onProfileContext(wxDataViewEvent &e)
+{
+  if (!e.GetItem().IsOk())
+  {
+    e.Skip();
+    return;
+  }
+
+  wxMenu menu;
+
+  auto del = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::ProfilesDelete,
+    "Delete"
+  );
+  del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+  menu.Append(del);
+
+  PopupMenu(&menu);
+}
+
+void Homepage::onContextSelected(wxCommandEvent &e)
+{
+  switch ((ContextIDs)e.GetId())
+  {
+    case ContextIDs::ProfilesDelete: onProfileDelete(e); break;
+  }
+  e.Skip();
+}
+
+void Homepage::onProfileDelete(wxCommandEvent & /* event */)
+{
+  wxLogMessage("Requesting delete");
+  const auto item = mProfilesCtrl->GetSelection();
+  mProfilesModel->remove(item);
 }
 
 void Homepage::fillPropertyGrid(

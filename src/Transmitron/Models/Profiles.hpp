@@ -34,6 +34,7 @@ public:
     const std::string &name
   );
   wxDataViewItem createProfile();
+  bool remove(wxDataViewItem item);
 
   const ValueObjects::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
   std::string getName(wxDataViewItem item) const;

@@ -196,6 +196,26 @@ bool Profiles::updateName(
   return true;
 }
 
+bool Profiles::remove(wxDataViewItem item)
+{
+  const auto index = toIndex(item);
+  auto &node = mProfiles.at(index);
+
+  std::error_code ec;
+  fs::remove_all(node->path, ec);
+  if (ec)
+  {
+    wxLogError("Could not delete '%s': %s", node->name, ec.message());
+    return false;
+  }
+
+  mProfiles.erase(std::begin(mProfiles) + index);
+  wxDataViewItem parent(0);
+  ItemDeleted(parent, item);
+
+  return true;
+}
+
 wxDataViewItem Profiles::createProfile()
 {
   const constexpr char *newProfileName = "New Profile";
