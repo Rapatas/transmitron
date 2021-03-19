@@ -27,10 +27,12 @@ wxDEFINE_EVENT(Events::DISCONNECTED, Events::Connection);
 
 Client::Client(
   wxWindow* parent,
-  std::shared_ptr<Types::Connection> connection
+  ValueObjects::BrokerOptions brokerOptions,
+  wxObjectDataPtr<Models::Snippets> snippetsModel
 ) :
   wxPanel(parent),
-  mConnection(connection)
+  mBrokerOptions(std::move(brokerOptions)),
+  mSnippetsModel(std::move(snippetsModel))
 {
   mClient = std::make_shared<MQTT::Client>();
   Bind(Events::CONNECTED, &Client::onConnectedSync, this);
@@ -125,7 +127,7 @@ Client::Client(
   setupPanelConnect(this);
 
   mMasterSizer = new wxBoxSizer(wxVERTICAL);
-  mMasterSizer->Add(mConnectionBar, 0, wxEXPAND);
+  mMasterSizer->Add(mProfileBar, 0, wxEXPAND);
   mMasterSizer->Add(wrapper, 1, wxEXPAND);
   SetSizer(mMasterSizer);
 
@@ -230,9 +232,9 @@ void Client::setupPanelHistory(wxWindow *parent)
 
 void Client::setupPanelConnect(wxWindow *parent)
 {
-  mConnectionBar = new wxPanel(parent, -1);
+  mProfileBar = new wxPanel(parent, -1);
 
-  mConnect  = new wxButton(mConnectionBar, -1, "Connect");
+  mConnect  = new wxButton(mProfileBar, -1, "Connect");
 
   auto cb = [this](Panes pane, wxCommandEvent &e)
   {
@@ -272,7 +274,7 @@ void Client::setupPanelConnect(wxWindow *parent)
 
     auto bitmap = mPanes.at(pane.first).icon18x18;
     auto button = new wxButton(
-      mConnectionBar,
+      mProfileBar,
       -1,
       "",
       wxDefaultPosition,
@@ -289,7 +291,7 @@ void Client::setupPanelConnect(wxWindow *parent)
     pane.second.toggle = button;
   }
 
-  mConnectionBar->SetSizer(hsizer);
+  mProfileBar->SetSizer(hsizer);
 
   mConnect->Bind(wxEVT_BUTTON, &Client::onConnectClicked, this);
 }
@@ -413,10 +415,8 @@ void Client::setupPanelSnippets(wxWindow *parent)
     wxDV_NO_HEADER
   );
   mSnippetsCtrl->AppendColumn(mSnippetColumns.at(Snippets::Column::Name));
-
-  mSnippetsModel = new Models::Snippets;
-  mSnippetsModel->load(mConnection->getPath());
   mSnippetsCtrl->AssociateModel(mSnippetsModel.get());
+
   mSnippetsCtrl->EnableDropTarget(wxDataFormat(wxDF_TEXT));
   mSnippetsCtrl->EnableDragSource(wxDataFormat(wxDF_TEXT));
 
@@ -574,10 +574,10 @@ void Client::onConnectClicked(wxCommandEvent &event)
   }
   else
   {
-    mClient->setHostname(mConnection->getBrokerOptions().getHostname());
-    mClient->setPort(mConnection->getBrokerOptions().getPort());
-    mClient->setUsername(mConnection->getBrokerOptions().getUsername());
-    mClient->setPassword(mConnection->getBrokerOptions().getPassword());
+    mClient->setHostname(mBrokerOptions.getHostname());
+    mClient->setPort(mBrokerOptions.getPort());
+    mClient->setUsername(mBrokerOptions.getUsername());
+    mClient->setPassword(mBrokerOptions.getPassword());
     mClient->connect();
   }
 }
@@ -1011,7 +1011,7 @@ void Client::onDisconnected()
 
 void Client::onConnectedSync(Events::Connection &e)
 {
-  wxLogInfo("Handling connection in GUI thread");
+  wxLogInfo("Handling profile in GUI thread");
   mConnect->Enable();
   mConnect->SetLabelText("Disconnect");
 }

@@ -15,7 +15,7 @@ add_executable(
   src/MQTT/Message.cpp
   src/MQTT/Subscription.cpp
   src/Transmitron/App.cpp
-  src/Transmitron/Models/Connections.cpp
+  src/Transmitron/Models/Profiles.cpp
   src/Transmitron/Models/History.cpp
   src/Transmitron/Models/Snippets.cpp
   src/Transmitron/Models/Subscriptions.cpp
@@ -37,7 +37,6 @@ add_executable(
   src/Transmitron/Resources/send/send-18x14.cpp
   src/Transmitron/Tabs/Client.cpp
   src/Transmitron/Tabs/Homepage.cpp
-  src/Transmitron/Types/Connection.cpp
   src/Transmitron/Types/Subscription.cpp
   src/Transmitron/ValueObjects/BrokerOptions.cpp
   src/Transmitron/Widgets/Edit.cpp

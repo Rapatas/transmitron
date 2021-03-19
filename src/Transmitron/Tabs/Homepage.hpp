@@ -9,7 +9,7 @@
 #include <wx/dataview.h>
 
 #include "Transmitron/Events/Connection.hpp"
-#include "Transmitron/Models/Connections.hpp"
+#include "Transmitron/Models/Profiles.hpp"
 
 namespace Transmitron::Tabs
 {
@@ -21,27 +21,35 @@ public:
 
   explicit Homepage(
     wxWindow *parent,
-    wxObjectDataPtr<Models::Connections> connectionsModel
+    wxObjectDataPtr<Models::Profiles> profilesModel
   );
   virtual ~Homepage();
 
 private:
 
-  wxDataViewCtrl *mConnectionsCtrl;
-  wxObjectDataPtr<Models::Connections> mConnectionsModel;
+  enum class ContextIDs : unsigned
+  {
+    ProfilesDelete,
+  };
+
+  wxDataViewCtrl *mProfilesCtrl;
+  wxObjectDataPtr<Models::Profiles> mProfilesModel;
 
   wxBoxSizer *mSizer;
-  wxPanel *mConnections;
-  void setupConnections();
+  wxPanel *mProfiles;
+  void setupProfiles();
 
-  void onConnectionActivated(wxDataViewEvent &event);
-  void onConnectionSelected(wxDataViewEvent &event);
+  void onProfileActivated(wxDataViewEvent &event);
+  void onProfileSelected(wxDataViewEvent &event);
   void onConnectClicked(wxCommandEvent &event);
   void onSaveClicked(wxCommandEvent &event);
-  void onNewConnectionClicked(wxCommandEvent &event);
+  void onNewProfileClicked(wxCommandEvent &event);
+  void onProfileContext(wxDataViewEvent &event);
+  void onContextSelected(wxCommandEvent &event);
+  void onProfileDelete(wxCommandEvent &event);
 
-  wxPanel *mConnectionForm;
-  void setupConnectionForm();
+  wxPanel *mProfileForm;
+  void setupProfileForm();
 
   wxPropertyGrid *mProp;
   wxPGProperty *mNameProp;
@@ -58,7 +66,10 @@ private:
   wxButton *mSave;
   wxButton *mConnect;
 
-  void fillPropertyGrid(std::shared_ptr<Types::Connection> c);
+  void fillPropertyGrid(
+    const ValueObjects::BrokerOptions &brokerOptions,
+    const std::string &name
+  );
   ValueObjects::BrokerOptions optionsFromPropertyGrid() const;
 };
 

@@ -1,8 +1,8 @@
-#ifndef TRANSMITRON_EVENTS_CONNECTION_HPP
-#define TRANSMITRON_EVENTS_CONNECTION_HPP
+#ifndef TRANSMITRON_EVENTS_PROFILE_HPP
+#define TRANSMITRON_EVENTS_PROFILE_HPP
 
+#include <wx/dataview.h>
 #include <wx/event.h>
-#include "Transmitron/Types/Connection.hpp"
 
 namespace Transmitron::Events
 {
@@ -22,22 +22,22 @@ public:
   Connection(const Connection& event) :
     wxCommandEvent(event)
   {
-    this->setConnection(event.getConnection());
+    this->setProfile(event.getProfile());
   }
 
   wxEvent* Clone() const { return new Connection(*this); }
-  std::shared_ptr<Types::Connection> getConnection() const { return mConnection; }
-  void setConnection(std::shared_ptr<Types::Connection> connection) { mConnection = connection; }
+  wxDataViewItem getProfile() const { return mProfile; }
+  void setProfile(wxDataViewItem profile) { mProfile = profile; }
 
 private:
-  std::shared_ptr<Types::Connection> mConnection;
+  wxDataViewItem mProfile;
 };
 
-typedef void (wxEvtHandler::*ConnectionEventFunction)(Connection &);
+typedef void (wxEvtHandler::*ProfileEventFunction)(Connection &);
 #define \
-  ConnectionEventHandler(func) \
-  wxEVENT_HANDLER_CAST(ConnectionEventFunction, func)
+  ProfileEventHandler(func) \
+  wxEVENT_HANDLER_CAST(ProfileEventFunction, func)
 
 }
 
-#endif // TRANSMITRON_EVENTS_CONNECTION_HPP
+#endif // TRANSMITRON_EVENTS_PROFILE_HPP

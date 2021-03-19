@@ -23,6 +23,7 @@
 #include "Resources/subscription/subscription-18x14.hpp"
 #include "Tabs/Client.hpp"
 #include "Tabs/Homepage.hpp"
+#include "Events/Connection.hpp"
 
 #define wxLOG_COMPONENT "App"
 
@@ -69,8 +70,8 @@ bool App::OnInit()
   mNote = new wxAuiNotebook(frame, -1);
   mNote->SetImageList(il);
 
-  mConnectionsModel = new Models::Connections();
-  mConnectionsModel->load(getConfigDir());
+  mProfilesModel = new Models::Profiles();
+  mProfilesModel->load(getConfigDir());
 
   newConnectionTab();
 
@@ -114,19 +115,23 @@ void App::onPageClosed(wxBookCtrlEvent& event)
 
 void App::newConnectionTab()
 {
-  auto homepage = new Tabs::Homepage(mNote, mConnectionsModel);
+  auto homepage = new Tabs::Homepage(mNote, mProfilesModel);
   mCount += mNote->InsertPage(mCount - 1, homepage, "Homepage");
   mNote->SetSelection(mCount - 2);
 
   homepage->Bind(Events::CONNECTION, [this, &homepage](Events::Connection e){
-    auto c = e.getConnection();
-    size_t selected = mNote->GetSelection();
+    const auto profileItem = e.getProfile();
+    const size_t selected = mNote->GetSelection();
 
-    auto client = new Tabs::Client(mNote, c);
+    auto client = new Tabs::Client(
+      mNote,
+      mProfilesModel->getBrokerOptions(profileItem),
+      mProfilesModel->getSnippetsModel(profileItem)
+    );
     mNote->RemovePage(selected);
     mNote->InsertPage(selected, client, "");
     mNote->SetSelection(selected);
-    mNote->SetPageText(selected, c->getName());
+    mNote->SetPageText(selected, mProfilesModel->getName(profileItem));
   });
 }
 

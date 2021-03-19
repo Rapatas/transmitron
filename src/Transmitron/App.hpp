@@ -3,7 +3,7 @@
 
 #include <wx/wx.h>
 #include <wx/aui/auibook.h>
-#include "Transmitron/Models/Connections.hpp"
+#include "Transmitron/Models/Profiles.hpp"
 
 namespace Transmitron
 {
@@ -17,7 +17,7 @@ private:
   unsigned mCount = 0;
   wxAuiNotebook *mNote;
 
-  wxObjectDataPtr<Models::Connections> mConnectionsModel;
+  wxObjectDataPtr<Models::Profiles> mProfilesModel;
 
   void onPageClosed(wxBookCtrlEvent& event);
   void onPageSelected(wxBookCtrlEvent& event);

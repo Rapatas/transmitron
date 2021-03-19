@@ -12,8 +12,8 @@
 #include "Transmitron/Models/History.hpp"
 #include "Transmitron/Models/Subscriptions.hpp"
 #include "Transmitron/Models/Snippets.hpp"
-#include "Transmitron/Types/Connection.hpp"
 #include "Transmitron/Widgets/Edit.hpp"
+#include "Transmitron/ValueObjects/BrokerOptions.hpp"
 
 namespace Transmitron::Tabs
 {
@@ -26,8 +26,9 @@ class Client :
 public:
 
   Client(
-    wxWindow* parent = nullptr,
-    std::shared_ptr<Types::Connection> connection = nullptr
+    wxWindow* parent,
+    ValueObjects::BrokerOptions brokerOptions,
+    wxObjectDataPtr<Models::Snippets> snippetsModel
   );
   ~Client();
 
@@ -74,12 +75,12 @@ private:
 
   static const size_t OptionsHeight = 26;
 
-  std::shared_ptr<Types::Connection> mConnection;
+  const ValueObjects::BrokerOptions mBrokerOptions;
 
   wxBoxSizer *mMasterSizer;
 
-  // Connection:
-  wxPanel *mConnectionBar;
+  // Profile:
+  wxPanel *mProfileBar;
   wxButton *mConnect;
 
   // History:

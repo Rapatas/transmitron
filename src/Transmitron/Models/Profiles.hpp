@@ -1,14 +1,15 @@
-#ifndef TRANSMITRON_MODELS_CONNECTIONS_HPP
-#define TRANSMITRON_MODELS_CONNECTIONS_HPP
+#ifndef TRANSMITRON_MODELS_PROFILES_HPP
+#define TRANSMITRON_MODELS_PROFILES_HPP
 
 #include <filesystem>
 #include <wx/dataview.h>
-#include "Transmitron/Types/Connection.hpp"
+#include "Snippets.hpp"
+#include "Transmitron/ValueObjects/BrokerOptions.hpp"
 
 namespace Transmitron::Models
 {
 
-class Connections :
+class Profiles :
   public wxDataViewModel
 {
 public:
@@ -20,29 +21,42 @@ public:
     Max
   };
 
-  explicit Connections();
-  virtual ~Connections() = default;
+  explicit Profiles();
 
   bool load(const std::string &configDir);
 
   bool updateBrokerOptions(
-    wxDataViewItem &item,
-    const ValueObjects::BrokerOptions &brokerOptions
+    wxDataViewItem item,
+    ValueObjects::BrokerOptions brokerOptions
   );
   bool updateName(
     wxDataViewItem &item,
     const std::string &name
   );
-  wxDataViewItem createConnection();
-  std::shared_ptr<Types::Connection> getConnection(const wxDataViewItem &item) const;
+  wxDataViewItem createProfile();
+  bool remove(wxDataViewItem item);
+
+  const ValueObjects::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
+  std::string getName(wxDataViewItem item) const;
+
+  const wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
 
 private:
+
+  struct Profile
+  {
+    std::string name;
+    ValueObjects::BrokerOptions brokerOptions;
+    std::filesystem::path path;
+    wxObjectDataPtr<Models::Snippets> snippetsModel;
+    bool saved;
+  };
 
   static constexpr const char *BrokerOptionsFilename =
     "broker-options.json";
 
-  std::vector<std::shared_ptr<Types::Connection>> mConnections;
-  std::string mConnectionsDir;
+  std::vector<std::unique_ptr<Profile>> mProfiles;
+  std::string mProfilesDir;
 
   // wxDataViewModel interface.
   virtual unsigned GetColumnCount() const override;
@@ -72,7 +86,7 @@ private:
     wxDataViewItemArray &array
   ) const override;
 
-  std::string toDir(const std::string &name) const;
+  bool save(size_t index);
 
   static size_t toIndex(const wxDataViewItem &item);
   static wxDataViewItem toItem(size_t index);
@@ -80,4 +94,4 @@ private:
 
 }
 
-#endif // TRANSMITRON_MODELS_CONNECTIONS_HPP
+#endif // TRANSMITRON_MODELS_PROFILES_HPP
