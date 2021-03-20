@@ -89,9 +89,6 @@ private:
     MQTT::Subscription::Id_t subscriptionId,
     mqtt::const_message_ptr message
   ) override;
-
-  static size_t toIndex(const wxDataViewItem &item);
-  static wxDataViewItem toItem(size_t id);
 };
 
 }

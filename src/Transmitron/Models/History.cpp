@@ -59,7 +59,7 @@ void History::onMessage(
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
 
-    const auto item = toItem(mRemap.size() - 1);
+    const auto item = GetItem((unsigned)mRemap.size() - 1);
     for (const auto &o : mObservers)
     {
       o.second->onMessage(item);
@@ -303,14 +303,4 @@ bool History::SetValueByRow(
   unsigned int /* col */
 ) {
   return false;
-}
-
-size_t History::toIndex(const wxDataViewItem &item)
-{
-  return reinterpret_cast<size_t>(item.GetID());
-}
-
-wxDataViewItem History::toItem(size_t index)
-{
-  return wxDataViewItem(reinterpret_cast<void*>(index));
 }
