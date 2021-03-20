@@ -777,7 +777,7 @@ bool Snippets::IsContainer(
   return node.type == Node::Type::Folder;
 }
 
-unsigned int Snippets::GetChildren(
+unsigned Snippets::GetChildren(
   const wxDataViewItem &parent,
   wxDataViewItemArray &array
 ) const {
@@ -794,7 +794,7 @@ unsigned int Snippets::GetChildren(
   {
     array.Add(toItem(i));
   }
-  return node.children.size();
+  return (unsigned)node.children.size();
 }
 
 Snippets::Node::Id_t Snippets::toId(const wxDataViewItem &item)

@@ -65,7 +65,7 @@ set(gcc_warnings
   -Werror
   -Wall
   # -Wextra
-  # -Wconversion
+  -Wconversion
   # -Wsign-conversion
   # -Wfloat-conversion
   # -Wpedantic

@@ -90,6 +90,9 @@ private:
   void onSubscribed(Events::Subscription &e);
   void onUnsubscribed(Events::Subscription &e);
   void onMessage(Events::Subscription &e);
+
+  static size_t toIndex(const wxDataViewItem &item);
+  static wxDataViewItem toItem(size_t index);
 };
 
 }

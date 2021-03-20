@@ -730,11 +730,17 @@ void Client::onContextSelected(wxCommandEvent& event)
     case ContextIDs::SubscriptionsChangeColor: {
       wxLogMessage("Requesting new color");
       auto item = mSubscriptionsCtrl->GetSelection();
-      wxColor color(
-        (rand() % 100) + 100,
-        (rand() % 100) + 100,
-        (rand() % 100) + 100
-      );
+      constexpr uint8_t MinColorChannel = 100;
+      // The std::abs is used to bypass a gcc bug:
+      // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=40752
+      const auto x = (size_t)std::abs(rand());
+      uint8_t r = ((x >> 0)  & 0xFF);
+      uint8_t g = ((x >> 8)  & 0xFF);
+      uint8_t b = ((x >> 16) & 0xFF);
+      if (r < MinColorChannel) { r = (uint8_t)(r + MinColorChannel); }
+      if (g < MinColorChannel) { g = (uint8_t)(r + MinColorChannel); }
+      if (b < MinColorChannel) { b = (uint8_t)(r + MinColorChannel); }
+      wxColor color(r, g, b);
       mSubscriptionsModel->setColor(item, color);
       mSubscriptionsCtrl->Refresh();
       mHistoryCtrl->Refresh();

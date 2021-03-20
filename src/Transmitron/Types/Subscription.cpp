@@ -80,12 +80,13 @@ bool Subscription::getMuted() const
 
 wxColor Subscription::colorFromString(const std::string &data)
 {
-  size_t x = std::hash<std::string>{}(data);
+  constexpr uint8_t MinColorChannel = 100;
+  const size_t x = std::hash<std::string>{}(data);
   uint8_t r = ((x >> 0)  & 0xFF);
   uint8_t g = ((x >> 8)  & 0xFF);
   uint8_t b = ((x >> 16) & 0xFF);
-  r = (r - 0) / (float)(255 - 0) * (255 - 100) + 100;
-  g = (g - 0) / (float)(255 - 0) * (255 - 100) + 100;
-  b = (b - 0) / (float)(255 - 0) * (255 - 100) + 100;
+  if (r < MinColorChannel) { r = (uint8_t)(r + MinColorChannel); }
+  if (g < MinColorChannel) { g = (uint8_t)(r + MinColorChannel); }
+  if (b < MinColorChannel) { b = (uint8_t)(r + MinColorChannel); }
   return wxColor(r, g, b);
 }

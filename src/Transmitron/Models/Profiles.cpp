@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iterator>
 #include <wx/log.h>
 #include <fmt/core.h>
 #include <cppcodec/base32_rfc4648.hpp>
@@ -148,7 +149,7 @@ bool Profiles::updateName(
   const bool nameExists = std::any_of(
     std::begin(mProfiles) + 1,
     std::end(mProfiles),
-    [this, &name](const auto &profile)
+    [&name](const auto &profile)
     {
       return profile->name == name;
     }
@@ -209,7 +210,9 @@ bool Profiles::remove(wxDataViewItem item)
     return false;
   }
 
-  mProfiles.erase(std::begin(mProfiles) + index);
+  auto toRemoveIt = std::begin(mProfiles);
+  std::advance(toRemoveIt, index);
+  mProfiles.erase(toRemoveIt);
   wxDataViewItem parent(0);
   ItemDeleted(parent, item);
 
@@ -350,7 +353,7 @@ bool Profiles::IsContainer(
   return false;
 }
 
-unsigned int Profiles::GetChildren(
+unsigned Profiles::GetChildren(
   const wxDataViewItem &parent,
   wxDataViewItemArray &array
 ) const {
@@ -358,7 +361,7 @@ unsigned int Profiles::GetChildren(
   {
     array.Add(toItem(i));
   }
-  return mProfiles.size() - 1;
+  return (unsigned)mProfiles.size() - 1;
 }
 
 bool Profiles::save(size_t index)

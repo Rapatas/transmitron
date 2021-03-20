@@ -22,7 +22,7 @@ size_t History::attachObserver(Observer *observer)
 {
   size_t id = 0;
   do {
-    id = rand();
+    id = (size_t)std::abs(rand());
   } while (mObservers.find(id) != std::end(mObservers));
 
   return mObservers.insert(std::make_pair(id, observer)).first->first;
@@ -59,7 +59,7 @@ void History::onMessage(
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
 
-    const auto item = GetItem(mRemap.size() - 1);
+    const auto item = toItem(mRemap.size() - 1);
     for (const auto &o : mObservers)
     {
       o.second->onMessage(item);
@@ -139,9 +139,9 @@ void History::remap()
   const size_t after = mRemap.size();
 
   const auto common = std::min(before, after);
-  for (size_t i = 0; i < common; ++i)
+  for (size_t i = 0; i != common; ++i)
   {
-    RowChanged(i);
+    RowChanged((unsigned)i);
   }
 
   if (after > before)
@@ -158,7 +158,7 @@ void History::remap()
     size_t diff = before - common;
     for (size_t i = 0; i < diff; ++i)
     {
-      rows.Add(after + i);
+      rows.Add((int)(after + i));
     }
     RowsDeleted(rows);
   }
@@ -170,7 +170,7 @@ void History::refresh(MQTT::Subscription::Id_t subscriptionId)
   {
     if (mMessages[mRemap[i]].subscriptionId == subscriptionId)
     {
-      RowChanged(i);
+      RowChanged((unsigned)i);
     }
   }
 }
@@ -214,7 +214,7 @@ unsigned History::GetColumnCount() const
 
 unsigned History::GetCount() const
 {
-  return mRemap.size();
+  return (unsigned)mRemap.size();
 }
 
 wxString History::GetColumnType(unsigned int col) const
@@ -303,4 +303,14 @@ bool History::SetValueByRow(
   unsigned int col
 ) {
   return false;
+}
+
+size_t History::toIndex(const wxDataViewItem &item)
+{
+  return reinterpret_cast<size_t>(item.GetID());
+}
+
+wxDataViewItem History::toItem(size_t index)
+{
+  return wxDataViewItem(reinterpret_cast<void*>(index));
 }

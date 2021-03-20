@@ -124,7 +124,6 @@ private:
   static std::string decode(const std::string &encoded);
   static Node::Id_t toId(const wxDataViewItem &item);
   static wxDataViewItem toItem(Node::Id_t id);
-
 };
 
 }
