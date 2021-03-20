@@ -60,7 +60,7 @@ void TopicCtrl::onContextSelected(wxCommandEvent &e)
           topic = topic.substr(from, to - from);
         }
         auto dataObject = new wxTextDataObject(topic);
-        auto res = wxTheClipboard->SetData(dataObject);
+        wxTheClipboard->SetData(dataObject);
         wxTheClipboard->Close();
       }
     } break;

@@ -8,10 +8,10 @@
 using namespace MQTT;
 
 Client::Client() :
-  mRetries(0),
-  mRetriesMax(10),
   mHostname("0.0.0.0"),
-  mPort(1883)
+  mPort(1883),
+  mRetries(0),
+  mRetriesMax(10)
 {
   mOptions.set_clean_session(true);
   mOptions.set_keep_alive_interval(20);
@@ -470,7 +470,7 @@ bool Client::match(const std::string &filter, const std::string &topic)
       return false;
     }
 
-    for (int i = 0; i < filterLevels.size(); ++i)
+    for (size_t i = 0; i != filterLevels.size(); ++i)
     {
       auto level = filterLevels.at(i);
       if (level == '#')

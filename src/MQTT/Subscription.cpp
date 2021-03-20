@@ -11,9 +11,9 @@ Subscription::Subscription(
   std::shared_ptr<Client> client
 ) :
   mId(id),
-  mClient(client),
   mFilter(filter),
-  mQos(qos)
+  mQos(qos),
+  mClient(client)
 {}
 
 size_t Subscription::attachObserver(Observer *o)

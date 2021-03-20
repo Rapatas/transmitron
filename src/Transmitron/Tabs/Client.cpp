@@ -914,7 +914,6 @@ void Client::onSnippetsDrag(wxDataViewEvent &e)
 void Client::onSnippetsDrop(wxDataViewEvent &e)
 {
   const auto target = e.GetItem();
-  auto targetId = reinterpret_cast<size_t>(target.GetID());
 
   wxTextDataObject object;
   object.SetData(e.GetDataFormat(), e.GetDataSize(), e.GetDataBuffer());

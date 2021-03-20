@@ -50,16 +50,16 @@ void History::onMessage(
   MQTT::Subscription::Id_t subscriptionId,
   mqtt::const_message_ptr message
 ) {
-  Message m{subscriptionId, message};
+  const Message m{subscriptionId, message};
   mMessages.push_back(m);
-  bool muted = mSubscriptions->getMuted(subscriptionId);
+  const bool muted = mSubscriptions->getMuted(subscriptionId);
 
-  if (!mSubscriptions->getMuted(subscriptionId))
+  if (!muted)
   {
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
 
-    auto item = GetItem(mRemap.size() - 1);
+    const auto item = GetItem(mRemap.size() - 1);
     for (const auto &o : mObservers)
     {
       o.second->onMessage(item);
