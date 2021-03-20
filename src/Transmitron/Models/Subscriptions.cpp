@@ -152,8 +152,7 @@ void Subscriptions::subscribe(const std::string &topic, MQTT::QoS /* qos */)
   sub->Bind(Events::RECEIVED, &Subscriptions::onMessage, this);
   mSubscriptions.insert({id, std::move(sub)});
   mRemap.push_back(id);
-  auto item = toItem(mRemap.size() - 1);
-  ItemAdded(wxDataViewItem(0), item);
+  RowAppended();
 }
 
 void Subscriptions::unsubscribe(wxDataViewItem item)
@@ -253,7 +252,7 @@ void Subscriptions::onUnsubscribed(Events::Subscription &e)
     return;
   }
   const auto index = (size_t)std::distance(std::begin(mRemap), it);
-  const auto item = toItem(index);
+  const auto item = GetItem((unsigned)index);
   for (const auto &o : mObservers)
   {
     o.second->onUnsubscribed(id);
@@ -269,14 +268,4 @@ void Subscriptions::onMessage(Events::Subscription &e)
   {
     o.second->onMessage(e.getId(), e.getMessage());
   }
-}
-
-size_t Subscriptions::toIndex(const wxDataViewItem &item)
-{
-  return reinterpret_cast<size_t>(item.GetID());
-}
-
-wxDataViewItem Subscriptions::toItem(size_t index)
-{
-  return wxDataViewItem(reinterpret_cast<void*>(index));
 }
