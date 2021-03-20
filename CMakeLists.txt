@@ -68,7 +68,7 @@ set(gcc_warnings
   -Wconversion
   -Wsign-conversion
   -Wfloat-conversion
-  # -Wpedantic
+  -Wpedantic
 )
 
 target_compile_options(

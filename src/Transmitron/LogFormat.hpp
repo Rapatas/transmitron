@@ -18,7 +18,7 @@ class LogFormat :
     const uint8_t color =
       ((info.threadId % (256U - MinColorChannel)) + MinColorChannel) & 0xFF;
     return wxString::Format(
-      "[\e[38;5;%um%#x\e[0m] [%s] : %s",
+      "[\033[38;5;%um%#x\033[0m] [%s] : %s",
       color,
       (unsigned)info.threadId,
       info.component,

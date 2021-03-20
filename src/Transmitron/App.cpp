@@ -102,7 +102,7 @@ void App::onPageSelected(wxBookCtrlEvent& event)
 
   newConnectionTab();
   event.Veto();
-};
+}
 
 void App::onPageClosed(wxBookCtrlEvent& event)
 {
