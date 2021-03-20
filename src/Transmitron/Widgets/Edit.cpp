@@ -381,7 +381,7 @@ Edit::Format Edit::formatGuess(const std::string &text)
   return Format::Text;
 }
 
-void Edit::onFormatSelected(wxCommandEvent &e)
+void Edit::onFormatSelected(wxCommandEvent &/* event */)
 {
   format();
 }

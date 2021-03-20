@@ -21,16 +21,16 @@ public:
     virtual void onColorSet(
       MQTT::Subscription::Id_t subscriptionId,
       wxColor color
-    ) {};
+    ) = 0;
     virtual void onMessage(
       MQTT::Subscription::Id_t subscriptionId,
       mqtt::const_message_ptr message
-    ) {}
-    virtual void onMuted(MQTT::Subscription::Id_t subscriptionId) {};
-    virtual void onSolo(MQTT::Subscription::Id_t subscriptionId) {};
-    virtual void onUnmuted(MQTT::Subscription::Id_t subscriptionId) {};
-    virtual void onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) {};
-    virtual void onCleared(MQTT::Subscription::Id_t subscriptionId) {};
+    ) = 0;
+    virtual void onMuted(MQTT::Subscription::Id_t subscriptionId) = 0;
+    virtual void onSolo(MQTT::Subscription::Id_t subscriptionId) = 0;
+    virtual void onUnmuted(MQTT::Subscription::Id_t subscriptionId) = 0;
+    virtual void onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) = 0;
+    virtual void onCleared(MQTT::Subscription::Id_t subscriptionId) = 0;
   };
 
   enum class Column : unsigned

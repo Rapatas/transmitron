@@ -10,10 +10,10 @@ class LogFormat :
   public wxLogFormatter
 {
   virtual wxString Format(
-    wxLogLevel level,
+    wxLogLevel /* level */,
     const wxString& msg,
     const wxLogRecordInfo& info
-  ) const {
+  ) const override {
     constexpr uint8_t MinColorChannel = 100;
     const uint8_t color =
       ((info.threadId % (256U - MinColorChannel)) + MinColorChannel) & 0xFF;

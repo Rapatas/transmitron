@@ -236,7 +236,7 @@ void Client::on_success(const mqtt::token& tok)
   }
 }
 
-void Client::on_success_connect(const mqtt::token& tok)
+void Client::on_success_connect(const mqtt::token& /* tok */)
 {
   for (const auto &o : mObservers)
   {
@@ -244,7 +244,7 @@ void Client::on_success_connect(const mqtt::token& tok)
   }
 }
 
-void Client::on_success_disconnect(const mqtt::token& tok)
+void Client::on_success_disconnect(const mqtt::token& /* tok */)
 {
   for (const auto &o : mObservers)
   {
@@ -252,7 +252,7 @@ void Client::on_success_disconnect(const mqtt::token& tok)
   }
 }
 
-void Client::on_success_publish(const mqtt::token& tok)
+void Client::on_success_publish(const mqtt::token& /* tok */)
 {
   wxLogMessage("Published!!");
 }
@@ -362,7 +362,7 @@ void Client::on_failure_unsubscribe(const mqtt::token& tok)
 
 // mqtt::callback interface {
 
-void Client::connected(const std::string& cause)
+void Client::connected(const std::string& /* cause */)
 {
   wxLogMessage("Connected!");
   wxLogMessage("Subscribing to topics:");

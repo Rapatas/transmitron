@@ -67,22 +67,22 @@ void History::onMessage(
   }
 }
 
-void History::onMuted(MQTT::Subscription::Id_t subscriptionId)
+void History::onMuted(MQTT::Subscription::Id_t /* subscriptionId */)
 {
   remap();
 }
 
-void History::onUnmuted(MQTT::Subscription::Id_t subscriptionId)
+void History::onUnmuted(MQTT::Subscription::Id_t /* subscriptionId */)
 {
   remap();
 }
 
-void History::onSolo(MQTT::Subscription::Id_t subscriptionId)
+void History::onSolo(MQTT::Subscription::Id_t /* subscriptionId */)
 {
   remap();
 }
 
-void History::onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor color)
+void History::onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor /* color */)
 {
   refresh(subscriptionId);
 }
@@ -290,17 +290,17 @@ void History::GetValueByRow(
 }
 
 bool History::GetAttrByRow(
-  unsigned int row,
-  unsigned int col,
-  wxDataViewItemAttr &attr
+  unsigned int /* row */,
+  unsigned int /* col */,
+  wxDataViewItemAttr &/* attr */
 ) const {
   return false;
 }
 
 bool History::SetValueByRow(
-  const wxVariant &variant,
-  unsigned int row,
-  unsigned int col
+  const wxVariant &/* variant */,
+  unsigned int /* row */,
+  unsigned int /* col */
 ) {
   return false;
 }

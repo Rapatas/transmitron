@@ -165,7 +165,7 @@ void Homepage::onProfileSelected(wxDataViewEvent &e)
   e.Skip();
 }
 
-void Homepage::onConnectClicked(wxCommandEvent &e)
+void Homepage::onConnectClicked(wxCommandEvent &/* event */)
 {
   const auto profileItem = mProfilesCtrl->GetSelection();
   const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
@@ -181,7 +181,7 @@ void Homepage::onConnectClicked(wxCommandEvent &e)
   wxQueueEvent(this, connectionEvent);
 }
 
-void Homepage::onSaveClicked(wxCommandEvent &event)
+void Homepage::onSaveClicked(wxCommandEvent &/* event */)
 {
   auto item = mProfilesCtrl->GetSelection();
 
@@ -197,7 +197,7 @@ void Homepage::onSaveClicked(wxCommandEvent &event)
   mProfilesModel->updateBrokerOptions(item, options);
 }
 
-void Homepage::onNewProfileClicked(wxCommandEvent &event)
+void Homepage::onNewProfileClicked(wxCommandEvent &/* event */)
 {
   auto item = mProfilesModel->createProfile();
   mProfilesCtrl->Select(item);

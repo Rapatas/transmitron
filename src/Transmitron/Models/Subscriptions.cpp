@@ -127,7 +127,7 @@ void Subscriptions::solo(wxDataViewItem item)
   ItemChanged(item);
 }
 
-void Subscriptions::subscribe(const std::string &topic, MQTT::QoS qos)
+void Subscriptions::subscribe(const std::string &topic, MQTT::QoS /* qos */)
 {
   auto it = std::find_if(
     std::begin(mSubscriptions),
@@ -219,25 +219,22 @@ void Subscriptions::GetValueByRow(
 }
 
 bool Subscriptions::GetAttrByRow(
-  unsigned int row,
-  unsigned int col,
-  wxDataViewItemAttr &attr
+  unsigned int /* row */,
+  unsigned int /* col */,
+  wxDataViewItemAttr &/* attr */
 ) const {
   return false;
 }
 
 bool Subscriptions::SetValueByRow(
-  const wxVariant &variant,
-  unsigned int row,
-  unsigned int col
+  const wxVariant &/* variant */,
+  unsigned int /* row */,
+  unsigned int /* col */
 ) {
   return false;
 }
 
-void Subscriptions::onSubscribed(Events::Subscription &e)
-{
-
-}
+void Subscriptions::onSubscribed(Events::Subscription &/* e */) {}
 
 void Subscriptions::onUnsubscribed(Events::Subscription &e)
 {

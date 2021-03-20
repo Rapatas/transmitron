@@ -19,7 +19,7 @@ public:
 
   struct Observer
   {
-    virtual void onMessage(wxDataViewItem item) {}
+    virtual void onMessage(wxDataViewItem item) = 0;
   };
 
   struct Message

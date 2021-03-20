@@ -323,22 +323,22 @@ void Profiles::GetValue(
 }
 
 bool Profiles::SetValue(
-  const wxVariant &variant,
-  const wxDataViewItem &item,
-  unsigned int col
+  const wxVariant &/* variant */,
+  const wxDataViewItem &/* item */,
+  unsigned int /* col */
 ) {
   return false;
 }
 
 bool Profiles::IsEnabled(
-  const wxDataViewItem &item,
-  unsigned int col
+  const wxDataViewItem &/* item */,
+  unsigned int /* col */
 ) const {
   return true;
 }
 
 wxDataViewItem Profiles::GetParent(
-  const wxDataViewItem &item
+  const wxDataViewItem &/* item */
 ) const {
   return wxDataViewItem(nullptr);
 }
@@ -354,7 +354,7 @@ bool Profiles::IsContainer(
 }
 
 unsigned Profiles::GetChildren(
-  const wxDataViewItem &parent,
+  const wxDataViewItem &/* parent */,
   wxDataViewItemArray &array
 ) const {
   for (size_t i = 1; i != mProfiles.size(); ++i)

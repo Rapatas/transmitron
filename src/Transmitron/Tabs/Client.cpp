@@ -48,35 +48,40 @@ Client::Client(
       {},
       nullptr,
       bin2c_history_18x18_png,
-      bin2c_history_18x14_png
+      bin2c_history_18x14_png,
+      nullptr
     }},
     {Panes::Preview, {
       "Preview",
       {},
       nullptr,
       bin2c_preview_18x18_png,
-      bin2c_preview_18x14_png
+      bin2c_preview_18x14_png,
+      nullptr
     }},
     {Panes::Publish, {
       "Publish",
       {},
       nullptr,
       bin2c_send_18x18_png,
-      bin2c_send_18x14_png
+      bin2c_send_18x14_png,
+      nullptr
     }},
     {Panes::Snippets, {
       "Snippets",
       {},
       nullptr,
       bin2c_snippets_18x18_png,
-      bin2c_snippets_18x14_png
+      bin2c_snippets_18x14_png,
+      nullptr
     }},
     {Panes::Subscriptions, {
       "Subscriptions",
       {},
       nullptr,
       bin2c_subscription_18x18_png,
-      bin2c_subscription_18x14_png
+      bin2c_subscription_18x14_png,
+      nullptr
     }},
   };
 
@@ -236,7 +241,7 @@ void Client::setupPanelConnect(wxWindow *parent)
 
   mConnect  = new wxButton(mProfileBar, -1, "Connect");
 
-  auto cb = [this](Panes pane, wxCommandEvent &e)
+  auto cb = [this](Panes pane, wxCommandEvent &/* event */)
   {
     auto widget = mPanes.at(pane);
 
@@ -463,7 +468,7 @@ void Client::setupPanelSnippets(wxWindow *parent)
   );
 }
 
-void Client::onPublishClicked(wxCommandEvent &event)
+void Client::onPublishClicked(wxCommandEvent &/* event */)
 {
   auto publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
 
@@ -478,7 +483,7 @@ void Client::onPublishClicked(wxCommandEvent &event)
   mClient->publish(topic, payload, qos, retained);
 }
 
-void Client::onPublishSaveSnippet(Events::Edit &e)
+void Client::onPublishSaveSnippet(Events::Edit &/* event */)
 {
   wxLogInfo("Saving current message");
   auto snippetItem = mSnippetsCtrl->GetSelection();
@@ -510,7 +515,7 @@ void Client::onPublishSaveSnippet(Events::Edit &e)
   }
 }
 
-void Client::onPreviewSaveSnippet(Events::Edit &e)
+void Client::onPreviewSaveSnippet(Events::Edit &/* event */)
 {
   wxLogInfo("Saving current message");
   auto snippetItem = mSnippetsCtrl->GetSelection();
@@ -537,7 +542,7 @@ void Client::onPreviewSaveSnippet(Events::Edit &e)
   }
 }
 
-void Client::onSubscribeClicked(wxCommandEvent &event)
+void Client::onSubscribeClicked(wxCommandEvent &/* event */)
 {
   auto text = mFilter->GetValue();
   mFilter->SetValue("");
@@ -564,7 +569,7 @@ void Client::onSubscribeEnter(wxKeyEvent &event)
   event.Skip();
 }
 
-void Client::onConnectClicked(wxCommandEvent &event)
+void Client::onConnectClicked(wxCommandEvent &/* event */)
 {
   mConnect->Disable();
 
@@ -972,7 +977,7 @@ void Client::onSnippetsDropPossible(wxDataViewEvent &e)
   e.Skip(true);
 }
 
-void Client::onClose(wxCloseEvent &event)
+void Client::onClose(wxCloseEvent &/* event */)
 {
   if (mClient->connected())
   {
@@ -1014,20 +1019,20 @@ void Client::onDisconnected()
   wxQueueEvent(this, e);
 }
 
-void Client::onConnectedSync(Events::Connection &e)
+void Client::onConnectedSync(Events::Connection &/* event */)
 {
   wxLogInfo("Handling profile in GUI thread");
   mConnect->Enable();
   mConnect->SetLabelText("Disconnect");
 }
 
-void Client::onDisconnectedSync(Events::Connection &e)
+void Client::onDisconnectedSync(Events::Connection &/* event */)
 {
   mConnect->Enable();
   mConnect->SetLabelText("Connect");
 }
 
-void Client::onSubscriptionSelected(wxDataViewEvent &event)
+void Client::onSubscriptionSelected(wxDataViewEvent &/* event */)
 {
   auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }

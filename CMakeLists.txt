@@ -64,7 +64,7 @@ target_include_directories(
 set(gcc_warnings
   -Werror
   -Wall
-  # -Wextra
+  -Wextra
   -Wconversion
   -Wsign-conversion
   -Wfloat-conversion
@@ -75,6 +75,7 @@ target_compile_options(
   ${CMAKE_PROJECT_NAME}
   PRIVATE
     $<$<CXX_COMPILER_ID:GNU>: ${gcc_warnings}>
+    $<$<CXX_COMPILER_ID:CLANG>: ${gcc_warnings}>
 )
 
 target_compile_definitions(
