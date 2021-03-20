@@ -126,8 +126,14 @@ void App::newConnectionTab()
   mNote->SetSelection(mCount - 2);
 
   homepage->Bind(Events::CONNECTION, [this](Events::Connection e){
+    if (e.GetSelection() == wxNOT_FOUND)
+    {
+      e.Skip();
+      return;
+    }
+
     const auto profileItem = e.getProfile();
-    const size_t selected = mNote->GetSelection();
+    const size_t selected = (size_t)mNote->GetSelection();
 
     auto client = new Tabs::Client(
       mNote,

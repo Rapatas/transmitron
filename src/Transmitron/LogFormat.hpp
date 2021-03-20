@@ -14,8 +14,9 @@ class LogFormat :
     const wxString& msg,
     const wxLogRecordInfo& info
   ) const {
-    uint8_t minColor = 100;
-    uint8_t color = ((info.threadId % (256 - minColor)) + minColor) & 0xFF;
+    constexpr uint8_t MinColorChannel = 100;
+    const uint8_t color =
+      ((info.threadId % (256U - MinColorChannel)) + MinColorChannel) & 0xFF;
     return wxString::Format(
       "[\e[38;5;%um%#x\e[0m] [%s] : %s",
       color,

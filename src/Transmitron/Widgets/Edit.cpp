@@ -153,7 +153,7 @@ void Edit::setupScintilla()
 
   static const int MARGIN_SCRIPT_FOLD_INDEX = 1;
   mText->SetMarginType(MARGIN_SCRIPT_FOLD_INDEX, wxSTC_MARGIN_SYMBOL);
-  mText->SetMarginMask(MARGIN_SCRIPT_FOLD_INDEX, wxSTC_MASK_FOLDERS);
+  mText->SetMarginMask(MARGIN_SCRIPT_FOLD_INDEX, (int)wxSTC_MASK_FOLDERS);
   mText->SetMarginWidth(MARGIN_SCRIPT_FOLD_INDEX, 20);
   mText->SetMarginSensitive(MARGIN_SCRIPT_FOLD_INDEX, 1);
   mText->SetAutomaticFold(wxSTC_AUTOMATICFOLD_CLICK);

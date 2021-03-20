@@ -20,7 +20,7 @@ size_t Subscription::attachObserver(Observer *o)
 {
   size_t id = 0;
   do {
-    id = rand();
+    id = (size_t)std::abs(rand());
   } while (mObservers.find(id) != std::end(mObservers));
 
   if (mState == State::Subscribed)

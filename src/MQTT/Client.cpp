@@ -74,7 +74,7 @@ size_t Client::attachObserver(Observer *o)
 {
   size_t id = 0;
   do {
-    id = rand();
+    id = (size_t)std::abs(rand());
   } while (mObservers.find(id) != std::end(mObservers));
 
   return mObservers.insert(std::make_pair(id, o)).first->first;
@@ -412,7 +412,7 @@ void Client::doSubscribe(size_t id)
     );
     mClient->subscribe(
       it->second->getFilter(),
-      (unsigned)it->second->getQos(),
+      (int)it->second->getQos(),
       nullptr,
       *this
     );
