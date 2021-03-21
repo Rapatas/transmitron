@@ -5,6 +5,7 @@ Checks: "
     cert-*,
     performance-*,
     cppcoreguidelines-explicit-virtual-functions,
+    cppcoreguidelines-init-variables,
     -cert-msc50-cpp,
     -cert-msc30-c,
 "

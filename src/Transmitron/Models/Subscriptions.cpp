@@ -215,7 +215,7 @@ void Subscriptions::GetValueByRow(
       variant = sub->getFilter();
     } break;
     case Column::Qos: {
-      wxBitmap *result;
+      wxBitmap *result = nullptr;
       switch (sub->getQos()) {
         case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0_png; } break;
         case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1_png; } break;

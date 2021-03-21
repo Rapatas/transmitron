@@ -438,7 +438,7 @@ bool Client::match(const std::string &filter, const std::string &topic)
   auto split = [](const std::string& str, char delim)
     -> std::vector<std::string> {
       std::vector<std::string> strings;
-      size_t start;
+      size_t start = 0;
       size_t end = 0;
       while ((start = str.find_first_not_of(delim, end)) != std::string::npos) {
         end = str.find(delim, start);

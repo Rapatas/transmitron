@@ -280,7 +280,7 @@ void History::GetValueByRow(
       variant << result;
     } break;
     case Column::Qos: {
-      wxBitmap *result;
+      wxBitmap *result = nullptr;
       switch ((MQTT::QoS)m.message->get_qos()) {
         case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0_png; } break;
         case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1_png; } break;
