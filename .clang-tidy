@@ -2,7 +2,10 @@ Checks: "
     -*,
     bugprone-*,
     readability-*,
+    cert-*,
     performance-*,
+    -cert-msc50-cpp,
+    -cert-msc30-c,
 "
 WarningsAsErrors: true
 HeaderFilterRegex: '.*'

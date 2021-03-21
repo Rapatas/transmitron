@@ -10,7 +10,7 @@
 using namespace Transmitron::Tabs;
 using namespace Transmitron;
 
-wxDEFINE_EVENT(Events::CONNECTION, Events::Connection);
+wxDEFINE_EVENT(Events::CONNECTION, Events::Connection); // NOLINT
 
 Homepage::Homepage(
   wxWindow *parent,

@@ -76,6 +76,7 @@ private:
   static const size_t OptionsHeight = 26;
 
   const ValueObjects::BrokerOptions mBrokerOptions;
+  const wxFont mFont;
 
   wxBoxSizer *mMasterSizer;
 

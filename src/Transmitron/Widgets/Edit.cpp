@@ -24,15 +24,8 @@ uint32_t green      = (0   << 0) | (150 << 8) | (0   << 16); // NOLINT
 uint32_t pink       = (200 << 0) | (0   << 8) | (150 << 16); // NOLINT
 uint32_t cyan       = (0   << 0) | (120 << 8) | (150 << 16); // NOLINT
 
-const std::map<std::string, Widgets::Edit::Format> Widgets::Edit::mFormats = {
-  {"Auto", Format::Auto},
-  {"Text", Format::Text},
-  {"Json", Format::Json},
-  {"Xml", Format::Xml},
-};
-
-wxDEFINE_EVENT(Events::EDIT_PUBLISH, Events::Edit);
-wxDEFINE_EVENT(Events::EDIT_SAVE_SNIPPET, Events::Edit);
+wxDEFINE_EVENT(Events::EDIT_PUBLISH, Events::Edit); // NOLINT
+wxDEFINE_EVENT(Events::EDIT_SAVE_SNIPPET, Events::Edit); // NOLINT
 
 Edit::Edit(
   wxWindow* parent,

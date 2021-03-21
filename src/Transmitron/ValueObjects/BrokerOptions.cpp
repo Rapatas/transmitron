@@ -4,22 +4,27 @@
 
 using namespace Transmitron::ValueObjects;
 
-const BrokerOptions BrokerOptions::defaults = BrokerOptions {
-  false,
-  {},
-  "127.0.0.1",
-  {},
-  {},
-  60,
-  10,
-  1883,
-  30
-};
+constexpr bool DefaultAutoReconnect = false;
+constexpr const char *DefaultClientId = "";
+constexpr const char *DefaultHostname = "127.0.0.1";
+constexpr const char *DefaultPassword = "";
+constexpr const char *DefaultUsername = "";
+constexpr unsigned DefaultKeepAliveIntervalSec = 60;
+constexpr unsigned DefaultMaxInFlight = 10;
+constexpr unsigned DefaultPort = 1883;
+constexpr unsigned DefaultTimeoutSec = 30;
 
-BrokerOptions::BrokerOptions()
-{
-  *this = defaults;
-}
+BrokerOptions::BrokerOptions() :
+   mAutoReconnect(DefaultAutoReconnect),
+   mClientId(DefaultClientId),
+   mHostname(DefaultHostname),
+   mPassword(DefaultPassword),
+   mUsername(DefaultUsername),
+   mKeepAliveInterval(DefaultKeepAliveIntervalSec),
+   mMaxInFlight(DefaultMaxInFlight),
+   mPort(DefaultPort),
+   mTimeout(DefaultTimeoutSec)
+{}
 
 BrokerOptions::BrokerOptions(
   bool autoReconnect,
@@ -53,31 +58,31 @@ BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data)
   using namespace Helpers;
 
   bool autoReconnect = extract<bool>(data, "autoReconnect")
-    .value_or(defaults.getAutoReconnect());
+    .value_or(DefaultAutoReconnect);
 
   std::string clientId = extract<std::string>(data, "clientId")
-    .value_or(defaults.getClientId());
+    .value_or(DefaultClientId);
 
   std::string hostname = extract<std::string>(data, "hostname")
-    .value_or(defaults.getHostname());
+    .value_or(DefaultHostname);
 
   std::string password = extract<std::string>(data, "password")
-    .value_or(defaults.getPassword());
+    .value_or(DefaultPassword);
 
   std::string username = extract<std::string>(data, "username")
-    .value_or(defaults.getUsername());
+    .value_or(DefaultUsername);
 
   unsigned keepAliveInterval = extract<unsigned>(data, "keepAliveInterval")
-    .value_or(defaults.getKeepAliveInterval());
+    .value_or(DefaultKeepAliveIntervalSec);
 
   unsigned maxInFlight = extract<unsigned>(data, "maxInFlight")
-    .value_or(defaults.getMaxInFlight());
+    .value_or(DefaultMaxInFlight);
 
   unsigned port = extract<unsigned>(data, "port")
-    .value_or(defaults.getPort());
+    .value_or(DefaultPort);
 
   unsigned timeout = extract<unsigned>(data, "timeout")
-    .value_or(defaults.getTimeout());
+    .value_or(DefaultTimeoutSec);
 
   return BrokerOptions {
     autoReconnect,

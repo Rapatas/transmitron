@@ -6,15 +6,16 @@
 
 using namespace Transmitron::Widgets;
 
-const wxFont TopicCtrl::Font = wxFont(wxFontInfo(9).FaceName("Consolas"));
+constexpr size_t FontSize = 9;
 
 TopicCtrl::TopicCtrl(
   wxWindow *parent,
   wxWindowID id
 ) :
-  wxTextCtrl(parent, id)
+  wxTextCtrl(parent, id),
+  mFont(wxFontInfo(FontSize).FaceName("Consolas"))
 {
-  SetFont(Font);
+  SetFont(mFont);
 
   Bind(wxEVT_LEFT_UP,     &TopicCtrl::onLeftUp,        this);
   Bind(wxEVT_LEFT_DOWN,   &TopicCtrl::onLeftDown,      this);

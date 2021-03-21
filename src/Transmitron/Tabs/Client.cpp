@@ -23,10 +23,10 @@ using namespace Transmitron::Tabs;
 using namespace Transmitron::Models;
 using namespace Transmitron;
 
-const wxFont Font(wxFontInfo(9).FaceName("Consolas"));
+constexpr size_t FontSize = 9;
 
-wxDEFINE_EVENT(Events::CONNECTED, Events::Connection);
-wxDEFINE_EVENT(Events::DISCONNECTED, Events::Connection);
+wxDEFINE_EVENT(Events::CONNECTED, Events::Connection); // NOLINT
+wxDEFINE_EVENT(Events::DISCONNECTED, Events::Connection); // NOLINT
 
 Client::Client(
   wxWindow* parent,
@@ -35,6 +35,7 @@ Client::Client(
 ) :
   wxPanel(parent),
   mBrokerOptions(brokerOptions),
+  mFont(wxFontInfo(FontSize).FaceName("Consolas")),
   mSnippetsModel(snippetsModel)
 {
   mClient = std::make_shared<MQTT::Client>();
@@ -197,7 +198,7 @@ void Client::setupPanelHistory(wxWindow *parent)
   mHistoryModel->attachObserver(this);
   mHistoryCtrl->AssociateModel(mHistoryModel.get());
 
-  mHistoryCtrl->SetFont(Font);
+  mHistoryCtrl->SetFont(mFont);
 
   mHistoryCtrl->AppendColumn(icon);
   mHistoryCtrl->AppendColumn(qos);
@@ -348,7 +349,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mSubscriptionsModel = new Models::Subscriptions(mClient);
   mSubscriptionsCtrl->AssociateModel(mSubscriptionsModel.get());
 
-  mSubscriptionsCtrl->SetFont(Font);
+  mSubscriptionsCtrl->SetFont(mFont);
 
   mSubscribe = new wxBitmapButton(
     panel,
@@ -359,7 +360,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   );
 
   mFilter = new Widgets::TopicCtrl(panel, -1);
-  mFilter->SetFont(Font);
+  mFilter->SetFont(mFont);
 
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
@@ -431,7 +432,7 @@ void Client::setupPanelSnippets(wxWindow *parent)
   mSnippetsCtrl->EnableDropTarget(wxDataFormat(wxDF_TEXT));
   mSnippetsCtrl->EnableDragSource(wxDataFormat(wxDF_TEXT));
 
-  mSnippetsCtrl->SetFont(Font);
+  mSnippetsCtrl->SetFont(mFont);
 
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(mSnippetsCtrl, 1, wxEXPAND);

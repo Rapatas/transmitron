@@ -41,8 +41,6 @@ public:
 
 private:
 
-  static const BrokerOptions defaults;
-
   bool mAutoReconnect;
   std::string mClientId;
   std::string mHostname;

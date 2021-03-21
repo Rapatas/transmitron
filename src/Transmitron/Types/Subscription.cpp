@@ -5,9 +5,9 @@
 using namespace Transmitron::Types;
 using namespace Transmitron;
 
-wxDEFINE_EVENT(Events::SUBSCRIBED, Events::Subscription);
-wxDEFINE_EVENT(Events::UNSUBSCRIBED, Events::Subscription);
-wxDEFINE_EVENT(Events::RECEIVED, Events::Subscription);
+wxDEFINE_EVENT(Events::SUBSCRIBED, Events::Subscription); // NOLINT
+wxDEFINE_EVENT(Events::UNSUBSCRIBED, Events::Subscription); // NOLINT
+wxDEFINE_EVENT(Events::RECEIVED, Events::Subscription); // NOLINT
 
 Subscription::Subscription(const std::shared_ptr<MQTT::Subscription> &sub) :
   mSub(sub),

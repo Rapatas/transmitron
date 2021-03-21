@@ -30,4 +30,6 @@ private:
 
 }
 
+DECLARE_APP(Transmitron::App)
+
 #endif // TRANSMITRON_APP_HPP

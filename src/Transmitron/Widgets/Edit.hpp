@@ -80,7 +80,12 @@ private:
   };
   Format mCurrentFormat = Format::Auto;
 
-  static const std::map<std::string, Format> mFormats;
+  const std::map<std::string, Format> mFormats{
+    {"Auto", Format::Auto},
+    {"Text", Format::Text},
+    {"Json", Format::Json},
+    {"Xml", Format::Xml},
+  };
 
   void onQosClicked(wxMouseEvent &e);
   void onRetainedClicked(wxMouseEvent &e);

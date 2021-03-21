@@ -31,8 +31,7 @@ public:
 
 private:
 
-  static const wxFont Font;
-
+  const wxFont mFont;
   bool mFakeSelection = false;
   bool mFirstClick = true;
   bool mReadOnly = false;
