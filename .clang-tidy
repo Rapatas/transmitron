@@ -1,0 +1,7 @@
+Checks: "
+    -*,
+    bugprone-*,
+"
+WarningsAsErrors: true
+HeaderFilterRegex: '.*'
+UseColor: true

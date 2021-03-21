@@ -291,14 +291,9 @@ unsigned Profiles::GetColumnCount() const
   return (unsigned)Column::Max;
 }
 
-wxString Profiles::GetColumnType(unsigned int col) const
+wxString Profiles::GetColumnType(unsigned int /* col */) const
 {
-  switch ((Column)col)
-  {
-    case Column::Name: { return wxDataViewTextRenderer::GetDefaultType(); } break;
-    case Column::URL:  { return wxDataViewTextRenderer::GetDefaultType(); } break;
-    default: { return "string"; }
-  }
+  return wxDataViewTextRenderer::GetDefaultType();
 }
 
 void Profiles::GetValue(

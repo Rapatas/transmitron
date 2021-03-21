@@ -460,8 +460,8 @@ bool Client::match(const std::string &filter, const std::string &topic)
   }
   else if (plus != std::string::npos)
   {
-    auto filterLevels = split(filter, '/');
-    auto topicLevels  = split(topic,  '/');
+    const auto filterLevels = split(filter, '/');
+    const auto topicLevels  = split(topic,  '/');
 
     if (
       filterLevels.size() != topicLevels.size()
@@ -472,19 +472,17 @@ bool Client::match(const std::string &filter, const std::string &topic)
 
     for (size_t i = 0; i != filterLevels.size(); ++i)
     {
-      auto level = filterLevels.at(i);
+
+      const bool levelMatches = topicLevels.size() >= filterLevels.size()
+        && topicLevels.at(i) == filterLevels.at(i);
+
+      const auto &level = filterLevels.at(i);
       if (level == '#')
       {
         return true;
       }
-      else if (level == '+')
+      else if (level == '+' || levelMatches)
       {
-        continue;
-      }
-      else if (
-        topicLevels.size() >= filterLevels.size()
-        && topicLevels.at(i) == filterLevels.at(i)
-      ) {
         continue;
       }
       return false;
