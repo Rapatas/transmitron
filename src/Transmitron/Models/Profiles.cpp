@@ -281,7 +281,7 @@ std::string Profiles::getName(wxDataViewItem item) const
   return mProfiles.at(toIndex(item))->name;
 }
 
-const wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
+wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
 {
   return mProfiles.at(toIndex(item))->snippetsModel;
 }
@@ -341,11 +341,7 @@ wxDataViewItem Profiles::GetParent(
 bool Profiles::IsContainer(
   const wxDataViewItem &item
 ) const {
-  if (!item.IsOk())
-  {
-    return true;
-  }
-  return false;
+  return !item.IsOk();
 }
 
 unsigned Profiles::GetChildren(

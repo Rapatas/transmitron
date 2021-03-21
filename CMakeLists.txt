@@ -13,6 +13,7 @@ add_executable(
   ${INFO_POST_CONF}
   src/MQTT/Client.cpp
   src/MQTT/Message.cpp
+  src/Helpers/Helpers.cpp
   src/MQTT/Subscription.cpp
   src/Transmitron/App.cpp
   src/Transmitron/Models/Profiles.cpp

@@ -26,7 +26,7 @@ public:
   bool load(const std::string &connectionDir);
 
   MQTT::Message getMessage(wxDataViewItem item) const;
-  wxDataViewItem getRootItem() const;
+  static wxDataViewItem getRootItem() ;
   wxDataViewItem createFolder(
     wxDataViewItem parent
   );
@@ -63,7 +63,7 @@ public:
     unsigned int col
   ) const override;
   virtual bool SetValue(
-    const wxVariant &variant,
+    const wxVariant &value,
     const wxDataViewItem &item,
     unsigned int col
   ) override;

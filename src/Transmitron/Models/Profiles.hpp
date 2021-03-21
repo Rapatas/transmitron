@@ -39,7 +39,7 @@ public:
   const ValueObjects::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
   std::string getName(wxDataViewItem item) const;
 
-  const wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
+  wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
 
 private:
 

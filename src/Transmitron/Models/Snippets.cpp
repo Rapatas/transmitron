@@ -1,5 +1,6 @@
 #include "Snippets.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <fstream>
@@ -47,7 +48,7 @@ MQTT::Message Snippets::getMessage(wxDataViewItem item) const
   return *node.message;
 }
 
-wxDataViewItem Snippets::getRootItem() const
+wxDataViewItem Snippets::getRootItem()
 {
   return toItem(0);
 }
@@ -571,16 +572,16 @@ void Snippets::loadDirectoryRecursive(
 }
 
 void Snippets::loadSnippet(
-  const std::filesystem::path &entry,
+  const std::filesystem::path &path,
   Node::Id_t parentId
 ) {
-  const auto stem = entry.stem().u8string();
+  const auto stem = path.stem().u8string();
   const std::string name = decode(stem);
 
-  std::ifstream snippetFile(entry);
+  std::ifstream snippetFile(path);
   if (!snippetFile.is_open())
   {
-    wxLogWarning("Could not load '%s': failed to open", entry.c_str());
+    wxLogWarning("Could not load '%s': failed to open", path.c_str());
     return;
   }
 
@@ -594,7 +595,7 @@ void Snippets::loadSnippet(
   {
     if (!nlohmann::json::accept(sbuffer))
     {
-      wxLogWarning("Could not load '%s': malformed json", entry.c_str());
+      wxLogWarning("Could not load '%s': malformed json", path.c_str());
       return;
     }
 
@@ -605,7 +606,7 @@ void Snippets::loadSnippet(
   Node newNode {
     parentId,
     name,
-    entry.filename(),
+    path.filename(),
     Node::Type::Snippet,
     {},
     std::move(message),
@@ -622,14 +623,14 @@ bool Snippets::hasChildNamed(
 ) const {
   const auto id = toId(parent);
   const auto children = mNodes.at(id).children;
-  for (const auto &child : children)
-  {
-    if (mNodes.at(child).name == name)
+  return std::any_of(
+    std::begin(children),
+    std::end(children),
+    [this, &name](const auto &child)
     {
-      return true;
+      return mNodes.at(child).name == name;
     }
-  }
-  return false;
+  );
 }
 
 unsigned Snippets::GetColumnCount() const
@@ -825,7 +826,7 @@ std::string Snippets::getNodePath(Node::Id_t id) const
   std::vector<std::string> parts;
   while (currentId != 0)
   {
-    auto &node = mNodes.at(currentId);
+    const auto &node = mNodes.at(currentId);
     parts.push_back(node.encoded);
     currentId = mNodes.at(currentId).parent;
   }

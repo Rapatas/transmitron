@@ -251,12 +251,15 @@ void History::GetValueByRow(
 
   const auto &m = mMessages.at(mRemap.at(row));
 
+  constexpr size_t MessageIconWidth = 10;
+  constexpr size_t MessageIconHeight = 20;
+
   switch ((Column)col) {
     case Column::Icon: {
 
       auto color = mSubscriptions->getColor(m.subscriptionId);
 
-      wxBitmap b(10, 20);
+      wxBitmap b(MessageIconWidth, MessageIconHeight);
       wxMemoryDC mem;
       mem.SelectObject(b);
       mem.SetBackground(wxBrush(color));

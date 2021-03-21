@@ -114,15 +114,15 @@ private:
 
   void onClose(wxCloseEvent &event);
   void onConnectClicked(wxCommandEvent &event);
-  void onHistorySelected(wxDataViewEvent& event);
+  void onHistorySelected(wxDataViewEvent &event);
   void onPublishClicked(wxCommandEvent &event);
   void onPublishSaveSnippet(Events::Edit &e);
   void onPreviewSaveSnippet(Events::Edit &e);
   void onSubscribeClicked(wxCommandEvent &event);
   void onSubscribeEnter(wxKeyEvent &event);
-  void onSubscriptionContext(wxDataViewEvent& event);
-  void onHistoryContext(wxDataViewEvent& event);
-  void onContextSelected(wxCommandEvent& event);
+  void onSubscriptionContext(wxDataViewEvent &event);
+  void onHistoryContext(wxDataViewEvent &event);
+  void onContextSelected(wxCommandEvent &event);
   void onSubscriptionSelected(wxDataViewEvent &event);
   void onSnippetsEdit(wxDataViewEvent &e);
   void onSnippetsContext(wxDataViewEvent &e);

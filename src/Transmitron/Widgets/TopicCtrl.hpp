@@ -42,7 +42,7 @@ private:
 
   void onContext(wxContextMenuEvent &e);
   void onDoubleClicked(wxMouseEvent &e);
-  void onKeyDown(wxKeyEvent &e);
+  static void onKeyDown(wxKeyEvent &e);
   void onLeftDown(wxMouseEvent &e);
   void onLeftUp(wxMouseEvent &e);
   void onLostFocus(wxFocusEvent &e);

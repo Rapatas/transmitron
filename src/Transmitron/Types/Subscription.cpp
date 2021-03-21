@@ -1,4 +1,5 @@
 #include "Subscription.hpp"
+#include "Helpers/Helpers.hpp"
 #include "Transmitron/Events/Subscription.hpp"
 
 using namespace Transmitron::Types;
@@ -18,21 +19,21 @@ Subscription::Subscription(std::shared_ptr<MQTT::Subscription> sub) :
 
 void Subscription::onSubscribed()
 {
-  auto e = new Events::Subscription(Events::SUBSCRIBED);
+  auto *e = new Events::Subscription(Events::SUBSCRIBED);
   e->setId(mSub->getId());
   wxQueueEvent(this, e);
 }
 
 void Subscription::onUnsubscribed()
 {
-  auto e = new Events::Subscription(Events::UNSUBSCRIBED);
+  auto *e = new Events::Subscription(Events::UNSUBSCRIBED);
   e->setId(mSub->getId());
   wxQueueEvent(this, e);
 }
 
 void Subscription::onMessage(mqtt::const_message_ptr msg)
 {
-  auto e = new Events::Subscription(Events::RECEIVED);
+  auto *e = new Events::Subscription(Events::RECEIVED);
   e->setMessage(msg);
   e->setId(mSub->getId());
   wxQueueEvent(this, e);
@@ -80,13 +81,6 @@ bool Subscription::getMuted() const
 
 wxColor Subscription::colorFromString(const std::string &data)
 {
-  constexpr uint8_t MinColorChannel = 100;
   const size_t x = std::hash<std::string>{}(data);
-  uint8_t r = ((x >> 0)  & 0xFF);
-  uint8_t g = ((x >> 8)  & 0xFF);
-  uint8_t b = ((x >> 16) & 0xFF);
-  if (r < MinColorChannel) { r = (uint8_t)(r + MinColorChannel); }
-  if (g < MinColorChannel) { g = (uint8_t)(r + MinColorChannel); }
-  if (b < MinColorChannel) { b = (uint8_t)(r + MinColorChannel); }
-  return wxColor(r, g, b);
+  return Helpers::colorFromNumber(x);
 }

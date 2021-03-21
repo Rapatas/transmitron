@@ -31,14 +31,14 @@ void TopicCtrl::setReadOnly(bool readonly)
 
   if (mReadOnly)
   {
-    auto dt = new NotAllowedDropTarget;
+    auto *dt = new NotAllowedDropTarget;
     SetDropTarget(dt);
-    Bind(wxEVT_KEY_DOWN,     &TopicCtrl::onKeyDown, this);
+    Bind(wxEVT_KEY_DOWN,     &TopicCtrl::onKeyDown);
     Bind(wxEVT_CONTEXT_MENU, &TopicCtrl::onContext, this);
   }
   else
   {
-    Unbind(wxEVT_KEY_DOWN,     &TopicCtrl::onKeyDown, this);
+    Unbind(wxEVT_KEY_DOWN,     &TopicCtrl::onKeyDown);
     Unbind(wxEVT_CONTEXT_MENU, &TopicCtrl::onContext, this);
   }
 }
@@ -61,7 +61,7 @@ void TopicCtrl::onContextSelected(wxCommandEvent &e)
         {
           topic = topic.substr(from, to - from);
         }
-        auto dataObject = new wxTextDataObject(topic);
+        auto *dataObject = new wxTextDataObject(topic);
         wxTheClipboard->SetData(dataObject);
         wxTheClipboard->Close();
       }
@@ -128,7 +128,7 @@ void TopicCtrl::onDoubleClicked(wxMouseEvent &e)
 void TopicCtrl::onContext(wxContextMenuEvent &e)
 {
   wxMenu menu;
-  auto item = new wxMenuItem(nullptr, (unsigned)ContextIDs::Copy, "Copy");
+  auto *item = new wxMenuItem(nullptr, (unsigned)ContextIDs::Copy, "Copy");
   item->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY));
   menu.Append(item);
   PopupMenu(&menu);

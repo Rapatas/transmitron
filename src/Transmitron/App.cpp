@@ -30,6 +30,11 @@
 using namespace Transmitron;
 namespace fs = std::filesystem;
 
+constexpr size_t DefaultWindowWidth = 800;
+constexpr size_t DefaultWindowHeight = 600;
+constexpr size_t MinWindowWidth = 400;
+constexpr size_t MinWindowHeight = 300;
+
 bool App::OnInit()
 {
   wxImage::AddHandler(new wxPNGHandler);
@@ -51,21 +56,21 @@ bool App::OnInit()
   bin2c_init_SUBSCRIPTION_18X14_HPP();
   bin2c_init_SUBSCRIPTION_18X18_HPP();
 
-  auto log = new wxLogStderr();
+  auto *log = new wxLogStderr();
   log->SetFormatter(new LogFormat());
   wxLog::SetActiveTarget(log);
 
   wxImageList * il = new wxImageList;
   il->Add(*bin2c_plus_18x18_png);
 
-  auto frame = new wxFrame(
+  auto *frame = new wxFrame(
     nullptr,
     -1,
     getProjectName(),
     wxDefaultPosition,
-    wxSize(800, 600)
+    wxSize(DefaultWindowWidth, DefaultWindowHeight)
   );
-  frame->SetMinSize(wxSize(400, 300));
+  frame->SetMinSize(wxSize(MinWindowWidth, MinWindowHeight));
 
   mNote = new wxAuiNotebook(frame, -1);
   mNote->SetImageList(il);
@@ -75,8 +80,9 @@ bool App::OnInit()
 
   newConnectionTab();
 
-  auto secret = new wxPanel(mNote);
-  mCount += mNote->AddPage(secret, "", false, 0);
+  auto *secret = new wxPanel(mNote);
+  mNote->AddPage(secret, "", false, 0);
+  ++mCount;
 
   mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGING, &App::onPageSelected, this);
   mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CLOSE, &App::onPageClosed, this);
@@ -121,8 +127,9 @@ void App::onPageClosed(wxBookCtrlEvent& event)
 
 void App::newConnectionTab()
 {
-  auto homepage = new Tabs::Homepage(mNote, mProfilesModel);
-  mCount += mNote->InsertPage(mCount - 1, homepage, "Homepage");
+  auto *homepage = new Tabs::Homepage(mNote, mProfilesModel);
+  mNote->InsertPage(mCount - 1, homepage, "Homepage");
+  ++mCount;
   mNote->SetSelection(mCount - 2);
 
   homepage->Bind(Events::CONNECTION, [this](Events::Connection e){
@@ -135,7 +142,7 @@ void App::newConnectionTab()
     const auto profileItem = e.getProfile();
     const size_t selected = (size_t)mNote->GetSelection();
 
-    auto client = new Tabs::Client(
+    auto *client = new Tabs::Client(
       mNote,
       mProfilesModel->getBrokerOptions(profileItem),
       mProfilesModel->getSnippetsModel(profileItem)

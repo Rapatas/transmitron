@@ -54,7 +54,7 @@ void Homepage::setupProfiles()
 
   mProfiles = new wxPanel(this, -1);
 
-  auto newProfile = new wxButton(mProfiles, -1, "New Profile");
+  auto *newProfile = new wxButton(mProfiles, -1, "New Profile");
   newProfile->Bind(wxEVT_BUTTON, &Homepage::onNewProfileClicked, this);
   newProfile->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
 
@@ -83,11 +83,11 @@ void Homepage::setupProfiles()
   mConnect->Bind(wxEVT_BUTTON, &Homepage::onConnectClicked, this);
   mConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
 
-  auto hsizer = new wxBoxSizer(wxHORIZONTAL);
+  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
   hsizer->Add(newProfile, 0, wxEXPAND);
   hsizer->AddStretchSpacer(1);
   hsizer->Add(mConnect, 0, wxEXPAND);
-  auto vsizer = new wxBoxSizer(wxVERTICAL);
+  auto *vsizer = new wxBoxSizer(wxVERTICAL);
   vsizer->Add(mProfilesCtrl, 1, wxEXPAND);
   vsizer->Add(hsizer, 0, wxEXPAND);
   mProfiles->SetSizer(vsizer);
@@ -124,7 +124,7 @@ void Homepage::setupProfileForm()
   mSave = new wxButton(mProfileForm, -1, "Save");
   mSave->Enable(false);
 
-  auto sizer = new wxBoxSizer(wxVERTICAL);
+  auto *sizer = new wxBoxSizer(wxVERTICAL);
   sizer->Add(mProp, 1, wxEXPAND);
   sizer->Add(mSave, 0, wxEXPAND);
   mProfileForm->SetSizer(sizer);
@@ -142,7 +142,7 @@ void Homepage::onProfileActivated(wxDataViewEvent &e)
     brokerOptions.getPort()
   );
 
-  auto connectionEvent = new Events::Connection();
+  auto *connectionEvent = new Events::Connection();
   connectionEvent->setProfile(profileItem);
   wxQueueEvent(this, connectionEvent);
 
@@ -176,7 +176,7 @@ void Homepage::onConnectClicked(wxCommandEvent &/* event */)
     brokerOptions.getPort()
   );
 
-  auto connectionEvent = new Events::Connection();
+  auto *connectionEvent = new Events::Connection();
   connectionEvent->setProfile(profileItem);
   wxQueueEvent(this, connectionEvent);
 }
@@ -218,7 +218,7 @@ void Homepage::onProfileContext(wxDataViewEvent &e)
 
   wxMenu menu;
 
-  auto del = new wxMenuItem(
+  auto *del = new wxMenuItem(
     nullptr,
     (unsigned)ContextIDs::ProfilesDelete,
     "Delete"
