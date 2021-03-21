@@ -22,7 +22,7 @@ size_t History::attachObserver(Observer *observer)
 {
   size_t id = 0;
   do {
-    id = rand();
+    id = (size_t)std::abs(rand());
   } while (mObservers.find(id) != std::end(mObservers));
 
   return mObservers.insert(std::make_pair(id, observer)).first->first;
@@ -50,16 +50,16 @@ void History::onMessage(
   MQTT::Subscription::Id_t subscriptionId,
   mqtt::const_message_ptr message
 ) {
-  Message m{subscriptionId, message};
+  const Message m{subscriptionId, message};
   mMessages.push_back(m);
-  bool muted = mSubscriptions->getMuted(subscriptionId);
+  const bool muted = mSubscriptions->getMuted(subscriptionId);
 
-  if (!mSubscriptions->getMuted(subscriptionId))
+  if (!muted)
   {
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
 
-    auto item = GetItem(mRemap.size() - 1);
+    const auto item = GetItem((unsigned)mRemap.size() - 1);
     for (const auto &o : mObservers)
     {
       o.second->onMessage(item);
@@ -67,22 +67,22 @@ void History::onMessage(
   }
 }
 
-void History::onMuted(MQTT::Subscription::Id_t subscriptionId)
+void History::onMuted(MQTT::Subscription::Id_t /* subscriptionId */)
 {
   remap();
 }
 
-void History::onUnmuted(MQTT::Subscription::Id_t subscriptionId)
+void History::onUnmuted(MQTT::Subscription::Id_t /* subscriptionId */)
 {
   remap();
 }
 
-void History::onSolo(MQTT::Subscription::Id_t subscriptionId)
+void History::onSolo(MQTT::Subscription::Id_t /* subscriptionId */)
 {
   remap();
 }
 
-void History::onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor color)
+void History::onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor /* color */)
 {
   refresh(subscriptionId);
 }
@@ -139,9 +139,9 @@ void History::remap()
   const size_t after = mRemap.size();
 
   const auto common = std::min(before, after);
-  for (size_t i = 0; i < common; ++i)
+  for (size_t i = 0; i != common; ++i)
   {
-    RowChanged(i);
+    RowChanged((unsigned)i);
   }
 
   if (after > before)
@@ -158,7 +158,7 @@ void History::remap()
     size_t diff = before - common;
     for (size_t i = 0; i < diff; ++i)
     {
-      rows.Add(after + i);
+      rows.Add((int)(after + i));
     }
     RowsDeleted(rows);
   }
@@ -170,7 +170,7 @@ void History::refresh(MQTT::Subscription::Id_t subscriptionId)
   {
     if (mMessages[mRemap[i]].subscriptionId == subscriptionId)
     {
-      RowChanged(i);
+      RowChanged((unsigned)i);
     }
   }
 }
@@ -214,7 +214,7 @@ unsigned History::GetColumnCount() const
 
 unsigned History::GetCount() const
 {
-  return mRemap.size();
+  return (unsigned)mRemap.size();
 }
 
 wxString History::GetColumnType(unsigned int col) const
@@ -290,17 +290,17 @@ void History::GetValueByRow(
 }
 
 bool History::GetAttrByRow(
-  unsigned int row,
-  unsigned int col,
-  wxDataViewItemAttr &attr
+  unsigned int /* row */,
+  unsigned int /* col */,
+  wxDataViewItemAttr &/* attr */
 ) const {
   return false;
 }
 
 bool History::SetValueByRow(
-  const wxVariant &variant,
-  unsigned int row,
-  unsigned int col
+  const wxVariant &/* variant */,
+  unsigned int /* row */,
+  unsigned int /* col */
 ) {
   return false;
 }

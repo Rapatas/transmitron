@@ -50,9 +50,11 @@ void TopicCtrl::onContextSelected(wxCommandEvent &e)
     case ContextIDs::Copy: {
       if (wxTheClipboard->Open())
       {
-        long from = 0;
-        long to = 0;
-        GetSelection(&from, &to);
+        long fromIn = 0;
+        long toIn = 0;
+        GetSelection(&fromIn, &toIn);
+        const auto from = (size_t)fromIn;
+        const auto to   = (size_t)toIn;
 
         auto topic = GetValue();
         if (from != to)
@@ -60,7 +62,7 @@ void TopicCtrl::onContextSelected(wxCommandEvent &e)
           topic = topic.substr(from, to - from);
         }
         auto dataObject = new wxTextDataObject(topic);
-        auto res = wxTheClipboard->SetData(dataObject);
+        wxTheClipboard->SetData(dataObject);
         wxTheClipboard->Close();
       }
     } break;

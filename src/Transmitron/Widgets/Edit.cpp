@@ -53,7 +53,7 @@ Edit::Edit(
     -1,
     "",
     wxDefaultPosition,
-    wxSize(optionsHeight, optionsHeight)
+    wxSize((int)optionsHeight, (int)optionsHeight)
   );
   mSaveSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
   mSaveSnippet->Bind(wxEVT_BUTTON, [this](wxCommandEvent &){
@@ -76,8 +76,8 @@ Edit::Edit(
   mTop = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   mVsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   mBottom = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
-  mTop->SetMinSize(0, mOptionsHeight);
-  mBottom->SetMinSize(0, mOptionsHeight);
+  mTop->SetMinSize(0, (int)mOptionsHeight);
+  mBottom->SetMinSize(0, (int)mOptionsHeight);
 
   mRetainedFalse = new wxStaticBitmap(this, -1, *bin2c_not_pinned_18x18_png);
   mRetainedFalse->SetToolTip("Not retained");
@@ -110,7 +110,7 @@ Edit::Edit(
     -1,
     *bin2c_send_18x18_png,
     wxDefaultPosition,
-    wxSize(mOptionsHeight, mOptionsHeight)
+    wxSize((int)mOptionsHeight, (int)mOptionsHeight)
   );
   mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &){
     auto e = new Events::Edit(Events::EDIT_PUBLISH);
@@ -153,7 +153,7 @@ void Edit::setupScintilla()
 
   static const int MARGIN_SCRIPT_FOLD_INDEX = 1;
   mText->SetMarginType(MARGIN_SCRIPT_FOLD_INDEX, wxSTC_MARGIN_SYMBOL);
-  mText->SetMarginMask(MARGIN_SCRIPT_FOLD_INDEX, wxSTC_MASK_FOLDERS);
+  mText->SetMarginMask(MARGIN_SCRIPT_FOLD_INDEX, (int)wxSTC_MASK_FOLDERS);
   mText->SetMarginWidth(MARGIN_SCRIPT_FOLD_INDEX, 20);
   mText->SetMarginSensitive(MARGIN_SCRIPT_FOLD_INDEX, 1);
   mText->SetAutomaticFold(wxSTC_AUTOMATICFOLD_CLICK);
@@ -381,7 +381,7 @@ Edit::Format Edit::formatGuess(const std::string &text)
   return Format::Text;
 }
 
-void Edit::onFormatSelected(wxCommandEvent &e)
+void Edit::onFormatSelected(wxCommandEvent &/* event */)
 {
   format();
 }

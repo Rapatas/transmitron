@@ -8,10 +8,10 @@
 using namespace MQTT;
 
 Client::Client() :
-  mRetries(0),
-  mRetriesMax(10),
   mHostname("0.0.0.0"),
-  mPort(1883)
+  mPort(1883),
+  mRetries(0),
+  mRetriesMax(10)
 {
   mOptions.set_clean_session(true);
   mOptions.set_keep_alive_interval(20);
@@ -74,7 +74,7 @@ size_t Client::attachObserver(Observer *o)
 {
   size_t id = 0;
   do {
-    id = rand();
+    id = (size_t)std::abs(rand());
   } while (mObservers.find(id) != std::end(mObservers));
 
   return mObservers.insert(std::make_pair(id, o)).first->first;
@@ -236,7 +236,7 @@ void Client::on_success(const mqtt::token& tok)
   }
 }
 
-void Client::on_success_connect(const mqtt::token& tok)
+void Client::on_success_connect(const mqtt::token& /* tok */)
 {
   for (const auto &o : mObservers)
   {
@@ -244,7 +244,7 @@ void Client::on_success_connect(const mqtt::token& tok)
   }
 }
 
-void Client::on_success_disconnect(const mqtt::token& tok)
+void Client::on_success_disconnect(const mqtt::token& /* tok */)
 {
   for (const auto &o : mObservers)
   {
@@ -252,7 +252,7 @@ void Client::on_success_disconnect(const mqtt::token& tok)
   }
 }
 
-void Client::on_success_publish(const mqtt::token& tok)
+void Client::on_success_publish(const mqtt::token& /* tok */)
 {
   wxLogMessage("Published!!");
 }
@@ -362,7 +362,7 @@ void Client::on_failure_unsubscribe(const mqtt::token& tok)
 
 // mqtt::callback interface {
 
-void Client::connected(const std::string& cause)
+void Client::connected(const std::string& /* cause */)
 {
   wxLogMessage("Connected!");
   wxLogMessage("Subscribing to topics:");
@@ -412,7 +412,7 @@ void Client::doSubscribe(size_t id)
     );
     mClient->subscribe(
       it->second->getFilter(),
-      (unsigned)it->second->getQos(),
+      (int)it->second->getQos(),
       nullptr,
       *this
     );
@@ -470,7 +470,7 @@ bool Client::match(const std::string &filter, const std::string &topic)
       return false;
     }
 
-    for (int i = 0; i < filterLevels.size(); ++i)
+    for (size_t i = 0; i != filterLevels.size(); ++i)
     {
       auto level = filterLevels.at(i);
       if (level == '#')

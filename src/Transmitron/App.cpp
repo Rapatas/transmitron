@@ -88,7 +88,13 @@ bool App::OnInit()
 
 void App::onPageSelected(wxBookCtrlEvent& event)
 {
-  if (event.GetSelection() != mCount - 1)
+  if (event.GetSelection() == wxNOT_FOUND)
+  {
+    event.Skip();
+    return;
+  }
+
+  if ((size_t)event.GetSelection() != mCount - 1)
   {
     event.Skip();
     return;
@@ -96,7 +102,7 @@ void App::onPageSelected(wxBookCtrlEvent& event)
 
   newConnectionTab();
   event.Veto();
-};
+}
 
 void App::onPageClosed(wxBookCtrlEvent& event)
 {
@@ -107,9 +113,9 @@ void App::onPageClosed(wxBookCtrlEvent& event)
     newConnectionTab();
   }
 
-  if (event.GetSelection() == mCount - 1)
+  if ((size_t)event.GetSelection() == mCount - 1)
   {
-    mNote->ChangeSelection(event.GetSelection() - 1);
+    mNote->ChangeSelection(mCount - 2);
   }
 }
 
@@ -119,9 +125,15 @@ void App::newConnectionTab()
   mCount += mNote->InsertPage(mCount - 1, homepage, "Homepage");
   mNote->SetSelection(mCount - 2);
 
-  homepage->Bind(Events::CONNECTION, [this, &homepage](Events::Connection e){
+  homepage->Bind(Events::CONNECTION, [this](Events::Connection e){
+    if (e.GetSelection() == wxNOT_FOUND)
+    {
+      e.Skip();
+      return;
+    }
+
     const auto profileItem = e.getProfile();
-    const size_t selected = mNote->GetSelection();
+    const size_t selected = (size_t)mNote->GetSelection();
 
     auto client = new Tabs::Client(
       mNote,

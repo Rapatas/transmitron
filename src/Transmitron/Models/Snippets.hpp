@@ -115,7 +115,6 @@ private:
     const std::filesystem::path &path,
     Node::Id_t parentId
   );
-  void saveAll();
   bool save(Node::Id_t id);
   Node::Id_t getNextId();
   bool isRecursive(wxDataViewItem parent, wxDataViewItem item) const;
@@ -124,7 +123,6 @@ private:
   static std::string decode(const std::string &encoded);
   static Node::Id_t toId(const wxDataViewItem &item);
   static wxDataViewItem toItem(Node::Id_t id);
-
 };
 
 }

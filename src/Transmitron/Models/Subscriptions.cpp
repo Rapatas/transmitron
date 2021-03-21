@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <iterator>
 #include <wx/dcmemory.h>
 #include <wx/log.h>
 #include "Subscriptions.hpp"
@@ -18,7 +19,7 @@ size_t Subscriptions::attachObserver(Observer *observer)
 {
   size_t id = 0;
   do {
-    id = rand();
+    id = (size_t)std::abs(rand());
   } while (mObservers.find(id) != std::end(mObservers));
 
   return mObservers.insert(std::make_pair(id, observer)).first->first;
@@ -132,7 +133,7 @@ void Subscriptions::solo(wxDataViewItem item)
   ItemChanged(item);
 }
 
-void Subscriptions::subscribe(const std::string &topic, MQTT::QoS qos)
+void Subscriptions::subscribe(const std::string &topic, MQTT::QoS /* qos */)
 {
   auto it = std::find_if(
     std::begin(mSubscriptions),
@@ -157,8 +158,7 @@ void Subscriptions::subscribe(const std::string &topic, MQTT::QoS qos)
   sub->Bind(Events::RECEIVED, &Subscriptions::onMessage, this);
   mSubscriptions.insert({id, std::move(sub)});
   mRemap.push_back(id);
-  auto item = GetItem(mRemap.size() - 1);
-  ItemAdded(wxDataViewItem(0), item);
+  RowAppended();
 }
 
 void Subscriptions::unsubscribe(wxDataViewItem item)
@@ -174,7 +174,7 @@ unsigned Subscriptions::GetColumnCount() const
 
 unsigned Subscriptions::GetCount() const
 {
-  return mSubscriptions.size();
+  return (unsigned)mSubscriptions.size();
 }
 
 wxString Subscriptions::GetColumnType(unsigned int col) const
@@ -224,25 +224,22 @@ void Subscriptions::GetValueByRow(
 }
 
 bool Subscriptions::GetAttrByRow(
-  unsigned int row,
-  unsigned int col,
-  wxDataViewItemAttr &attr
+  unsigned int /* row */,
+  unsigned int /* col */,
+  wxDataViewItemAttr &/* attr */
 ) const {
   return false;
 }
 
 bool Subscriptions::SetValueByRow(
-  const wxVariant &variant,
-  unsigned int row,
-  unsigned int col
+  const wxVariant &/* variant */,
+  unsigned int /* row */,
+  unsigned int /* col */
 ) {
   return false;
 }
 
-void Subscriptions::onSubscribed(Events::Subscription &e)
-{
-
-}
+void Subscriptions::onSubscribed(Events::Subscription &/* e */) {}
 
 void Subscriptions::onUnsubscribed(Events::Subscription &e)
 {
@@ -260,8 +257,8 @@ void Subscriptions::onUnsubscribed(Events::Subscription &e)
     wxLogError("Could not find subscription");
     return;
   }
-  const auto row = it - std::begin(mRemap);
-  const auto item = GetItem(row);
+  const auto index = (size_t)std::distance(std::begin(mRemap), it);
+  const auto item = GetItem((unsigned)index);
   for (const auto &o : mObservers)
   {
     o.second->onUnsubscribed(id);
@@ -278,4 +275,3 @@ void Subscriptions::onMessage(Events::Subscription &e)
     o.second->onMessage(e.getId(), e.getMessage());
   }
 }
-

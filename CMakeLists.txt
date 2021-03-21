@@ -61,6 +61,23 @@ target_include_directories(
     ./src
 )
 
+set(gcc_warnings
+  -Werror
+  -Wall
+  -Wextra
+  -Wconversion
+  -Wsign-conversion
+  -Wfloat-conversion
+  -Wpedantic
+)
+
+target_compile_options(
+  ${CMAKE_PROJECT_NAME}
+  PRIVATE
+    $<$<CXX_COMPILER_ID:GNU>: ${gcc_warnings}>
+    $<$<CXX_COMPILER_ID:Clang>: ${gcc_warnings}>
+)
+
 target_compile_definitions(
   ${CMAKE_PROJECT_NAME}
   PRIVATE

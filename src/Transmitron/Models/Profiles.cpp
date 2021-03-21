@@ -1,4 +1,5 @@
 #include <fstream>
+#include <iterator>
 #include <wx/log.h>
 #include <fmt/core.h>
 #include <cppcodec/base32_rfc4648.hpp>
@@ -148,7 +149,7 @@ bool Profiles::updateName(
   const bool nameExists = std::any_of(
     std::begin(mProfiles) + 1,
     std::end(mProfiles),
-    [this, &name](const auto &profile)
+    [&name](const auto &profile)
     {
       return profile->name == name;
     }
@@ -209,7 +210,9 @@ bool Profiles::remove(wxDataViewItem item)
     return false;
   }
 
-  mProfiles.erase(std::begin(mProfiles) + index);
+  auto toRemoveIt = std::begin(mProfiles);
+  std::advance(toRemoveIt, index);
+  mProfiles.erase(toRemoveIt);
   wxDataViewItem parent(0);
   ItemDeleted(parent, item);
 
@@ -320,22 +323,22 @@ void Profiles::GetValue(
 }
 
 bool Profiles::SetValue(
-  const wxVariant &variant,
-  const wxDataViewItem &item,
-  unsigned int col
+  const wxVariant &/* variant */,
+  const wxDataViewItem &/* item */,
+  unsigned int /* col */
 ) {
   return false;
 }
 
 bool Profiles::IsEnabled(
-  const wxDataViewItem &item,
-  unsigned int col
+  const wxDataViewItem &/* item */,
+  unsigned int /* col */
 ) const {
   return true;
 }
 
 wxDataViewItem Profiles::GetParent(
-  const wxDataViewItem &item
+  const wxDataViewItem &/* item */
 ) const {
   return wxDataViewItem(nullptr);
 }
@@ -350,15 +353,15 @@ bool Profiles::IsContainer(
   return false;
 }
 
-unsigned int Profiles::GetChildren(
-  const wxDataViewItem &parent,
+unsigned Profiles::GetChildren(
+  const wxDataViewItem &/* parent */,
   wxDataViewItemArray &array
 ) const {
   for (size_t i = 1; i != mProfiles.size(); ++i)
   {
     array.Add(toItem(i));
   }
-  return mProfiles.size() - 1;
+  return (unsigned)mProfiles.size() - 1;
 }
 
 bool Profiles::save(size_t index)

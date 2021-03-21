@@ -9,7 +9,7 @@ Message Message::fromJson(const nlohmann::json &data)
   Message result;
 
   auto iqos = extract<unsigned>(data, "qos").value_or(0);
-  if (iqos < 0 || iqos > 2)
+  if (iqos > 2)
   {
     iqos = 0;
   }

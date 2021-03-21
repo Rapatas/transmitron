@@ -19,7 +19,7 @@ public:
 
   struct Observer
   {
-    virtual void onMessage(wxDataViewItem item) {}
+    virtual void onMessage(wxDataViewItem item) = 0;
   };
 
   struct Message
@@ -89,7 +89,6 @@ private:
     MQTT::Subscription::Id_t subscriptionId,
     mqtt::const_message_ptr message
   ) override;
-
 };
 
 }

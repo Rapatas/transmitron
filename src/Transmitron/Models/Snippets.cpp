@@ -651,7 +651,7 @@ wxString Snippets::GetColumnType(unsigned int col) const
 void Snippets::GetValue(
   wxVariant &variant,
   const wxDataViewItem &item,
-  unsigned int col
+  unsigned int /* col */
 ) const {
   auto id = toId(item);
   const auto &node = mNodes.at(id);
@@ -744,8 +744,8 @@ bool Snippets::SetValue(
 }
 
 bool Snippets::IsEnabled(
-  const wxDataViewItem &item,
-  unsigned int col
+  const wxDataViewItem &/* item */,
+  unsigned int /* col */
 ) const {
   return true;
 }
@@ -777,7 +777,7 @@ bool Snippets::IsContainer(
   return node.type == Node::Type::Folder;
 }
 
-unsigned int Snippets::GetChildren(
+unsigned Snippets::GetChildren(
   const wxDataViewItem &parent,
   wxDataViewItemArray &array
 ) const {
@@ -794,7 +794,7 @@ unsigned int Snippets::GetChildren(
   {
     array.Add(toItem(i));
   }
-  return node.children.size();
+  return (unsigned)node.children.size();
 }
 
 Snippets::Node::Id_t Snippets::toId(const wxDataViewItem &item)
@@ -841,19 +841,6 @@ std::string Snippets::getNodePath(Node::Id_t id) const
   result.pop_back();
 
   return result;
-}
-
-void Snippets::saveAll()
-{
-  // Traverse backwards.
-  // If we save a child, the parents are saved with it.
-  for (Node::Id_t i = mNodes.size() - 1; i >= 0; --i)
-  {
-    if (!mNodes.at(i).saved)
-    {
-      save(i);
-    }
-  }
 }
 
 bool Snippets::save(Node::Id_t id)
