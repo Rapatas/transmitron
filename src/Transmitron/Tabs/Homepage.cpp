@@ -5,7 +5,7 @@
 #include <wx/artprov.h>
 #include <wx/propgrid/propgrid.h>
 
-#define wxLOG_COMPONENT "Homepage"
+#define wxLOG_COMPONENT "Homepage" // NOLINT
 
 using namespace Transmitron::Tabs;
 using namespace Transmitron;

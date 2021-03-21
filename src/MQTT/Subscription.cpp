@@ -1,6 +1,6 @@
 #include "Subscription.hpp"
 
-#define wxLOG_COMPONENT "mqtt/subscription"
+#define wxLOG_COMPONENT "mqtt/subscription" // NOLINT
 
 using namespace MQTT;
 

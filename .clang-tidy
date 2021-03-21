@@ -6,6 +6,7 @@ Checks: "
     performance-*,
     cppcoreguidelines-explicit-virtual-functions,
     cppcoreguidelines-init-variables,
+    cppcoreguidelines-macro-usage,
     -cert-msc50-cpp,
     -cert-msc30-c,
 "

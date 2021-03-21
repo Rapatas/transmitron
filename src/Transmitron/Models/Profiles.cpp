@@ -6,7 +6,7 @@
 #include "Transmitron/Info.hpp"
 #include "Profiles.hpp"
 
-#define wxLOG_COMPONENT "models/profiles"
+#define wxLOG_COMPONENT "models/profiles" // NOLINT
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;

@@ -17,7 +17,7 @@
 #include "Transmitron/Resources/subscription/subscription-18x14.hpp"
 #include "Transmitron/Resources/subscription/subscription-18x18.hpp"
 
-#define wxLOG_COMPONENT "Client"
+#define wxLOG_COMPONENT "Client" // NOLINT
 
 using namespace Transmitron::Tabs;
 using namespace Transmitron::Models;

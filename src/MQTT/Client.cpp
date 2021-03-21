@@ -3,7 +3,7 @@
 #include <thread>
 #include "Subscription.hpp"
 
-#define wxLOG_COMPONENT "mqtt/client"
+#define wxLOG_COMPONENT "mqtt/client" // NOLINT
 
 using namespace MQTT;
 

@@ -25,7 +25,7 @@
 #include "Tabs/Homepage.hpp"
 #include "Events/Connection.hpp"
 
-#define wxLOG_COMPONENT "App"
+#define wxLOG_COMPONENT "Transmitron" // NOLINT
 
 using namespace Transmitron;
 namespace fs = std::filesystem;

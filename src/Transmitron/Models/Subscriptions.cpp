@@ -8,7 +8,7 @@
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
 
-#define wxLOG_COMPONENT "models/subscriptions"
+#define wxLOG_COMPONENT "models/subscriptions" // NOLINT
 
 using namespace Transmitron::Models;
 

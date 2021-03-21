@@ -9,7 +9,7 @@
 #include <fmt/format.h>
 #include <cppcodec/base32_rfc4648.hpp>
 
-#define wxLOG_COMPONENT "Models/Snippets"
+#define wxLOG_COMPONENT "Models/Snippets" // NOLINT
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;

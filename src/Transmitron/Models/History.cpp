@@ -7,7 +7,7 @@
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
 
-#define wxLOG_COMPONENT "Models/History"
+#define wxLOG_COMPONENT "Models/History" // NOLINT
 
 using namespace Transmitron::Models;
 using namespace Transmitron;
