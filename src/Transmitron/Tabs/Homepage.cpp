@@ -14,7 +14,7 @@ wxDEFINE_EVENT(Events::CONNECTION, Events::Connection);
 
 Homepage::Homepage(
   wxWindow *parent,
-  wxObjectDataPtr<Models::Profiles> profilesModel
+  const wxObjectDataPtr<Models::Profiles> &profilesModel
 ) :
   wxPanel(parent),
   mProfilesModel(profilesModel)

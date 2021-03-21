@@ -36,7 +36,7 @@ public:
     Max
   };
 
-  explicit History(wxObjectDataPtr<Subscriptions> subscriptions);
+  explicit History(const wxObjectDataPtr<Subscriptions> &subscriptions);
 
   size_t attachObserver(Observer *observer);
   bool detachObserver(size_t id);

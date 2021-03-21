@@ -27,8 +27,8 @@ public:
 
   Client(
     wxWindow* parent,
-    ValueObjects::BrokerOptions brokerOptions,
-    wxObjectDataPtr<Models::Snippets> snippetsModel
+    const ValueObjects::BrokerOptions &brokerOptions,
+    const wxObjectDataPtr<Models::Snippets> &snippetsModel
   );
   ~Client();
 

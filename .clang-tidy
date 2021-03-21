@@ -2,6 +2,7 @@ Checks: "
     -*,
     bugprone-*,
     readability-*,
+    performance-*,
 "
 WarningsAsErrors: true
 HeaderFilterRegex: '.*'

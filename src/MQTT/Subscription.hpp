@@ -47,7 +47,7 @@ public:
 
   void unsubscribe();
 
-  void onMessage(mqtt::const_message_ptr msg);
+  void onMessage(const mqtt::const_message_ptr &msg);
   void onUnsubscribed();
   void onSubscribed();
 

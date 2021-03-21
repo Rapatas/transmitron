@@ -101,7 +101,7 @@ bool Profiles::load(const std::string &configDir)
       name,
       brokerOptions,
       entry.path(),
-      std::move(snippetsModel),
+      snippetsModel,
       true
     });
     mProfiles.push_back(std::move(profile));
@@ -112,7 +112,7 @@ bool Profiles::load(const std::string &configDir)
 
 bool Profiles::updateBrokerOptions(
   wxDataViewItem item,
-  ValueObjects::BrokerOptions brokerOptions
+  const ValueObjects::BrokerOptions &brokerOptions
 ) {
   if (!item.IsOk())
   {
@@ -121,7 +121,7 @@ bool Profiles::updateBrokerOptions(
 
   const auto index = toIndex(item);
   auto &profile = mProfiles.at(index);
-  profile->brokerOptions = std::move(brokerOptions);
+  profile->brokerOptions = brokerOptions;
   profile->saved = false;
 
   save(index);

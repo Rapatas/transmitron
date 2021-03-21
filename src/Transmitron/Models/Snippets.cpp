@@ -200,7 +200,7 @@ wxDataViewItem Snippets::createSnippet(
     encoded,
     Node::Type::Snippet,
     {},
-    message,
+    std::move(message),
     false,
   };
   const auto newId = getNextId();
@@ -262,7 +262,7 @@ wxDataViewItem Snippets::insert(
     encoded,
     Node::Type::Snippet,
     {},
-    message,
+    std::move(message),
     false,
   };
   const auto newId = getNextId();
@@ -301,7 +301,7 @@ wxDataViewItem Snippets::replace(
   {
     output << MQTT::Message::toJson(*message);
   }
-  node.message = message;
+  node.message = std::move(message);
   return item;
 }
 

@@ -30,12 +30,12 @@ wxDEFINE_EVENT(Events::DISCONNECTED, Events::Connection);
 
 Client::Client(
   wxWindow* parent,
-  ValueObjects::BrokerOptions brokerOptions,
-  wxObjectDataPtr<Models::Snippets> snippetsModel
+  const ValueObjects::BrokerOptions &brokerOptions,
+  const wxObjectDataPtr<Models::Snippets> &snippetsModel
 ) :
   wxPanel(parent),
-  mBrokerOptions(std::move(brokerOptions)),
-  mSnippetsModel(std::move(snippetsModel))
+  mBrokerOptions(brokerOptions),
+  mSnippetsModel(snippetsModel)
 {
   mClient = std::make_shared<MQTT::Client>();
   Bind(Events::CONNECTED, &Client::onConnectedSync, this);

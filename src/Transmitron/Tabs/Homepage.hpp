@@ -21,7 +21,7 @@ public:
 
   explicit Homepage(
     wxWindow *parent,
-    wxObjectDataPtr<Models::Profiles> profilesModel
+    const wxObjectDataPtr<Models::Profiles> &profilesModel
   );
   virtual ~Homepage();
 

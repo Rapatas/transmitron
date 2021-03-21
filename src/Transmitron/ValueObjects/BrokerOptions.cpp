@@ -33,10 +33,10 @@ BrokerOptions::BrokerOptions(
   unsigned timeout
 ) :
   mAutoReconnect(autoReconnect),
-  mClientId(clientId),
-  mHostname(hostname),
-  mPassword(password),
-  mUsername(username),
+  mClientId(std::move(clientId)),
+  mHostname(std::move(hostname)),
+  mPassword(std::move(password)),
+  mUsername(std::move(username)),
   mKeepAliveInterval(keepAliveInterval),
   mMaxInFlight(maxInFlight),
   mPort(port),

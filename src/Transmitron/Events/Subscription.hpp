@@ -43,7 +43,7 @@ public:
 
   void setMessage(mqtt::const_message_ptr msg)
   {
-    mMsg = msg;
+    mMsg = std::move(msg);
   }
 
   void setId(MQTT::Subscription::Id_t id)

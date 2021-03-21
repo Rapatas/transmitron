@@ -9,7 +9,7 @@ wxDEFINE_EVENT(Events::SUBSCRIBED, Events::Subscription);
 wxDEFINE_EVENT(Events::UNSUBSCRIBED, Events::Subscription);
 wxDEFINE_EVENT(Events::RECEIVED, Events::Subscription);
 
-Subscription::Subscription(std::shared_ptr<MQTT::Subscription> sub) :
+Subscription::Subscription(const std::shared_ptr<MQTT::Subscription> &sub) :
   mSub(sub),
   mMuted(false)
 {

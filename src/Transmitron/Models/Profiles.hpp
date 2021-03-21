@@ -27,7 +27,7 @@ public:
 
   bool updateBrokerOptions(
     wxDataViewItem item,
-    ValueObjects::BrokerOptions brokerOptions
+    const ValueObjects::BrokerOptions &brokerOptions
   );
   bool updateName(
     wxDataViewItem &item,

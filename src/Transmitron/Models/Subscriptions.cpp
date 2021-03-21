@@ -13,7 +13,7 @@
 using namespace Transmitron::Models;
 
 Subscriptions::Subscriptions(std::shared_ptr<MQTT::Client> client) :
-  mClient(client)
+  mClient(std::move(client))
 {}
 
 size_t Subscriptions::attachObserver(Observer *observer)
