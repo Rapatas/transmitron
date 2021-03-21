@@ -59,29 +59,29 @@ private:
   std::string mProfilesDir;
 
   // wxDataViewModel interface.
-  virtual unsigned GetColumnCount() const override;
-  virtual wxString GetColumnType(unsigned int col) const override;
-  virtual void GetValue(
+  unsigned GetColumnCount() const override;
+  wxString GetColumnType(unsigned int col) const override;
+  void GetValue(
     wxVariant &variant,
     const wxDataViewItem &item,
     unsigned int col
   ) const override;
-  virtual bool SetValue(
+  bool SetValue(
     const wxVariant &variant,
     const wxDataViewItem &item,
     unsigned int col
   ) override;
-  virtual bool IsEnabled(
+  bool IsEnabled(
     const wxDataViewItem &item,
     unsigned int col
   ) const override;
-  virtual wxDataViewItem GetParent(
+  wxDataViewItem GetParent(
     const wxDataViewItem &item
   ) const override;
-  virtual bool IsContainer(
+  bool IsContainer(
     const wxDataViewItem &item
   ) const override;
-  virtual unsigned int GetChildren(
+  unsigned int GetChildren(
     const wxDataViewItem &parent,
     wxDataViewItemArray &array
   ) const override;

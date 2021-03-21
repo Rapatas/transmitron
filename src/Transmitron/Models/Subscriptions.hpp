@@ -68,20 +68,20 @@ private:
   std::map<size_t, Observer *> mObservers;
 
   // wxDataViewVirtualListModel interface.
-  virtual unsigned GetColumnCount() const override;
-  virtual wxString GetColumnType(unsigned int col) const override;
-  virtual unsigned GetCount() const override;
-  virtual void GetValueByRow(
+  unsigned GetColumnCount() const override;
+  wxString GetColumnType(unsigned int col) const override;
+  unsigned GetCount() const override;
+  void GetValueByRow(
     wxVariant &variant,
     unsigned int row,
     unsigned int col
   ) const override;
-  virtual bool GetAttrByRow(
+  bool GetAttrByRow(
     unsigned int row,
     unsigned int col,
     wxDataViewItemAttr &attr
   ) const override;
-  virtual bool SetValueByRow(
+  bool SetValueByRow(
     const wxVariant &variant,
     unsigned int row,
     unsigned int col

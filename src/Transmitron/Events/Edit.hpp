@@ -21,16 +21,11 @@ public:
     wxCommandEvent(event)
   {}
 
-  wxEvent* Clone() const
+  wxEvent* Clone() const override
   {
     return new Edit(*this);
   }
 };
-
-typedef void (wxEvtHandler::*EditFunction)(Edit &);
-#define \
-  EditHandler(func) \
-  wxEVENT_HANDLER_CAST(EditFunction, func)
 
 }
 

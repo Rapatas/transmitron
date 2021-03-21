@@ -4,6 +4,7 @@ Checks: "
     readability-*,
     cert-*,
     performance-*,
+    cppcoreguidelines-explicit-virtual-functions,
     -cert-msc50-cpp,
     -cert-msc30-c,
 "

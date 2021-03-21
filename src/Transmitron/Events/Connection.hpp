@@ -25,18 +25,24 @@ public:
     this->setProfile(event.getProfile());
   }
 
-  wxEvent* Clone() const { return new Connection(*this); }
-  wxDataViewItem getProfile() const { return mProfile; }
-  void setProfile(wxDataViewItem profile) { mProfile = profile; }
+  wxEvent* Clone() const override
+  {
+    return new Connection(*this);
+  }
+
+  wxDataViewItem getProfile() const
+  {
+    return mProfile;
+  }
+
+  void setProfile(wxDataViewItem profile)
+  {
+    mProfile = profile;
+  }
 
 private:
   wxDataViewItem mProfile;
 };
-
-typedef void (wxEvtHandler::*ProfileEventFunction)(Connection &);
-#define \
-  ProfileEventHandler(func) \
-  wxEVENT_HANDLER_CAST(ProfileEventFunction, func)
 
 }
 

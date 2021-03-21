@@ -26,7 +26,7 @@ public:
     this->setMessage(event.getMessage());
   }
 
-  wxEvent* Clone() const
+  wxEvent* Clone() const override
   {
     return new Subscription(*this);
   }
@@ -56,11 +56,6 @@ private:
   MQTT::Subscription::Id_t mId;
   mqtt::const_message_ptr mMsg;
 };
-
-typedef void (wxEvtHandler::*SubscriptionFunction)(Subscription &);
-#define \
-  SubscriptionHandler(func) \
-  wxEVENT_HANDLER_CAST(SubscriptionFunction, func)
 
 }
 
