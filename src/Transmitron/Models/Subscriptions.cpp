@@ -112,11 +112,17 @@ void Subscriptions::mute(wxDataViewItem item)
 
 void Subscriptions::solo(wxDataViewItem item)
 {
-  for (size_t i = 0; i != mSubscriptions.size(); ++i)
+  for (auto &subscription : mSubscriptions)
   {
-    mSubscriptions[i]->setMuted(true);
-    ItemChanged(toItem(i));
+    subscription.second->setMuted(true);
   }
+
+  wxDataViewItemArray array;
+  for (size_t i = 0; i != mRemap.size(); ++i)
+  {
+    array.push_back(GetItem((unsigned)i));
+  }
+  ItemsChanged(array);
 
   auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   sub->setMuted(false);
