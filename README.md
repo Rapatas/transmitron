@@ -16,15 +16,6 @@
 
 ```bash
 sudo apt-get install -y gcc-8
-
-# Optionally if required:
-sudo update-alternatives \
-    --install /usr/bin/gcc gcc /usr/bin/gcc-7 70 \
-    --slave /usr/bin/g++ g++ /usr/bin/g++-7
-sudo update-alternatives \
-    --install /usr/bin/gcc gcc /usr/bin/gcc-8 80 \
-    --slave /usr/bin/g++ g++ /usr/bin/g++-8
-sudo update-alternatives --config gcc
 ```
 
 **conan**
@@ -47,8 +38,8 @@ git clone git@github.com:rapatas/transmitron.git
 cd transmitron/
 
 mkdir build && cd build
-conan install ../conan/
-cmake -DCMAKE_TOOLCHAIN_FILE=conan_paths.cmake -DCMAKE_BUILD_TYPE=Release ..
+conan install ../conan/ --build=missing
+cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_BUILD_TYPE=Release ..
 make -j $(nproc)
 ```
 
