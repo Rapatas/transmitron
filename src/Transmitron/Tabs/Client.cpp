@@ -51,40 +51,40 @@ Client::Client(
       "History",
       {},
       nullptr,
-      bin2c_history_18x18_png,
-      bin2c_history_18x14_png,
+      bin2c_history_18x18(),
+      bin2c_history_18x14(),
       nullptr
     }},
     {Panes::Preview, {
       "Preview",
       {},
       nullptr,
-      bin2c_preview_18x18_png,
-      bin2c_preview_18x14_png,
+      bin2c_preview_18x18(),
+      bin2c_preview_18x14(),
       nullptr
     }},
     {Panes::Publish, {
       "Publish",
       {},
       nullptr,
-      bin2c_send_18x18_png,
-      bin2c_send_18x14_png,
+      bin2c_send_18x18(),
+      bin2c_send_18x14(),
       nullptr
     }},
     {Panes::Snippets, {
       "Snippets",
       {},
       nullptr,
-      bin2c_snippets_18x18_png,
-      bin2c_snippets_18x14_png,
+      bin2c_snippets_18x18(),
+      bin2c_snippets_18x14(),
       nullptr
     }},
     {Panes::Subscriptions, {
       "Subscriptions",
       {},
       nullptr,
-      bin2c_subscription_18x18_png,
-      bin2c_subscription_18x14_png,
+      bin2c_subscription_18x18(),
+      bin2c_subscription_18x14(),
       nullptr
     }},
   };
@@ -286,7 +286,7 @@ void Client::setupPanelConnect(wxWindow *parent)
       continue;
     }
 
-    auto *bitmap = mPanes.at(pane.first).icon18x18;
+    const auto *bitmap = mPanes.at(pane.first).icon18x18;
     auto *button = new wxButton(
       mProfileBar,
       -1,
@@ -354,7 +354,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mSubscribe = new wxBitmapButton(
     panel,
     -1,
-    *bin2c_plus_18x18_png,
+    *bin2c_plus_18x18(),
     wxDefaultPosition,
     wxSize(OptionsHeight, OptionsHeight)
   );

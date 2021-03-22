@@ -75,25 +75,25 @@ Edit::Edit(
   mTop->SetMinSize(0, (int)mOptionsHeight);
   mBottom->SetMinSize(0, (int)mOptionsHeight);
 
-  mRetainedFalse = new wxStaticBitmap(this, -1, *bin2c_not_pinned_18x18_png);
+  mRetainedFalse = new wxStaticBitmap(this, -1, *bin2c_not_pinned_18x18());
   mRetainedFalse->SetToolTip("Not retained");
   mRetainedFalse->Bind(wxEVT_LEFT_UP, &Edit::onRetainedClicked, this);
-  mRetainedTrue = new wxStaticBitmap(this, -1, *bin2c_pinned_18x18_png);
+  mRetainedTrue = new wxStaticBitmap(this, -1, *bin2c_pinned_18x18());
   mRetainedTrue->SetToolTip("Retained");
   mRetainedTrue->Bind(wxEVT_LEFT_UP, &Edit::onRetainedClicked, this);
 
   mRetainedTrue->Hide();
   mRetained = false;
 
-  mQos0 = new wxStaticBitmap(this, -1, *bin2c_qos_0_png);
+  mQos0 = new wxStaticBitmap(this, -1, *bin2c_qos_0());
   mQos0->SetToolTip("QoS: 0");
   mQos0->Bind(wxEVT_LEFT_UP, &Edit::onQosClicked, this);
 
-  mQos1 = new wxStaticBitmap(this, -1, *bin2c_qos_1_png);
+  mQos1 = new wxStaticBitmap(this, -1, *bin2c_qos_1());
   mQos1->SetToolTip("QoS: 1");
   mQos1->Bind(wxEVT_LEFT_UP, &Edit::onQosClicked, this);
 
-  mQos2 = new wxStaticBitmap(this, -1, *bin2c_qos_2_png);
+  mQos2 = new wxStaticBitmap(this, -1, *bin2c_qos_2());
   mQos2->SetToolTip("QoS: 2");
   mQos2->Bind(wxEVT_LEFT_UP, &Edit::onQosClicked, this);
 
@@ -104,7 +104,7 @@ Edit::Edit(
   mPublish = new wxBitmapButton(
     this,
     -1,
-    *bin2c_send_18x18_png,
+    *bin2c_send_18x18(),
     wxDefaultPosition,
     wxSize((int)mOptionsHeight, (int)mOptionsHeight)
   );

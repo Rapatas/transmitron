@@ -274,17 +274,17 @@ void History::GetValueByRow(
       if (m.message->is_retained())
       {
         wxIcon icon;
-        icon.CopyFromBitmap(*bin2c_pinned_18x18_png);
+        icon.CopyFromBitmap(*bin2c_pinned_18x18());
         result.SetIcon(icon);
       }
       variant << result;
     } break;
     case Column::Qos: {
-      wxBitmap *result = nullptr;
+      const wxBitmap *result = nullptr;
       switch ((MQTT::QoS)m.message->get_qos()) {
-        case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0_png; } break;
-        case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1_png; } break;
-        case MQTT::QoS::ExactlyOnce: { result = bin2c_qos_2_png; } break;
+        case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0(); } break;
+        case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1(); } break;
+        case MQTT::QoS::ExactlyOnce: { result = bin2c_qos_2(); } break;
       }
       variant << *result;
     } break;

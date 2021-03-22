@@ -66,8 +66,8 @@ private:
     std::string name;
     wxAuiPaneInfo info;
     wxPanel *panel;
-    wxBitmap *icon18x18;
-    wxBitmap *icon18x14;
+    const wxBitmap *icon18x18;
+    const wxBitmap *icon18x14;
     wxButton *toggle;
   };
 

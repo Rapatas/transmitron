@@ -215,11 +215,11 @@ void Subscriptions::GetValueByRow(
       variant = sub->getFilter();
     } break;
     case Column::Qos: {
-      wxBitmap *result = nullptr;
+      const wxBitmap *result = nullptr;
       switch (sub->getQos()) {
-        case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0_png; } break;
-        case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1_png; } break;
-        case MQTT::QoS::ExactlyOnce: { result = bin2c_qos_2_png; } break;
+        case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0(); } break;
+        case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1(); } break;
+        case MQTT::QoS::ExactlyOnce: { result = bin2c_qos_2(); } break;
       }
       variant << *result;
     } break;

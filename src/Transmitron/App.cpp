@@ -39,29 +39,12 @@ bool App::OnInit()
 {
   wxImage::AddHandler(new wxPNGHandler);
 
-  bin2c_init_HISTORY_18X14_HPP();
-  bin2c_init_HISTORY_18X18_HPP();
-  bin2c_init_NOT_PINNED_18X18_HPP();
-  bin2c_init_PINNED_18X18_HPP();
-  bin2c_init_PLUS_18X18_HPP();
-  bin2c_init_PREVIEW_18X14_HPP();
-  bin2c_init_PREVIEW_18X18_HPP();
-  bin2c_init_QOS_0_HPP();
-  bin2c_init_QOS_1_HPP();
-  bin2c_init_QOS_2_HPP();
-  bin2c_init_SEND_18X14_HPP();
-  bin2c_init_SEND_18X18_HPP();
-  bin2c_init_SNIPPETS_18X14_HPP();
-  bin2c_init_SNIPPETS_18X18_HPP();
-  bin2c_init_SUBSCRIPTION_18X14_HPP();
-  bin2c_init_SUBSCRIPTION_18X18_HPP();
-
   auto *log = new wxLogStderr();
   log->SetFormatter(new LogFormat());
   wxLog::SetActiveTarget(log);
 
   wxImageList * il = new wxImageList;
-  il->Add(*bin2c_plus_18x18_png);
+  il->Add(*bin2c_plus_18x18());
 
   auto *frame = new wxFrame(
     nullptr,
