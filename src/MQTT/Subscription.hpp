@@ -29,6 +29,11 @@ public:
 
   struct Observer
   {
+    Observer() = default;
+    Observer(const Observer &other) = default;
+    Observer(Observer &&other) = default;
+    Observer &operator=(const Observer &other) = default;
+    Observer &operator=(Observer &&other) = default;
     virtual ~Observer() = default;
     virtual void onSubscribed() = 0;
     virtual void onUnsubscribed() = 0;
@@ -41,7 +46,6 @@ public:
     QoS qos,
     std::shared_ptr<Client> client
   );
-  virtual ~Subscription() = default;
 
   size_t attachObserver(Observer *observer);
 

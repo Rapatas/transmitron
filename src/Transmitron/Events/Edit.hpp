@@ -10,9 +10,12 @@ class Edit;
 wxDECLARE_EVENT(EDIT_PUBLISH, Edit);
 wxDECLARE_EVENT(EDIT_SAVE_SNIPPET, Edit);
 
-class Edit : public wxCommandEvent
+// NOLINTNEXTLINE
+class Edit :
+  public wxCommandEvent
 {
 public:
+
   Edit(wxEventType commandType, int id = 0) :
     wxCommandEvent(commandType, id)
   {}

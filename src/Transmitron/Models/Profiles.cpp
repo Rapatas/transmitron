@@ -384,11 +384,17 @@ bool Profiles::save(size_t index)
 
 size_t Profiles::toIndex(const wxDataViewItem &item)
 {
-  return reinterpret_cast<size_t>(item.GetID());
+  uintptr_t result = 0;
+  const void *id = item.GetID();
+  std::memcpy(&result, id, sizeof(item.GetID()));
+  return result;
 }
 
 wxDataViewItem Profiles::toItem(size_t index)
 {
-  return wxDataViewItem(reinterpret_cast<void*>(index));
+  void *id = nullptr;
+  const uintptr_t value = index;
+  std::memcpy(id, &value, sizeof(void*));
+  return wxDataViewItem(id);
 }
 

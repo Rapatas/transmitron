@@ -16,7 +16,6 @@ public:
     wxWindow *parent,
     wxWindowID id
   );
-  virtual ~TopicCtrl() = default;
 
   enum class ContextIDs : unsigned
   {

@@ -24,7 +24,6 @@ public:
     unsigned port,
     unsigned timeout
   );
-  virtual ~BrokerOptions() = default;
 
   static BrokerOptions fromJson(const nlohmann::json &data);
   nlohmann::json toJson() const;

@@ -27,8 +27,6 @@ Client::Client() :
   mId = "client" + std::to_string(std::abs(rand()));
 }
 
-Client::~Client() {}
-
 void Client::connect()
 {
   std::string address = mHostname + ':' + std::to_string(mPort);

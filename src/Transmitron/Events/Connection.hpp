@@ -12,9 +12,12 @@ wxDECLARE_EVENT(CONNECTION, Connection);
 wxDECLARE_EVENT(CONNECTED, Connection);
 wxDECLARE_EVENT(DISCONNECTED, Connection);
 
-class Connection : public wxCommandEvent
+// NOLINTNEXTLINE
+class Connection :
+  public wxCommandEvent
 {
 public:
+
   Connection(wxEventType commandType = CONNECTION, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
@@ -41,6 +44,7 @@ public:
   }
 
 private:
+
   wxDataViewItem mProfile;
 };
 

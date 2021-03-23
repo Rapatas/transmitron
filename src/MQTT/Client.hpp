@@ -23,13 +23,17 @@ public:
 
   struct Observer
   {
+    Observer() = default;
+    Observer(const Observer &other) = default;
+    Observer(Observer &&other) = default;
+    Observer &operator=(const Observer &other) = default;
+    Observer &operator=(Observer &&other) = default;
     virtual ~Observer() = default;
     virtual void onConnected() = 0;
     virtual void onDisconnected() = 0;
   };
 
   explicit Client();
-  virtual ~Client();
 
   void connect();
   void disconnect();

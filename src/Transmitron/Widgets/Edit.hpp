@@ -22,7 +22,6 @@ public:
     wxWindowID id,
     size_t optionsHeight
   );
-  virtual ~Edit() = default;
 
   void format();
 

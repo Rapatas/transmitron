@@ -33,8 +33,6 @@ Homepage::Homepage(
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Homepage::onContextSelected, this);
 }
 
-Homepage::~Homepage() {}
-
 void Homepage::setupProfiles()
 {
   wxDataViewColumn* const name = new wxDataViewColumn(

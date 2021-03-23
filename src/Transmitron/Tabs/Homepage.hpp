@@ -23,7 +23,6 @@ public:
     wxWindow *parent,
     const wxObjectDataPtr<Models::Profiles> &profilesModel
   );
-  virtual ~Homepage();
 
 private:
 

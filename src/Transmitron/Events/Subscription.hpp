@@ -12,9 +12,12 @@ wxDECLARE_EVENT(SUBSCRIBED, Subscription);
 wxDECLARE_EVENT(UNSUBSCRIBED, Subscription);
 wxDECLARE_EVENT(RECEIVED, Subscription);
 
-class Subscription : public wxCommandEvent
+// NOLINTNEXTLINE
+class Subscription :
+  public wxCommandEvent
 {
 public:
+
   Subscription(wxEventType commandType, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
@@ -53,7 +56,7 @@ public:
 
 private:
 
-  MQTT::Subscription::Id_t mId;
+  MQTT::Subscription::Id_t mId = 0;
   mqtt::const_message_ptr mMsg;
 };
 

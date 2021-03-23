@@ -141,10 +141,10 @@ std::string App::getConfigDir()
 {
   std::string result;
 
-  char *xdg_config_home = getenv("XDG_CONFIG_HOME");
+  char *xdg_config_home = getenv("XDG_CONFIG_HOME"); // NOLINT
   if (xdg_config_home == nullptr)
   {
-    char *user = getenv("USER");
+    char *user = getenv("USER"); // NOLINT
     if (user != nullptr)
     {
       result = fmt::format("/home/{}/.config/{}", user, getProjectName());
