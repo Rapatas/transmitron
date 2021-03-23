@@ -13,6 +13,7 @@ Subscription::Subscription(
   mId(id),
   mFilter(filter),
   mQos(qos),
+  mState(State::Unsubscribed),
   mClient(std::move(client))
 {}
 

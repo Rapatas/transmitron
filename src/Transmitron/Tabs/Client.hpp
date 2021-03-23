@@ -65,10 +65,10 @@ private:
   {
     std::string name;
     wxAuiPaneInfo info;
-    wxPanel *panel;
-    const wxBitmap *icon18x18;
-    const wxBitmap *icon18x14;
-    wxButton *toggle;
+    wxPanel *panel = nullptr;
+    const wxBitmap *icon18x18 = nullptr;
+    const wxBitmap *icon18x14 = nullptr;
+    wxButton *toggle = nullptr;
   };
 
   std::map<Panes, Pane> mPanes;
@@ -78,28 +78,28 @@ private:
   const ValueObjects::BrokerOptions mBrokerOptions;
   const wxFont mFont;
 
-  wxBoxSizer *mMasterSizer;
+  wxBoxSizer *mMasterSizer = nullptr;
 
   // Profile:
-  wxPanel *mProfileBar;
-  wxButton *mConnect;
+  wxPanel *mProfileBar = nullptr;
+  wxButton *mConnect = nullptr;
 
   // History:
   wxObjectDataPtr<Models::History> mHistoryModel;
-  wxDataViewCtrl *mHistoryCtrl;
-  wxCheckBox *mAutoScroll;
-  wxButton *mHistoryClear;
+  wxDataViewCtrl *mHistoryCtrl = nullptr;
+  wxCheckBox *mAutoScroll = nullptr;
+  wxButton *mHistoryClear = nullptr;
 
   // Subscriptions:
-  wxBitmapButton *mSubscribe;
-  Widgets::TopicCtrl *mFilter;
+  wxBitmapButton *mSubscribe = nullptr;
+  Widgets::TopicCtrl *mFilter = nullptr;
   wxObjectDataPtr<Models::Subscriptions> mSubscriptionsModel;
-  wxDataViewCtrl *mSubscriptionsCtrl;
+  wxDataViewCtrl *mSubscriptionsCtrl = nullptr;
 
   // Snippets:
   wxObjectDataPtr<Models::Snippets> mSnippetsModel;
-  wxDataViewCtrl *mSnippetsCtrl;
-  std::array<wxDataViewColumn*, Models::Snippets::Column::Max> mSnippetColumns;
+  wxDataViewCtrl *mSnippetsCtrl = nullptr;
+  std::array<wxDataViewColumn*, Models::Snippets::Column::Max> mSnippetColumns {};
   bool mSnippetExplicitEditRequest = false;
   bool mSnippetsWasExpanded = false;
   std::pair<bool, wxDataViewItem> mSnippetsPossible;

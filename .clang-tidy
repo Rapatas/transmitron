@@ -8,6 +8,7 @@ Checks: "
     cppcoreguidelines-init-variables,
     cppcoreguidelines-macro-usage,
     cppcoreguidelines-avoid-non-const-global-variables,
+    cppcoreguidelines-pro-type-member-init,
     -cert-msc50-cpp,
     -cert-msc30-c,
 "

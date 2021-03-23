@@ -32,11 +32,11 @@ private:
     ProfilesDelete,
   };
 
-  wxDataViewCtrl *mProfilesCtrl;
+  wxDataViewCtrl *mProfilesCtrl = nullptr;
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
 
-  wxBoxSizer *mSizer;
-  wxPanel *mProfiles;
+  wxBoxSizer *mSizer = nullptr;
+  wxPanel *mProfiles = nullptr;
   void setupProfiles();
 
   void onProfileActivated(wxDataViewEvent &event);
@@ -48,23 +48,23 @@ private:
   void onContextSelected(wxCommandEvent &event);
   void onProfileDelete(wxCommandEvent &event);
 
-  wxPanel *mProfileForm;
+  wxPanel *mProfileForm = nullptr;
   void setupProfileForm();
 
-  wxPropertyGrid *mProp;
-  wxPGProperty *mNameProp;
-  wxPGProperty *mHostnameProp;
-  wxPGProperty *mPortProp;
-  wxPGProperty *mTimeoutProp;
-  wxPGProperty *mMaxInFlightProp;
-  wxPGProperty *mKeepAliveProp;
-  wxPGProperty *mClientIdProp;
-  wxPGProperty *mUsernameProp;
-  wxPGProperty *mPasswordProp;
-  wxPGProperty *mAutoReconnectProp;
+  wxPropertyGrid *mProp = nullptr;
+  wxPGProperty *mNameProp = nullptr;
+  wxPGProperty *mHostnameProp = nullptr;
+  wxPGProperty *mPortProp = nullptr;
+  wxPGProperty *mTimeoutProp = nullptr;
+  wxPGProperty *mMaxInFlightProp = nullptr;
+  wxPGProperty *mKeepAliveProp = nullptr;
+  wxPGProperty *mClientIdProp = nullptr;
+  wxPGProperty *mUsernameProp = nullptr;
+  wxPGProperty *mPasswordProp = nullptr;
+  wxPGProperty *mAutoReconnectProp = nullptr;
 
-  wxButton *mSave;
-  wxButton *mConnect;
+  wxButton *mSave = nullptr;
+  wxButton *mConnect = nullptr;
 
   void fillPropertyGrid(
     const ValueObjects::BrokerOptions &brokerOptions,

@@ -49,7 +49,7 @@ private:
     ValueObjects::BrokerOptions brokerOptions;
     std::filesystem::path path;
     wxObjectDataPtr<Models::Snippets> snippetsModel;
-    bool saved;
+    bool saved = false;
   };
 
   static constexpr const char *BrokerOptionsFilename =
