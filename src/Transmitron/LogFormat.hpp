@@ -9,7 +9,7 @@ namespace Transmitron
 class LogFormat :
   public wxLogFormatter
 {
-  virtual wxString Format(
+  wxString Format(
     wxLogLevel /* level */,
     const wxString& msg,
     const wxLogRecordInfo& info

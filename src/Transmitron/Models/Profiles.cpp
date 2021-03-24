@@ -6,7 +6,7 @@
 #include "Transmitron/Info.hpp"
 #include "Profiles.hpp"
 
-#define wxLOG_COMPONENT "models/profiles"
+#define wxLOG_COMPONENT "models/profiles" // NOLINT
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
@@ -101,7 +101,7 @@ bool Profiles::load(const std::string &configDir)
       name,
       brokerOptions,
       entry.path(),
-      std::move(snippetsModel),
+      snippetsModel,
       true
     });
     mProfiles.push_back(std::move(profile));
@@ -112,7 +112,7 @@ bool Profiles::load(const std::string &configDir)
 
 bool Profiles::updateBrokerOptions(
   wxDataViewItem item,
-  ValueObjects::BrokerOptions brokerOptions
+  const ValueObjects::BrokerOptions &brokerOptions
 ) {
   if (!item.IsOk())
   {
@@ -121,7 +121,7 @@ bool Profiles::updateBrokerOptions(
 
   const auto index = toIndex(item);
   auto &profile = mProfiles.at(index);
-  profile->brokerOptions = std::move(brokerOptions);
+  profile->brokerOptions = brokerOptions;
   profile->saved = false;
 
   save(index);
@@ -281,7 +281,7 @@ std::string Profiles::getName(wxDataViewItem item) const
   return mProfiles.at(toIndex(item))->name;
 }
 
-const wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
+wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
 {
   return mProfiles.at(toIndex(item))->snippetsModel;
 }
@@ -291,14 +291,9 @@ unsigned Profiles::GetColumnCount() const
   return (unsigned)Column::Max;
 }
 
-wxString Profiles::GetColumnType(unsigned int col) const
+wxString Profiles::GetColumnType(unsigned int /* col */) const
 {
-  switch ((Column)col)
-  {
-    case Column::Name: { return wxDataViewTextRenderer::GetDefaultType(); } break;
-    case Column::URL:  { return wxDataViewTextRenderer::GetDefaultType(); } break;
-    default: { return "string"; }
-  }
+  return wxDataViewTextRenderer::GetDefaultType();
 }
 
 void Profiles::GetValue(
@@ -346,11 +341,7 @@ wxDataViewItem Profiles::GetParent(
 bool Profiles::IsContainer(
   const wxDataViewItem &item
 ) const {
-  if (!item.IsOk())
-  {
-    return true;
-  }
-  return false;
+  return !item.IsOk();
 }
 
 unsigned Profiles::GetChildren(
@@ -393,11 +384,17 @@ bool Profiles::save(size_t index)
 
 size_t Profiles::toIndex(const wxDataViewItem &item)
 {
-  return reinterpret_cast<size_t>(item.GetID());
+  uintptr_t result = 0;
+  const void *id = item.GetID();
+  std::memcpy(&result, id, sizeof(item.GetID()));
+  return result;
 }
 
 wxDataViewItem Profiles::toItem(size_t index)
 {
-  return wxDataViewItem(reinterpret_cast<void*>(index));
+  void *id = nullptr;
+  const uintptr_t value = index;
+  std::memcpy(id, &value, sizeof(void*));
+  return wxDataViewItem(id);
 }
 

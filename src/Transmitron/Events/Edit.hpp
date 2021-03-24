@@ -10,9 +10,12 @@ class Edit;
 wxDECLARE_EVENT(EDIT_PUBLISH, Edit);
 wxDECLARE_EVENT(EDIT_SAVE_SNIPPET, Edit);
 
-class Edit : public wxCommandEvent
+// NOLINTNEXTLINE
+class Edit :
+  public wxCommandEvent
 {
 public:
+
   Edit(wxEventType commandType, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
@@ -21,16 +24,11 @@ public:
     wxCommandEvent(event)
   {}
 
-  wxEvent* Clone() const
+  wxEvent* Clone() const override
   {
     return new Edit(*this);
   }
 };
-
-typedef void (wxEvtHandler::*EditFunction)(Edit &);
-#define \
-  EditHandler(func) \
-  wxEVENT_HANDLER_CAST(EditFunction, func)
 
 }
 

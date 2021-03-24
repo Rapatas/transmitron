@@ -1,0 +1,16 @@
+Checks: "
+    -*,
+    bugprone-*,
+    readability-*,
+    cert-*,
+    performance-*,
+    cppcoreguidelines-*,
+    -cert-msc50-cpp,
+    -cert-msc30-c,
+    -cppcoreguidelines-owning-memory,
+    -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+    -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+"
+WarningsAsErrors: true
+HeaderFilterRegex: '.*'
+UseColor: true

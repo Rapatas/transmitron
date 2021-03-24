@@ -3,23 +3,29 @@
 #include <thread>
 #include "Subscription.hpp"
 
-#define wxLOG_COMPONENT "mqtt/client"
+#define wxLOG_COMPONENT "mqtt/client" // NOLINT
 
 using namespace MQTT;
 
+constexpr size_t DefaultPort = 1883;
+constexpr size_t DefaultMaxRetries = 10;
+constexpr size_t DefaultKeepAliveIntervalSec = 20;
+constexpr size_t DefaultConnectTimeoutSec = 5;
+
+constexpr size_t DisconnectTimeoutMs = 200;
+constexpr size_t ReconnectAfterMs = 2500;
+
 Client::Client() :
   mHostname("0.0.0.0"),
-  mPort(1883),
+  mPort(DefaultPort),
   mRetries(0),
-  mRetriesMax(10)
+  mRetriesMax(DefaultMaxRetries)
 {
   mOptions.set_clean_session(true);
-  mOptions.set_keep_alive_interval(20);
-  mOptions.set_connect_timeout(5);
-  mId = "client" + std::to_string(rand() % 100);
+  mOptions.set_keep_alive_interval(DefaultKeepAliveIntervalSec);
+  mOptions.set_connect_timeout(DefaultConnectTimeoutSec);
+  mId = "client" + std::to_string(std::abs(rand()));
 }
-
-Client::~Client() {}
 
 void Client::connect()
 {
@@ -45,7 +51,7 @@ void Client::disconnect()
   wxLogMessage("Disconnecting from %s", mHostname);
   try
   {
-    mClient->disconnect(200, nullptr, *this);
+    mClient->disconnect(DisconnectTimeoutMs, nullptr, *this);
     cleanSubscriptions();
   }
   catch (const mqtt::exception& exc)
@@ -57,7 +63,7 @@ void Client::disconnect()
 
 void Client::reconnect()
 {
-  std::this_thread::sleep_for(std::chrono::milliseconds(2500));
+  std::this_thread::sleep_for(std::chrono::milliseconds(ReconnectAfterMs));
   wxLogMessage("Reconnecting...");
   try
   {
@@ -252,10 +258,7 @@ void Client::on_success_disconnect(const mqtt::token& /* tok */)
   }
 }
 
-void Client::on_success_publish(const mqtt::token& /* tok */)
-{
-  wxLogMessage("Published!!");
-}
+void Client::on_success_publish(const mqtt::token& /* tok */) {}
 
 void Client::on_success_subscribe(const mqtt::token& tok)
 {
@@ -433,7 +436,7 @@ bool Client::match(const std::string &filter, const std::string &topic)
   auto split = [](const std::string& str, char delim)
     -> std::vector<std::string> {
       std::vector<std::string> strings;
-      size_t start;
+      size_t start = 0;
       size_t end = 0;
       while ((start = str.find_first_not_of(delim, end)) != std::string::npos) {
         end = str.find(delim, start);
@@ -447,9 +450,9 @@ bool Client::match(const std::string &filter, const std::string &topic)
     return true;
   }
 
-  auto plus = filter.find('+');
+  const auto plusPos = filter.find('+');
 
-  if (filter.back() == '#' && plus == std::string::npos)
+  if (filter.back() == '#' && plusPos == std::string::npos)
   {
     auto root = filter.substr(0, filter.size() - 1);
     if (*root.rend() == '/')
@@ -458,40 +461,38 @@ bool Client::match(const std::string &filter, const std::string &topic)
     }
     return topic.rfind(root, 0) == 0;
   }
-  else if (plus != std::string::npos)
+
+  if (plusPos == std::string::npos)
   {
-    auto filterLevels = split(filter, '/');
-    auto topicLevels  = split(topic,  '/');
-
-    if (
-      filterLevels.size() != topicLevels.size()
-      && filter.back() != '#'
-    ) {
-      return false;
-    }
-
-    for (size_t i = 0; i != filterLevels.size(); ++i)
-    {
-      auto level = filterLevels.at(i);
-      if (level == '#')
-      {
-        return true;
-      }
-      else if (level == '+')
-      {
-        continue;
-      }
-      else if (
-        topicLevels.size() >= filterLevels.size()
-        && topicLevels.at(i) == filterLevels.at(i)
-      ) {
-        continue;
-      }
-      return false;
-    }
-
-    return true;
+    return false;
   }
 
-  return false;
+  const auto filterLevels = split(filter, '/');
+  const auto topicLevels  = split(topic,  '/');
+
+  if (
+    filterLevels.size() != topicLevels.size()
+    && filter.back() != '#'
+  ) {
+    return false;
+  }
+
+  for (size_t i = 0; i != filterLevels.size(); ++i)
+  {
+    const bool levelMatches = topicLevels.size() >= filterLevels.size()
+      && topicLevels.at(i) == filterLevels.at(i);
+
+    const auto &level = filterLevels.at(i);
+    if (level == '#')
+    {
+      return true;
+    }
+
+    if (level != '+' && !levelMatches)
+    {
+      return false;
+    }
+  }
+
+  return true;
 }

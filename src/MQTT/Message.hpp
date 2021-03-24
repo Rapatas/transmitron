@@ -12,8 +12,8 @@ struct Message
 {
   std::string topic;
   std::string payload;
-  MQTT::QoS qos;
-  bool retained;
+  MQTT::QoS qos = MQTT::QoS::AtLeastOnce;
+  bool retained = false;
 
   static Message fromJson(const nlohmann::json &data);
   static nlohmann::json toJson(const Message &message);

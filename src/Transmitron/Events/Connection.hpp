@@ -12,9 +12,12 @@ wxDECLARE_EVENT(CONNECTION, Connection);
 wxDECLARE_EVENT(CONNECTED, Connection);
 wxDECLARE_EVENT(DISCONNECTED, Connection);
 
-class Connection : public wxCommandEvent
+// NOLINTNEXTLINE
+class Connection :
+  public wxCommandEvent
 {
 public:
+
   Connection(wxEventType commandType = CONNECTION, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
@@ -25,18 +28,25 @@ public:
     this->setProfile(event.getProfile());
   }
 
-  wxEvent* Clone() const { return new Connection(*this); }
-  wxDataViewItem getProfile() const { return mProfile; }
-  void setProfile(wxDataViewItem profile) { mProfile = profile; }
+  wxEvent* Clone() const override
+  {
+    return new Connection(*this);
+  }
+
+  wxDataViewItem getProfile() const
+  {
+    return mProfile;
+  }
+
+  void setProfile(wxDataViewItem profile)
+  {
+    mProfile = profile;
+  }
 
 private:
+
   wxDataViewItem mProfile;
 };
-
-typedef void (wxEvtHandler::*ProfileEventFunction)(Connection &);
-#define \
-  ProfileEventHandler(func) \
-  wxEVENT_HANDLER_CAST(ProfileEventFunction, func)
 
 }
 

@@ -6,15 +6,16 @@
 
 using namespace Transmitron::Widgets;
 
-const wxFont TopicCtrl::Font = wxFont(wxFontInfo(9).FaceName("Consolas"));
+constexpr size_t FontSize = 9;
 
 TopicCtrl::TopicCtrl(
   wxWindow *parent,
   wxWindowID id
 ) :
-  wxTextCtrl(parent, id)
+  wxTextCtrl(parent, id),
+  mFont(wxFontInfo(FontSize).FaceName("Consolas"))
 {
-  SetFont(Font);
+  SetFont(mFont);
 
   Bind(wxEVT_LEFT_UP,     &TopicCtrl::onLeftUp,        this);
   Bind(wxEVT_LEFT_DOWN,   &TopicCtrl::onLeftDown,      this);
@@ -31,14 +32,14 @@ void TopicCtrl::setReadOnly(bool readonly)
 
   if (mReadOnly)
   {
-    auto dt = new NotAllowedDropTarget;
+    auto *dt = new NotAllowedDropTarget;
     SetDropTarget(dt);
-    Bind(wxEVT_KEY_DOWN,     &TopicCtrl::onKeyDown, this);
+    Bind(wxEVT_KEY_DOWN,     &TopicCtrl::onKeyDown);
     Bind(wxEVT_CONTEXT_MENU, &TopicCtrl::onContext, this);
   }
   else
   {
-    Unbind(wxEVT_KEY_DOWN,     &TopicCtrl::onKeyDown, this);
+    Unbind(wxEVT_KEY_DOWN,     &TopicCtrl::onKeyDown);
     Unbind(wxEVT_CONTEXT_MENU, &TopicCtrl::onContext, this);
   }
 }
@@ -61,7 +62,7 @@ void TopicCtrl::onContextSelected(wxCommandEvent &e)
         {
           topic = topic.substr(from, to - from);
         }
-        auto dataObject = new wxTextDataObject(topic);
+        auto *dataObject = new wxTextDataObject(topic);
         wxTheClipboard->SetData(dataObject);
         wxTheClipboard->Close();
       }
@@ -128,7 +129,7 @@ void TopicCtrl::onDoubleClicked(wxMouseEvent &e)
 void TopicCtrl::onContext(wxContextMenuEvent &e)
 {
   wxMenu menu;
-  auto item = new wxMenuItem(nullptr, (unsigned)ContextIDs::Copy, "Copy");
+  auto *item = new wxMenuItem(nullptr, (unsigned)ContextIDs::Copy, "Copy");
   item->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY));
   menu.Append(item);
   PopupMenu(&menu);

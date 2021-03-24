@@ -27,7 +27,7 @@ public:
 
   bool updateBrokerOptions(
     wxDataViewItem item,
-    ValueObjects::BrokerOptions brokerOptions
+    const ValueObjects::BrokerOptions &brokerOptions
   );
   bool updateName(
     wxDataViewItem &item,
@@ -39,7 +39,7 @@ public:
   const ValueObjects::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
   std::string getName(wxDataViewItem item) const;
 
-  const wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
+  wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
 
 private:
 
@@ -49,7 +49,7 @@ private:
     ValueObjects::BrokerOptions brokerOptions;
     std::filesystem::path path;
     wxObjectDataPtr<Models::Snippets> snippetsModel;
-    bool saved;
+    bool saved = false;
   };
 
   static constexpr const char *BrokerOptionsFilename =
@@ -59,29 +59,29 @@ private:
   std::string mProfilesDir;
 
   // wxDataViewModel interface.
-  virtual unsigned GetColumnCount() const override;
-  virtual wxString GetColumnType(unsigned int col) const override;
-  virtual void GetValue(
+  unsigned GetColumnCount() const override;
+  wxString GetColumnType(unsigned int col) const override;
+  void GetValue(
     wxVariant &variant,
     const wxDataViewItem &item,
     unsigned int col
   ) const override;
-  virtual bool SetValue(
+  bool SetValue(
     const wxVariant &variant,
     const wxDataViewItem &item,
     unsigned int col
   ) override;
-  virtual bool IsEnabled(
+  bool IsEnabled(
     const wxDataViewItem &item,
     unsigned int col
   ) const override;
-  virtual wxDataViewItem GetParent(
+  wxDataViewItem GetParent(
     const wxDataViewItem &item
   ) const override;
-  virtual bool IsContainer(
+  bool IsContainer(
     const wxDataViewItem &item
   ) const override;
-  virtual unsigned int GetChildren(
+  unsigned int GetChildren(
     const wxDataViewItem &parent,
     wxDataViewItemArray &array
   ) const override;

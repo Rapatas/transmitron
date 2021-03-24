@@ -27,9 +27,13 @@ public:
 
   Client(
     wxWindow* parent,
-    ValueObjects::BrokerOptions brokerOptions,
-    wxObjectDataPtr<Models::Snippets> snippetsModel
+    const ValueObjects::BrokerOptions &brokerOptions,
+    const wxObjectDataPtr<Models::Snippets> &snippetsModel
   );
+  Client(const Client &other) = delete;
+  Client(Client &&other) = delete;
+  Client &operator=(const Client &other) = delete;
+  Client &operator=(Client &&other) = delete;
   ~Client();
 
 private:
@@ -65,10 +69,10 @@ private:
   {
     std::string name;
     wxAuiPaneInfo info;
-    wxPanel *panel;
-    wxBitmap *icon18x18;
-    wxBitmap *icon18x14;
-    wxButton *toggle;
+    wxPanel *panel = nullptr;
+    const wxBitmap *icon18x18 = nullptr;
+    const wxBitmap *icon18x14 = nullptr;
+    wxButton *toggle = nullptr;
   };
 
   std::map<Panes, Pane> mPanes;
@@ -76,29 +80,30 @@ private:
   static const size_t OptionsHeight = 26;
 
   const ValueObjects::BrokerOptions mBrokerOptions;
+  const wxFont mFont;
 
-  wxBoxSizer *mMasterSizer;
+  wxBoxSizer *mMasterSizer = nullptr;
 
   // Profile:
-  wxPanel *mProfileBar;
-  wxButton *mConnect;
+  wxPanel *mProfileBar = nullptr;
+  wxButton *mConnect = nullptr;
 
   // History:
   wxObjectDataPtr<Models::History> mHistoryModel;
-  wxDataViewCtrl *mHistoryCtrl;
-  wxCheckBox *mAutoScroll;
-  wxButton *mHistoryClear;
+  wxDataViewCtrl *mHistoryCtrl = nullptr;
+  wxCheckBox *mAutoScroll = nullptr;
+  wxButton *mHistoryClear = nullptr;
 
   // Subscriptions:
-  wxBitmapButton *mSubscribe;
-  Widgets::TopicCtrl *mFilter;
+  wxBitmapButton *mSubscribe = nullptr;
+  Widgets::TopicCtrl *mFilter = nullptr;
   wxObjectDataPtr<Models::Subscriptions> mSubscriptionsModel;
-  wxDataViewCtrl *mSubscriptionsCtrl;
+  wxDataViewCtrl *mSubscriptionsCtrl = nullptr;
 
   // Snippets:
   wxObjectDataPtr<Models::Snippets> mSnippetsModel;
-  wxDataViewCtrl *mSnippetsCtrl;
-  std::array<wxDataViewColumn*, Models::Snippets::Column::Max> mSnippetColumns;
+  wxDataViewCtrl *mSnippetsCtrl = nullptr;
+  std::array<wxDataViewColumn*, Models::Snippets::Column::Max> mSnippetColumns {};
   bool mSnippetExplicitEditRequest = false;
   bool mSnippetsWasExpanded = false;
   std::pair<bool, wxDataViewItem> mSnippetsPossible;
@@ -114,15 +119,15 @@ private:
 
   void onClose(wxCloseEvent &event);
   void onConnectClicked(wxCommandEvent &event);
-  void onHistorySelected(wxDataViewEvent& event);
+  void onHistorySelected(wxDataViewEvent &event);
   void onPublishClicked(wxCommandEvent &event);
   void onPublishSaveSnippet(Events::Edit &e);
   void onPreviewSaveSnippet(Events::Edit &e);
   void onSubscribeClicked(wxCommandEvent &event);
   void onSubscribeEnter(wxKeyEvent &event);
-  void onSubscriptionContext(wxDataViewEvent& event);
-  void onHistoryContext(wxDataViewEvent& event);
-  void onContextSelected(wxCommandEvent& event);
+  void onSubscriptionContext(wxDataViewEvent &event);
+  void onHistoryContext(wxDataViewEvent &event);
+  void onContextSelected(wxCommandEvent &event);
   void onSubscriptionSelected(wxDataViewEvent &event);
   void onSnippetsEdit(wxDataViewEvent &e);
   void onSnippetsContext(wxDataViewEvent &e);

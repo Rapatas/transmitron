@@ -8,10 +8,13 @@
 namespace Transmitron
 {
 
-struct App :
+class App :
   public wxApp
 {
-  bool OnInit();
+public:
+
+  bool OnInit() override;
+
 private:
 
   unsigned mCount = 0;
@@ -29,5 +32,7 @@ private:
 };
 
 }
+
+DECLARE_APP(Transmitron::App)
 
 #endif // TRANSMITRON_APP_HPP

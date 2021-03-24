@@ -16,23 +16,16 @@ using namespace nlohmann;
 using namespace Transmitron;
 using namespace Transmitron::Widgets;
 
-uint32_t foreground = (0   << 0) | (0   << 8) | (0   << 16);
-uint32_t backgound  = (250 << 0) | (250 << 8) | (250 << 16);
-uint32_t red        = (180 << 0) | (0   << 8) | (0   << 16);
-uint32_t orange     = (150 << 0) | (120 << 8) | (0   << 16);
-uint32_t green      = (0   << 0) | (150 << 8) | (0   << 16);
-uint32_t pink       = (200 << 0) | (0   << 8) | (150 << 16);
-uint32_t cyan       = (0   << 0) | (120 << 8) | (150 << 16);
+uint32_t foreground = (0   << 0) | (0   << 8) | (0   << 16); // NOLINT
+uint32_t backgound  = (250 << 0) | (250 << 8) | (250 << 16); // NOLINT
+uint32_t red        = (180 << 0) | (0   << 8) | (0   << 16); // NOLINT
+uint32_t orange     = (150 << 0) | (120 << 8) | (0   << 16); // NOLINT
+uint32_t green      = (0   << 0) | (150 << 8) | (0   << 16); // NOLINT
+uint32_t pink       = (200 << 0) | (0   << 8) | (150 << 16); // NOLINT
+uint32_t cyan       = (0   << 0) | (120 << 8) | (150 << 16); // NOLINT
 
-const std::map<std::string, Widgets::Edit::Format> Widgets::Edit::mFormats = {
-  {"Auto", Format::Auto},
-  {"Text", Format::Text},
-  {"Json", Format::Json},
-  {"Xml", Format::Xml},
-};
-
-wxDEFINE_EVENT(Events::EDIT_PUBLISH, Events::Edit);
-wxDEFINE_EVENT(Events::EDIT_SAVE_SNIPPET, Events::Edit);
+wxDEFINE_EVENT(Events::EDIT_PUBLISH, Events::Edit); // NOLINT
+wxDEFINE_EVENT(Events::EDIT_SAVE_SNIPPET, Events::Edit); // NOLINT
 
 Edit::Edit(
   wxWindow* parent,
@@ -42,7 +35,8 @@ Edit::Edit(
   wxPanel(parent, id),
   mOptionsHeight(optionsHeight)
 {
-  mFont = wxFont(wxFontInfo(9).FaceName("Consolas"));
+  constexpr size_t FontSize = 9;
+  mFont = wxFont(wxFontInfo(FontSize).FaceName("Consolas"));
   setupScintilla();
 
   mTopic = new TopicCtrl(this, -1);
@@ -56,17 +50,19 @@ Edit::Edit(
     wxSize((int)optionsHeight, (int)optionsHeight)
   );
   mSaveSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
-  mSaveSnippet->Bind(wxEVT_BUTTON, [this](wxCommandEvent &){
-    auto e = new Events::Edit(Events::EDIT_SAVE_SNIPPET);
+  mSaveSnippet->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/*event*/){
+    auto *e = new Events::Edit(Events::EDIT_SAVE_SNIPPET);
     wxQueueEvent(this, e);
   });
+
+  constexpr size_t FormatButtonWidth = 100;
 
   mFormatSelect = new wxComboBox(
     this,
     -1,
     mFormats.begin()->first,
     wxDefaultPosition,
-    wxSize(100, 25)
+    wxSize(FormatButtonWidth, (int)optionsHeight)
   );
   for (const auto &format : mFormats)
   {
@@ -79,25 +75,25 @@ Edit::Edit(
   mTop->SetMinSize(0, (int)mOptionsHeight);
   mBottom->SetMinSize(0, (int)mOptionsHeight);
 
-  mRetainedFalse = new wxStaticBitmap(this, -1, *bin2c_not_pinned_18x18_png);
+  mRetainedFalse = new wxStaticBitmap(this, -1, *bin2c_not_pinned_18x18());
   mRetainedFalse->SetToolTip("Not retained");
   mRetainedFalse->Bind(wxEVT_LEFT_UP, &Edit::onRetainedClicked, this);
-  mRetainedTrue = new wxStaticBitmap(this, -1, *bin2c_pinned_18x18_png);
+  mRetainedTrue = new wxStaticBitmap(this, -1, *bin2c_pinned_18x18());
   mRetainedTrue->SetToolTip("Retained");
   mRetainedTrue->Bind(wxEVT_LEFT_UP, &Edit::onRetainedClicked, this);
 
   mRetainedTrue->Hide();
   mRetained = false;
 
-  mQos0 = new wxStaticBitmap(this, -1, *bin2c_qos_0_png);
+  mQos0 = new wxStaticBitmap(this, -1, *bin2c_qos_0());
   mQos0->SetToolTip("QoS: 0");
   mQos0->Bind(wxEVT_LEFT_UP, &Edit::onQosClicked, this);
 
-  mQos1 = new wxStaticBitmap(this, -1, *bin2c_qos_1_png);
+  mQos1 = new wxStaticBitmap(this, -1, *bin2c_qos_1());
   mQos1->SetToolTip("QoS: 1");
   mQos1->Bind(wxEVT_LEFT_UP, &Edit::onQosClicked, this);
 
-  mQos2 = new wxStaticBitmap(this, -1, *bin2c_qos_2_png);
+  mQos2 = new wxStaticBitmap(this, -1, *bin2c_qos_2());
   mQos2->SetToolTip("QoS: 2");
   mQos2->Bind(wxEVT_LEFT_UP, &Edit::onQosClicked, this);
 
@@ -108,12 +104,12 @@ Edit::Edit(
   mPublish = new wxBitmapButton(
     this,
     -1,
-    *bin2c_send_18x18_png,
+    *bin2c_send_18x18(),
     wxDefaultPosition,
     wxSize((int)mOptionsHeight, (int)mOptionsHeight)
   );
-  mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &){
-    auto e = new Events::Edit(Events::EDIT_PUBLISH);
+  mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/*event*/){
+    auto *e = new Events::Edit(Events::EDIT_PUBLISH);
     wxQueueEvent(this, e);
   });
 
@@ -151,11 +147,14 @@ void Edit::setupScintilla()
   mText->SetProperty("fold.comment", "1");
   mText->SetProperty("fold.preprocessor", "1");
 
-  static const int MARGIN_SCRIPT_FOLD_INDEX = 1;
+  constexpr int FoldMarginWidth = 20;
+  constexpr int ScrollWidth = 50;
+
+  constexpr int MARGIN_SCRIPT_FOLD_INDEX = 1;
   mText->SetMarginType(MARGIN_SCRIPT_FOLD_INDEX, wxSTC_MARGIN_SYMBOL);
   mText->SetMarginMask(MARGIN_SCRIPT_FOLD_INDEX, (int)wxSTC_MASK_FOLDERS);
-  mText->SetMarginWidth(MARGIN_SCRIPT_FOLD_INDEX, 20);
-  mText->SetMarginSensitive(MARGIN_SCRIPT_FOLD_INDEX, 1);
+  mText->SetMarginWidth(MARGIN_SCRIPT_FOLD_INDEX, FoldMarginWidth);
+  mText->SetMarginSensitive(MARGIN_SCRIPT_FOLD_INDEX, true);
   mText->SetAutomaticFold(wxSTC_AUTOMATICFOLD_CLICK);
 
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDER,        wxSTC_MARK_PLUS);
@@ -166,7 +165,7 @@ void Edit::setupScintilla()
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDERSUB,     wxSTC_MARK_EMPTY);
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDERTAIL,    wxSTC_MARK_EMPTY);
 
-  mText->SetScrollWidth(50);
+  mText->SetScrollWidth(ScrollWidth);
   mText->SetScrollWidthTracking(true);
 }
 
@@ -367,7 +366,7 @@ Edit::Format Edit::formatGuess(const std::string &text)
   }
 
   if (
-    isdigit(c)
+    (bool)isdigit(c)
     || c == '"'
     || c == '{'
     || c == '['
@@ -392,7 +391,7 @@ void Edit::onTopicKeyDown(wxKeyEvent &e)
     e.GetKeyCode() == WXK_RETURN
     && !mTopic->IsEmpty()
   ) {
-    auto e = new Events::Edit(Events::EDIT_PUBLISH);
+    auto *e = new Events::Edit(Events::EDIT_PUBLISH);
     wxQueueEvent(this, e);
   }
 }

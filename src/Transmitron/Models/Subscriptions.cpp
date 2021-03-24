@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstddef>
 #include <iterator>
 #include <wx/dcmemory.h>
 #include <wx/log.h>
@@ -7,12 +8,12 @@
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
 
-#define wxLOG_COMPONENT "models/subscriptions"
+#define wxLOG_COMPONENT "models/subscriptions" // NOLINT
 
 using namespace Transmitron::Models;
 
 Subscriptions::Subscriptions(std::shared_ptr<MQTT::Client> client) :
-  mClient(client)
+  mClient(std::move(client))
 {}
 
 size_t Subscriptions::attachObserver(Observer *observer)
@@ -39,31 +40,31 @@ bool Subscriptions::detachObserver(size_t id)
 
 std::string Subscriptions::getFilter(wxDataViewItem item) const
 {
-  auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
+  const auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   return sub->getFilter();
 }
 
 std::string Subscriptions::getFilter(MQTT::Subscription::Id_t subscriptionId) const
 {
-  auto &sub = mSubscriptions.at(subscriptionId);
+  const auto &sub = mSubscriptions.at(subscriptionId);
   return sub->getFilter();
 }
 
 bool Subscriptions::getMuted(wxDataViewItem item) const
 {
-  auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
+  const auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   return sub->getMuted();
 }
 
 bool Subscriptions::getMuted(MQTT::Subscription::Id_t subscriptionId) const
 {
-  auto &sub = mSubscriptions.at(subscriptionId);
+  const auto &sub = mSubscriptions.at(subscriptionId);
   return sub->getMuted();
 }
 
 wxColor Subscriptions::getColor(MQTT::Subscription::Id_t subscriptionId) const
 {
-  auto &sub = mSubscriptions.at(subscriptionId);
+  const auto &sub = mSubscriptions.at(subscriptionId);
   return sub->getColor();
 }
 
@@ -193,12 +194,15 @@ void Subscriptions::GetValueByRow(
   unsigned int row,
   unsigned int col
 ) const {
-  auto &sub = mSubscriptions.at(mRemap.at(row));
+  const auto &sub = mSubscriptions.at(mRemap.at(row));
+
+  constexpr size_t SubscriptionIconHeight = 10;
+  constexpr size_t SubscriptionIconWidth = 20;
 
   switch ((Column)col) {
     case Column::Icon: {
 
-      wxBitmap b(10, 20);
+      wxBitmap b(SubscriptionIconHeight, SubscriptionIconWidth);
       wxMemoryDC mem;
       mem.SelectObject(b);
       mem.SetBackground(wxBrush(sub->getColor()));
@@ -211,11 +215,11 @@ void Subscriptions::GetValueByRow(
       variant = sub->getFilter();
     } break;
     case Column::Qos: {
-      wxBitmap *result;
+      const wxBitmap *result = nullptr;
       switch (sub->getQos()) {
-        case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0_png; } break;
-        case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1_png; } break;
-        case MQTT::QoS::ExactlyOnce: { result = bin2c_qos_2_png; } break;
+        case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0(); } break;
+        case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1(); } break;
+        case MQTT::QoS::ExactlyOnce: { result = bin2c_qos_2(); } break;
       }
       variant << *result;
     } break;

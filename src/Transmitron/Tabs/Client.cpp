@@ -4,6 +4,7 @@
 #include <wx/artprov.h>
 #include <nlohmann/json.hpp>
 
+#include "Helpers/Helpers.hpp"
 #include "Transmitron/Resources/plus/plus-18x18.hpp"
 #include "Transmitron/Resources/history/history-18x14.hpp"
 #include "Transmitron/Resources/history/history-18x18.hpp"
@@ -16,23 +17,26 @@
 #include "Transmitron/Resources/subscription/subscription-18x14.hpp"
 #include "Transmitron/Resources/subscription/subscription-18x18.hpp"
 
-#define wxLOG_COMPONENT "Client"
+#define wxLOG_COMPONENT "Client" // NOLINT
 
 using namespace Transmitron::Tabs;
 using namespace Transmitron::Models;
 using namespace Transmitron;
 
-wxDEFINE_EVENT(Events::CONNECTED, Events::Connection);
-wxDEFINE_EVENT(Events::DISCONNECTED, Events::Connection);
+constexpr size_t FontSize = 9;
+
+wxDEFINE_EVENT(Events::CONNECTED, Events::Connection); // NOLINT
+wxDEFINE_EVENT(Events::DISCONNECTED, Events::Connection); // NOLINT
 
 Client::Client(
   wxWindow* parent,
-  ValueObjects::BrokerOptions brokerOptions,
-  wxObjectDataPtr<Models::Snippets> snippetsModel
+  const ValueObjects::BrokerOptions &brokerOptions,
+  const wxObjectDataPtr<Models::Snippets> &snippetsModel
 ) :
   wxPanel(parent),
-  mBrokerOptions(std::move(brokerOptions)),
-  mSnippetsModel(std::move(snippetsModel))
+  mBrokerOptions(brokerOptions),
+  mFont(wxFontInfo(FontSize).FaceName("Consolas")),
+  mSnippetsModel(snippetsModel)
 {
   mClient = std::make_shared<MQTT::Client>();
   Bind(Events::CONNECTED, &Client::onConnectedSync, this);
@@ -47,46 +51,59 @@ Client::Client(
       "History",
       {},
       nullptr,
-      bin2c_history_18x18_png,
-      bin2c_history_18x14_png,
+      bin2c_history_18x18(),
+      bin2c_history_18x14(),
       nullptr
     }},
     {Panes::Preview, {
       "Preview",
       {},
       nullptr,
-      bin2c_preview_18x18_png,
-      bin2c_preview_18x14_png,
+      bin2c_preview_18x18(),
+      bin2c_preview_18x14(),
       nullptr
     }},
     {Panes::Publish, {
       "Publish",
       {},
       nullptr,
-      bin2c_send_18x18_png,
-      bin2c_send_18x14_png,
+      bin2c_send_18x18(),
+      bin2c_send_18x14(),
       nullptr
     }},
     {Panes::Snippets, {
       "Snippets",
       {},
       nullptr,
-      bin2c_snippets_18x18_png,
-      bin2c_snippets_18x14_png,
+      bin2c_snippets_18x18(),
+      bin2c_snippets_18x14(),
       nullptr
     }},
     {Panes::Subscriptions, {
       "Subscriptions",
       {},
       nullptr,
-      bin2c_subscription_18x18_png,
-      bin2c_subscription_18x14_png,
+      bin2c_subscription_18x18(),
+      bin2c_subscription_18x14(),
       nullptr
     }},
   };
 
+  constexpr size_t PaneMinWidth = 250;
+  constexpr size_t PaneMinHeight = 100;
+  constexpr size_t EditorMinHeight = 200;
+
   for (auto &pane : mPanes)
   {
+    const bool isEditor =
+      pane.first == Panes::Preview
+      || pane.first == Panes::Publish;
+
+    const auto minSize = isEditor
+      ? wxSize(PaneMinWidth, EditorMinHeight)
+      : wxSize(PaneMinWidth, PaneMinHeight);
+
+    pane.second.info.MinSize(minSize);
     pane.second.info.Caption(pane.second.name);
     pane.second.info.CloseButton(false);
     pane.second.info.Icon(*pane.second.icon18x14);
@@ -116,13 +133,7 @@ Client::Client(
   mPanes.at(Panes::Preview).info.Layer(2);
   mPanes.at(Panes::Publish).info.Layer(2);
 
-  mPanes.at(Panes::History).info.MinSize(wxSize(100, 100));
-  mPanes.at(Panes::Subscriptions).info.MinSize(wxSize(300, 100));
-  mPanes.at(Panes::Snippets).info.MinSize(wxSize(150, 100));
-  mPanes.at(Panes::Preview).info.MinSize(wxSize(200, 200));
-  mPanes.at(Panes::Publish).info.MinSize(wxSize(200, 200));
-
-  auto wrapper = new wxPanel(this, -1);
+  auto *wrapper = new wxPanel(this, -1);
 
   setupPanelPublish(wrapper);
   setupPanelSubscriptions(wrapper);
@@ -172,9 +183,7 @@ void Client::setupPanelHistory(wxWindow *parent)
     wxCOL_WIDTH_AUTOSIZE
   );
 
-  wxFont font(wxFontInfo(9).FaceName("Consolas"));
-
-  auto panel = new wxPanel(parent, -1, wxDefaultPosition);
+  auto *panel = new wxPanel(parent, -1, wxDefaultPosition);
   mPanes.at(Panes::History).panel = panel;
 
   mHistoryCtrl = new wxDataViewCtrl(
@@ -189,7 +198,7 @@ void Client::setupPanelHistory(wxWindow *parent)
   mHistoryModel->attachObserver(this);
   mHistoryCtrl->AssociateModel(mHistoryModel.get());
 
-  mHistoryCtrl->SetFont(font);
+  mHistoryCtrl->SetFont(mFont);
 
   mHistoryCtrl->AppendColumn(icon);
   mHistoryCtrl->AppendColumn(qos);
@@ -198,20 +207,15 @@ void Client::setupPanelHistory(wxWindow *parent)
   mAutoScroll = new wxCheckBox(panel, -1, "auto-scroll");
   mAutoScroll->SetValue(true);
 
-  mHistoryClear = new wxButton(
-    panel,
-    -1,
-    "Clear",
-    wxDefaultPosition,
-    wxSize(50, OptionsHeight)
-  );
+  mHistoryClear = new wxButton(panel, -1, "Clear");
+  mHistoryClear->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
 
-  auto hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
+  auto *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   hsizer->SetMinSize(0, OptionsHeight);
   hsizer->Add(mAutoScroll, 0, wxEXPAND);
   hsizer->AddStretchSpacer(1);
   hsizer->Add(mHistoryClear, 0, wxEXPAND);
-  auto vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
+  auto *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(mHistoryCtrl, 1, wxEXPAND);
   vsizer->Add(hsizer, 0, wxEXPAND);
   panel->SetSizer(vsizer);
@@ -228,7 +232,7 @@ void Client::setupPanelHistory(wxWindow *parent)
   );
   mHistoryClear->Bind(
     wxEVT_BUTTON,
-    [this](wxCommandEvent &)
+    [this](wxCommandEvent &/*event*/)
     {
       mHistoryModel->clear();
     }
@@ -255,7 +259,12 @@ void Client::setupPanelConnect(wxWindow *parent)
       }
       mAuiMan.DetachPane(widget.panel);
       widget.panel->Show(false);
-      widget.toggle->SetBackgroundColour(wxColor(150, 150, 150));
+      constexpr uint8_t ColorChannelHalf = 255 / 2;
+      widget.toggle->SetBackgroundColour(wxColor(
+        ColorChannelHalf,
+        ColorChannelHalf,
+        ColorChannelHalf
+      ));
     }
     else
     {
@@ -277,8 +286,8 @@ void Client::setupPanelConnect(wxWindow *parent)
       continue;
     }
 
-    auto bitmap = mPanes.at(pane.first).icon18x18;
-    auto button = new wxButton(
+    const auto *bitmap = mPanes.at(pane.first).icon18x18;
+    auto *button = new wxButton(
       mProfileBar,
       -1,
       "",
@@ -323,9 +332,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
     wxCOL_WIDTH_AUTOSIZE
   );
 
-  wxFont font(wxFontInfo(9).FaceName("Consolas"));
-
-  auto panel = new wxPanel(parent, -1, wxDefaultPosition);
+  auto *panel = new wxPanel(parent, -1, wxDefaultPosition);
   mPanes.at(Panes::Subscriptions).panel = panel;
 
   mSubscriptionsCtrl = new wxDataViewListCtrl(
@@ -342,18 +349,18 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mSubscriptionsModel = new Models::Subscriptions(mClient);
   mSubscriptionsCtrl->AssociateModel(mSubscriptionsModel.get());
 
-  mSubscriptionsCtrl->SetFont(font);
+  mSubscriptionsCtrl->SetFont(mFont);
 
   mSubscribe = new wxBitmapButton(
     panel,
     -1,
-    *bin2c_plus_18x18_png,
+    *bin2c_plus_18x18(),
     wxDefaultPosition,
     wxSize(OptionsHeight, OptionsHeight)
   );
 
   mFilter = new Widgets::TopicCtrl(panel, -1);
-  mFilter->SetFont(font);
+  mFilter->SetFont(mFont);
 
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
@@ -380,7 +387,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
 void Client::setupPanelPreview(wxWindow *parent)
 {
-  auto panel = new Widgets::Edit(parent, -1, OptionsHeight);
+  auto *panel = new Widgets::Edit(parent, -1, OptionsHeight);
   mPanes.at(Panes::Preview).panel = panel;
   panel->setReadOnly(true);
   panel->Bind(Events::EDIT_SAVE_SNIPPET, &Client::onPreviewSaveSnippet, this);
@@ -388,7 +395,7 @@ void Client::setupPanelPreview(wxWindow *parent)
 
 void Client::setupPanelPublish(wxWindow *parent)
 {
-  auto panel = new Widgets::Edit(parent, -1, OptionsHeight);
+  auto *panel = new Widgets::Edit(parent, -1, OptionsHeight);
   mPanes.at(Panes::Publish).panel = panel;
   panel->Bind(Events::EDIT_PUBLISH, &Client::onPublishClicked, this);
   panel->Bind(Events::EDIT_SAVE_SNIPPET, &Client::onPublishSaveSnippet, this);
@@ -396,7 +403,7 @@ void Client::setupPanelPublish(wxWindow *parent)
 
 void Client::setupPanelSnippets(wxWindow *parent)
 {
-  auto renderer = new wxDataViewIconTextRenderer(
+  auto *renderer = new wxDataViewIconTextRenderer(
     wxDataViewIconTextRenderer::GetDefaultType(),
     wxDATAVIEW_CELL_EDITABLE
   );
@@ -409,7 +416,7 @@ void Client::setupPanelSnippets(wxWindow *parent)
     wxALIGN_LEFT
   );
 
-  auto panel = new wxPanel(parent, -1);
+  auto *panel = new wxPanel(parent, -1);
   mPanes.at(Panes::Snippets).panel = panel;
 
   mSnippetsCtrl = new wxDataViewListCtrl(
@@ -425,8 +432,7 @@ void Client::setupPanelSnippets(wxWindow *parent)
   mSnippetsCtrl->EnableDropTarget(wxDataFormat(wxDF_TEXT));
   mSnippetsCtrl->EnableDragSource(wxDataFormat(wxDF_TEXT));
 
-  wxFont font(wxFontInfo(9).FaceName("Consolas"));
-  mSnippetsCtrl->SetFont(font);
+  mSnippetsCtrl->SetFont(mFont);
 
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(mSnippetsCtrl, 1, wxEXPAND);
@@ -470,7 +476,7 @@ void Client::setupPanelSnippets(wxWindow *parent)
 
 void Client::onPublishClicked(wxCommandEvent &/* event */)
 {
-  auto publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
+  auto *publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
 
   if (!mClient->connected()) { return; }
   auto topic = publish->getTopic();
@@ -493,7 +499,7 @@ void Client::onPublishSaveSnippet(Events::Edit &/* event */)
     snippetItem = mSnippetsModel->GetParent(snippetItem);
   }
 
-  auto publish = dynamic_cast<Widgets::Edit*>(
+  auto *publish = dynamic_cast<Widgets::Edit*>(
     mPanes.at(Panes::Publish).panel
   );
 
@@ -502,14 +508,14 @@ void Client::onPublishSaveSnippet(Events::Edit &/* event */)
   auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
   if (inserted.IsOk())
   {
-    auto publish = dynamic_cast<Widgets::Edit*>(
+    auto *publish = dynamic_cast<Widgets::Edit*>(
       mPanes.at(Panes::Publish).panel
     );
     publish->setMessage(mSnippetsModel->getMessage(inserted));
 
     mSnippetsCtrl->Select(inserted);
     mSnippetsCtrl->EnsureVisible(inserted);
-    auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+    auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
     mSnippetExplicitEditRequest = true;
     mSnippetsCtrl->EditItem(inserted, nameColumn);
   }
@@ -525,7 +531,7 @@ void Client::onPreviewSaveSnippet(Events::Edit &/* event */)
     snippetItem = mSnippetsModel->GetParent(snippetItem);
   }
 
-  auto preview = dynamic_cast<Widgets::Edit*>(
+  auto *preview = dynamic_cast<Widgets::Edit*>(
     mPanes.at(Panes::Preview).panel
   );
 
@@ -536,7 +542,7 @@ void Client::onPreviewSaveSnippet(Events::Edit &/* event */)
   {
     mSnippetsCtrl->Select(inserted);
     mSnippetsCtrl->EnsureVisible(inserted);
-    auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+    auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
     mSnippetExplicitEditRequest = true;
     mSnippetsCtrl->EditItem(inserted, nameColumn);
   }
@@ -592,7 +598,7 @@ void Client::onHistorySelected(wxDataViewEvent &event)
   if (!event.GetItem().IsOk()) { return; }
   auto item = event.GetItem();
 
-  auto preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
+  auto *preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
 
   preview->setPayload(mHistoryModel->getPayload(item));
   preview->setTopic(mHistoryModel->getTopic(item));
@@ -600,11 +606,11 @@ void Client::onHistorySelected(wxDataViewEvent &event)
   preview->setRetained(mHistoryModel->getRetained(item));
 }
 
-void Client::onSubscriptionContext(wxDataViewEvent& dve)
+void Client::onSubscriptionContext(wxDataViewEvent& event)
 {
-  if (!dve.GetItem().IsOk()) { return; }
+  if (!event.GetItem().IsOk()) { return; }
 
-  auto item = dve.GetItem();
+  auto item = event.GetItem();
 
   mSubscriptionsCtrl->Select(item);
   bool muted = mSubscriptionsModel->getMuted(item);
@@ -643,7 +649,7 @@ void Client::onSnippetsContext(wxDataViewEvent& e)
 {
   wxMenu menu;
 
-  auto newFolder = new wxMenuItem(
+  auto *newFolder = new wxMenuItem(
     nullptr,
     (unsigned)ContextIDs::SnippetNewFolder,
     "New Folder"
@@ -651,7 +657,7 @@ void Client::onSnippetsContext(wxDataViewEvent& e)
   newFolder->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW_DIR));
   menu.Append(newFolder);
 
-  auto newSnippet = new wxMenuItem(
+  auto *newSnippet = new wxMenuItem(
     nullptr,
     (unsigned)ContextIDs::SnippetNewSnippet,
     "New Snippet"
@@ -665,7 +671,7 @@ void Client::onSnippetsContext(wxDataViewEvent& e)
 
     if (item != mSnippetsModel->getRootItem())
     {
-      auto rename = new wxMenuItem(
+      auto *rename = new wxMenuItem(
         nullptr,
         (unsigned)ContextIDs::SnippetRename,
         "Rename"
@@ -673,7 +679,7 @@ void Client::onSnippetsContext(wxDataViewEvent& e)
       rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
       menu.Append(rename);
 
-      auto del = new wxMenuItem(
+      auto *del = new wxMenuItem(
         nullptr,
         (unsigned)ContextIDs::SnippetDelete,
         "Delete"
@@ -706,7 +712,7 @@ void Client::onContextSelected(wxCommandEvent& event)
       auto item = mSubscriptionsCtrl->GetSelection();
       mSubscriptionsModel->unsubscribe(item);
       auto selected = mHistoryCtrl->GetSelection();
-      auto preview = dynamic_cast<Widgets::Edit*>(
+      auto *preview = dynamic_cast<Widgets::Edit*>(
         mPanes.at(Panes::Preview).panel
       );
       preview->clear();
@@ -735,17 +741,7 @@ void Client::onContextSelected(wxCommandEvent& event)
     case ContextIDs::SubscriptionsChangeColor: {
       wxLogMessage("Requesting new color");
       auto item = mSubscriptionsCtrl->GetSelection();
-      constexpr uint8_t MinColorChannel = 100;
-      // The std::abs is used to bypass a gcc bug:
-      // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=40752
-      const auto x = (size_t)std::abs(rand());
-      uint8_t r = ((x >> 0)  & 0xFF);
-      uint8_t g = ((x >> 8)  & 0xFF);
-      uint8_t b = ((x >> 16) & 0xFF);
-      if (r < MinColorChannel) { r = (uint8_t)(r + MinColorChannel); }
-      if (g < MinColorChannel) { g = (uint8_t)(r + MinColorChannel); }
-      if (b < MinColorChannel) { b = (uint8_t)(r + MinColorChannel); }
-      wxColor color(r, g, b);
+      const auto color = Helpers::colorFromNumber((size_t)std::abs(rand()));
       mSubscriptionsModel->setColor(item, color);
       mSubscriptionsCtrl->Refresh();
       mHistoryCtrl->Refresh();
@@ -763,7 +759,7 @@ void Client::onContextSelected(wxCommandEvent& event)
       wxLogMessage("Requesting edit");
       auto item = mHistoryCtrl->GetSelection();
       if (!item.IsOk()) { return; }
-      auto publish = dynamic_cast<Widgets::Edit*>(
+      auto *publish = dynamic_cast<Widgets::Edit*>(
         mPanes.at(Panes::Publish).panel
       );
       publish->clear();
@@ -785,14 +781,14 @@ void Client::onContextSelected(wxCommandEvent& event)
       auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
       if (inserted.IsOk())
       {
-        auto publish = dynamic_cast<Widgets::Edit*>(
+        auto *publish = dynamic_cast<Widgets::Edit*>(
           mPanes.at(Panes::Publish).panel
         );
         publish->setMessage(mSnippetsModel->getMessage(inserted));
 
         mSnippetsCtrl->Select(inserted);
         mSnippetsCtrl->EnsureVisible(inserted);
-        auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+        auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
         mSnippetExplicitEditRequest = true;
         mSnippetsCtrl->EditItem(inserted, nameColumn);
       }
@@ -811,7 +807,7 @@ void Client::onContextSelected(wxCommandEvent& event)
       {
         mSnippetsCtrl->Select(inserted);
         mSnippetsCtrl->EnsureVisible(inserted);
-        auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+        auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
         mSnippetExplicitEditRequest = true;
         mSnippetsCtrl->EditItem(inserted, nameColumn);
       }
@@ -827,14 +823,14 @@ void Client::onContextSelected(wxCommandEvent& event)
       auto inserted = mSnippetsModel->createSnippet(item, nullptr);
       if (inserted.IsOk())
       {
-        auto publish = dynamic_cast<Widgets::Edit*>(
+        auto *publish = dynamic_cast<Widgets::Edit*>(
           mPanes.at(Panes::Publish).panel
         );
         publish->setMessage(mSnippetsModel->getMessage(inserted));
 
         mSnippetsCtrl->Select(inserted);
         mSnippetsCtrl->EnsureVisible(inserted);
-        auto nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+        auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
         mSnippetExplicitEditRequest = true;
         mSnippetsCtrl->EditItem(inserted, nameColumn);
       }
@@ -868,7 +864,7 @@ void Client::onSnippetsSelected(wxDataViewEvent &e)
     return;
   }
 
-  auto publish = dynamic_cast<Widgets::Edit*>(
+  auto *publish = dynamic_cast<Widgets::Edit*>(
     mPanes.at(Panes::Publish).panel
   );
 
@@ -912,8 +908,10 @@ void Client::onSnippetsDrag(wxDataViewEvent &e)
   auto item = e.GetItem();
   mSnippetsWasExpanded = mSnippetsCtrl->IsExpanded(item);
 
-  const size_t id = reinterpret_cast<size_t>(item.GetID());
-  auto o = new wxTextDataObject(std::to_string(id));
+  const void *id = item.GetID();
+  uintptr_t message = 0;
+  std::memcpy(&message, id, sizeof(void*));
+  auto *o = new wxTextDataObject(std::to_string(message));
 
   e.SetDataFormat(o->GetFormat());
   e.SetDataSize(o->GetDataSize());
@@ -928,8 +926,10 @@ void Client::onSnippetsDrop(wxDataViewEvent &e)
 
   wxTextDataObject object;
   object.SetData(e.GetDataFormat(), e.GetDataSize(), e.GetDataBuffer());
-  size_t id = std::stoul(object.GetText().ToStdString());
-  auto item = wxDataViewItem((void*)id);
+  const uintptr_t message = std::stoul(object.GetText().ToStdString());
+  void *id = nullptr;
+  std::memcpy(id, &message, sizeof(void*));
+  auto item = wxDataViewItem(id);
 
   wxDataViewItem moved;
 
@@ -981,7 +981,7 @@ void Client::onClose(wxCloseEvent &/* event */)
 {
   if (mClient->connected())
   {
-    auto preview = dynamic_cast<Widgets::Edit*>(
+    auto *preview = dynamic_cast<Widgets::Edit*>(
       mPanes.at(Panes::Preview).panel
     );
     preview->setPayload("Closing...");
@@ -1000,7 +1000,7 @@ void Client::onMessage(wxDataViewItem item)
   mHistoryCtrl->Select(item);
   mHistoryCtrl->EnsureVisible(item);
 
-  auto preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
+  auto *preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
   preview->setPayload(mHistoryModel->getPayload(item));
   preview->setTopic(mHistoryModel->getTopic(item));
   preview->setQos(mHistoryModel->getQos(item));
@@ -1009,13 +1009,13 @@ void Client::onMessage(wxDataViewItem item)
 
 void Client::onConnected()
 {
-  auto e = new Events::Connection(Events::CONNECTED);
+  auto *e = new Events::Connection(Events::CONNECTED);
   wxQueueEvent(this, e);
 }
 
 void Client::onDisconnected()
 {
-  auto e = new Events::Connection(Events::DISCONNECTED);
+  auto *e = new Events::Connection(Events::DISCONNECTED);
   wxQueueEvent(this, e);
 }
 

@@ -15,7 +15,7 @@ class Subscription :
 {
 public:
 
-  Subscription(std::shared_ptr<MQTT::Subscription> sub);
+  Subscription(const std::shared_ptr<MQTT::Subscription> &sub);
 
   // MQTT::Subscription::Observer interface.
   void onSubscribed() override;

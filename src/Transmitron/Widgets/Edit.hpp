@@ -22,7 +22,6 @@ public:
     wxWindowID id,
     size_t optionsHeight
   );
-  virtual ~Edit() = default;
 
   void format();
 
@@ -49,27 +48,27 @@ private:
   bool mReadOnly = false;
   size_t mOptionsHeight;
 
-  wxBoxSizer *mTop;
-  wxBoxSizer *mVsizer;
-  wxBoxSizer *mBottom;
+  wxBoxSizer *mTop = nullptr;
+  wxBoxSizer *mVsizer = nullptr;
+  wxBoxSizer *mBottom = nullptr;
 
-  TopicCtrl *mTopic;
+  TopicCtrl *mTopic = nullptr;
 
   bool mRetained;
-  wxStaticBitmap *mRetainedTrue;
-  wxStaticBitmap *mRetainedFalse;
+  wxStaticBitmap *mRetainedTrue = nullptr;
+  wxStaticBitmap *mRetainedFalse = nullptr;
 
   MQTT::QoS mQoS;
-  wxStaticBitmap *mQos0;
-  wxStaticBitmap *mQos1;
-  wxStaticBitmap *mQos2;
+  wxStaticBitmap *mQos0 = nullptr;
+  wxStaticBitmap *mQos1 = nullptr;
+  wxStaticBitmap *mQos2 = nullptr;
 
-  wxBitmapButton *mPublish;
+  wxBitmapButton *mPublish = nullptr;
 
-  wxStyledTextCtrl *mText;
+  wxStyledTextCtrl *mText = nullptr;
 
-  wxButton *mSaveSnippet;
-  wxComboBox *mFormatSelect;
+  wxButton *mSaveSnippet = nullptr;
+  wxComboBox *mFormatSelect = nullptr;
 
   enum class Format
   {
@@ -80,7 +79,12 @@ private:
   };
   Format mCurrentFormat = Format::Auto;
 
-  static const std::map<std::string, Format> mFormats;
+  const std::map<std::string, Format> mFormats{
+    {"Auto", Format::Auto},
+    {"Text", Format::Text},
+    {"Json", Format::Json},
+    {"Xml", Format::Xml},
+  };
 
   void onQosClicked(wxMouseEvent &e);
   void onRetainedClicked(wxMouseEvent &e);

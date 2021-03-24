@@ -16,7 +16,6 @@ public:
     wxWindow *parent,
     wxWindowID id
   );
-  virtual ~TopicCtrl() = default;
 
   enum class ContextIDs : unsigned
   {
@@ -31,8 +30,7 @@ public:
 
 private:
 
-  static const wxFont Font;
-
+  const wxFont mFont;
   bool mFakeSelection = false;
   bool mFirstClick = true;
   bool mReadOnly = false;
@@ -42,7 +40,7 @@ private:
 
   void onContext(wxContextMenuEvent &e);
   void onDoubleClicked(wxMouseEvent &e);
-  void onKeyDown(wxKeyEvent &e);
+  static void onKeyDown(wxKeyEvent &e);
   void onLeftDown(wxMouseEvent &e);
   void onLeftUp(wxMouseEvent &e);
   void onLostFocus(wxFocusEvent &e);

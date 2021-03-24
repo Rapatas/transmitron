@@ -1,6 +1,6 @@
 #include "Subscription.hpp"
 
-#define wxLOG_COMPONENT "mqtt/subscription"
+#define wxLOG_COMPONENT "mqtt/subscription" // NOLINT
 
 using namespace MQTT;
 
@@ -13,7 +13,8 @@ Subscription::Subscription(
   mId(id),
   mFilter(filter),
   mQos(qos),
-  mClient(client)
+  mState(State::Unsubscribed),
+  mClient(std::move(client))
 {}
 
 size_t Subscription::attachObserver(Observer *o)
@@ -58,7 +59,7 @@ void Subscription::onUnsubscribed()
 }
 
 void Subscription::onMessage(
-  mqtt::const_message_ptr msg
+  const mqtt::const_message_ptr &msg
 ) {
   for (const auto &o : mObservers)
   {

@@ -7,13 +7,13 @@
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
 
-#define wxLOG_COMPONENT "Models/History"
+#define wxLOG_COMPONENT "Models/History" // NOLINT
 
 using namespace Transmitron::Models;
 using namespace Transmitron;
 
-History::History(wxObjectDataPtr<Subscriptions> subscriptions) :
-  mSubscriptions(std::move(subscriptions))
+History::History(const wxObjectDataPtr<Subscriptions> &subscriptions) :
+  mSubscriptions(subscriptions)
 {
   mSubscriptions->attachObserver(this);
 }
@@ -251,12 +251,15 @@ void History::GetValueByRow(
 
   const auto &m = mMessages.at(mRemap.at(row));
 
+  constexpr size_t MessageIconWidth = 10;
+  constexpr size_t MessageIconHeight = 20;
+
   switch ((Column)col) {
     case Column::Icon: {
 
       auto color = mSubscriptions->getColor(m.subscriptionId);
 
-      wxBitmap b(10, 20);
+      wxBitmap b(MessageIconWidth, MessageIconHeight);
       wxMemoryDC mem;
       mem.SelectObject(b);
       mem.SetBackground(wxBrush(color));
@@ -271,17 +274,17 @@ void History::GetValueByRow(
       if (m.message->is_retained())
       {
         wxIcon icon;
-        icon.CopyFromBitmap(*bin2c_pinned_18x18_png);
+        icon.CopyFromBitmap(*bin2c_pinned_18x18());
         result.SetIcon(icon);
       }
       variant << result;
     } break;
     case Column::Qos: {
-      wxBitmap *result;
+      const wxBitmap *result = nullptr;
       switch ((MQTT::QoS)m.message->get_qos()) {
-        case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0_png; } break;
-        case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1_png; } break;
-        case MQTT::QoS::ExactlyOnce: { result = bin2c_qos_2_png; } break;
+        case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0(); } break;
+        case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1(); } break;
+        case MQTT::QoS::ExactlyOnce: { result = bin2c_qos_2(); } break;
       }
       variant << *result;
     } break;
