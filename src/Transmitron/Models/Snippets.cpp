@@ -802,7 +802,7 @@ Snippets::Node::Id_t Snippets::toId(const wxDataViewItem &item)
 {
   uintptr_t result = 0;
   const void *id = item.GetID();
-  std::memcpy(&result, id, sizeof(item.GetID()));
+  std::memcpy(&result, &id, sizeof(item.GetID()));
   return result;
 }
 
@@ -810,7 +810,7 @@ wxDataViewItem Snippets::toItem(Node::Id_t id)
 {
   void *itemId = nullptr;
   const uintptr_t value = id;
-  std::memcpy(itemId, &value, sizeof(id));
+  std::memcpy(&itemId, &value, sizeof(id));
   return wxDataViewItem(itemId);
 }
 

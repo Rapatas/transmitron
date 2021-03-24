@@ -386,7 +386,7 @@ size_t Profiles::toIndex(const wxDataViewItem &item)
 {
   uintptr_t result = 0;
   const void *id = item.GetID();
-  std::memcpy(&result, id, sizeof(item.GetID()));
+  std::memcpy(&result, &id, sizeof(uintptr_t));
   return result;
 }
 
@@ -394,7 +394,7 @@ wxDataViewItem Profiles::toItem(size_t index)
 {
   void *id = nullptr;
   const uintptr_t value = index;
-  std::memcpy(id, &value, sizeof(void*));
+  std::memcpy(&id, &value, sizeof(uintptr_t));
   return wxDataViewItem(id);
 }
 
