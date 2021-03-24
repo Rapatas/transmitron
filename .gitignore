@@ -1,3 +1,5 @@
 *.sw?
 /compile_commands.json
 /build*
+/tags
+/.cache
