@@ -159,6 +159,7 @@ void Subscriptions::subscribe(const std::string &topic, MQTT::QoS /* qos */)
   sub->Bind(Events::RECEIVED, &Subscriptions::onMessage, this);
   mSubscriptions.insert({id, std::move(sub)});
   mRemap.push_back(id);
+  wxLogMessage("RowAppended");
   RowAppended();
 }
 
@@ -248,13 +249,10 @@ void Subscriptions::onSubscribed(Events::Subscription &/* e */) {}
 void Subscriptions::onUnsubscribed(Events::Subscription &e)
 {
   const auto id = e.getId();
-  auto it = std::find_if(
+  const auto it = std::find(
     std::begin(mRemap),
     std::end(mRemap),
-    [id](auto subId)
-    {
-      return subId == id;
-    }
+    id
   );
   if (it == std::end(mRemap))
   {
@@ -262,14 +260,13 @@ void Subscriptions::onUnsubscribed(Events::Subscription &e)
     return;
   }
   const auto index = (size_t)std::distance(std::begin(mRemap), it);
-  const auto item = GetItem((unsigned)index);
   for (const auto &o : mObservers)
   {
     o.second->onUnsubscribed(id);
   }
   mSubscriptions.erase(id);
   mRemap.erase(it);
-  ItemDeleted(wxDataViewItem(0), item);
+  RowDeleted((unsigned)index);
 }
 
 void Subscriptions::onMessage(Events::Subscription &e)
