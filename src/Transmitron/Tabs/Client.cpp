@@ -910,7 +910,7 @@ void Client::onSnippetsDrag(wxDataViewEvent &e)
 
   const void *id = item.GetID();
   uintptr_t message = 0;
-  std::memcpy(&message, id, sizeof(void*));
+  std::memcpy(&message, &id, sizeof(uintptr_t));
   auto *o = new wxTextDataObject(std::to_string(message));
 
   e.SetDataFormat(o->GetFormat());
@@ -928,7 +928,7 @@ void Client::onSnippetsDrop(wxDataViewEvent &e)
   object.SetData(e.GetDataFormat(), e.GetDataSize(), e.GetDataBuffer());
   const uintptr_t message = std::stoul(object.GetText().ToStdString());
   void *id = nullptr;
-  std::memcpy(id, &message, sizeof(void*));
+  std::memcpy(&id, &message, sizeof(uintptr_t));
   auto item = wxDataViewItem(id);
 
   wxDataViewItem moved;
