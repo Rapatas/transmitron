@@ -386,6 +386,7 @@ void Client::connection_lost(const std::string& cause)
 
 void Client::message_arrived(mqtt::const_message_ptr msg)
 {
+  wxLogMessage("Message received: %s", msg->get_topic());
   for (const auto &sub : mSubscriptions)
   {
     if (Client::match(sub.second->getFilter(), msg->get_topic()))
@@ -455,9 +456,9 @@ bool Client::match(const std::string &filter, const std::string &topic)
   if (filter.back() == '#' && plusPos == std::string::npos)
   {
     auto root = filter.substr(0, filter.size() - 1);
-    if (*root.rend() == '/')
+    if (root.back() == '/')
     {
-      root = root.substr(0, root.size() - 1);
+      root.pop_back();
     }
     return topic.rfind(root, 0) == 0;
   }
