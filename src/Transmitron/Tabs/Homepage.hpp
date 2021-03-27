@@ -51,25 +51,27 @@ private:
   void setupProfileForm();
 
   wxPropertyGrid *mProp = nullptr;
-  wxPGProperty *mNameProp = nullptr;
-  wxPGProperty *mHostnameProp = nullptr;
-  wxPGProperty *mPortProp = nullptr;
-  wxPGProperty *mTimeoutProp = nullptr;
-  wxPGProperty *mMaxInFlightProp = nullptr;
-  wxPGProperty *mKeepAliveProp = nullptr;
-  wxPGProperty *mClientIdProp = nullptr;
-  wxPGProperty *mUsernameProp = nullptr;
-  wxPGProperty *mPasswordProp = nullptr;
   wxPGProperty *mAutoReconnectProp = nullptr;
+  wxPGProperty *mClientIdProp = nullptr;
+  wxPGProperty *mConnectTimeoutProp = nullptr;
+  wxPGProperty *mDisconnectTimeoutProp = nullptr;
+  wxPGProperty *mHostnameProp = nullptr;
+  wxPGProperty *mKeepAliveProp = nullptr;
+  wxPGProperty *mMaxInFlightProp = nullptr;
+  wxPGProperty *mMaxReconnectRetriesProp = nullptr;
+  wxPGProperty *mNameProp = nullptr;
+  wxPGProperty *mPasswordProp = nullptr;
+  wxPGProperty *mPortProp = nullptr;
+  wxPGProperty *mUsernameProp = nullptr;
 
   wxButton *mSave = nullptr;
   wxButton *mConnect = nullptr;
 
   void fillPropertyGrid(
-    const ValueObjects::BrokerOptions &brokerOptions,
+    const MQTT::BrokerOptions &brokerOptions,
     const std::string &name
   );
-  ValueObjects::BrokerOptions optionsFromPropertyGrid() const;
+  MQTT::BrokerOptions optionsFromPropertyGrid() const;
 };
 
 }

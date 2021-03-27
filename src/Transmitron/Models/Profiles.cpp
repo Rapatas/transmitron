@@ -92,7 +92,7 @@ bool Profiles::load(const std::string &configDir)
     }
 
     auto j = nlohmann::json::parse(buffer.str());
-    auto brokerOptions = ValueObjects::BrokerOptions::fromJson(j);
+    auto brokerOptions = MQTT::BrokerOptions::fromJson(j);
 
     wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
     snippetsModel->load(entry.path());
@@ -112,7 +112,7 @@ bool Profiles::load(const std::string &configDir)
 
 bool Profiles::updateBrokerOptions(
   wxDataViewItem item,
-  const ValueObjects::BrokerOptions &brokerOptions
+  const MQTT::BrokerOptions &brokerOptions
 ) {
   if (!item.IsOk())
   {
@@ -271,7 +271,7 @@ wxDataViewItem Profiles::createProfile()
   return item;
 }
 
-const ValueObjects::BrokerOptions &Profiles::getBrokerOptions(wxDataViewItem item) const
+const MQTT::BrokerOptions &Profiles::getBrokerOptions(wxDataViewItem item) const
 {
   return mProfiles.at(toIndex(item))->brokerOptions;
 }

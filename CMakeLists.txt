@@ -11,35 +11,35 @@ set(INFO_POST_CONF ${CMAKE_CURRENT_BINARY_DIR}/Transmitron/Info.cpp)
 add_executable(
   ${PROJECT_NAME}
   ${INFO_POST_CONF}
+  src/Helpers/Helpers.cpp
+  src/MQTT/BrokerOptions.cpp
   src/MQTT/Client.cpp
   src/MQTT/Message.cpp
-  src/Helpers/Helpers.cpp
   src/MQTT/Subscription.cpp
   src/Transmitron/App.cpp
-  src/Transmitron/Models/Profiles.cpp
   src/Transmitron/Models/History.cpp
+  src/Transmitron/Models/Profiles.cpp
   src/Transmitron/Models/Snippets.cpp
   src/Transmitron/Models/Subscriptions.cpp
+  src/Transmitron/Resources/history/history-18x14.cpp
+  src/Transmitron/Resources/history/history-18x18.cpp
   src/Transmitron/Resources/pin/not-pinned-18x18.cpp
   src/Transmitron/Resources/pin/pinned-18x18.cpp
   src/Transmitron/Resources/plus/plus-18x18.cpp
+  src/Transmitron/Resources/preview/preview-18x14.cpp
+  src/Transmitron/Resources/preview/preview-18x18.cpp
   src/Transmitron/Resources/qos/qos-0.cpp
   src/Transmitron/Resources/qos/qos-1.cpp
   src/Transmitron/Resources/qos/qos-2.cpp
-  src/Transmitron/Resources/send/send-18x18.cpp
-  src/Transmitron/Resources/history/history-18x18.cpp
-  src/Transmitron/Resources/preview/preview-18x18.cpp
-  src/Transmitron/Resources/snippets/snippets-18x18.cpp
-  src/Transmitron/Resources/subscription/subscription-18x18.cpp
-  src/Transmitron/Resources/history/history-18x14.cpp
-  src/Transmitron/Resources/preview/preview-18x14.cpp
-  src/Transmitron/Resources/snippets/snippets-18x14.cpp
-  src/Transmitron/Resources/subscription/subscription-18x14.cpp
   src/Transmitron/Resources/send/send-18x14.cpp
+  src/Transmitron/Resources/send/send-18x18.cpp
+  src/Transmitron/Resources/snippets/snippets-18x14.cpp
+  src/Transmitron/Resources/snippets/snippets-18x18.cpp
+  src/Transmitron/Resources/subscription/subscription-18x14.cpp
+  src/Transmitron/Resources/subscription/subscription-18x18.cpp
   src/Transmitron/Tabs/Client.cpp
   src/Transmitron/Tabs/Homepage.cpp
   src/Transmitron/Types/Subscription.cpp
-  src/Transmitron/ValueObjects/BrokerOptions.cpp
   src/Transmitron/Widgets/Edit.cpp
   src/Transmitron/Widgets/TopicCtrl.cpp
   src/main.cpp

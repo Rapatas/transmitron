@@ -1,4 +1,5 @@
 #include "Client.hpp"
+#include <fmt/core.h>
 #include <wx/log.h>
 #include <thread>
 #include "Subscription.hpp"
@@ -7,37 +8,43 @@
 
 using namespace MQTT;
 
-constexpr size_t DefaultPort = 1883;
-constexpr size_t DefaultMaxRetries = 10;
-constexpr size_t DefaultKeepAliveIntervalSec = 20;
-constexpr size_t DefaultConnectTimeoutSec = 5;
-
-constexpr size_t DisconnectTimeoutMs = 200;
+constexpr size_t MaxRetries = 10;
 constexpr size_t ReconnectAfterMs = 2500;
 
-Client::Client() :
-  mHostname("0.0.0.0"),
-  mPort(DefaultPort),
-  mRetries(0),
-  mRetriesMax(DefaultMaxRetries)
+// Public {
+
+// Management {
+
+size_t Client::attachObserver(Observer *o)
 {
-  mOptions.set_clean_session(true);
-  mOptions.set_keep_alive_interval(DefaultKeepAliveIntervalSec);
-  mOptions.set_connect_timeout(DefaultConnectTimeoutSec);
-  mId = "client" + std::to_string(std::abs(rand()));
+  size_t id = 0;
+  do {
+    id = (size_t)std::abs(rand());
+  } while (mObservers.find(id) != std::end(mObservers));
+
+  return mObservers.insert(std::make_pair(id, o)).first->first;
 }
+
+// Management }
+
+// Actions {
 
 void Client::connect()
 {
-  std::string address = mHostname + ':' + std::to_string(mPort);
+  const std::string address = fmt::format(
+    "{}:{}",
+    mBrokerOptions.getHostname(),
+    mBrokerOptions.getPort()
+  );
   wxLogMessage("Connecting to %s", address);
   try
   {
-    mClient = std::make_shared<mqtt::async_client>(address, mId);
+    mClient = std::make_shared<mqtt::async_client>(
+      address,
+      mBrokerOptions.getClientId()
+    );
     mClient->set_callback(*this);
-    wxLogMessage("Username: %s", mOptions.get_user_name());
-    wxLogMessage("Password: %s", mOptions.get_password_str());
-    mClient->connect(mOptions, nullptr, *this);
+    mClient->connect(mConnectOptions, nullptr, *this);
   }
   catch (const mqtt::exception& e)
   {
@@ -48,10 +55,10 @@ void Client::connect()
 
 void Client::disconnect()
 {
-  wxLogMessage("Disconnecting from %s", mHostname);
+  wxLogMessage("Disconnecting from %s", mBrokerOptions.getHostname());
   try
   {
-    mClient->disconnect(DisconnectTimeoutMs, nullptr, *this);
+    mClient->disconnect(mDisconnectOptions);
     cleanSubscriptions();
   }
   catch (const mqtt::exception& exc)
@@ -67,90 +74,13 @@ void Client::reconnect()
   wxLogMessage("Reconnecting...");
   try
   {
-    mClient->connect(mOptions, nullptr, *this);
+    mClient->connect(mConnectOptions, nullptr, *this);
   }
   catch (const mqtt::exception& exc)
   {
     std::cerr << "Error: " << exc.what() << std::endl;
     exit(1);
   }
-}
-
-size_t Client::attachObserver(Observer *o)
-{
-  size_t id = 0;
-  do {
-    id = (size_t)std::abs(rand());
-  } while (mObservers.find(id) != std::end(mObservers));
-
-  return mObservers.insert(std::make_pair(id, o)).first->first;
-}
-
-void Client::publish(
-  const std::string &topic,
-  const std::string &payload,
-  QoS qos,
-  bool retained
-) {
-  mClient->publish(
-    topic,
-    payload.data(),
-    payload.size(),
-    (int)qos,
-    retained,
-    nullptr,
-    *this
-  );
-}
-
-void Client::setHostname(const std::string &hostname)
-{
-  if (connected()) { return; }
-  mHostname = hostname;
-}
-
-void Client::setPort(unsigned port)
-{
-  if (connected()) { return; }
-  mPort = port;
-}
-
-void Client::setId(const std::string &id)
-{
-  if (connected()) { return; }
-  mId = id;
-}
-
-void Client::setUsername(const std::string &username)
-{
-  if (connected()) { return; }
-  mOptions.set_user_name(username);
-}
-
-void Client::setPassword(const std::string &password)
-{
-  if (connected()) { return; }
-  mOptions.set_password(password);
-}
-
-std::string Client::hostname() const
-{
-  return mHostname;
-}
-
-unsigned Client::port() const
-{
-  return mPort;
-}
-
-std::string Client::id() const
-{
-  return mId;
-}
-
-bool Client::connected() const
-{
-  return mClient && mClient->is_connected();
 }
 
 std::shared_ptr<Subscription> Client::subscribe(const std::string &topic)
@@ -190,13 +120,69 @@ std::shared_ptr<Subscription> Client::subscribe(const std::string &topic)
   return sub;
 }
 
-void Client::unsubscribe(size_t id) {
-  auto it = mSubscriptions.find(id);
+void Client::unsubscribe(size_t id)
+{
+  const auto it = mSubscriptions.find(id);
   if (it == std::end(mSubscriptions)) { return; }
   it->second->setState(Subscription::State::PendingUnsubscription);
   wxLogMessage("Unsubscribing from %s", it->second->getFilter());
   mClient->unsubscribe(it->second->getFilter(), nullptr, *this);
 }
+
+void Client::publish(
+  const std::string &topic,
+  const std::string &payload,
+  QoS qos,
+  bool retained
+) {
+  mClient->publish(
+    topic,
+    payload.data(),
+    payload.size(),
+    (int)qos,
+    retained,
+    nullptr,
+    *this
+  );
+}
+
+// Actions }
+
+// Setters {
+
+void Client::setBrokerOptions(BrokerOptions brokerOptions)
+{
+  if (connected()) { return; }
+  mBrokerOptions = std::move(brokerOptions);
+
+  // Connect.
+  mConnectOptions.set_clean_session(true);
+  mConnectOptions.set_keep_alive_interval(mBrokerOptions.getKeepAliveInterval());
+  mConnectOptions.set_connect_timeout(mBrokerOptions.getConnectTimeout());
+
+  // Disconnect.
+  mDisconnectOptions.set_timeout(mBrokerOptions.getDisconnectTimeout());
+}
+
+// Setters }
+
+// Getters {
+
+const BrokerOptions &Client::brokerOptions() const
+{
+  return mBrokerOptions;
+}
+
+bool Client::connected() const
+{
+  return mClient && mClient->is_connected();
+}
+
+// Getters }
+
+// Public }
+
+// Private {
 
 // mqtt::iaction_listener interface {
 
@@ -322,7 +308,7 @@ void Client::onFailureConnect(const mqtt::token& tok)
     "Connection attempt failed: %s",
     returnCodes.at(tok.get_return_code()).c_str()
   );
-  if (++mRetries > mRetriesMax)
+  if (++mRetries > MaxRetries)
   {
     exit(1);
   }
@@ -432,6 +418,8 @@ void Client::cleanSubscriptions()
   }
 }
 
+// Static {
+
 bool Client::match(const std::string &filter, const std::string &topic)
 {
   auto split = [](const std::string& str, char delim)
@@ -497,3 +485,7 @@ bool Client::match(const std::string &filter, const std::string &topic)
 
   return true;
 }
+
+// Static }
+
+// Private }

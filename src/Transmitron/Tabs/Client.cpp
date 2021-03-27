@@ -30,7 +30,7 @@ wxDEFINE_EVENT(Events::DISCONNECTED, Events::Connection); // NOLINT
 
 Client::Client(
   wxWindow* parent,
-  const ValueObjects::BrokerOptions &brokerOptions,
+  const MQTT::BrokerOptions &brokerOptions,
   const wxObjectDataPtr<Models::Snippets> &snippetsModel
 ) :
   wxPanel(parent),
@@ -585,10 +585,7 @@ void Client::onConnectClicked(wxCommandEvent &/* event */)
   }
   else
   {
-    mClient->setHostname(mBrokerOptions.getHostname());
-    mClient->setPort(mBrokerOptions.getPort());
-    mClient->setUsername(mBrokerOptions.getUsername());
-    mClient->setPassword(mBrokerOptions.getPassword());
+    mClient->setBrokerOptions(mBrokerOptions);
     mClient->connect();
   }
 }

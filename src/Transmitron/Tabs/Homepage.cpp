@@ -111,13 +111,15 @@ void Homepage::setupProfileForm()
   mNameProp = mProp->Append(new wxStringProperty("Name", "", {}));
   mHostnameProp = mProp->Append(new wxStringProperty("Hostname", "", {}));
   mPortProp = mProp->Append(new wxUIntProperty("Port", "", {}));
-  mTimeoutProp = mProp->Append(new wxUIntProperty("Timeout (s)", "", {}));
+  mConnectTimeoutProp = mProp->Append(new wxUIntProperty("Connect Timeout (s)", "", {}));
+  mDisconnectTimeoutProp = mProp->Append(new wxUIntProperty("Disconnect Timeout (s)", "", {}));
   mMaxInFlightProp = mProp->Append(new wxUIntProperty("Max in flight", "", {}));
   mKeepAliveProp = mProp->Append(new wxUIntProperty("Keep alive interval", "", {}));
   mClientIdProp = mProp->Append(new wxStringProperty("Client ID", "", {}));
   mUsernameProp = mProp->Append(new wxStringProperty("Username", "", {}));
   mPasswordProp = mProp->Append(new wxStringProperty("Password", "", {}));
   mAutoReconnectProp = mProp->Append(new wxBoolProperty("Auto Reconnect", "", {}));
+  mMaxReconnectRetriesProp = mProp->Append(new wxUIntProperty("Max Reconnect Retries", "", {}));
 
   mSave = new wxButton(mProfileForm, -1, "Save");
   mSave->Enable(false);
@@ -244,36 +246,40 @@ void Homepage::onProfileDelete(wxCommandEvent & /* event */)
 }
 
 void Homepage::fillPropertyGrid(
-  const ValueObjects::BrokerOptions &brokerOptions,
+  const MQTT::BrokerOptions &brokerOptions,
   const std::string &name
 ) {
-  mNameProp->SetValue(name);
-  mHostnameProp->SetValue(brokerOptions.getHostname());
-  mPortProp->SetValue((int)brokerOptions.getPort());
-  mTimeoutProp->SetValue((int)brokerOptions.getTimeout());
-  mMaxInFlightProp->SetValue((int)brokerOptions.getMaxInFlight());
-  mKeepAliveProp->SetValue((int)brokerOptions.getKeepAliveInterval());
-  mClientIdProp->SetValue(brokerOptions.getClientId());
-  mUsernameProp->SetValue(brokerOptions.getUsername());
-  mPasswordProp->SetValue(brokerOptions.getPassword());
   mAutoReconnectProp->SetValue(brokerOptions.getAutoReconnect());
+  mClientIdProp->SetValue(brokerOptions.getClientId());
+  mConnectTimeoutProp->SetValue((int)brokerOptions.getConnectTimeout().count());
+  mDisconnectTimeoutProp->SetValue(brokerOptions.getDisconnectTimeout().count());
+  mHostnameProp->SetValue(brokerOptions.getHostname());
+  mKeepAliveProp->SetValue(brokerOptions.getKeepAliveInterval().count());
+  mMaxInFlightProp->SetValue((int)brokerOptions.getMaxInFlight());
+  mMaxReconnectRetriesProp->SetValue((int)brokerOptions.getMaxReconnectRetries());
+  mNameProp->SetValue(name);
+  mPasswordProp->SetValue(brokerOptions.getPassword());
+  mPortProp->SetValue((int)brokerOptions.getPort());
+  mUsernameProp->SetValue(brokerOptions.getUsername());
 
   mSave->Enable(true);
   mConnect->Enable(true);
   mProp->Enable(true);
 }
 
-ValueObjects::BrokerOptions Homepage::optionsFromPropertyGrid() const
+MQTT::BrokerOptions Homepage::optionsFromPropertyGrid() const
 {
-  return ValueObjects::BrokerOptions {
+  return MQTT::BrokerOptions {
     mAutoReconnectProp->GetValue(),
+    (unsigned)mMaxInFlightProp->GetValue().GetInteger(),
+    (unsigned)mMaxReconnectRetriesProp->GetValue().GetInteger(),
+    (unsigned)mPortProp->GetValue().GetInteger(),
+    (unsigned)mConnectTimeoutProp->GetValue().GetInteger(),
+    (unsigned)mDisconnectTimeoutProp->GetValue().GetInteger(),
+    (unsigned)mKeepAliveProp->GetValue().GetLong(),
     mClientIdProp->GetValue(),
     mHostnameProp->GetValue(),
-    mUsernameProp->GetValue(),
     mPasswordProp->GetValue(),
-    (unsigned)mKeepAliveProp->GetValue().GetLong(),
-    (unsigned)mMaxInFlightProp->GetValue().GetInteger(),
-    (unsigned)mPortProp->GetValue().GetInteger(),
-    (unsigned)mTimeoutProp->GetValue().GetInteger(),
+    mUsernameProp->GetValue(),
   };
 }

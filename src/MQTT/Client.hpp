@@ -5,7 +5,9 @@
 #include <map>
 #include <list>
 #include <mqtt/async_client.h>
+#include <mqtt/disconnect_options.h>
 #include "QualityOfService.hpp"
+#include "BrokerOptions.hpp"
 
 namespace MQTT
 {
@@ -29,38 +31,33 @@ public:
     Observer &operator=(const Observer &other) = default;
     Observer &operator=(Observer &&other) = default;
     virtual ~Observer() = default;
+
     virtual void onConnected() = 0;
     virtual void onDisconnected() = 0;
   };
 
-  explicit Client();
+  explicit Client() = default;
+  size_t attachObserver(Observer *o);
 
+  // Actions.
   void connect();
   void disconnect();
   void reconnect();
-
-  size_t attachObserver(Observer *o);
-
-  void setHostname(const std::string &hostname);
-  void setPort(unsigned port);
-  void setId(const std::string &id);
-  void setUsername(const std::string &username);
-  void setPassword(const std::string &password);
-
   void publish(
     const std::string &topic,
     const std::string &payload,
     QoS qos,
     bool retained = false
   );
-
   std::shared_ptr<Subscription> subscribe(const std::string &topic);
   void unsubscribe(size_t id);
 
-  std::string hostname() const;
-  unsigned port() const;
+  // Setters.
+  void setBrokerOptions(BrokerOptions brokerOptions);
+
+  // Getters.
+  const BrokerOptions &brokerOptions() const;
   bool connected() const;
-  std::string id() const;
 
 private:
 
@@ -75,14 +72,11 @@ private:
     { -1, "Connection timeout" }
   };
 
-  mqtt::connect_options mOptions;
-  std::string mHostname;
-  std::string mId;
-  unsigned mPort;
-  unsigned mRetries;
-  unsigned mRetriesMax;
-
+  BrokerOptions mBrokerOptions;
   SubscriptionId mSubscriptionIds = 0;
+  mqtt::connect_options mConnectOptions;
+  mqtt::disconnect_options mDisconnectOptions;
+  size_t mRetries = 0;
   std::map<SubscriptionId, std::shared_ptr<Subscription>> mSubscriptions;
   std::map<size_t, MQTT::Client::Observer*> mObservers;
   std::shared_ptr<mqtt::async_client> mClient;

@@ -7,13 +7,13 @@
 #include <wx/tglbtn.h>
 
 #include "MQTT/Client.hpp"
+#include "MQTT/BrokerOptions.hpp"
 #include "Transmitron/Events/Connection.hpp"
 #include "Transmitron/Widgets/TopicCtrl.hpp"
 #include "Transmitron/Models/History.hpp"
 #include "Transmitron/Models/Subscriptions.hpp"
 #include "Transmitron/Models/Snippets.hpp"
 #include "Transmitron/Widgets/Edit.hpp"
-#include "Transmitron/ValueObjects/BrokerOptions.hpp"
 
 namespace Transmitron::Tabs
 {
@@ -27,7 +27,7 @@ public:
 
   Client(
     wxWindow* parent,
-    const ValueObjects::BrokerOptions &brokerOptions,
+    const MQTT::BrokerOptions &brokerOptions,
     const wxObjectDataPtr<Models::Snippets> &snippetsModel
   );
   Client(const Client &other) = delete;
@@ -79,7 +79,7 @@ private:
 
   static constexpr size_t OptionsHeight = 26;
 
-  const ValueObjects::BrokerOptions mBrokerOptions;
+  const MQTT::BrokerOptions mBrokerOptions;
   const wxFont mFont;
 
   wxBoxSizer *mMasterSizer = nullptr;

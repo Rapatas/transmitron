@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <wx/dataview.h>
 #include "Snippets.hpp"
-#include "Transmitron/ValueObjects/BrokerOptions.hpp"
+#include "MQTT/BrokerOptions.hpp"
 
 namespace Transmitron::Models
 {
@@ -27,7 +27,7 @@ public:
 
   bool updateBrokerOptions(
     wxDataViewItem item,
-    const ValueObjects::BrokerOptions &brokerOptions
+    const MQTT::BrokerOptions &brokerOptions
   );
   bool updateName(
     wxDataViewItem &item,
@@ -36,7 +36,7 @@ public:
   wxDataViewItem createProfile();
   bool remove(wxDataViewItem item);
 
-  const ValueObjects::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
+  const MQTT::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
   std::string getName(wxDataViewItem item) const;
 
   wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
@@ -46,7 +46,7 @@ private:
   struct Profile
   {
     std::string name;
-    ValueObjects::BrokerOptions brokerOptions;
+    MQTT::BrokerOptions brokerOptions;
     std::filesystem::path path;
     wxObjectDataPtr<Models::Snippets> snippetsModel;
     bool saved = false;
