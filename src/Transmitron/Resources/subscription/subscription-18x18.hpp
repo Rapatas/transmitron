@@ -2,6 +2,6 @@
 #define SUBSCRIPTION_18X18_HPP
 
 class wxBitmap;
-const wxBitmap *bin2c_subscription_18x18();
+const wxBitmap *bin2cSubscription18x18();
 
 #endif // SUBSCRIPTION_18X18_HPP

@@ -75,25 +75,25 @@ Edit::Edit(
   mTop->SetMinSize(0, (int)mOptionsHeight);
   mBottom->SetMinSize(0, (int)mOptionsHeight);
 
-  mRetainedFalse = new wxStaticBitmap(this, -1, *bin2c_not_pinned_18x18());
+  mRetainedFalse = new wxStaticBitmap(this, -1, *bin2cNotPinned18x18());
   mRetainedFalse->SetToolTip("Not retained");
   mRetainedFalse->Bind(wxEVT_LEFT_UP, &Edit::onRetainedClicked, this);
-  mRetainedTrue = new wxStaticBitmap(this, -1, *bin2c_pinned_18x18());
+  mRetainedTrue = new wxStaticBitmap(this, -1, *bin2cPinned18x18());
   mRetainedTrue->SetToolTip("Retained");
   mRetainedTrue->Bind(wxEVT_LEFT_UP, &Edit::onRetainedClicked, this);
 
   mRetainedTrue->Hide();
   mRetained = false;
 
-  mQos0 = new wxStaticBitmap(this, -1, *bin2c_qos_0());
+  mQos0 = new wxStaticBitmap(this, -1, *bin2cQos0());
   mQos0->SetToolTip("QoS: 0");
   mQos0->Bind(wxEVT_LEFT_UP, &Edit::onQosClicked, this);
 
-  mQos1 = new wxStaticBitmap(this, -1, *bin2c_qos_1());
+  mQos1 = new wxStaticBitmap(this, -1, *bin2cQos1());
   mQos1->SetToolTip("QoS: 1");
   mQos1->Bind(wxEVT_LEFT_UP, &Edit::onQosClicked, this);
 
-  mQos2 = new wxStaticBitmap(this, -1, *bin2c_qos_2());
+  mQos2 = new wxStaticBitmap(this, -1, *bin2cQos2());
   mQos2->SetToolTip("QoS: 2");
   mQos2->Bind(wxEVT_LEFT_UP, &Edit::onQosClicked, this);
 
@@ -104,7 +104,7 @@ Edit::Edit(
   mPublish = new wxBitmapButton(
     this,
     -1,
-    *bin2c_send_18x18(),
+    *bin2cSend18x18(),
     wxDefaultPosition,
     wxSize((int)mOptionsHeight, (int)mOptionsHeight)
   );
@@ -150,11 +150,11 @@ void Edit::setupScintilla()
   constexpr int FoldMarginWidth = 20;
   constexpr int ScrollWidth = 50;
 
-  constexpr int MARGIN_SCRIPT_FOLD_INDEX = 1;
-  mText->SetMarginType(MARGIN_SCRIPT_FOLD_INDEX, wxSTC_MARGIN_SYMBOL);
-  mText->SetMarginMask(MARGIN_SCRIPT_FOLD_INDEX, (int)wxSTC_MASK_FOLDERS);
-  mText->SetMarginWidth(MARGIN_SCRIPT_FOLD_INDEX, FoldMarginWidth);
-  mText->SetMarginSensitive(MARGIN_SCRIPT_FOLD_INDEX, true);
+  constexpr int MarginScriptFoldIndex = 1;
+  mText->SetMarginType(MarginScriptFoldIndex, wxSTC_MARGIN_SYMBOL);
+  mText->SetMarginMask(MarginScriptFoldIndex, (int)wxSTC_MASK_FOLDERS);
+  mText->SetMarginWidth(MarginScriptFoldIndex, FoldMarginWidth);
+  mText->SetMarginSensitive(MarginScriptFoldIndex, true);
   mText->SetAutomaticFold(wxSTC_AUTOMATICFOLD_CLICK);
 
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDER,        wxSTC_MARK_PLUS);

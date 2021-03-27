@@ -2,6 +2,6 @@
 #define SEND_18X14_HPP
 
 class wxBitmap;
-const wxBitmap *bin2c_send_18x14();
+const wxBitmap *bin2cSend18x14();
 
 #endif // SEND_18X14_HPP

@@ -204,19 +204,19 @@ void Client::on_failure(const mqtt::token& tok)
 {
   switch (tok.get_type()) {
     case mqtt::delivery_token::Type::CONNECT: {
-      on_failure_connect(tok);
+      onFailureConnect(tok);
     } break;
     case mqtt::delivery_token::Type::DISCONNECT: {
-      on_failure_disconnect(tok);
+      onFailureDisconnect(tok);
     } break;
     case mqtt::delivery_token::Type::PUBLISH: {
-      on_failure_publish(tok);
+      onFailurePublish(tok);
     } break;
     case mqtt::delivery_token::Type::SUBSCRIBE: {
-      on_failure_subscribe(tok);
+      onFailureSubscribe(tok);
     } break;
     case mqtt::delivery_token::Type::UNSUBSCRIBE: {
-      on_failure_unsubscribe(tok);
+      onFailureUnsubscribe(tok);
     } break;
   }
 }
@@ -225,24 +225,24 @@ void Client::on_success(const mqtt::token& tok)
 {
   switch (tok.get_type()) {
     case mqtt::delivery_token::Type::CONNECT: {
-      on_success_connect(tok);
+      onSuccessConnect(tok);
     } break;
     case mqtt::delivery_token::Type::DISCONNECT: {
-      on_success_disconnect(tok);
+      onSuccessDisconnect(tok);
     } break;
     case mqtt::delivery_token::Type::PUBLISH: {
-      on_success_publish(tok);
+      onSuccessPublish(tok);
     } break;
     case mqtt::delivery_token::Type::SUBSCRIBE: {
-      on_success_subscribe(tok);
+      onSuccessSubscribe(tok);
     } break;
     case mqtt::delivery_token::Type::UNSUBSCRIBE: {
-      on_success_unsubscribe(tok);
+      onSuccessUnsubscribe(tok);
     } break;
   }
 }
 
-void Client::on_success_connect(const mqtt::token& /* tok */)
+void Client::onSuccessConnect(const mqtt::token& /* tok */)
 {
   for (const auto &o : mObservers)
   {
@@ -250,7 +250,7 @@ void Client::on_success_connect(const mqtt::token& /* tok */)
   }
 }
 
-void Client::on_success_disconnect(const mqtt::token& /* tok */)
+void Client::onSuccessDisconnect(const mqtt::token& /* tok */)
 {
   for (const auto &o : mObservers)
   {
@@ -258,9 +258,9 @@ void Client::on_success_disconnect(const mqtt::token& /* tok */)
   }
 }
 
-void Client::on_success_publish(const mqtt::token& /* tok */) {}
+void Client::onSuccessPublish(const mqtt::token& /* tok */) {}
 
-void Client::on_success_subscribe(const mqtt::token& tok)
+void Client::onSuccessSubscribe(const mqtt::token& tok)
 {
   auto it = std::find_if(
     std::begin(mSubscriptions),
@@ -288,7 +288,7 @@ void Client::on_success_subscribe(const mqtt::token& tok)
   }
 }
 
-void Client::on_success_unsubscribe(const mqtt::token& tok)
+void Client::onSuccessUnsubscribe(const mqtt::token& tok)
 {
   auto it = std::find_if(
     std::begin(mSubscriptions),
@@ -306,7 +306,7 @@ void Client::on_success_unsubscribe(const mqtt::token& tok)
   }
 
   wxLogMessage(
-    "Client::on_success_unsubscribe: %s",
+    "Client::onSuccessUnsubscribe: %s",
     it->second->getFilter()
   );
 
@@ -315,7 +315,7 @@ void Client::on_success_unsubscribe(const mqtt::token& tok)
   mSubscriptions.erase(it);
 }
 
-void Client::on_failure_connect(const mqtt::token& tok)
+void Client::onFailureConnect(const mqtt::token& tok)
 {
 
   wxLogWarning(
@@ -329,7 +329,7 @@ void Client::on_failure_connect(const mqtt::token& tok)
   reconnect();
 }
 
-void Client::on_failure_disconnect(const mqtt::token& tok)
+void Client::onFailureDisconnect(const mqtt::token& tok)
 {
   wxLogWarning(
     "Disconnection attempt failed: %s",
@@ -337,7 +337,7 @@ void Client::on_failure_disconnect(const mqtt::token& tok)
   );
 }
 
-void Client::on_failure_publish(const mqtt::token& tok)
+void Client::onFailurePublish(const mqtt::token& tok)
 {
   wxLogWarning(
     "Publishing attempt failed: %s",
@@ -345,7 +345,7 @@ void Client::on_failure_publish(const mqtt::token& tok)
   );
 }
 
-void Client::on_failure_subscribe(const mqtt::token& tok)
+void Client::onFailureSubscribe(const mqtt::token& tok)
 {
   wxLogWarning(
     "Subscription attempt failed: %s",
@@ -353,7 +353,7 @@ void Client::on_failure_subscribe(const mqtt::token& tok)
   );
 }
 
-void Client::on_failure_unsubscribe(const mqtt::token& tok)
+void Client::onFailureUnsubscribe(const mqtt::token& tok)
 {
   wxLogWarning(
     "Unsubscription attempt failed: %s",

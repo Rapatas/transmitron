@@ -44,7 +44,7 @@ bool App::OnInit()
   wxLog::SetActiveTarget(log);
 
   wxImageList * il = new wxImageList;
-  il->Add(*bin2c_plus_18x18());
+  il->Add(*bin2cPlus18x18());
 
   auto *frame = new wxFrame(
     nullptr,

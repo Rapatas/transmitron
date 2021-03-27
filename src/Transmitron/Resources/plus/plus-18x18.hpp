@@ -2,6 +2,6 @@
 #define PLUS_18X18_HPP
 
 class wxBitmap;
-const wxBitmap *bin2c_plus_18x18();
+const wxBitmap *bin2cPlus18x18();
 
 #endif // PLUS_18X18_HPP

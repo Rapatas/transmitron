@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <string_view>
 #include <wx/log.h>
 #include <wx/artprov.h>
 #include <fmt/format.h>
@@ -91,7 +92,7 @@ bool Snippets::load(const std::string &connectionDir)
 wxDataViewItem Snippets::createFolder(
   wxDataViewItem parentItem
 ) {
-  const constexpr char *newName = "New Folder";
+  const constexpr std::string_view NewName{"New Folder"};
 
   auto parentId = toId(parentItem);
   Node &parentNode = mNodes.at(parentId);
@@ -101,11 +102,11 @@ wxDataViewItem Snippets::createFolder(
   }
 
   // Find a unique name.
-  std::string uniqueName = newName;
+  std::string uniqueName{NewName};
   size_t postfix = 0;
   while (hasChildNamed(parentItem, uniqueName)) {
     ++postfix;
-    uniqueName = fmt::format("{} - {}", newName, postfix);
+    uniqueName = fmt::format("{} - {}", NewName, postfix);
   }
 
   wxLogInfo(
@@ -155,7 +156,7 @@ wxDataViewItem Snippets::createSnippet(
   wxDataViewItem parentItem,
   std::shared_ptr<MQTT::Message> message
 ) {
-  const constexpr char *newName = "New Snippet";
+  const constexpr std::string_view NewName{"New Snippet"};
 
   auto parentId = toId(parentItem);
   Node &parentNode = mNodes.at(parentId);
@@ -165,11 +166,11 @@ wxDataViewItem Snippets::createSnippet(
   }
 
   // Find a unique name.
-  std::string uniqueName = newName;
+  std::string uniqueName{NewName};
   size_t postfix = 0;
   while (hasChildNamed(parentItem, uniqueName)) {
     ++postfix;
-    uniqueName = fmt::format("{} - {}", newName, postfix);
+    uniqueName = fmt::format("{} - {}", NewName, postfix);
   }
 
   wxLogInfo(

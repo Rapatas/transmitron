@@ -221,8 +221,8 @@ bool Profiles::remove(wxDataViewItem item)
 
 wxDataViewItem Profiles::createProfile()
 {
-  const constexpr char *newProfileName = "New Profile";
-  std::string uniqueName{newProfileName};
+  const constexpr std::string_view NewProfileName{"New Profile"};
+  std::string uniqueName{NewProfileName};
   unsigned postfix = 0;
   while (std::any_of(
       std::begin(mProfiles) + 1,
@@ -233,7 +233,7 @@ wxDataViewItem Profiles::createProfile()
       }
   )) {
     ++postfix;
-    uniqueName = fmt::format("{} - {}", newProfileName, postfix);
+    uniqueName = fmt::format("{} - {}", NewProfileName, postfix);
   }
 
   std::string encoded;

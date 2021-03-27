@@ -218,9 +218,9 @@ void Subscriptions::GetValueByRow(
     case Column::Qos: {
       const wxBitmap *result = nullptr;
       switch (sub->getQos()) {
-        case MQTT::QoS::AtLeastOnce: { result = bin2c_qos_0(); } break;
-        case MQTT::QoS::AtMostOnce:  { result = bin2c_qos_1(); } break;
-        case MQTT::QoS::ExactlyOnce: { result = bin2c_qos_2(); } break;
+        case MQTT::QoS::AtLeastOnce: { result = bin2cQos0(); } break;
+        case MQTT::QoS::AtMostOnce:  { result = bin2cQos1(); } break;
+        case MQTT::QoS::ExactlyOnce: { result = bin2cQos2(); } break;
       }
       variant << *result;
     } break;

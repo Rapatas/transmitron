@@ -77,7 +77,7 @@ private:
 
   std::map<Panes, Pane> mPanes;
 
-  static const size_t OptionsHeight = 26;
+  static constexpr size_t OptionsHeight = 26;
 
   const ValueObjects::BrokerOptions mBrokerOptions;
   const wxFont mFont;

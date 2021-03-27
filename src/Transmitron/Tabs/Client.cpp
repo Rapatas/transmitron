@@ -51,40 +51,40 @@ Client::Client(
       "History",
       {},
       nullptr,
-      bin2c_history_18x18(),
-      bin2c_history_18x14(),
+      bin2cHistory18x18(),
+      bin2cHistory18x14(),
       nullptr
     }},
     {Panes::Preview, {
       "Preview",
       {},
       nullptr,
-      bin2c_preview_18x18(),
-      bin2c_preview_18x14(),
+      bin2cPreview18x18(),
+      bin2cPreview18x14(),
       nullptr
     }},
     {Panes::Publish, {
       "Publish",
       {},
       nullptr,
-      bin2c_send_18x18(),
-      bin2c_send_18x14(),
+      bin2cSend18x18(),
+      bin2cSend18x14(),
       nullptr
     }},
     {Panes::Snippets, {
       "Snippets",
       {},
       nullptr,
-      bin2c_snippets_18x18(),
-      bin2c_snippets_18x14(),
+      bin2cSnippets18x18(),
+      bin2cSnippets18x14(),
       nullptr
     }},
     {Panes::Subscriptions, {
       "Subscriptions",
       {},
       nullptr,
-      bin2c_subscription_18x18(),
-      bin2c_subscription_18x14(),
+      bin2cSubscription18x18(),
+      bin2cSubscription18x14(),
       nullptr
     }},
   };
@@ -354,7 +354,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mSubscribe = new wxBitmapButton(
     panel,
     -1,
-    *bin2c_plus_18x18(),
+    *bin2cPlus18x18(),
     wxDefaultPosition,
     wxSize(OptionsHeight, OptionsHeight)
   );
