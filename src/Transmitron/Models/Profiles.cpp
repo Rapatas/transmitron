@@ -130,7 +130,7 @@ bool Profiles::updateBrokerOptions(
 }
 
 bool Profiles::updateName(
-  wxDataViewItem &item,
+  wxDataViewItem item,
   const std::string &name
 ) {
   if (!item.IsOk())

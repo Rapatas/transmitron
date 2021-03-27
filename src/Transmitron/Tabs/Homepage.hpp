@@ -1,6 +1,7 @@
 #ifndef TRANSMITRON_TABS_HOMEPAGE_HPP
 #define TRANSMITRON_TABS_HOMEPAGE_HPP
 
+#include <wx/propgrid/property.h>
 #include <wx/propgrid/props.h>
 #include <wx/panel.h>
 #include <wx/sizer.h>
@@ -31,12 +32,35 @@ private:
     ProfilesDelete,
   };
 
+  enum Properties : size_t
+  {
+    AutoReconnect,
+    ClientId,
+    ConnectTimeout,
+    DisconnectTimeout,
+    Hostname,
+    KeepAlive,
+    MaxInFlight,
+    MaxReconnectRetries,
+    Name,
+    Password,
+    Port,
+    Username,
+    Max
+  };
+
+  wxButton *mConnect = nullptr;
+  wxButton *mSave = nullptr;
+
+  // Profiles.
+  wxPanel *mProfiles = nullptr;
   wxDataViewCtrl *mProfilesCtrl = nullptr;
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
 
-  wxBoxSizer *mSizer = nullptr;
-  wxPanel *mProfiles = nullptr;
-  void setupProfiles();
+  // Profile Form.
+  wxPanel *mProfileForm = nullptr;
+  wxPropertyGrid *mProfileFormGrid = nullptr;
+  std::vector<wxPGProperty*> mProfileFormProperties;
 
   void onProfileActivated(wxDataViewEvent &event);
   void onProfileSelected(wxDataViewEvent &event);
@@ -47,26 +71,8 @@ private:
   void onContextSelected(wxCommandEvent &event);
   void onProfileDelete(wxCommandEvent &event);
 
-  wxPanel *mProfileForm = nullptr;
+  void setupProfiles();
   void setupProfileForm();
-
-  wxPropertyGrid *mProp = nullptr;
-  wxPGProperty *mAutoReconnectProp = nullptr;
-  wxPGProperty *mClientIdProp = nullptr;
-  wxPGProperty *mConnectTimeoutProp = nullptr;
-  wxPGProperty *mDisconnectTimeoutProp = nullptr;
-  wxPGProperty *mHostnameProp = nullptr;
-  wxPGProperty *mKeepAliveProp = nullptr;
-  wxPGProperty *mMaxInFlightProp = nullptr;
-  wxPGProperty *mMaxReconnectRetriesProp = nullptr;
-  wxPGProperty *mNameProp = nullptr;
-  wxPGProperty *mPasswordProp = nullptr;
-  wxPGProperty *mPortProp = nullptr;
-  wxPGProperty *mUsernameProp = nullptr;
-
-  wxButton *mSave = nullptr;
-  wxButton *mConnect = nullptr;
-
   void fillPropertyGrid(
     const MQTT::BrokerOptions &brokerOptions,
     const std::string &name

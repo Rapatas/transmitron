@@ -30,7 +30,7 @@ public:
     const MQTT::BrokerOptions &brokerOptions
   );
   bool updateName(
-    wxDataViewItem &item,
+    wxDataViewItem item,
     const std::string &name
   );
   wxDataViewItem createProfile();

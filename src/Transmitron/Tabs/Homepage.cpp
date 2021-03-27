@@ -19,16 +19,15 @@ Homepage::Homepage(
   wxPanel(parent),
   mProfilesModel(profilesModel)
 {
-  mSizer = new wxBoxSizer(wxHORIZONTAL);
-  this->SetSizer(mSizer);
+  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
+  this->SetSizer(hsizer);
 
   setupProfiles();
   setupProfileForm();
 
-  mSizer->Add(mProfiles,      1, wxEXPAND);
-  mSizer->Add(mProfileForm,   1, wxEXPAND);
-
-  mSizer->Layout();
+  hsizer->Add(mProfiles,    1, wxEXPAND);
+  hsizer->Add(mProfileForm, 1, wxEXPAND);
+  hsizer->Layout();
 
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Homepage::onContextSelected, this);
 }
@@ -36,14 +35,14 @@ Homepage::Homepage(
 void Homepage::setupProfiles()
 {
   wxDataViewColumn* const name = new wxDataViewColumn(
-    "name",
+    "Name",
     new wxDataViewTextRenderer(),
     (unsigned)Models::Profiles::Column::Name,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
   wxDataViewColumn* const url = new wxDataViewColumn(
-    "url",
+    "Address",
     new wxDataViewTextRenderer(),
     (unsigned)Models::Profiles::Column::URL,
     wxCOL_WIDTH_AUTOSIZE,
@@ -95,7 +94,7 @@ void Homepage::setupProfileForm()
 {
   mProfileForm = new wxPanel(this, -1);
 
-  mProp = new wxPropertyGrid(
+  mProfileFormGrid = new wxPropertyGrid(
     mProfileForm,
     -1,
     wxDefaultPosition,
@@ -103,29 +102,46 @@ void Homepage::setupProfileForm()
     wxPG_SPLITTER_AUTO_CENTER
   );
 
-  mProp->DedicateKey(WXK_UP);
-  mProp->DedicateKey(WXK_DOWN);
+  mProfileFormGrid->DedicateKey(WXK_UP);
+  mProfileFormGrid->DedicateKey(WXK_DOWN);
 
-  mProp->Enable(false);
+  mProfileFormGrid->Enable(false);
 
-  mNameProp = mProp->Append(new wxStringProperty("Name", "", {}));
-  mHostnameProp = mProp->Append(new wxStringProperty("Hostname", "", {}));
-  mPortProp = mProp->Append(new wxUIntProperty("Port", "", {}));
-  mConnectTimeoutProp = mProp->Append(new wxUIntProperty("Connect Timeout (s)", "", {}));
-  mDisconnectTimeoutProp = mProp->Append(new wxUIntProperty("Disconnect Timeout (s)", "", {}));
-  mMaxInFlightProp = mProp->Append(new wxUIntProperty("Max in flight", "", {}));
-  mKeepAliveProp = mProp->Append(new wxUIntProperty("Keep alive interval", "", {}));
-  mClientIdProp = mProp->Append(new wxStringProperty("Client ID", "", {}));
-  mUsernameProp = mProp->Append(new wxStringProperty("Username", "", {}));
-  mPasswordProp = mProp->Append(new wxStringProperty("Password", "", {}));
-  mAutoReconnectProp = mProp->Append(new wxBoolProperty("Auto Reconnect", "", {}));
-  mMaxReconnectRetriesProp = mProp->Append(new wxUIntProperty("Max Reconnect Retries", "", {}));
+  auto &pfp = mProfileFormProperties;
+  auto &pfg = mProfileFormGrid;
+
+  pfp.resize(Properties::Max);
+
+  pfp.at(Properties::Name) =
+    pfg->Append(new wxStringProperty("Name", "", {}));
+  pfp.at(Properties::Hostname) =
+    pfg->Append(new wxStringProperty("Hostname", "", {}));
+  pfp.at(Properties::Port) =
+    pfg->Append(new wxUIntProperty("Port", "", {}));
+  pfp.at(Properties::Username) =
+    pfg->Append(new wxStringProperty("Username", "", {}));
+  pfp.at(Properties::Password) =
+    pfg->Append(new wxStringProperty("Password", "", {}));
+  pfp.at(Properties::ConnectTimeout) =
+    pfg->Append(new wxUIntProperty("Connect Timeout (s)", "", {}));
+  pfp.at(Properties::DisconnectTimeout) =
+    pfg->Append(new wxUIntProperty("Disconnect Timeout (s)", "", {}));
+  pfp.at(Properties::MaxInFlight) =
+    pfg->Append(new wxUIntProperty("Max in flight", "", {}));
+  pfp.at(Properties::KeepAlive) =
+    pfg->Append(new wxUIntProperty("Keep alive interval", "", {}));
+  pfp.at(Properties::ClientId) =
+    pfg->Append(new wxStringProperty("Client ID", "", {}));
+  pfp.at(Properties::AutoReconnect) =
+    pfg->Append(new wxBoolProperty("Auto Reconnect", "", {}));
+  pfp.at(Properties::MaxReconnectRetries) =
+    pfg->Append(new wxUIntProperty("Max Reconnect Retries", "", {}));
 
   mSave = new wxButton(mProfileForm, -1, "Save");
   mSave->Enable(false);
 
   auto *sizer = new wxBoxSizer(wxVERTICAL);
-  sizer->Add(mProp, 1, wxEXPAND);
+  sizer->Add(mProfileFormGrid, 1, wxEXPAND);
   sizer->Add(mSave, 0, wxEXPAND);
   mProfileForm->SetSizer(sizer);
 
@@ -137,7 +153,7 @@ void Homepage::onProfileActivated(wxDataViewEvent &e)
   const auto &profileItem = e.GetItem();
   const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
   wxLogMessage(
-    "Queueing event for profile at %s:%d",
+    "Queueing event for profile at %s:%zu",
     brokerOptions.getHostname(),
     brokerOptions.getPort()
   );
@@ -171,7 +187,7 @@ void Homepage::onConnectClicked(wxCommandEvent &/* event */)
   const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
 
   wxLogMessage(
-    "Queueing event for profile at %s:%d",
+    "Queueing event for profile at %s:%zu",
     brokerOptions.getHostname(),
     brokerOptions.getPort()
   );
@@ -183,23 +199,23 @@ void Homepage::onConnectClicked(wxCommandEvent &/* event */)
 
 void Homepage::onSaveClicked(wxCommandEvent &/* event */)
 {
-  auto item = mProfilesCtrl->GetSelection();
+  const auto item = mProfilesCtrl->GetSelection();
 
   if (!item.IsOk())
   {
     return;
   }
 
-  auto name = mNameProp->GetValue();
+  const auto name = mProfileFormProperties.at(Properties::Name)->GetValue();
   mProfilesModel->updateName(item, name);
 
-  auto options = optionsFromPropertyGrid();
+  const auto options = optionsFromPropertyGrid();
   mProfilesModel->updateBrokerOptions(item, options);
 }
 
 void Homepage::onNewProfileClicked(wxCommandEvent &/* event */)
 {
-  auto item = mProfilesModel->createProfile();
+  const auto item = mProfilesModel->createProfile();
   mProfilesCtrl->Select(item);
   mProfilesCtrl->EnsureVisible(item);
   fillPropertyGrid(
@@ -249,37 +265,39 @@ void Homepage::fillPropertyGrid(
   const MQTT::BrokerOptions &brokerOptions,
   const std::string &name
 ) {
-  mAutoReconnectProp->SetValue(brokerOptions.getAutoReconnect());
-  mClientIdProp->SetValue(brokerOptions.getClientId());
-  mConnectTimeoutProp->SetValue((int)brokerOptions.getConnectTimeout().count());
-  mDisconnectTimeoutProp->SetValue(brokerOptions.getDisconnectTimeout().count());
-  mHostnameProp->SetValue(brokerOptions.getHostname());
-  mKeepAliveProp->SetValue(brokerOptions.getKeepAliveInterval().count());
-  mMaxInFlightProp->SetValue((int)brokerOptions.getMaxInFlight());
-  mMaxReconnectRetriesProp->SetValue((int)brokerOptions.getMaxReconnectRetries());
-  mNameProp->SetValue(name);
-  mPasswordProp->SetValue(brokerOptions.getPassword());
-  mPortProp->SetValue((int)brokerOptions.getPort());
-  mUsernameProp->SetValue(brokerOptions.getUsername());
+  auto &pfp = mProfileFormProperties;
+  pfp.at(Properties::AutoReconnect)->SetValue(brokerOptions.getAutoReconnect());
+  pfp.at(Properties::ClientId)->SetValue(brokerOptions.getClientId());
+  pfp.at(Properties::ConnectTimeout)->SetValue((int)brokerOptions.getConnectTimeout().count());
+  pfp.at(Properties::DisconnectTimeout)->SetValue(brokerOptions.getDisconnectTimeout().count());
+  pfp.at(Properties::Hostname)->SetValue(brokerOptions.getHostname());
+  pfp.at(Properties::KeepAlive)->SetValue(brokerOptions.getKeepAliveInterval().count());
+  pfp.at(Properties::MaxInFlight)->SetValue((int)brokerOptions.getMaxInFlight());
+  pfp.at(Properties::MaxReconnectRetries)->SetValue((int)brokerOptions.getMaxReconnectRetries());
+  pfp.at(Properties::Name)->SetValue(name);
+  pfp.at(Properties::Password)->SetValue(brokerOptions.getPassword());
+  pfp.at(Properties::Port)->SetValue((int)brokerOptions.getPort());
+  pfp.at(Properties::Username)->SetValue(brokerOptions.getUsername());
 
   mSave->Enable(true);
   mConnect->Enable(true);
-  mProp->Enable(true);
+  mProfileFormGrid->Enable(true);
 }
 
 MQTT::BrokerOptions Homepage::optionsFromPropertyGrid() const
 {
+  const auto &pfp = mProfileFormProperties;
   return MQTT::BrokerOptions {
-    mAutoReconnectProp->GetValue(),
-    (unsigned)mMaxInFlightProp->GetValue().GetInteger(),
-    (unsigned)mMaxReconnectRetriesProp->GetValue().GetInteger(),
-    (unsigned)mPortProp->GetValue().GetInteger(),
-    (unsigned)mConnectTimeoutProp->GetValue().GetInteger(),
-    (unsigned)mDisconnectTimeoutProp->GetValue().GetInteger(),
-    (unsigned)mKeepAliveProp->GetValue().GetLong(),
-    mClientIdProp->GetValue(),
-    mHostnameProp->GetValue(),
-    mPasswordProp->GetValue(),
-    mUsernameProp->GetValue(),
+    pfp.at(Properties::AutoReconnect)->GetValue(),
+    (unsigned)pfp.at(Properties::MaxInFlight)->GetValue().GetInteger(),
+    (unsigned)pfp.at(Properties::MaxReconnectRetries)->GetValue().GetInteger(),
+    (unsigned)pfp.at(Properties::Port)->GetValue().GetInteger(),
+    (unsigned)pfp.at(Properties::ConnectTimeout)->GetValue().GetInteger(),
+    (unsigned)pfp.at(Properties::DisconnectTimeout)->GetValue().GetInteger(),
+    (unsigned)pfp.at(Properties::KeepAlive)->GetValue().GetLong(),
+    pfp.at(Properties::ClientId)->GetValue(),
+    pfp.at(Properties::Hostname)->GetValue(),
+    pfp.at(Properties::Password)->GetValue(),
+    pfp.at(Properties::Username)->GetValue(),
   };
 }
