@@ -75,7 +75,6 @@ private:
   BrokerOptions mBrokerOptions;
   SubscriptionId mSubscriptionIds = 0;
   mqtt::connect_options mConnectOptions;
-  mqtt::disconnect_options mDisconnectOptions;
   size_t mRetries = 0;
   std::map<SubscriptionId, std::shared_ptr<Subscription>> mSubscriptions;
   std::map<size_t, MQTT::Client::Observer*> mObservers;

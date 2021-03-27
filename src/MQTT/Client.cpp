@@ -58,7 +58,11 @@ void Client::disconnect()
   wxLogMessage("Disconnecting from %s", mBrokerOptions.getHostname());
   try
   {
-    mClient->disconnect(mDisconnectOptions);
+    mClient->disconnect(
+      mBrokerOptions.getDisconnectTimeout(),
+      nullptr,
+      *this
+    );
     cleanSubscriptions();
   }
   catch (const mqtt::exception& exc)
@@ -159,9 +163,6 @@ void Client::setBrokerOptions(BrokerOptions brokerOptions)
   mConnectOptions.set_clean_session(true);
   mConnectOptions.set_keep_alive_interval(mBrokerOptions.getKeepAliveInterval());
   mConnectOptions.set_connect_timeout(mBrokerOptions.getConnectTimeout());
-
-  // Disconnect.
-  mDisconnectOptions.set_timeout(mBrokerOptions.getDisconnectTimeout());
 }
 
 // Setters }
