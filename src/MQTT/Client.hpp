@@ -34,15 +34,18 @@ public:
 
     virtual void onConnected() = 0;
     virtual void onDisconnected() = 0;
+    virtual void onConnectionFailure() = 0;
+    virtual void onConnectionLost() = 0;
   };
 
   explicit Client() = default;
   size_t attachObserver(Observer *o);
+  void detachObserver(size_t id);
 
   // Actions.
   void connect();
   void disconnect();
-  void reconnect();
+  void cancel();
   void publish(
     const std::string &topic,
     const std::string &payload,
@@ -61,7 +64,7 @@ public:
 
 private:
 
-  const std::map<int, std::string> returnCodes
+  const std::map<int, std::string> mReturnCodes
   {
     { 0,  "Connection accepted" },
     { 1,  "Unacceptable protocol version" },
@@ -74,6 +77,8 @@ private:
 
   BrokerOptions mBrokerOptions;
   SubscriptionId mSubscriptionIds = 0;
+  bool mShouldReconnect = false;
+  bool mCanceled = false;
   mqtt::connect_options mConnectOptions;
   size_t mRetries = 0;
   std::map<SubscriptionId, std::shared_ptr<Subscription>> mSubscriptions;
@@ -101,6 +106,7 @@ private:
   void onFailureSubscribe(const mqtt::token& tok);
   void onFailureUnsubscribe(const mqtt::token& tok);
 
+  void reconnect();
   void doSubscribe(size_t id);
   void cleanSubscriptions();
 

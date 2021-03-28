@@ -11,6 +11,8 @@ class Connection;
 wxDECLARE_EVENT(CONNECTION, Connection);
 wxDECLARE_EVENT(CONNECTED, Connection);
 wxDECLARE_EVENT(DISCONNECTED, Connection);
+wxDECLARE_EVENT(FAILED, Connection);
+wxDECLARE_EVENT(LOST, Connection);
 
 // NOLINTNEXTLINE
 class Connection :

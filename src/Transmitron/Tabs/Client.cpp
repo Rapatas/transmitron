@@ -27,6 +27,8 @@ constexpr size_t FontSize = 9;
 
 wxDEFINE_EVENT(Events::CONNECTED, Events::Connection); // NOLINT
 wxDEFINE_EVENT(Events::DISCONNECTED, Events::Connection); // NOLINT
+wxDEFINE_EVENT(Events::LOST, Events::Connection); // NOLINT
+wxDEFINE_EVENT(Events::FAILED, Events::Connection); // NOLINT
 
 Client::Client(
   wxWindow* parent,
@@ -41,7 +43,9 @@ Client::Client(
   mClient = std::make_shared<MQTT::Client>();
   Bind(Events::CONNECTED, &Client::onConnectedSync, this);
   Bind(Events::DISCONNECTED, &Client::onDisconnectedSync, this);
-  mClient->attachObserver(this);
+  Bind(Events::LOST, &Client::onConnectionLostSync, this);
+  Bind(Events::FAILED, &Client::onConnectionFailureSync, this);
+  mMqttObserverId = mClient->attachObserver(this);
   Bind(wxEVT_CLOSE_WINDOW, &Client::onClose, this);
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Client::onContextSelected, this);
 
@@ -157,6 +161,8 @@ Client::Client(
 
 Client::~Client()
 {
+  mClient->disconnect();
+  mClient->detachObserver(mMqttObserverId);
   mAuiMan.UnInit();
 }
 
@@ -243,7 +249,9 @@ void Client::setupPanelConnect(wxWindow *parent)
 {
   mProfileBar = new wxPanel(parent, -1);
 
-  mConnect  = new wxButton(mProfileBar, -1, "Connect");
+  mConnect    = new wxButton(mProfileBar, -1, "Connect");
+  mDisconnect = new wxButton(mProfileBar, -1, "Disconnect");
+  mCancel     = new wxButton(mProfileBar, -1, "Cancel");
 
   auto cb = [this](Panes pane, wxCommandEvent &/* event */)
   {
@@ -275,9 +283,12 @@ void Client::setupPanelConnect(wxWindow *parent)
     mAuiMan.Update();
   };
 
-  wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
-  hsizer->SetMinSize(0, OptionsHeight);
-  hsizer->Add(mConnect, 0, wxEXPAND);
+  mProfileSizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
+  mProfileSizer->SetMinSize(0, OptionsHeight);
+  mProfileSizer->Add(mConnect, 0, wxEXPAND);
+  mProfileSizer->Add(mDisconnect, 0, wxEXPAND);
+  mProfileSizer->Add(mCancel, 0, wxEXPAND);
+  allowConnect();
 
   for (auto &pane : mPanes)
   {
@@ -300,14 +311,40 @@ void Client::setupPanelConnect(wxWindow *parent)
       wxEVT_BUTTON,
       std::bind(cb, pane.first, std::placeholders::_1)
     );
-    hsizer->Add(button, 0, wxEXPAND);
+    mProfileSizer->Add(button, 0, wxEXPAND);
 
     pane.second.toggle = button;
   }
 
-  mProfileBar->SetSizer(hsizer);
+  mProfileBar->SetSizer(mProfileSizer);
 
   mConnect->Bind(wxEVT_BUTTON, &Client::onConnectClicked, this);
+  mDisconnect->Bind(wxEVT_BUTTON, &Client::onDisconnectClicked, this);
+  mCancel->Bind(wxEVT_BUTTON, &Client::onCancelClicked, this);
+}
+
+void Client::allowConnect()
+{
+  mProfileSizer->Show(mConnect);
+  mProfileSizer->Hide(mDisconnect);
+  mProfileSizer->Hide(mCancel);
+  mProfileSizer->Layout();
+}
+
+void Client::allowDisconnect()
+{
+  mProfileSizer->Hide(mConnect);
+  mProfileSizer->Show(mDisconnect);
+  mProfileSizer->Hide(mCancel);
+  mProfileSizer->Layout();
+}
+
+void Client::allowCancel()
+{
+  mProfileSizer->Hide(mConnect);
+  mProfileSizer->Hide(mDisconnect);
+  mProfileSizer->Show(mCancel);
+  mProfileSizer->Layout();
 }
 
 void Client::setupPanelSubscriptions(wxWindow *parent)
@@ -577,17 +614,32 @@ void Client::onSubscribeEnter(wxKeyEvent &event)
 
 void Client::onConnectClicked(wxCommandEvent &/* event */)
 {
-  mConnect->Disable();
-
   if (mClient->connected())
   {
-    mClient->disconnect();
+    wxLogMessage("Was connected");
+    return;
   }
-  else
+
+  allowCancel();
+  mClient->setBrokerOptions(mBrokerOptions);
+  mClient->connect();
+}
+
+void Client::onDisconnectClicked(wxCommandEvent &/* event */)
+{
+  if (!mClient->connected())
   {
-    mClient->setBrokerOptions(mBrokerOptions);
-    mClient->connect();
+    wxLogMessage("Was not connected");
+    return;
   }
+
+  allowCancel();
+  mClient->disconnect();
+}
+
+void Client::onCancelClicked(wxCommandEvent &/* event */)
+{
+  mClient->cancel();
 }
 
 void Client::onHistorySelected(wxDataViewEvent &event)
@@ -1016,17 +1068,40 @@ void Client::onDisconnected()
   wxQueueEvent(this, e);
 }
 
+void Client::onConnectionLost()
+{
+  auto *e = new Events::Connection(Events::LOST);
+  wxQueueEvent(this, e);
+}
+
+void Client::onConnectionFailure()
+{
+  auto *e = new Events::Connection(Events::FAILED);
+  wxQueueEvent(this, e);
+}
+
 void Client::onConnectedSync(Events::Connection &/* event */)
 {
-  wxLogInfo("Handling profile in GUI thread");
-  mConnect->Enable();
-  mConnect->SetLabelText("Disconnect");
+  wxLogInfo("Connected");
+  allowDisconnect();
 }
 
 void Client::onDisconnectedSync(Events::Connection &/* event */)
 {
-  mConnect->Enable();
-  mConnect->SetLabelText("Connect");
+  wxLogInfo("Disconnected");
+  allowConnect();
+}
+
+void Client::onConnectionLostSync(Events::Connection &/* event */)
+{
+  wxLogInfo("Connection lost, reconnecting...");
+  allowCancel();
+}
+
+void Client::onConnectionFailureSync(Events::Connection &/* event */)
+{
+  wxLogInfo("Unable to connect to server");
+  allowConnect();
 }
 
 void Client::onSubscriptionSelected(wxDataViewEvent &/* event */)

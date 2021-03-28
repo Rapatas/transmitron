@@ -86,7 +86,10 @@ private:
 
   // Profile:
   wxPanel *mProfileBar = nullptr;
+  wxBoxSizer *mProfileSizer = nullptr;
   wxButton *mConnect = nullptr;
+  wxButton *mDisconnect = nullptr;
+  wxButton *mCancel = nullptr;
 
   // History:
   wxObjectDataPtr<Models::History> mHistoryModel;
@@ -109,6 +112,7 @@ private:
   std::pair<bool, wxDataViewItem> mSnippetsPossible;
 
   std::shared_ptr<MQTT::Client> mClient;
+  size_t mMqttObserverId = 0;
 
   void setupPanelConnect(wxWindow *parent);
   void setupPanelSubscriptions(wxWindow *parent);
@@ -119,6 +123,8 @@ private:
 
   void onClose(wxCloseEvent &event);
   void onConnectClicked(wxCommandEvent &event);
+  void onDisconnectClicked(wxCommandEvent &event);
+  void onCancelClicked(wxCommandEvent &event);
   void onHistorySelected(wxDataViewEvent &event);
   void onPublishClicked(wxCommandEvent &event);
   void onPublishSaveSnippet(Events::Edit &e);
@@ -137,14 +143,21 @@ private:
   void onSnippetsDrop(wxDataViewEvent &e);
   void onSnippetsDropPossible(wxDataViewEvent &e);
 
-  void onConnectedSync(Events::Connection &e);
-  void onDisconnectedSync(Events::Connection &e);
-
   void handleInserted(wxDataViewItem &inserted);
+  void allowConnect();
+  void allowDisconnect();
+  void allowCancel();
 
   // MQTT::Client::Observer interface.
   void onConnected() override;
   void onDisconnected() override;
+  void onConnectionLost() override;
+  void onConnectionFailure() override;
+
+  void onConnectedSync(Events::Connection &e);
+  void onDisconnectedSync(Events::Connection &e);
+  void onConnectionLostSync(Events::Connection &e);
+  void onConnectionFailureSync(Events::Connection &e);
 
   // Models::History::Observer interface.
   void onMessage(wxDataViewItem item) override;

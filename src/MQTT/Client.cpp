@@ -1,5 +1,7 @@
 #include "Client.hpp"
+#include <chrono>
 #include <fmt/core.h>
+#include <iterator>
 #include <wx/log.h>
 #include <thread>
 #include "Subscription.hpp"
@@ -8,7 +10,7 @@
 
 using namespace MQTT;
 
-constexpr size_t MaxRetries = 10;
+constexpr size_t CancelCheckIntervalMs = 50;
 constexpr size_t ReconnectAfterMs = 2500;
 
 // Public {
@@ -25,12 +27,20 @@ size_t Client::attachObserver(Observer *o)
   return mObservers.insert(std::make_pair(id, o)).first->first;
 }
 
+void Client::detachObserver(size_t id)
+{
+  mObservers.erase(id);
+}
+
 // Management }
 
 // Actions {
 
 void Client::connect()
 {
+  mCanceled = false;
+  mShouldReconnect = false;
+  mRetries = 0;
   const std::string address = fmt::format(
     "{}:{}",
     mBrokerOptions.getHostname(),
@@ -55,6 +65,7 @@ void Client::connect()
 
 void Client::disconnect()
 {
+  mCanceled = false;
   wxLogMessage("Disconnecting from %s", mBrokerOptions.getHostname());
   try
   {
@@ -72,19 +83,9 @@ void Client::disconnect()
   }
 }
 
-void Client::reconnect()
+void Client::cancel()
 {
-  std::this_thread::sleep_for(std::chrono::milliseconds(ReconnectAfterMs));
-  wxLogMessage("Reconnecting...");
-  try
-  {
-    mClient->connect(mConnectOptions, nullptr, *this);
-  }
-  catch (const mqtt::exception& exc)
-  {
-    std::cerr << "Error: " << exc.what() << std::endl;
-    exit(1);
-  }
+  mCanceled = true;
 }
 
 std::shared_ptr<Subscription> Client::subscribe(const std::string &topic)
@@ -231,10 +232,7 @@ void Client::on_success(const mqtt::token& tok)
 
 void Client::onSuccessConnect(const mqtt::token& /* tok */)
 {
-  for (const auto &o : mObservers)
-  {
-    o.second->onConnected();
-  }
+  mRetries = 0;
 }
 
 void Client::onSuccessDisconnect(const mqtt::token& /* tok */)
@@ -304,15 +302,10 @@ void Client::onSuccessUnsubscribe(const mqtt::token& tok)
 
 void Client::onFailureConnect(const mqtt::token& tok)
 {
-
   wxLogWarning(
     "Connection attempt failed: %s",
-    returnCodes.at(tok.get_return_code()).c_str()
+    mReturnCodes.at(tok.get_return_code()).c_str()
   );
-  if (++mRetries > MaxRetries)
-  {
-    exit(1);
-  }
   reconnect();
 }
 
@@ -320,7 +313,7 @@ void Client::onFailureDisconnect(const mqtt::token& tok)
 {
   wxLogWarning(
     "Disconnection attempt failed: %s",
-    returnCodes.at(tok.get_return_code()).c_str()
+    mReturnCodes.at(tok.get_return_code()).c_str()
   );
 }
 
@@ -328,7 +321,7 @@ void Client::onFailurePublish(const mqtt::token& tok)
 {
   wxLogWarning(
     "Publishing attempt failed: %s",
-    returnCodes.at(tok.get_return_code()).c_str()
+    mReturnCodes.at(tok.get_return_code()).c_str()
   );
 }
 
@@ -336,7 +329,7 @@ void Client::onFailureSubscribe(const mqtt::token& tok)
 {
   wxLogWarning(
     "Subscription attempt failed: %s",
-    returnCodes.at(tok.get_return_code()).c_str()
+    mReturnCodes.at(tok.get_return_code()).c_str()
   );
 }
 
@@ -344,7 +337,7 @@ void Client::onFailureUnsubscribe(const mqtt::token& tok)
 {
   wxLogWarning(
     "Unsubscription attempt failed: %s",
-    returnCodes.at(tok.get_return_code()).c_str()
+    mReturnCodes.at(tok.get_return_code()).c_str()
   );
 }
 
@@ -355,6 +348,13 @@ void Client::onFailureUnsubscribe(const mqtt::token& tok)
 void Client::connected(const std::string& /* cause */)
 {
   wxLogMessage("Connected!");
+  mRetries = 0;
+  mShouldReconnect = true;
+  for (const auto &o : mObservers)
+  {
+    o.second->onConnected();
+  }
+
   wxLogMessage("Subscribing to topics:");
 
   for (const auto &sub : mSubscriptions)
@@ -366,7 +366,10 @@ void Client::connected(const std::string& /* cause */)
 void Client::connection_lost(const std::string& cause)
 {
   wxLogMessage("Connection lost: %s", cause);
-  mRetries = 0;
+  for (const auto &o : mObservers)
+  {
+    o.second->onConnectionLost();
+  }
   cleanSubscriptions();
   reconnect();
 }
@@ -389,6 +392,57 @@ void Client::delivery_complete(mqtt::delivery_token_ptr token)
 }
 
 // mqtt::callback interface }
+
+void Client::reconnect()
+{
+  if (
+    !mShouldReconnect
+    || !mBrokerOptions.getAutoReconnect()
+    || ++mRetries >= mBrokerOptions.getMaxReconnectRetries()
+  ) {
+    for (const auto &o : mObservers)
+    {
+      o.second->onConnectionFailure();
+    }
+    return;
+  }
+
+  // Stop waiting quickly on cancel.
+  using namespace std::chrono;
+  const auto start = system_clock::now();
+  while (
+    !mCanceled
+    && system_clock::now() - start < milliseconds(ReconnectAfterMs)
+  ) {
+    std::this_thread::sleep_for(milliseconds(CancelCheckIntervalMs));
+  }
+
+  if (mCanceled)
+  {
+    for (const auto &o : mObservers)
+    {
+      o.second->onDisconnected();
+    }
+    return;
+  }
+
+  wxLogMessage(
+    "Reconnecting attempt %zu/%zu in %zums...",
+    mRetries,
+    mBrokerOptions.getMaxReconnectRetries(),
+    ReconnectAfterMs
+  );
+  mShouldReconnect = true;
+  try
+  {
+    mClient->connect(mConnectOptions, nullptr, *this);
+  }
+  catch (const mqtt::exception& exc)
+  {
+    std::cerr << "Error: " << exc.what() << std::endl;
+    exit(1);
+  }
+}
 
 void Client::doSubscribe(size_t id)
 {
