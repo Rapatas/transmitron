@@ -166,6 +166,10 @@ Client::~Client()
   mAuiMan.UnInit();
 }
 
+// Private {
+
+// Setup {
+
 void Client::setupPanelHistory(wxWindow *parent)
 {
   wxDataViewColumn* const icon = new wxDataViewColumn(
@@ -238,10 +242,8 @@ void Client::setupPanelHistory(wxWindow *parent)
   );
   mHistoryClear->Bind(
     wxEVT_BUTTON,
-    [this](wxCommandEvent &/*event*/)
-    {
-      mHistoryModel->clear();
-    }
+    &Client::onHistoryClearClicked,
+    this
   );
 }
 
@@ -321,30 +323,6 @@ void Client::setupPanelConnect(wxWindow *parent)
   mConnect->Bind(wxEVT_BUTTON, &Client::onConnectClicked, this);
   mDisconnect->Bind(wxEVT_BUTTON, &Client::onDisconnectClicked, this);
   mCancel->Bind(wxEVT_BUTTON, &Client::onCancelClicked, this);
-}
-
-void Client::allowConnect()
-{
-  mProfileSizer->Show(mConnect);
-  mProfileSizer->Hide(mDisconnect);
-  mProfileSizer->Hide(mCancel);
-  mProfileSizer->Layout();
-}
-
-void Client::allowDisconnect()
-{
-  mProfileSizer->Hide(mConnect);
-  mProfileSizer->Show(mDisconnect);
-  mProfileSizer->Hide(mCancel);
-  mProfileSizer->Layout();
-}
-
-void Client::allowCancel()
-{
-  mProfileSizer->Hide(mConnect);
-  mProfileSizer->Hide(mDisconnect);
-  mProfileSizer->Show(mCancel);
-  mProfileSizer->Layout();
 }
 
 void Client::setupPanelSubscriptions(wxWindow *parent)
@@ -511,398 +489,9 @@ void Client::setupPanelSnippets(wxWindow *parent)
   );
 }
 
-void Client::onPublishClicked(wxCommandEvent &/* event */)
-{
-  auto *publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
+// Setup }
 
-  if (!mClient->connected()) { return; }
-  auto topic = publish->getTopic();
-  if (topic.empty()) { return; }
-
-  auto payload  = publish->getPayload();
-  auto qos      = publish->getQos();
-  bool retained = publish->getRetained();
-
-  mClient->publish(topic, payload, qos, retained);
-}
-
-void Client::onPublishSaveSnippet(Events::Edit &/* event */)
-{
-  wxLogInfo("Saving current message");
-  auto snippetItem = mSnippetsCtrl->GetSelection();
-  if (!mSnippetsModel->IsContainer(snippetItem))
-  {
-    wxLogInfo("Selecting parent");
-    snippetItem = mSnippetsModel->GetParent(snippetItem);
-  }
-
-  auto *publish = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Publish).panel
-  );
-
-  auto message = std::make_shared<MQTT::Message>(publish->getMessage());
-  wxLogInfo("Storing %s", message->topic);
-  auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
-  if (inserted.IsOk())
-  {
-    auto *publish = dynamic_cast<Widgets::Edit*>(
-      mPanes.at(Panes::Publish).panel
-    );
-    publish->setMessage(mSnippetsModel->getMessage(inserted));
-
-    mSnippetsCtrl->Select(inserted);
-    mSnippetsCtrl->EnsureVisible(inserted);
-    auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
-    mSnippetExplicitEditRequest = true;
-    mSnippetsCtrl->EditItem(inserted, nameColumn);
-  }
-}
-
-void Client::onPreviewSaveSnippet(Events::Edit &/* event */)
-{
-  wxLogInfo("Saving current message");
-  auto snippetItem = mSnippetsCtrl->GetSelection();
-  if (!mSnippetsModel->IsContainer(snippetItem))
-  {
-    wxLogInfo("Selecting parent");
-    snippetItem = mSnippetsModel->GetParent(snippetItem);
-  }
-
-  auto *preview = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Preview).panel
-  );
-
-  auto message = std::make_shared<MQTT::Message>(preview->getMessage());
-  wxLogInfo("Storing %s", message->topic);
-  auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
-  if (inserted.IsOk())
-  {
-    mSnippetsCtrl->Select(inserted);
-    mSnippetsCtrl->EnsureVisible(inserted);
-    auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
-    mSnippetExplicitEditRequest = true;
-    mSnippetsCtrl->EditItem(inserted, nameColumn);
-  }
-}
-
-void Client::onSubscribeClicked(wxCommandEvent &/* event */)
-{
-  auto text = mFilter->GetValue();
-  mFilter->SetValue("");
-  auto topic = text.empty()
-    ? "#"
-    : text.ToStdString();
-  mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
-}
-
-void Client::onSubscribeEnter(wxKeyEvent &event)
-{
-  if (event.GetKeyCode() != WXK_RETURN)
-  {
-    event.Skip();
-    return;
-  }
-
-  auto text = mFilter->GetValue();
-  mFilter->SetValue("");
-  auto topic = text.empty()
-    ? "#"
-    : text.ToStdString();
-  mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
-  event.Skip();
-}
-
-void Client::onConnectClicked(wxCommandEvent &/* event */)
-{
-  if (mClient->connected())
-  {
-    wxLogMessage("Was connected");
-    return;
-  }
-
-  allowCancel();
-  mClient->setBrokerOptions(mBrokerOptions);
-  mClient->connect();
-}
-
-void Client::onDisconnectClicked(wxCommandEvent &/* event */)
-{
-  if (!mClient->connected())
-  {
-    wxLogMessage("Was not connected");
-    return;
-  }
-
-  allowCancel();
-  mClient->disconnect();
-}
-
-void Client::onCancelClicked(wxCommandEvent &/* event */)
-{
-  mClient->cancel();
-}
-
-void Client::onHistorySelected(wxDataViewEvent &event)
-{
-  if (!event.GetItem().IsOk()) { return; }
-  auto item = event.GetItem();
-
-  auto *preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
-
-  preview->setPayload(mHistoryModel->getPayload(item));
-  preview->setTopic(mHistoryModel->getTopic(item));
-  preview->setQos(mHistoryModel->getQos(item));
-  preview->setRetained(mHistoryModel->getRetained(item));
-}
-
-void Client::onSubscriptionContext(wxDataViewEvent& event)
-{
-  if (!event.GetItem().IsOk()) { return; }
-
-  auto item = event.GetItem();
-
-  mSubscriptionsCtrl->Select(item);
-  bool muted = mSubscriptionsModel->getMuted(item);
-
-  wxMenu menu;
-  menu.Append((unsigned)ContextIDs::SubscriptionsUnsubscribe, "Unsubscribe");
-  menu.Append((unsigned)ContextIDs::SubscriptionsChangeColor, "Color change");
-  menu.Append((unsigned)ContextIDs::SubscriptionsSolo, "Solo");
-  menu.Append((unsigned)ContextIDs::SubscriptionsClear, "Clear");
-  if (muted)
-  {
-    menu.Append((unsigned)ContextIDs::SubscriptionsUnmute, "Unmute");
-  }
-  else
-  {
-    menu.Append((unsigned)ContextIDs::SubscriptionsMute, "Mute");
-  }
-  PopupMenu(&menu);
-}
-
-void Client::onHistoryContext(wxDataViewEvent& e)
-{
-  if (!e.GetItem().IsOk()) { return; }
-
-  mHistoryCtrl->Select(e.GetItem());
-
-  wxMenu menu;
-  menu.Append((unsigned)ContextIDs::HistoryEdit, "Edit");
-  menu.Append((unsigned)ContextIDs::HistoryResend, "Re-Send");
-  menu.Append((unsigned)ContextIDs::HistoryRetainedClear, "Clear retained");
-  menu.Append((unsigned)ContextIDs::HistorySaveSnippet, "Save snippet");
-  PopupMenu(&menu);
-}
-
-void Client::onSnippetsContext(wxDataViewEvent& e)
-{
-  wxMenu menu;
-
-  auto *newFolder = new wxMenuItem(
-    nullptr,
-    (unsigned)ContextIDs::SnippetNewFolder,
-    "New Folder"
-  );
-  newFolder->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW_DIR));
-  menu.Append(newFolder);
-
-  auto *newSnippet = new wxMenuItem(
-    nullptr,
-    (unsigned)ContextIDs::SnippetNewSnippet,
-    "New Snippet"
-  );
-  newSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE));
-  menu.Append(newSnippet);
-
-  if (e.GetItem().IsOk())
-  {
-    auto item = mSnippetsCtrl->GetSelection();
-
-    if (item != mSnippetsModel->getRootItem())
-    {
-      auto *rename = new wxMenuItem(
-        nullptr,
-        (unsigned)ContextIDs::SnippetRename,
-        "Rename"
-      );
-      rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
-      menu.Append(rename);
-
-      auto *del = new wxMenuItem(
-        nullptr,
-        (unsigned)ContextIDs::SnippetDelete,
-        "Delete"
-      );
-      del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
-      menu.Append(del);
-    }
-  }
-  else
-  {
-    mSnippetsCtrl->UnselectAll();
-  }
-
-  PopupMenu(&menu);
-}
-
-void Client::onContextSelected(wxCommandEvent& event)
-{
-  switch ((ContextIDs)event.GetId())
-  {
-    case ContextIDs::HistoryRetainedClear: {
-      wxLogMessage("Requesting clear retained");
-      auto item = mHistoryCtrl->GetSelection();
-      auto topic = mHistoryModel->getTopic(item);
-      auto qos = mHistoryModel->getQos(item);
-      mClient->publish(topic, "", qos, true);
-    } break;
-    case ContextIDs::SubscriptionsUnsubscribe: {
-      wxLogMessage("Requesting unsubscribe");
-      auto item = mSubscriptionsCtrl->GetSelection();
-      mSubscriptionsModel->unsubscribe(item);
-      auto selected = mHistoryCtrl->GetSelection();
-      auto *preview = dynamic_cast<Widgets::Edit*>(
-        mPanes.at(Panes::Preview).panel
-      );
-      preview->clear();
-      mHistoryCtrl->Unselect(selected);
-    } break;
-    case ContextIDs::SubscriptionsSolo: {
-      wxLogMessage("Requesting solo");
-      auto item = mSubscriptionsCtrl->GetSelection();
-      mSubscriptionsModel->solo(item);
-    } break;
-    case ContextIDs::SubscriptionsClear: {
-      wxLogMessage("Requesting clear");
-      const auto item = mSubscriptionsCtrl->GetSelection();
-      mSubscriptionsModel->clear(item);
-    } break;
-    case ContextIDs::SubscriptionsMute: {
-      wxLogMessage("Requesting mute");
-      auto item = mSubscriptionsCtrl->GetSelection();
-      mSubscriptionsModel->mute(item);
-    } break;
-    case ContextIDs::SubscriptionsUnmute: {
-      wxLogMessage("Requesting unmute");
-      auto item = mSubscriptionsCtrl->GetSelection();
-      mSubscriptionsModel->unmute(item);
-    } break;
-    case ContextIDs::SubscriptionsChangeColor: {
-      wxLogMessage("Requesting new color");
-      auto item = mSubscriptionsCtrl->GetSelection();
-      const auto color = Helpers::colorFromNumber((size_t)std::abs(rand()));
-      mSubscriptionsModel->setColor(item, color);
-      mSubscriptionsCtrl->Refresh();
-      mHistoryCtrl->Refresh();
-    } break;
-    case ContextIDs::HistoryResend: {
-      wxLogMessage("Requesting resend");
-      auto item     = mHistoryCtrl->GetSelection();
-      auto topic    = mHistoryModel->getTopic(item);
-      auto retained = mHistoryModel->getRetained(item);
-      auto qos      = mHistoryModel->getQos(item);
-      auto payload  = mHistoryModel->getPayload(item);
-      mClient->publish(topic, payload, qos, retained);
-    } break;
-    case ContextIDs::HistoryEdit: {
-      wxLogMessage("Requesting edit");
-      auto item = mHistoryCtrl->GetSelection();
-      if (!item.IsOk()) { return; }
-      auto *publish = dynamic_cast<Widgets::Edit*>(
-        mPanes.at(Panes::Publish).panel
-      );
-      publish->clear();
-      publish->setTopic(mHistoryModel->getTopic(item));
-      publish->setQos(mHistoryModel->getQos(item));
-      publish->setPayload(mHistoryModel->getPayload(item));
-      publish->setRetained(mHistoryModel->getRetained(item));
-    } break;
-    case ContextIDs::HistorySaveSnippet: {
-      wxLogMessage("Requesting save snippet");
-      auto historyItem = mHistoryCtrl->GetSelection();
-      auto snippetItem = mSnippetsCtrl->GetSelection();
-      if (!mSnippetsModel->IsContainer(snippetItem))
-      {
-        wxLogInfo("Selecting parent");
-        snippetItem = mSnippetsModel->GetParent(snippetItem);
-      }
-      auto message = mHistoryModel->getMessage(historyItem);
-      auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
-      if (inserted.IsOk())
-      {
-        auto *publish = dynamic_cast<Widgets::Edit*>(
-          mPanes.at(Panes::Publish).panel
-        );
-        publish->setMessage(mSnippetsModel->getMessage(inserted));
-
-        mSnippetsCtrl->Select(inserted);
-        mSnippetsCtrl->EnsureVisible(inserted);
-        auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
-        mSnippetExplicitEditRequest = true;
-        mSnippetsCtrl->EditItem(inserted, nameColumn);
-      }
-
-    } break;
-    case ContextIDs::SnippetNewFolder: {
-      wxLogMessage("Requesting new folder");
-      auto item = mSnippetsCtrl->GetSelection();
-      if (!mSnippetsModel->IsContainer(item))
-      {
-        wxLogInfo("Selecting parent");
-        item = mSnippetsModel->GetParent(item);
-      }
-      auto inserted = mSnippetsModel->createFolder(item);
-      if (inserted.IsOk())
-      {
-        mSnippetsCtrl->Select(inserted);
-        mSnippetsCtrl->EnsureVisible(inserted);
-        auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
-        mSnippetExplicitEditRequest = true;
-        mSnippetsCtrl->EditItem(inserted, nameColumn);
-      }
-    } break;
-    case ContextIDs::SnippetNewSnippet: {
-      wxLogMessage("Requesting new snippet");
-      auto item = mSnippetsCtrl->GetSelection();
-      if (!mSnippetsModel->IsContainer(item))
-      {
-        wxLogInfo("Selecting parent");
-        item = mSnippetsModel->GetParent(item);
-      }
-      auto inserted = mSnippetsModel->createSnippet(item, nullptr);
-      if (inserted.IsOk())
-      {
-        auto *publish = dynamic_cast<Widgets::Edit*>(
-          mPanes.at(Panes::Publish).panel
-        );
-        publish->setMessage(mSnippetsModel->getMessage(inserted));
-
-        mSnippetsCtrl->Select(inserted);
-        mSnippetsCtrl->EnsureVisible(inserted);
-        auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
-        mSnippetExplicitEditRequest = true;
-        mSnippetsCtrl->EditItem(inserted, nameColumn);
-      }
-    } break;
-    case ContextIDs::SnippetDelete: {
-      wxLogMessage("Requesting delete");
-      auto item = mSnippetsCtrl->GetSelection();
-      bool done = mSnippetsModel->remove(item);
-      if (done)
-      {
-        auto root = mSnippetsModel->getRootItem();
-        mSnippetsCtrl->Select(root);
-      }
-    } break;
-    case ContextIDs::SnippetRename: {
-      wxLogMessage("Requesting rename");
-      mSnippetExplicitEditRequest = true;
-      auto item = mSnippetsCtrl->GetSelection();
-      mSnippetsCtrl->EditItem(item, mSnippetColumns.at(Snippets::Column::Name));
-    } break;
-  }
-  event.Skip(true);
-}
+// Snippets {
 
 void Client::onSnippetsSelected(wxDataViewEvent &e)
 {
@@ -1026,35 +615,409 @@ void Client::onSnippetsDropPossible(wxDataViewEvent &e)
   e.Skip(true);
 }
 
-void Client::onClose(wxCloseEvent &/* event */)
+// Snippets }
+
+// Connection {
+
+void Client::onConnectClicked(wxCommandEvent &/* event */)
 {
   if (mClient->connected())
   {
-    auto *preview = dynamic_cast<Widgets::Edit*>(
-      mPanes.at(Panes::Preview).panel
-    );
-    preview->setPayload("Closing...");
-    mClient->disconnect();
+    wxLogMessage("Was connected");
+    return;
   }
-  Destroy();
+
+  allowCancel();
+  mClient->setBrokerOptions(mBrokerOptions);
+  mClient->connect();
 }
 
-void Client::onMessage(wxDataViewItem item)
+void Client::onDisconnectClicked(wxCommandEvent &/* event */)
 {
-  if (!mAutoScroll->GetValue())
+  if (!mClient->connected())
+  {
+    wxLogMessage("Was not connected");
+    return;
+  }
+
+  allowCancel();
+  mClient->disconnect();
+}
+
+void Client::onCancelClicked(wxCommandEvent &/* event */)
+{
+  mClient->cancel();
+}
+
+void Client::allowConnect()
+{
+  mProfileSizer->Show(mConnect);
+  mProfileSizer->Hide(mDisconnect);
+  mProfileSizer->Hide(mCancel);
+  mProfileSizer->Layout();
+}
+
+void Client::allowDisconnect()
+{
+  mProfileSizer->Hide(mConnect);
+  mProfileSizer->Show(mDisconnect);
+  mProfileSizer->Hide(mCancel);
+  mProfileSizer->Layout();
+}
+
+void Client::allowCancel()
+{
+  mProfileSizer->Hide(mConnect);
+  mProfileSizer->Hide(mDisconnect);
+  mProfileSizer->Show(mCancel);
+  mProfileSizer->Layout();
+}
+
+// Connection }
+
+// Context {
+
+void Client::onSubscriptionContext(wxDataViewEvent& event)
+{
+  if (!event.GetItem().IsOk()) { return; }
+
+  auto item = event.GetItem();
+
+  mSubscriptionsCtrl->Select(item);
+  bool muted = mSubscriptionsModel->getMuted(item);
+
+  wxMenu menu;
+  menu.Append((unsigned)ContextIDs::SubscriptionsUnsubscribe, "Unsubscribe");
+  menu.Append((unsigned)ContextIDs::SubscriptionsChangeColor, "Color change");
+  menu.Append((unsigned)ContextIDs::SubscriptionsSolo, "Solo");
+  menu.Append((unsigned)ContextIDs::SubscriptionsClear, "Clear");
+  if (muted)
+  {
+    menu.Append((unsigned)ContextIDs::SubscriptionsUnmute, "Unmute");
+  }
+  else
+  {
+    menu.Append((unsigned)ContextIDs::SubscriptionsMute, "Mute");
+  }
+  PopupMenu(&menu);
+}
+
+void Client::onHistoryContext(wxDataViewEvent& e)
+{
+  if (!e.GetItem().IsOk()) { return; }
+
+  mHistoryCtrl->Select(e.GetItem());
+
+  wxMenu menu;
+  menu.Append((unsigned)ContextIDs::HistoryEdit, "Edit");
+  menu.Append((unsigned)ContextIDs::HistoryResend, "Re-Send");
+  menu.Append((unsigned)ContextIDs::HistoryRetainedClear, "Clear retained");
+  menu.Append((unsigned)ContextIDs::HistorySaveSnippet, "Save snippet");
+  PopupMenu(&menu);
+}
+
+void Client::onSnippetsContext(wxDataViewEvent& e)
+{
+  wxMenu menu;
+
+  auto *newFolder = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::SnippetNewFolder,
+    "New Folder"
+  );
+  newFolder->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW_DIR));
+  menu.Append(newFolder);
+
+  auto *newSnippet = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::SnippetNewSnippet,
+    "New Snippet"
+  );
+  newSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE));
+  menu.Append(newSnippet);
+
+  if (e.GetItem().IsOk())
+  {
+    auto item = mSnippetsCtrl->GetSelection();
+
+    if (item != mSnippetsModel->getRootItem())
+    {
+      auto *rename = new wxMenuItem(
+        nullptr,
+        (unsigned)ContextIDs::SnippetRename,
+        "Rename"
+      );
+      rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
+      menu.Append(rename);
+
+      auto *del = new wxMenuItem(
+        nullptr,
+        (unsigned)ContextIDs::SnippetDelete,
+        "Delete"
+      );
+      del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+      menu.Append(del);
+    }
+  }
+  else
+  {
+    mSnippetsCtrl->UnselectAll();
+  }
+
+  PopupMenu(&menu);
+}
+
+void Client::onContextSelected(wxCommandEvent& event)
+{
+  switch (static_cast<ContextIDs>(event.GetId()))
+  {
+    case ContextIDs::HistoryRetainedClear: {
+      onContextSelectedHistoryRetainedClear(event);
+    } break;
+    case ContextIDs::SubscriptionsUnsubscribe: {
+      onContextSelectedSubscriptionsUnsubscribe(event);
+    } break;
+    case ContextIDs::SubscriptionsSolo: {
+      onContextSelectedSubscriptionsSolo(event);
+    } break;
+    case ContextIDs::SubscriptionsClear: {
+      onContextSelectedSubscriptionsClear(event);
+    } break;
+    case ContextIDs::SubscriptionsMute: {
+      onContextSelectedSubscriptionsMute(event);
+    } break;
+    case ContextIDs::SubscriptionsUnmute: {
+      onContextSelectedSubscriptionsUnmute(event);
+    } break;
+    case ContextIDs::SubscriptionsChangeColor: {
+      onContextSelectedSubscriptionsChangeColor(event);
+    } break;
+    case ContextIDs::HistoryResend: {
+      onContextSelectedHistoryResend(event);
+    } break;
+    case ContextIDs::HistoryEdit: {
+      onContextSelectedHistoryEdit(event);
+    } break;
+    case ContextIDs::HistorySaveSnippet: {
+      onContextSelectedHistorySaveSnippet(event);
+    } break;
+    case ContextIDs::SnippetNewFolder: {
+      onContextSelectedSnippetNewFolder(event);
+    } break;
+    case ContextIDs::SnippetNewSnippet: {
+      onContextSelectedSnippetNewSnippet(event);
+    } break;
+    case ContextIDs::SnippetDelete: {
+      onContextSelectedSnippetDelete(event);
+    } break;
+    case ContextIDs::SnippetRename: {
+      onContextSelectedSnippetRename(event);
+    } break;
+  }
+  event.Skip();
+}
+
+void Client::onContextSelectedSubscriptionsUnsubscribe(wxCommandEvent &/* event */)
+{
+  const auto item = mSubscriptionsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+
+  const auto selected = mHistoryCtrl->GetSelection();
+  if (!selected.IsOk()) { return; }
+
+  mSubscriptionsModel->unsubscribe(item);
+  mHistoryCtrl->Unselect(selected);
+
+  auto *preview = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Preview).panel
+  );
+  preview->clear();
+}
+
+void Client::onContextSelectedSubscriptionsChangeColor(wxCommandEvent &/* event */)
+{
+  const auto item = mSubscriptionsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+
+  const auto color = Helpers::colorFromNumber((size_t)std::abs(rand()));
+  mSubscriptionsModel->setColor(item, color);
+
+  mSubscriptionsCtrl->Refresh();
+  mHistoryCtrl->Refresh();
+}
+
+void Client::onContextSelectedSubscriptionsMute(wxCommandEvent &/* event */)
+{
+  const auto item = mSubscriptionsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+  mSubscriptionsModel->mute(item);
+}
+
+void Client::onContextSelectedSubscriptionsUnmute(wxCommandEvent &/* event */)
+{
+  const auto item = mSubscriptionsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+  mSubscriptionsModel->unmute(item);
+}
+
+void Client::onContextSelectedSubscriptionsSolo(wxCommandEvent &/* event */)
+{
+  const auto item = mSubscriptionsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+  mSubscriptionsModel->solo(item);
+}
+
+void Client::onContextSelectedSubscriptionsClear(wxCommandEvent &/* event */)
+{
+  const auto item = mSubscriptionsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+  mSubscriptionsModel->clear(item);
+}
+
+void Client::onContextSelectedHistoryRetainedClear(wxCommandEvent &/* event */)
+{
+  const auto item = mHistoryCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+
+  const auto topic = mHistoryModel->getTopic(item);
+  const auto qos = mHistoryModel->getQos(item);
+  mClient->publish(topic, "", qos, true);
+}
+
+void Client::onContextSelectedHistoryResend(wxCommandEvent &/* event */)
+{
+  const auto item     = mHistoryCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+
+  const auto topic    = mHistoryModel->getTopic(item);
+  const auto retained = mHistoryModel->getRetained(item);
+  const auto qos      = mHistoryModel->getQos(item);
+  const auto payload  = mHistoryModel->getPayload(item);
+  mClient->publish(topic, payload, qos, retained);
+}
+
+void Client::onContextSelectedHistoryEdit(wxCommandEvent &/* event */)
+{
+  const auto item = mHistoryCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+
+  auto *publish = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Publish).panel
+  );
+
+  publish->clear();
+  publish->setTopic(mHistoryModel->getTopic(item));
+  publish->setQos(mHistoryModel->getQos(item));
+  publish->setPayload(mHistoryModel->getPayload(item));
+  publish->setRetained(mHistoryModel->getRetained(item));
+}
+
+void Client::onContextSelectedHistorySaveSnippet(wxCommandEvent &/* event */)
+{
+  auto snippetItem = mSnippetsCtrl->GetSelection();
+  if (!mSnippetsModel->IsContainer(snippetItem))
+  {
+    snippetItem = mSnippetsModel->GetParent(snippetItem);
+  }
+
+  const auto historyItem = mHistoryCtrl->GetSelection();
+  const auto message = mHistoryModel->getMessage(historyItem);
+  const auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
+
+  if (!inserted.IsOk())
   {
     return;
   }
 
-  mHistoryCtrl->Select(item);
-  mHistoryCtrl->EnsureVisible(item);
+  auto *publish = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Publish).panel
+  );
+  publish->setMessage(mSnippetsModel->getMessage(inserted));
 
-  auto *preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
-  preview->setPayload(mHistoryModel->getPayload(item));
-  preview->setTopic(mHistoryModel->getTopic(item));
-  preview->setQos(mHistoryModel->getQos(item));
-  preview->setRetained(mHistoryModel->getRetained(item));
+  mSnippetsCtrl->Select(inserted);
+  mSnippetsCtrl->EnsureVisible(inserted);
+
+  auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+  mSnippetExplicitEditRequest = true;
+  mSnippetsCtrl->EditItem(inserted, nameColumn);
 }
+
+void Client::onContextSelectedSnippetRename(wxCommandEvent &/* event */)
+{
+  const auto item = mSnippetsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+
+  mSnippetExplicitEditRequest = true;
+  mSnippetsCtrl->EditItem(item, mSnippetColumns.at(Snippets::Column::Name));
+}
+
+void Client::onContextSelectedSnippetDelete(wxCommandEvent &/* event */)
+{
+  const auto item = mSnippetsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+
+  const bool done = mSnippetsModel->remove(item);
+  if (!done)
+  {
+    return;
+  }
+
+  const auto root = mSnippetsModel->getRootItem();
+  mSnippetsCtrl->Select(root);
+}
+
+void Client::onContextSelectedSnippetNewSnippet(wxCommandEvent &/* event */)
+{
+  auto item = mSnippetsCtrl->GetSelection();
+  if (!mSnippetsModel->IsContainer(item))
+  {
+    item = mSnippetsModel->GetParent(item);
+  }
+
+  const auto inserted = mSnippetsModel->createSnippet(item, nullptr);
+  if (!inserted.IsOk())
+  {
+    return;
+  }
+
+  auto *publish = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Publish).panel
+  );
+  publish->setMessage(mSnippetsModel->getMessage(inserted));
+
+  mSnippetsCtrl->Select(inserted);
+  mSnippetsCtrl->EnsureVisible(inserted);
+
+  auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+  mSnippetExplicitEditRequest = true;
+  mSnippetsCtrl->EditItem(inserted, nameColumn);
+}
+
+void Client::onContextSelectedSnippetNewFolder(wxCommandEvent &/* event */)
+{
+  auto item = mSnippetsCtrl->GetSelection();
+  if (!mSnippetsModel->IsContainer(item))
+  {
+    item = mSnippetsModel->GetParent(item);
+  }
+
+  const auto inserted = mSnippetsModel->createFolder(item);
+  if (!inserted.IsOk())
+  {
+    return;
+  }
+
+  mSnippetsCtrl->Select(inserted);
+  mSnippetsCtrl->EnsureVisible(inserted);
+
+  auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+  mSnippetExplicitEditRequest = true;
+  mSnippetsCtrl->EditItem(inserted, nameColumn);
+}
+
+// Context }
+
+// MQTT::Client::Observer {
 
 void Client::onConnected()
 {
@@ -1104,6 +1067,58 @@ void Client::onConnectionFailureSync(Events::Connection &/* event */)
   allowConnect();
 }
 
+// MQTT::Client::Observer }
+
+// Models::History::Observer {
+
+void Client::onMessage(wxDataViewItem item)
+{
+  if (!mAutoScroll->GetValue())
+  {
+    return;
+  }
+
+  mHistoryCtrl->Select(item);
+  mHistoryCtrl->EnsureVisible(item);
+
+  auto *preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
+  preview->setPayload(mHistoryModel->getPayload(item));
+  preview->setTopic(mHistoryModel->getTopic(item));
+  preview->setQos(mHistoryModel->getQos(item));
+  preview->setRetained(mHistoryModel->getRetained(item));
+}
+
+// Models::History::Observer }
+
+// Subscriptions {
+
+void Client::onSubscribeClicked(wxCommandEvent &/* event */)
+{
+  auto text = mFilter->GetValue();
+  mFilter->SetValue("");
+  auto topic = text.empty()
+    ? "#"
+    : text.ToStdString();
+  mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
+}
+
+void Client::onSubscribeEnter(wxKeyEvent &event)
+{
+  if (event.GetKeyCode() != WXK_RETURN)
+  {
+    event.Skip();
+    return;
+  }
+
+  auto text = mFilter->GetValue();
+  mFilter->SetValue("");
+  auto topic = text.empty()
+    ? "#"
+    : text.ToStdString();
+  mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
+  event.Skip();
+}
+
 void Client::onSubscriptionSelected(wxDataViewEvent &/* event */)
 {
   auto item = mSubscriptionsCtrl->GetSelection();
@@ -1112,3 +1127,123 @@ void Client::onSubscriptionSelected(wxDataViewEvent &/* event */)
   mFilter->SetValue(f);
 }
 
+// Subscriptions }
+
+// Publish {
+
+void Client::onPublishClicked(wxCommandEvent &/* event */)
+{
+  auto *publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
+
+  if (!mClient->connected()) { return; }
+  auto topic = publish->getTopic();
+  if (topic.empty()) { return; }
+
+  auto payload  = publish->getPayload();
+  auto qos      = publish->getQos();
+  bool retained = publish->getRetained();
+
+  mClient->publish(topic, payload, qos, retained);
+}
+
+void Client::onPublishSaveSnippet(Events::Edit &/* event */)
+{
+  wxLogInfo("Saving current message");
+  auto snippetItem = mSnippetsCtrl->GetSelection();
+  if (!mSnippetsModel->IsContainer(snippetItem))
+  {
+    wxLogInfo("Selecting parent");
+    snippetItem = mSnippetsModel->GetParent(snippetItem);
+  }
+
+  auto *publish = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Publish).panel
+  );
+
+  auto message = std::make_shared<MQTT::Message>(publish->getMessage());
+  wxLogInfo("Storing %s", message->topic);
+  auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
+  if (inserted.IsOk())
+  {
+    auto *publish = dynamic_cast<Widgets::Edit*>(
+      mPanes.at(Panes::Publish).panel
+    );
+    publish->setMessage(mSnippetsModel->getMessage(inserted));
+
+    mSnippetsCtrl->Select(inserted);
+    mSnippetsCtrl->EnsureVisible(inserted);
+    auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+    mSnippetExplicitEditRequest = true;
+    mSnippetsCtrl->EditItem(inserted, nameColumn);
+  }
+}
+
+// Publish }
+
+// History {
+
+void Client::onHistorySelected(wxDataViewEvent &event)
+{
+  if (!event.GetItem().IsOk()) { return; }
+  auto item = event.GetItem();
+
+  auto *preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
+
+  preview->setPayload(mHistoryModel->getPayload(item));
+  preview->setTopic(mHistoryModel->getTopic(item));
+  preview->setQos(mHistoryModel->getQos(item));
+  preview->setRetained(mHistoryModel->getRetained(item));
+}
+
+void Client::onHistoryClearClicked(wxCommandEvent &/* event */)
+{
+  mHistoryModel->clear();
+}
+
+// History }
+
+// Preview {
+
+void Client::onPreviewSaveSnippet(Events::Edit &/* event */)
+{
+  wxLogInfo("Saving current message");
+  auto snippetItem = mSnippetsCtrl->GetSelection();
+  if (!mSnippetsModel->IsContainer(snippetItem))
+  {
+    wxLogInfo("Selecting parent");
+    snippetItem = mSnippetsModel->GetParent(snippetItem);
+  }
+
+  auto *preview = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Preview).panel
+  );
+
+  auto message = std::make_shared<MQTT::Message>(preview->getMessage());
+  wxLogInfo("Storing %s", message->topic);
+  auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
+  if (inserted.IsOk())
+  {
+    mSnippetsCtrl->Select(inserted);
+    mSnippetsCtrl->EnsureVisible(inserted);
+    auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
+    mSnippetExplicitEditRequest = true;
+    mSnippetsCtrl->EditItem(inserted, nameColumn);
+  }
+}
+
+// Preview }
+
+void Client::onClose(wxCloseEvent &/* event */)
+{
+  if (mClient->connected())
+  {
+    auto *preview = dynamic_cast<Widgets::Edit*>(
+      mPanes.at(Panes::Preview).panel
+    );
+    preview->setPayload("Closing...");
+    mClient->disconnect();
+  }
+  Destroy();
+}
+
+//  }

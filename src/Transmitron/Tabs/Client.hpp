@@ -114,39 +114,67 @@ private:
   std::shared_ptr<MQTT::Client> mClient;
   size_t mMqttObserverId = 0;
 
+  void onClose(wxCloseEvent &event);
+
+  // Connection.
+  void allowCancel();
+  void allowConnect();
+  void allowDisconnect();
+  void onCancelClicked(wxCommandEvent &event);
+  void onConnectClicked(wxCommandEvent &event);
+  void onDisconnectClicked(wxCommandEvent &event);
+
+  // Context.
+  void onContextSelected(wxCommandEvent &event);
+  void onContextSelectedHistoryEdit(wxCommandEvent &event);
+  void onContextSelectedHistoryResend(wxCommandEvent &event);
+  void onContextSelectedHistoryRetainedClear(wxCommandEvent &event);
+  void onContextSelectedHistorySaveSnippet(wxCommandEvent &event);
+  void onContextSelectedSnippetDelete(wxCommandEvent &event);
+  void onContextSelectedSnippetNewFolder(wxCommandEvent &event);
+  void onContextSelectedSnippetNewSnippet(wxCommandEvent &event);
+  void onContextSelectedSnippetRename(wxCommandEvent &event);
+  void onContextSelectedSubscriptionsChangeColor(wxCommandEvent &event);
+  void onContextSelectedSubscriptionsClear(wxCommandEvent &event);
+  void onContextSelectedSubscriptionsMute(wxCommandEvent &event);
+  void onContextSelectedSubscriptionsSolo(wxCommandEvent &event);
+  void onContextSelectedSubscriptionsUnmute(wxCommandEvent &event);
+  void onContextSelectedSubscriptionsUnsubscribe(wxCommandEvent &event);
+  void onHistoryContext(wxDataViewEvent &event);
+  void onSnippetsContext(wxDataViewEvent &e);
+  void onSubscriptionContext(wxDataViewEvent &event);
+
+  // History.
+  void onHistoryClearClicked(wxCommandEvent &event);
+  void onHistorySelected(wxDataViewEvent &event);
+
+  // Preview.
+  void onPreviewSaveSnippet(Events::Edit &e);
+
+  // Publish.
+  void onPublishClicked(wxCommandEvent &event);
+  void onPublishSaveSnippet(Events::Edit &e);
+
+  // Setup.
   void setupPanelConnect(wxWindow *parent);
-  void setupPanelSubscriptions(wxWindow *parent);
   void setupPanelHistory(wxWindow *parent);
   void setupPanelPreview(wxWindow *parent);
   void setupPanelPublish(wxWindow *parent);
   void setupPanelSnippets(wxWindow *parent);
+  void setupPanelSubscriptions(wxWindow *parent);
 
-  void onClose(wxCloseEvent &event);
-  void onConnectClicked(wxCommandEvent &event);
-  void onDisconnectClicked(wxCommandEvent &event);
-  void onCancelClicked(wxCommandEvent &event);
-  void onHistorySelected(wxDataViewEvent &event);
-  void onPublishClicked(wxCommandEvent &event);
-  void onPublishSaveSnippet(Events::Edit &e);
-  void onPreviewSaveSnippet(Events::Edit &e);
-  void onSubscribeClicked(wxCommandEvent &event);
-  void onSubscribeEnter(wxKeyEvent &event);
-  void onSubscriptionContext(wxDataViewEvent &event);
-  void onHistoryContext(wxDataViewEvent &event);
-  void onContextSelected(wxCommandEvent &event);
-  void onSubscriptionSelected(wxDataViewEvent &event);
-  void onSnippetsEdit(wxDataViewEvent &e);
-  void onSnippetsContext(wxDataViewEvent &e);
-  void onSnippetsSelected(wxDataViewEvent &e);
+  // Snippets.
   void onSnippetsActivated(wxDataViewEvent &e);
   void onSnippetsDrag(wxDataViewEvent &e);
   void onSnippetsDrop(wxDataViewEvent &e);
   void onSnippetsDropPossible(wxDataViewEvent &e);
+  void onSnippetsEdit(wxDataViewEvent &e);
+  void onSnippetsSelected(wxDataViewEvent &e);
 
-  void handleInserted(wxDataViewItem &inserted);
-  void allowConnect();
-  void allowDisconnect();
-  void allowCancel();
+  // Subscriptions.
+  void onSubscribeClicked(wxCommandEvent &event);
+  void onSubscribeEnter(wxKeyEvent &event);
+  void onSubscriptionSelected(wxDataViewEvent &event);
 
   // MQTT::Client::Observer interface.
   void onConnected() override;
@@ -154,6 +182,7 @@ private:
   void onConnectionLost() override;
   void onConnectionFailure() override;
 
+  // MQTT::Client::Observer on GUI thread.
   void onConnectedSync(Events::Connection &e);
   void onDisconnectedSync(Events::Connection &e);
   void onConnectionLostSync(Events::Connection &e);
