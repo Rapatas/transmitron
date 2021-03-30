@@ -531,13 +531,26 @@ void Client::onSnippetsActivated(wxDataViewEvent &e)
   const auto item = e.GetItem();
   if (!item.IsOk()) { return; }
 
-  if (mSnippetsCtrl->IsExpanded(item))
+  if (mSnippetsModel->IsContainer(item))
   {
-    mSnippetsCtrl->Collapse(item);
+    if (mSnippetsCtrl->IsExpanded(item))
+    {
+      mSnippetsCtrl->Collapse(item);
+    }
+    else
+    {
+      mSnippetsCtrl->Expand(item);
+    }
   }
   else
   {
-    mSnippetsCtrl->Expand(item);
+    const auto message = mSnippetsModel->getMessage(item);
+    mClient->publish(
+      message.topic,
+      message.payload,
+      message.qos,
+      message.retained
+    );
   }
 }
 
