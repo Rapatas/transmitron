@@ -54,6 +54,7 @@ private:
     SnippetDelete,
     SnippetNewSnippet,
     SnippetNewFolder,
+    SnippetPublish,
   };
 
   enum class Panes : unsigned
@@ -134,6 +135,7 @@ private:
   void onContextSelectedSnippetNewFolder(wxCommandEvent &event);
   void onContextSelectedSnippetNewSnippet(wxCommandEvent &event);
   void onContextSelectedSnippetRename(wxCommandEvent &event);
+  void onContextSelectedSnippetPublish(wxCommandEvent &event);
   void onContextSelectedSubscriptionsChangeColor(wxCommandEvent &event);
   void onContextSelectedSubscriptionsClear(wxCommandEvent &event);
   void onContextSelectedSubscriptionsMute(wxCommandEvent &event);

@@ -720,48 +720,60 @@ void Client::onSnippetsContext(wxDataViewEvent& e)
 {
   wxMenu menu;
 
-  auto *newFolder = new wxMenuItem(
-    nullptr,
-    (unsigned)ContextIDs::SnippetNewFolder,
-    "New Folder"
-  );
-  newFolder->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW_DIR));
-  menu.Append(newFolder);
-
-  auto *newSnippet = new wxMenuItem(
-    nullptr,
-    (unsigned)ContextIDs::SnippetNewSnippet,
-    "New Snippet"
-  );
-  newSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE));
-  menu.Append(newSnippet);
-
-  if (e.GetItem().IsOk())
+  if (!e.GetItem().IsOk())
   {
-    auto item = mSnippetsCtrl->GetSelection();
-
-    if (item != mSnippetsModel->getRootItem())
-    {
-      auto *rename = new wxMenuItem(
-        nullptr,
-        (unsigned)ContextIDs::SnippetRename,
-        "Rename"
-      );
-      rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
-      menu.Append(rename);
-
-      auto *del = new wxMenuItem(
-        nullptr,
-        (unsigned)ContextIDs::SnippetDelete,
-        "Delete"
-      );
-      del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
-      menu.Append(del);
-    }
+    mSnippetsCtrl->UnselectAll();
   }
   else
   {
-    mSnippetsCtrl->UnselectAll();
+    const auto item = e.GetItem();
+
+    if (!mSnippetsModel->IsContainer(item))
+    {
+      auto *publish = new wxMenuItem(
+        nullptr,
+        (unsigned)ContextIDs::SnippetPublish,
+        "Publish"
+      );
+      menu.Append(publish);
+    }
+
+    auto *rename = new wxMenuItem(
+      nullptr,
+      (unsigned)ContextIDs::SnippetRename,
+      "Rename"
+    );
+    rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
+    menu.Append(rename);
+
+    auto *del = new wxMenuItem(
+      nullptr,
+      (unsigned)ContextIDs::SnippetDelete,
+      "Delete"
+    );
+    del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+    menu.Append(del);
+  }
+
+  if (
+    !e.GetItem().IsOk()
+    || mSnippetsModel->IsContainer(e.GetItem())
+  ) {
+    auto *newFolder = new wxMenuItem(
+      nullptr,
+      (unsigned)ContextIDs::SnippetNewFolder,
+      "New Folder"
+    );
+    newFolder->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW_DIR));
+    menu.Append(newFolder);
+
+    auto *newSnippet = new wxMenuItem(
+      nullptr,
+      (unsigned)ContextIDs::SnippetNewSnippet,
+      "New Snippet"
+    );
+    newSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE));
+    menu.Append(newSnippet);
   }
 
   PopupMenu(&menu);
@@ -812,6 +824,9 @@ void Client::onContextSelected(wxCommandEvent& event)
     } break;
     case ContextIDs::SnippetRename: {
       onContextSelectedSnippetRename(event);
+    } break;
+    case ContextIDs::SnippetPublish: {
+      onContextSelectedSnippetPublish(event);
     } break;
   }
   event.Skip();
@@ -949,6 +964,26 @@ void Client::onContextSelectedSnippetRename(wxCommandEvent &/* event */)
 
   mSnippetExplicitEditRequest = true;
   mSnippetsCtrl->EditItem(item, mSnippetColumns.at(Snippets::Column::Name));
+}
+
+void Client::onContextSelectedSnippetPublish(wxCommandEvent &/* event */)
+{
+  const auto item = mSnippetsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+
+  auto *publish = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Publish).panel
+  );
+
+  const auto &message = mSnippetsModel->getMessage(item);
+  publish->setMessage(message);
+
+  mClient->publish(
+    message.topic,
+    message.payload,
+    message.qos,
+    message.retained
+  );
 }
 
 void Client::onContextSelectedSnippetDelete(wxCommandEvent &/* event */)
