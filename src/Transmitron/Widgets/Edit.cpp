@@ -140,23 +140,24 @@ void Edit::setupScintilla()
   mText = new wxStyledTextCtrl(this, wxID_ANY, wxDefaultPosition);
 
   mText->StyleSetFont(wxSTC_STYLE_DEFAULT, mFont);
-
   mText->SetWrapMode(wxSTC_WRAP_WORD);
-  mText->SetProperty("fold", "1");
-  mText->SetProperty("fold.compact", "0");
-  mText->SetProperty("fold.comment", "1");
-  mText->SetProperty("fold.preprocessor", "1");
 
-  constexpr int FoldMarginWidth = 20;
   constexpr int ScrollWidth = 50;
+  mText->SetScrollWidth(ScrollWidth);
+  mText->SetScrollWidthTracking(true);
 
+  // Folding margins.
   constexpr int MarginScriptFoldIndex = 1;
+  constexpr int FoldMarginWidth = 20;
+  mText->SetMarginWidth(MarginScriptFoldIndex, 0);
   mText->SetMarginType(MarginScriptFoldIndex, wxSTC_MARGIN_SYMBOL);
   mText->SetMarginMask(MarginScriptFoldIndex, (int)wxSTC_MASK_FOLDERS);
   mText->SetMarginWidth(MarginScriptFoldIndex, FoldMarginWidth);
   mText->SetMarginSensitive(MarginScriptFoldIndex, true);
   mText->SetAutomaticFold(wxSTC_AUTOMATICFOLD_CLICK);
+  mText->SetFoldFlags(wxSTC_FOLDFLAG_LINEAFTER_CONTRACTED);
 
+  // Folding markers.
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDER,        wxSTC_MARK_PLUS);
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDEROPEN,    wxSTC_MARK_MINUS);
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDEREND,     wxSTC_MARK_EMPTY);
@@ -164,9 +165,6 @@ void Edit::setupScintilla()
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDEROPENMID, wxSTC_MARK_EMPTY);
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDERSUB,     wxSTC_MARK_EMPTY);
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDERTAIL,    wxSTC_MARK_EMPTY);
-
-  mText->SetScrollWidth(ScrollWidth);
-  mText->SetScrollWidthTracking(true);
 }
 
 void Edit::setStyle(Format format)
@@ -194,6 +192,7 @@ void Edit::setStyle(Format format)
       mText->StyleSetForeground(wxSTC_JSON_PROPERTYNAME, green);
       mText->StyleSetForeground(wxSTC_JSON_STRING,       orange);
       mText->StyleSetForeground(wxSTC_JSON_URI,          cyan);
+
     }
     break;
 
@@ -222,6 +221,11 @@ void Edit::setStyle(Format format)
     }
     break;
   }
+
+  // Setup folding.
+  mText->SetProperty("fold", "1");
+  mText->SetProperty("fold.html", "1");
+  mText->SetProperty("fold.compact", "0");
 
   mCurrentFormat = format;
 }
