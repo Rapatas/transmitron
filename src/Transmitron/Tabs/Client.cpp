@@ -722,10 +722,38 @@ void Client::onHistoryContext(wxDataViewEvent& e)
   mHistoryCtrl->Select(e.GetItem());
 
   wxMenu menu;
-  menu.Append((unsigned)ContextIDs::HistoryEdit, "Edit");
-  menu.Append((unsigned)ContextIDs::HistoryResend, "Re-Send");
-  menu.Append((unsigned)ContextIDs::HistoryRetainedClear, "Clear retained");
-  menu.Append((unsigned)ContextIDs::HistorySaveSnippet, "Save snippet");
+
+  auto *edit = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::HistoryEdit,
+    "Edit"
+  );
+  edit->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
+  menu.Append(edit);
+
+  auto *resend = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::HistoryResend,
+    "Re-Send"
+  );
+  menu.Append(resend);
+
+  auto *clearRetained = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::HistoryRetainedClear,
+    "Clear retained"
+  );
+  clearRetained->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+  menu.Append(clearRetained);
+
+  auto *save = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::HistorySaveSnippet,
+    "Save Snippet"
+  );
+  save->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
+  menu.Append(save);
+
   PopupMenu(&menu);
 }
 
