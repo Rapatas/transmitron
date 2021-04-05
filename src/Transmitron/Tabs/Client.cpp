@@ -879,10 +879,12 @@ void Client::onContextSelectedSubscriptionsUnsubscribe(wxCommandEvent &/* event 
   if (!item.IsOk()) { return; }
 
   const auto selected = mHistoryCtrl->GetSelection();
-  if (!selected.IsOk()) { return; }
+  if (selected.IsOk())
+  {
+    mHistoryCtrl->Unselect(selected);
+  }
 
   mSubscriptionsModel->unsubscribe(item);
-  mHistoryCtrl->Unselect(selected);
 
   auto *preview = dynamic_cast<Widgets::Edit*>(
     mPanes.at(Panes::Preview).panel
@@ -1197,9 +1199,9 @@ void Client::onSubscribeEnter(wxKeyEvent &event)
 
 void Client::onSubscriptionSelected(wxDataViewEvent &/* event */)
 {
-  auto item = mSubscriptionsCtrl->GetSelection();
+  const auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
-  auto f = mSubscriptionsModel->getFilter(item);
+  const auto f = mSubscriptionsModel->getFilter(item);
   mFilter->SetValue(f);
 }
 
