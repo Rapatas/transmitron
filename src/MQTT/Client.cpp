@@ -65,6 +65,8 @@ void Client::connect()
 
 void Client::disconnect()
 {
+  if (mClient == nullptr) { return; }
+
   mCanceled = false;
   wxLogMessage("Disconnecting from %s", mBrokerOptions.getHostname());
   try

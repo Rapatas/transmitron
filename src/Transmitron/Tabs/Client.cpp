@@ -161,8 +161,11 @@ Client::Client(
 
 Client::~Client()
 {
-  mClient->disconnect();
-  mClient->detachObserver(mMqttObserverId);
+  if (mClient != nullptr)
+  {
+    mClient->disconnect();
+    mClient->detachObserver(mMqttObserverId);
+  }
   mAuiMan.UnInit();
 }
 
