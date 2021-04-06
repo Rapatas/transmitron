@@ -13,3 +13,6 @@ class SaladConan(ConanFile):
         "cppcodec/0.2",
         "fmt/7.1.3"
     ]
+    default_options = {
+        "wxwidgets:webview": False
+    }
