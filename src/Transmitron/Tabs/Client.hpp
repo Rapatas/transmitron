@@ -28,7 +28,8 @@ public:
   Client(
     wxWindow* parent,
     const MQTT::BrokerOptions &brokerOptions,
-    const wxObjectDataPtr<Models::Snippets> &snippetsModel
+    const wxObjectDataPtr<Models::Snippets> &snippetsModel,
+    bool darkMode
   );
   Client(const Client &other) = delete;
   Client(Client &&other) = delete;
@@ -82,6 +83,7 @@ private:
 
   const MQTT::BrokerOptions mBrokerOptions;
   const wxFont mFont;
+  const bool mDarkMode;
 
   wxBoxSizer *mMasterSizer = nullptr;
 

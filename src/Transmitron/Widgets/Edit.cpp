@@ -2,6 +2,7 @@
 #include <tinyxml2.h>
 #include <wx/clipbrd.h>
 #include <wx/artprov.h>
+#include <wx/log.h>
 #include "Edit.hpp"
 #include "Transmitron/Events/Edit.hpp"
 #include "Transmitron/Resources/send/send-18x18.hpp"
@@ -11,18 +12,12 @@
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
 
+#define wxLOG_COMPONENT "Edit" // NOLINT
+
 using namespace tinyxml2;
 using namespace nlohmann;
 using namespace Transmitron;
 using namespace Transmitron::Widgets;
-
-uint32_t foreground = (0   << 0) | (0   << 8) | (0   << 16); // NOLINT
-uint32_t backgound  = (250 << 0) | (250 << 8) | (250 << 16); // NOLINT
-uint32_t red        = (180 << 0) | (0   << 8) | (0   << 16); // NOLINT
-uint32_t orange     = (150 << 0) | (120 << 8) | (0   << 16); // NOLINT
-uint32_t green      = (0   << 0) | (150 << 8) | (0   << 16); // NOLINT
-uint32_t pink       = (200 << 0) | (0   << 8) | (150 << 16); // NOLINT
-uint32_t cyan       = (0   << 0) | (120 << 8) | (150 << 16); // NOLINT
 
 wxDEFINE_EVENT(Events::EDIT_PUBLISH, Events::Edit); // NOLINT
 wxDEFINE_EVENT(Events::EDIT_SAVE_SNIPPET, Events::Edit); // NOLINT
@@ -30,13 +25,16 @@ wxDEFINE_EVENT(Events::EDIT_SAVE_SNIPPET, Events::Edit); // NOLINT
 Edit::Edit(
   wxWindow* parent,
   wxWindowID id,
-  size_t optionsHeight
+  size_t optionsHeight,
+  bool darkMode
 ) :
   wxPanel(parent, id),
+  mTheme(darkMode ? Theme::Dark : Theme::Light),
   mOptionsHeight(optionsHeight)
 {
   constexpr size_t FontSize = 9;
   mFont = wxFont(wxFontInfo(FontSize).FaceName("Consolas"));
+
   setupScintilla();
 
   mTopic = new TopicCtrl(this, -1);
@@ -165,6 +163,12 @@ void Edit::setupScintilla()
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDEROPENMID, wxSTC_MARK_EMPTY);
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDERSUB,     wxSTC_MARK_EMPTY);
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDERTAIL,    wxSTC_MARK_EMPTY);
+
+  mText->StyleSetForeground(wxSTC_STYLE_DEFAULT, mStyles.at(mTheme).at(Style::Normal).first);
+  mText->StyleSetBackground(wxSTC_STYLE_DEFAULT, mStyles.at(mTheme).at(Style::Normal).second);
+  mText->StyleClearAll();
+  mText->StyleSetForeground(wxSTC_STYLE_LINENUMBER, mStyles.at(mTheme).at(Style::Normal).second);
+  mText->StyleSetBackground(wxSTC_STYLE_LINENUMBER, mStyles.at(mTheme).at(Style::Normal).first);
 }
 
 void Edit::setStyle(Format format)
@@ -174,11 +178,7 @@ void Edit::setStyle(Format format)
     return;
   }
 
-  mText->StyleSetBackground(wxSTC_STYLE_DEFAULT, backgound);
-  mText->StyleSetForeground(wxSTC_STYLE_DEFAULT, foreground);
-  mText->StyleClearAll();
-  mText->StyleSetForeground(wxSTC_STYLE_LINENUMBER, backgound);
-  mText->StyleSetBackground(wxSTC_STYLE_LINENUMBER, foreground);
+  const auto &style = mStyles.at(mTheme);
 
   switch (format)
   {
@@ -186,12 +186,12 @@ void Edit::setStyle(Format format)
     {
       mText->SetLexer(wxSTC_LEX_JSON);
       mText->SetKeyWords(0, "true false null");
-      mText->StyleSetBackground(wxSTC_JSON_ERROR,        red);
-      mText->StyleSetForeground(wxSTC_JSON_KEYWORD,      cyan);
-      mText->StyleSetForeground(wxSTC_JSON_NUMBER,       orange);
-      mText->StyleSetForeground(wxSTC_JSON_PROPERTYNAME, green);
-      mText->StyleSetForeground(wxSTC_JSON_STRING,       orange);
-      mText->StyleSetForeground(wxSTC_JSON_URI,          cyan);
+      mText->StyleSetBackground(wxSTC_JSON_ERROR,        style.at(Style::Error).first);
+      mText->StyleSetForeground(wxSTC_JSON_KEYWORD,      style.at(Style::Keyword).first);
+      mText->StyleSetForeground(wxSTC_JSON_NUMBER,       style.at(Style::Number).first);
+      mText->StyleSetForeground(wxSTC_JSON_PROPERTYNAME, style.at(Style::Key).first);
+      mText->StyleSetForeground(wxSTC_JSON_STRING,       style.at(Style::String).first);
+      mText->StyleSetForeground(wxSTC_JSON_URI,          style.at(Style::Uri).first);
 
     }
     break;
@@ -199,18 +199,18 @@ void Edit::setStyle(Format format)
     case Format::Xml:
     {
       mText->SetLexer(wxSTC_LEX_XML);
-      mText->StyleSetForeground(wxSTC_H_ATTRIBUTE,        green);
-      mText->StyleSetForeground(wxSTC_H_ATTRIBUTEUNKNOWN, red);
-      mText->StyleSetForeground(wxSTC_H_COMMENT,          foreground);
-      mText->StyleSetForeground(wxSTC_H_DOUBLESTRING,     orange);
-      mText->StyleSetForeground(wxSTC_H_NUMBER,           orange);
-      mText->StyleSetForeground(wxSTC_H_OTHER,            green);
-      mText->StyleSetForeground(wxSTC_H_SINGLESTRING,     orange);
-      mText->StyleSetForeground(wxSTC_H_TAG,              cyan);
-      mText->StyleSetForeground(wxSTC_H_TAGEND,           cyan);
-      mText->StyleSetForeground(wxSTC_H_TAGUNKNOWN,       red);
-      mText->StyleSetForeground(wxSTC_H_XMLEND,           pink);
-      mText->StyleSetForeground(wxSTC_H_XMLSTART,         pink);
+      mText->StyleSetForeground(wxSTC_H_ATTRIBUTE,        style.at(Style::Key).first);
+      mText->StyleSetForeground(wxSTC_H_ATTRIBUTEUNKNOWN, style.at(Style::Error).first);
+      mText->StyleSetForeground(wxSTC_H_COMMENT,          style.at(Style::Comment).first);
+      mText->StyleSetForeground(wxSTC_H_DOUBLESTRING,     style.at(Style::String).first);
+      mText->StyleSetForeground(wxSTC_H_NUMBER,           style.at(Style::Number).first);
+      mText->StyleSetForeground(wxSTC_H_OTHER,            style.at(Style::Key).first);
+      mText->StyleSetForeground(wxSTC_H_SINGLESTRING,     style.at(Style::String).first);
+      mText->StyleSetForeground(wxSTC_H_TAG,              style.at(Style::Keyword).first);
+      mText->StyleSetForeground(wxSTC_H_TAGEND,           style.at(Style::Keyword).first);
+      mText->StyleSetForeground(wxSTC_H_TAGUNKNOWN,       style.at(Style::Error).first);
+      mText->StyleSetForeground(wxSTC_H_XMLEND,           style.at(Style::Special).first);
+      mText->StyleSetForeground(wxSTC_H_XMLSTART,         style.at(Style::Special).first);
     }
     break;
 
@@ -306,6 +306,7 @@ void Edit::format()
       payloadUtf8.data(),
       payloadUtf8.length())
   );
+
   if (mReadOnly)
   {
     mText->SetReadOnly(true);

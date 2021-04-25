@@ -33,11 +33,13 @@ wxDEFINE_EVENT(Events::FAILED, Events::Connection); // NOLINT
 Client::Client(
   wxWindow* parent,
   const MQTT::BrokerOptions &brokerOptions,
-  const wxObjectDataPtr<Models::Snippets> &snippetsModel
+  const wxObjectDataPtr<Models::Snippets> &snippetsModel,
+  bool darkMode
 ) :
   wxPanel(parent),
   mBrokerOptions(brokerOptions),
   mFont(wxFontInfo(FontSize).FaceName("Consolas")),
+  mDarkMode(darkMode),
   mSnippetsModel(snippetsModel)
 {
   mClient = std::make_shared<MQTT::Client>();
@@ -405,7 +407,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
 void Client::setupPanelPreview(wxWindow *parent)
 {
-  auto *panel = new Widgets::Edit(parent, -1, OptionsHeight);
+  auto *panel = new Widgets::Edit(parent, -1, OptionsHeight, mDarkMode);
   mPanes.at(Panes::Preview).panel = panel;
   panel->setReadOnly(true);
   panel->Bind(Events::EDIT_SAVE_SNIPPET, &Client::onPreviewSaveSnippet, this);
@@ -413,7 +415,7 @@ void Client::setupPanelPreview(wxWindow *parent)
 
 void Client::setupPanelPublish(wxWindow *parent)
 {
-  auto *panel = new Widgets::Edit(parent, -1, OptionsHeight);
+  auto *panel = new Widgets::Edit(parent, -1, OptionsHeight, mDarkMode);
   mPanes.at(Panes::Publish).panel = panel;
   panel->Bind(Events::EDIT_PUBLISH, &Client::onPublishClicked, this);
   panel->Bind(Events::EDIT_SAVE_SNIPPET, &Client::onPublishSaveSnippet, this);

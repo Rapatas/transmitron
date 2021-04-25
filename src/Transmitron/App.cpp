@@ -1,6 +1,7 @@
 #include "App.hpp"
 
 #include <wx/notebook.h>
+#include <wx/settings.h>
 #include <fmt/core.h>
 
 #include "Info.hpp"
@@ -60,6 +61,9 @@ bool App::OnInit()
 
   mProfilesModel = new Models::Profiles();
   mProfilesModel->load(getConfigDir());
+
+  const auto appearance = wxSystemSettings::GetAppearance();
+  mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();
 
   newConnectionTab();
 
@@ -128,7 +132,8 @@ void App::newConnectionTab()
     auto *client = new Tabs::Client(
       mNote,
       mProfilesModel->getBrokerOptions(profileItem),
-      mProfilesModel->getSnippetsModel(profileItem)
+      mProfilesModel->getSnippetsModel(profileItem),
+      mDarkMode
     );
     mNote->RemovePage(selected);
     mNote->InsertPage(selected, client, "");

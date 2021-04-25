@@ -20,7 +20,8 @@ public:
   explicit Edit(
     wxWindow* parent,
     wxWindowID id,
-    size_t optionsHeight
+    size_t optionsHeight,
+    bool darkMode
   );
 
   void format();
@@ -43,6 +44,60 @@ public:
 
 private:
 
+  enum class Theme : uint8_t
+  {
+    Light,
+    Dark,
+  };
+
+  enum class Style : uint8_t
+  {
+    Comment,
+    Error,
+    Key,
+    Keyword,
+    Normal,
+    Number,
+    Special,
+    String,
+    Uri,
+  };
+
+  static constexpr uint32_t NoColor = 0x10000000;
+  static constexpr uint32_t Black  = (30  << 0) | (30  << 8) | (30  << 16); // NOLINT
+  static constexpr uint32_t White  = (250 << 0) | (250 << 8) | (250 << 16); // NOLINT
+  static constexpr uint32_t Red    = (180 << 0) | (0   << 8) | (0   << 16); // NOLINT
+  static constexpr uint32_t Orange = (150 << 0) | (120 << 8) | (0   << 16); // NOLINT
+  static constexpr uint32_t Green  = (0   << 0) | (150 << 8) | (0   << 16); // NOLINT
+  static constexpr uint32_t Pink   = (200 << 0) | (0   << 8) | (150 << 16); // NOLINT
+  static constexpr uint32_t Cyan   = (0   << 0) | (120 << 8) | (150 << 16); // NOLINT
+
+  const std::map<Theme, std::map<Style, std::pair<uint32_t, uint32_t>>> mStyles {
+    {Theme::Light, {
+      {Style::Comment, {Black,   NoColor}},
+      {Style::Error,   {NoColor, Red}},
+      {Style::Normal,  {Black,   White}},
+      {Style::Key,     {Green,   NoColor}},
+      {Style::Keyword, {Cyan,    NoColor}},
+      {Style::Number,  {Orange,  NoColor}},
+      {Style::String,  {Orange,  NoColor}},
+      {Style::Uri,     {Cyan,    NoColor}},
+      {Style::Special, {Pink,    NoColor}},
+    }},
+    {Theme::Dark, {
+      {Style::Comment, {White,   NoColor}},
+      {Style::Error,   {NoColor, Red}},
+      {Style::Normal,  {White,   Black}},
+      {Style::Key,     {Green  | (80 << 0) | (80 << 8) | (80 << 16), NoColor}},
+      {Style::Keyword, {Cyan   | (80 << 0) | (80 << 8) | (80 << 16), NoColor}},
+      {Style::Number,  {Orange | (80 << 0) | (80 << 8) | (80 << 16), NoColor}},
+      {Style::String,  {Orange | (80 << 0) | (80 << 8) | (80 << 16), NoColor}},
+      {Style::Uri,     {Cyan   | (80 << 0) | (80 << 8) | (80 << 16), NoColor}},
+      {Style::Special, {Pink   | (80 << 0) | (80 << 8) | (80 << 16), NoColor}},
+    }}
+  };
+
+  Theme mTheme;
   wxFont mFont;
 
   bool mReadOnly = false;

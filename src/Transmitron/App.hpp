@@ -19,6 +19,7 @@ private:
 
   unsigned mCount = 0;
   wxAuiNotebook *mNote;
+  bool mDarkMode = false;
 
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
 
