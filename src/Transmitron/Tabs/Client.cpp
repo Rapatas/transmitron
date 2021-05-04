@@ -3,6 +3,7 @@
 #include <sstream>
 #include <wx/artprov.h>
 #include <nlohmann/json.hpp>
+#include <wx/log.h>
 
 #include "Helpers/Helpers.hpp"
 #include "Transmitron/Resources/plus/plus-18x18.hpp"
@@ -95,9 +96,17 @@ Client::Client(
     }},
   };
 
-  constexpr size_t PaneMinWidth = 250;
-  constexpr size_t PaneMinHeight = 100;
-  constexpr size_t EditorMinHeight = 200;
+  mPanes.at(Panes::History).info.Center();
+  mPanes.at(Panes::Subscriptions).info.Left();
+  mPanes.at(Panes::Snippets).info.Left();
+  mPanes.at(Panes::Publish).info.Bottom();
+  mPanes.at(Panes::Preview).info.Bottom();
+
+  mPanes.at(Panes::History).info.Layer(0);
+  mPanes.at(Panes::Subscriptions).info.Layer(1);
+  mPanes.at(Panes::Snippets).info.Layer(1);
+  mPanes.at(Panes::Publish).info.Layer(2);
+  mPanes.at(Panes::Preview).info.Layer(2);
 
   for (auto &pane : mPanes)
   {
@@ -127,25 +136,13 @@ Client::Client(
     }
   }
 
-  mPanes.at(Panes::History).info.Center();
-  mPanes.at(Panes::Subscriptions).info.Left();
-  mPanes.at(Panes::Snippets).info.Left();
-  mPanes.at(Panes::Preview).info.Bottom();
-  mPanes.at(Panes::Publish).info.Bottom();
-
-  mPanes.at(Panes::History).info.Layer(0);
-  mPanes.at(Panes::Subscriptions).info.Layer(1);
-  mPanes.at(Panes::Snippets).info.Layer(1);
-  mPanes.at(Panes::Preview).info.Layer(2);
-  mPanes.at(Panes::Publish).info.Layer(2);
-
   auto *wrapper = new wxPanel(this, -1);
 
+  setupPanelSnippets(wrapper);
   setupPanelPublish(wrapper);
   setupPanelSubscriptions(wrapper);
-  setupPanelHistory(wrapper);
   setupPanelPreview(wrapper);
-  setupPanelSnippets(wrapper);
+  setupPanelHistory(wrapper);
   setupPanelConnect(this);
 
   mMasterSizer = new wxBoxSizer(wxVERTICAL);
@@ -260,6 +257,39 @@ void Client::setupPanelConnect(wxWindow *parent)
   mDisconnect = new wxButton(mProfileBar, -1, "Disconnect");
   mCancel     = new wxButton(mProfileBar, -1, "Cancel");
 
+  wxArrayString options;
+  options.push_back("Default");
+
+  mLayoutsLocked = new wxComboBox(
+    mProfileBar,
+    -1,
+    "Default",
+    wxDefaultPosition,
+    wxDefaultSize,
+    options,
+    wxCB_READONLY
+  );
+
+  mLayoutsEdit = new wxComboBox(
+    mProfileBar,
+    -1,
+    "Default",
+    wxDefaultPosition,
+    wxDefaultSize,
+    options,
+    wxTE_PROCESS_ENTER
+  );
+  mLayoutsEdit->Show(false);
+
+  mLayoutSave = new wxButton(
+    mProfileBar,
+    -1,
+    "",
+    wxDefaultPosition,
+    wxSize((int)OptionsHeight, (int)OptionsHeight)
+  );
+  mLayoutSave->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
+
   auto cb = [this](Panes pane, wxCommandEvent &/* event */)
   {
     auto widget = mPanes.at(pane);
@@ -323,8 +353,17 @@ void Client::setupPanelConnect(wxWindow *parent)
     pane.second.toggle = button;
   }
 
+  mProfileSizer->AddStretchSpacer(1);
+  mProfileSizer->Add(mLayoutSave, 0, wxEXPAND);
+  mProfileSizer->Add(mLayoutsLocked, 0, wxEXPAND);
+  mProfileSizer->Add(mLayoutsEdit, 0, wxEXPAND);
+
   mProfileBar->SetSizer(mProfileSizer);
 
+  mLayoutsEdit->Bind(wxEVT_COMBOBOX, &Client::onLayoutEditSelected, this);
+  mLayoutsEdit->Bind(wxEVT_TEXT_ENTER, &Client::onLayoutEditEnter, this);
+  mLayoutsLocked->Bind(wxEVT_COMBOBOX, &Client::onLayoutLockedSelected, this);
+  mLayoutSave->Bind(wxEVT_BUTTON, &Client::onLayoutSaveClicked, this);
   mConnect->Bind(wxEVT_BUTTON, &Client::onConnectClicked, this);
   mDisconnect->Bind(wxEVT_BUTTON, &Client::onDisconnectClicked, this);
   mCancel->Bind(wxEVT_BUTTON, &Client::onCancelClicked, this);
@@ -1284,6 +1323,92 @@ void Client::onHistoryClearClicked(wxCommandEvent &/* event */)
 }
 
 // History }
+
+// Layouts {
+
+void Client::onLayoutSaveClicked(wxCommandEvent &/* event */)
+{
+  mLayoutsEdit->SetValue(mLayoutsModel.getUniqueName());
+
+  mLayoutsEdit->Show(true);
+  mLayoutsLocked->Show(false);
+  mProfileSizer->Layout();
+
+  mLayoutsEdit->SelectAll();
+  mLayoutsEdit->SetFocus();
+}
+
+void Client::onLayoutEditEnter(wxCommandEvent &/* event */)
+{
+  const auto value = mLayoutsEdit->GetValue().ToStdString();
+  wxLogInfo("User created: %s", value);
+
+  const auto perspective = mAuiMan.SavePerspective().ToStdString();
+  const auto stored = mLayoutsModel.store(value, perspective);
+
+  if (!stored)
+  {
+    wxLogWarning("Could not load perspective");
+    return;
+  }
+
+  mLayoutsEdit->Append(value);
+  mLayoutsLocked->Append(value);
+
+  mLayoutsLocked->SetValue(value);
+
+  mLayoutsEdit->Hide();
+  mLayoutsLocked->Show();
+  mProfileSizer->Layout();
+}
+
+void Client::onLayoutEditSelected(wxCommandEvent &/* event */)
+{
+  onLayoutSelected(mLayoutsEdit->GetValue().ToStdString());
+}
+
+void Client::onLayoutLockedSelected(wxCommandEvent &/* event */)
+{
+  onLayoutSelected(mLayoutsLocked->GetValue().ToStdString());
+}
+
+void Client::onLayoutSelected(const std::string &value)
+{
+  wxLogInfo("User selected: %s", value);
+
+  const auto layoutOpt = mLayoutsModel.getLayout(value);
+  if (!layoutOpt.has_value())
+  {
+    return;
+  }
+
+  const auto &layout = layoutOpt.value();
+
+  mAuiMan.LoadPerspective(layout, false);
+
+  for (auto &pane : mPanes)
+  {
+    auto &info = mAuiMan.GetPane(pane.second.panel);
+
+    const bool isEditor =
+      pane.first == Panes::Preview
+      || pane.first == Panes::Publish;
+
+    const auto minSize = isEditor
+      ? wxSize(PaneMinWidth, EditorMinHeight)
+      : wxSize(PaneMinWidth, PaneMinHeight);
+
+    info.MinSize(minSize);
+    info.Caption(pane.second.name);
+    info.CloseButton(false);
+    info.Icon(*pane.second.icon18x14);
+    info.PaneBorder(false);
+  }
+
+  mAuiMan.Update();
+}
+
+// Layouts }
 
 // Preview {
 

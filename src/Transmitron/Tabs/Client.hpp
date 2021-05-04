@@ -5,12 +5,14 @@
 #include <wx/splitter.h>
 #include <wx/aui/aui.h>
 #include <wx/tglbtn.h>
+#include <wx/combobox.h>
 
 #include "MQTT/Client.hpp"
 #include "MQTT/BrokerOptions.hpp"
 #include "Transmitron/Events/Connection.hpp"
 #include "Transmitron/Widgets/TopicCtrl.hpp"
 #include "Transmitron/Models/History.hpp"
+#include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Models/Subscriptions.hpp"
 #include "Transmitron/Models/Snippets.hpp"
 #include "Transmitron/Widgets/Edit.hpp"
@@ -61,10 +63,10 @@ private:
   enum class Panes : unsigned
   {
     History = 0,
-    Preview = 4,
-    Publish = 3,
-    Snippets = 2,
     Subscriptions = 1,
+    Snippets = 2,
+    Publish = 3,
+    Preview = 4,
   };
 
   struct Pane
@@ -76,6 +78,10 @@ private:
     const wxBitmap *icon18x14 = nullptr;
     wxButton *toggle = nullptr;
   };
+
+  static constexpr size_t PaneMinWidth = 200;
+  static constexpr size_t PaneMinHeight = 100;
+  static constexpr size_t EditorMinHeight = 200;
 
   std::map<Panes, Pane> mPanes;
 
@@ -93,6 +99,12 @@ private:
   wxButton *mConnect = nullptr;
   wxButton *mDisconnect = nullptr;
   wxButton *mCancel = nullptr;
+
+  // Layouts:
+  Models::Layouts mLayoutsModel;
+  wxComboBox *mLayoutsLocked = nullptr;
+  wxComboBox *mLayoutsEdit = nullptr;
+  wxButton *mLayoutSave = nullptr;
 
   // History:
   wxObjectDataPtr<Models::History> mHistoryModel;
@@ -151,6 +163,13 @@ private:
   // History.
   void onHistoryClearClicked(wxCommandEvent &event);
   void onHistorySelected(wxDataViewEvent &event);
+
+  // Layouts
+  void onLayoutSaveClicked(wxCommandEvent &event);
+  void onLayoutEditEnter(wxCommandEvent &event);
+  void onLayoutEditSelected(wxCommandEvent &event);
+  void onLayoutLockedSelected(wxCommandEvent &event);
+  void onLayoutSelected(const std::string &value);
 
   // Preview.
   void onPreviewSaveSnippet(Events::Edit &e);

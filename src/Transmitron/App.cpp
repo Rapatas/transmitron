@@ -33,7 +33,7 @@ namespace fs = std::filesystem;
 
 constexpr size_t DefaultWindowWidth = 800;
 constexpr size_t DefaultWindowHeight = 600;
-constexpr size_t MinWindowWidth = 400;
+constexpr size_t MinWindowWidth = 550;
 constexpr size_t MinWindowHeight = 300;
 
 bool App::OnInit()
