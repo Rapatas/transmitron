@@ -18,6 +18,7 @@ add_executable(
   src/MQTT/Subscription.cpp
   src/Transmitron/App.cpp
   src/Transmitron/Models/History.cpp
+  src/Transmitron/Models/Layouts.cpp
   src/Transmitron/Models/Profiles.cpp
   src/Transmitron/Models/Snippets.cpp
   src/Transmitron/Models/Subscriptions.cpp
