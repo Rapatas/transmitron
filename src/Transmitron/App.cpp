@@ -25,6 +25,7 @@
 #include "Tabs/Client.hpp"
 #include "Tabs/Homepage.hpp"
 #include "Events/Connection.hpp"
+#include "Transmitron/Models/Layouts.hpp"
 
 #define wxLOG_COMPONENT "Transmitron" // NOLINT
 
@@ -61,6 +62,9 @@ bool App::OnInit()
 
   mProfilesModel = new Models::Profiles();
   mProfilesModel->load(getConfigDir());
+
+  mLayoutsModel = new Models::Layouts();
+  mLayoutsModel->load(getConfigDir());
 
   const auto appearance = wxSystemSettings::GetAppearance();
   mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();
@@ -133,6 +137,7 @@ void App::newConnectionTab()
       mNote,
       mProfilesModel->getBrokerOptions(profileItem),
       mProfilesModel->getSnippetsModel(profileItem),
+      mLayoutsModel,
       mDarkMode
     );
     mNote->RemovePage(selected);

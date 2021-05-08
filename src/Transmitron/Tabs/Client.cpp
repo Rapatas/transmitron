@@ -6,6 +6,7 @@
 #include <wx/log.h>
 
 #include "Helpers/Helpers.hpp"
+#include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Resources/plus/plus-18x18.hpp"
 #include "Transmitron/Resources/history/history-18x14.hpp"
 #include "Transmitron/Resources/history/history-18x18.hpp"
@@ -35,12 +36,14 @@ Client::Client(
   wxWindow* parent,
   const MQTT::BrokerOptions &brokerOptions,
   const wxObjectDataPtr<Models::Snippets> &snippetsModel,
+  const wxObjectDataPtr<Models::Layouts> &layoutsModel,
   bool darkMode
 ) :
   wxPanel(parent),
   mBrokerOptions(brokerOptions),
   mFont(wxFontInfo(FontSize).FaceName("Consolas")),
   mDarkMode(darkMode),
+  mLayoutsModel(layoutsModel),
   mSnippetsModel(snippetsModel)
 {
   mClient = std::make_shared<MQTT::Client>();
@@ -110,6 +113,8 @@ Client::Client(
 
   for (auto &pane : mPanes)
   {
+    pane.second.info.Name(pane.second.name);
+
     const bool isEditor =
       pane.first == Panes::Preview
       || pane.first == Panes::Publish;
@@ -257,13 +262,12 @@ void Client::setupPanelConnect(wxWindow *parent)
   mDisconnect = new wxButton(mProfileBar, -1, "Disconnect");
   mCancel     = new wxButton(mProfileBar, -1, "Cancel");
 
-  wxArrayString options;
-  options.push_back("Default");
+  wxArrayString options = mLayoutsModel->getNames();
 
   mLayoutsLocked = new wxComboBox(
     mProfileBar,
     -1,
-    "Default",
+    options.front(),
     wxDefaultPosition,
     wxDefaultSize,
     options,
@@ -273,7 +277,7 @@ void Client::setupPanelConnect(wxWindow *parent)
   mLayoutsEdit = new wxComboBox(
     mProfileBar,
     -1,
-    "Default",
+    options.front(),
     wxDefaultPosition,
     wxDefaultSize,
     options,
@@ -1328,7 +1332,7 @@ void Client::onHistoryClearClicked(wxCommandEvent &/* event */)
 
 void Client::onLayoutSaveClicked(wxCommandEvent &/* event */)
 {
-  mLayoutsEdit->SetValue(mLayoutsModel.getUniqueName());
+  mLayoutsEdit->SetValue(mLayoutsModel->getUniqueName());
 
   mLayoutsEdit->Show(true);
   mLayoutsLocked->Show(false);
@@ -1344,9 +1348,9 @@ void Client::onLayoutEditEnter(wxCommandEvent &/* event */)
   wxLogInfo("User created: %s", value);
 
   const auto perspective = mAuiMan.SavePerspective().ToStdString();
-  const auto stored = mLayoutsModel.store(value, perspective);
+  const auto item = mLayoutsModel->create(value, perspective);
 
-  if (!stored)
+  if (!item.IsOk())
   {
     wxLogWarning("Could not load perspective");
     return;
@@ -1376,15 +1380,15 @@ void Client::onLayoutSelected(const std::string &value)
 {
   wxLogInfo("User selected: %s", value);
 
-  const auto layoutOpt = mLayoutsModel.getLayout(value);
+  const auto layoutOpt = mLayoutsModel->getLayout(value);
   if (!layoutOpt.has_value())
   {
     return;
   }
 
-  const auto &layout = layoutOpt.value();
+  const auto &perspective = layoutOpt.value();
 
-  mAuiMan.LoadPerspective(layout, false);
+  mAuiMan.LoadPerspective(perspective, false);
 
   for (auto &pane : mPanes)
   {

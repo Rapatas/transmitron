@@ -31,6 +31,7 @@ public:
     wxWindow* parent,
     const MQTT::BrokerOptions &brokerOptions,
     const wxObjectDataPtr<Models::Snippets> &snippetsModel,
+    const wxObjectDataPtr<Models::Layouts> &layoutsModel,
     bool darkMode
   );
   Client(const Client &other) = delete;
@@ -101,7 +102,7 @@ private:
   wxButton *mCancel = nullptr;
 
   // Layouts:
-  Models::Layouts mLayoutsModel;
+  wxObjectDataPtr<Models::Layouts> mLayoutsModel;
   wxComboBox *mLayoutsLocked = nullptr;
   wxComboBox *mLayoutsEdit = nullptr;
   wxButton *mLayoutSave = nullptr;

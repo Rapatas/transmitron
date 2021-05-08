@@ -105,6 +105,7 @@ bool Profiles::load(const std::string &configDir)
       true
     });
     mProfiles.push_back(std::move(profile));
+    wxLogMessage("Loaded %s", entry.path().u8string());
   }
 
   return true;

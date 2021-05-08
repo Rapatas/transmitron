@@ -4,6 +4,7 @@
 #include <wx/wx.h>
 #include <wx/aui/auibook.h>
 #include "Transmitron/Models/Profiles.hpp"
+#include "Transmitron/Models/Layouts.hpp"
 
 namespace Transmitron
 {
@@ -22,6 +23,7 @@ private:
   bool mDarkMode = false;
 
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
+  wxObjectDataPtr<Models::Layouts> mLayoutsModel;
 
   void onPageClosed(wxBookCtrlEvent& event);
   void onPageSelected(wxBookCtrlEvent& event);
