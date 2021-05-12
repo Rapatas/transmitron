@@ -17,16 +17,16 @@ public:
 
 private:
 
-  unsigned mCount = 0;
+  size_t mCount = 0;
   wxAuiNotebook *mNote;
   bool mDarkMode = false;
 
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
 
-  void onPageClosed(wxBookCtrlEvent& event);
+  void onPageClosing(wxBookCtrlEvent& event);
   void onPageSelected(wxBookCtrlEvent& event);
 
-  void newConnectionTab();
+  void createProfilesTab(size_t index);
 
   /// Empty if it fails.
   static std::string getConfigDir();

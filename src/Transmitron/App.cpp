@@ -1,7 +1,9 @@
 #include "App.hpp"
 
+#include <wx/aui/auibook.h>
 #include <wx/notebook.h>
 #include <wx/settings.h>
+#include <wx/artprov.h>
 #include <fmt/core.h>
 
 #include "Info.hpp"
@@ -44,9 +46,6 @@ bool App::OnInit()
   log->SetFormatter(new LogFormat());
   wxLog::SetActiveTarget(log);
 
-  wxImageList * il = new wxImageList;
-  il->Add(*bin2cPlus18x18());
-
   auto *frame = new wxFrame(
     nullptr,
     -1,
@@ -56,8 +55,19 @@ bool App::OnInit()
   );
   frame->SetMinSize(wxSize(MinWindowWidth, MinWindowHeight));
 
-  mNote = new wxAuiNotebook(frame, -1);
-  mNote->SetImageList(il);
+  const int noteStyle = wxAUI_NB_DEFAULT_STYLE & ~(0
+    | wxAUI_NB_TAB_MOVE
+    | wxAUI_NB_TAB_EXTERNAL_MOVE
+    | wxAUI_NB_TAB_SPLIT
+  );
+
+  mNote = new wxAuiNotebook(
+    frame,
+    -1,
+    wxDefaultPosition,
+    wxDefaultSize,
+    noteStyle
+  );
 
   mProfilesModel = new Models::Profiles();
   mProfilesModel->load(getConfigDir());
@@ -65,14 +75,18 @@ bool App::OnInit()
   const auto appearance = wxSystemSettings::GetAppearance();
   mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();
 
-  newConnectionTab();
+  auto *settingsTab = new wxPanel(mNote);
+  mNote->AddPage(settingsTab, "", false, wxArtProvider::GetBitmap(wxART_EDIT));
+  ++mCount;
 
-  auto *secret = new wxPanel(mNote);
-  mNote->AddPage(secret, "", false, 0);
+  createProfilesTab(1);
+
+  auto *newProfilesTab = new wxPanel(mNote);
+  mNote->AddPage(newProfilesTab, "", false, *bin2cPlus18x18());
   ++mCount;
 
   mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGING, &App::onPageSelected, this);
-  mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CLOSE, &App::onPageClosed, this);
+  mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CLOSE, &App::onPageClosing, this);
 
   frame->Show();
 
@@ -87,37 +101,68 @@ void App::onPageSelected(wxBookCtrlEvent& event)
     return;
   }
 
-  if ((size_t)event.GetSelection() != mCount - 1)
+  if ((size_t)event.GetSelection() == mCount - 1)
   {
-    event.Skip();
+    createProfilesTab(mCount - 1);
+    event.Veto();
     return;
   }
 
-  newConnectionTab();
-  event.Veto();
-}
+  const auto style = mNote->GetWindowStyle();
+  constexpr int Closable = 0
+    | wxAUI_NB_CLOSE_BUTTON
+    | wxAUI_NB_CLOSE_ON_ACTIVE_TAB;
 
-void App::onPageClosed(wxBookCtrlEvent& event)
-{
-  --mCount;
-
-  if (mCount == 1)
+  if ((size_t)event.GetSelection() == 0)
   {
-    newConnectionTab();
+    if ((style & Closable) != 0)
+    {
+      mNote->SetWindowStyle(style & ~Closable);
+    }
+  }
+  else
+  {
+    if ((style & Closable) != Closable)
+    {
+      mNote->SetWindowStyle(style | Closable);
+    }
   }
 
-  if ((size_t)event.GetSelection() == mCount - 1)
+  event.Skip();
+}
+
+void App::onPageClosing(wxBookCtrlEvent& event)
+{
+  const auto closingIndex = (size_t)event.GetSelection();
+
+  // Settings and Plus.
+  if (closingIndex == 0 || closingIndex == mCount - 1)
+  {
+    event.Veto();
+    return;
+  }
+
+  --mCount;
+
+  if (mCount == 2)
+  {
+    createProfilesTab(mCount - 1);
+  }
+
+  if ((size_t)event.GetOldSelection() == mCount - 1)
   {
     mNote->ChangeSelection(mCount - 2);
   }
+
+  event.Skip();
 }
 
-void App::newConnectionTab()
+void App::createProfilesTab(size_t index)
 {
   auto *homepage = new Tabs::Homepage(mNote, mProfilesModel);
-  mNote->InsertPage(mCount - 1, homepage, "Homepage");
+  mNote->InsertPage(index, homepage, "Homepage");
   ++mCount;
-  mNote->SetSelection(mCount - 2);
+  mNote->SetSelection(index);
 
   homepage->Bind(Events::CONNECTION, [this](Events::Connection e){
     if (e.GetSelection() == wxNOT_FOUND)
