@@ -101,7 +101,6 @@ void App::onPageSelected(wxBookCtrlEvent& event)
     return;
   }
 
-  wxLogInfo("Selected");
   if ((size_t)event.GetSelection() == mCount - 1)
   {
     createProfilesTab(mCount - 1);
@@ -112,7 +111,6 @@ void App::onPageSelected(wxBookCtrlEvent& event)
   const auto style = mNote->GetWindowStyle();
   constexpr int Closable = 0
     | wxAUI_NB_CLOSE_BUTTON
-    // | wxAUI_NB_MIDDLE_CLICK_CLOSE
     | wxAUI_NB_CLOSE_ON_ACTIVE_TAB;
 
   if ((size_t)event.GetSelection() == 0)
