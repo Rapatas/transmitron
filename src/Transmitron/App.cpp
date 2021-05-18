@@ -26,6 +26,7 @@
 #include "Resources/subscription/subscription-18x14.hpp"
 #include "Tabs/Client.hpp"
 #include "Tabs/Homepage.hpp"
+#include "Tabs/Settings.hpp"
 #include "Events/Connection.hpp"
 #include "Transmitron/Models/Layouts.hpp"
 
@@ -38,6 +39,11 @@ constexpr size_t DefaultWindowWidth = 800;
 constexpr size_t DefaultWindowHeight = 600;
 constexpr size_t MinWindowWidth = 550;
 constexpr size_t MinWindowHeight = 300;
+constexpr size_t LabelFontSize = 15;
+
+App::App() :
+  LabelFontInfo(LabelFontSize)
+{}
 
 bool App::OnInit()
 {
@@ -79,9 +85,7 @@ bool App::OnInit()
   const auto appearance = wxSystemSettings::GetAppearance();
   mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();
 
-  auto *settingsTab = new wxPanel(mNote);
-  mNote->AddPage(settingsTab, "", false, wxArtProvider::GetBitmap(wxART_EDIT));
-  ++mCount;
+  createSettingsTab();
 
   createProfilesTab(1);
 
@@ -163,7 +167,7 @@ void App::onPageClosing(wxBookCtrlEvent& event)
 
 void App::createProfilesTab(size_t index)
 {
-  auto *homepage = new Tabs::Homepage(mNote, mProfilesModel);
+  auto *homepage = new Tabs::Homepage(mNote, LabelFontInfo, mProfilesModel);
   mNote->InsertPage(index, homepage, "Homepage");
   ++mCount;
   mNote->SetSelection(index);
@@ -190,6 +194,13 @@ void App::createProfilesTab(size_t index)
     mNote->SetSelection(selected);
     mNote->SetPageText(selected, mProfilesModel->getName(profileItem));
   });
+}
+
+void App::createSettingsTab()
+{
+  auto *settingsTab = new Tabs::Settings(mNote, LabelFontInfo, mLayoutsModel);
+  mNote->AddPage(settingsTab, "", false, wxArtProvider::GetBitmap(wxART_EDIT));
+  ++mCount;
 }
 
 std::string App::getConfigDir()

@@ -125,6 +125,41 @@ wxArrayString Layouts::getNames() const
   return result;
 }
 
+bool Layouts::remove(wxDataViewItem item)
+{
+  const auto index = toIndex(item);
+  auto &node = mLayouts.at(index);
+
+  std::error_code ec;
+  fs::remove_all(node->path, ec);
+  if (ec)
+  {
+    wxLogError("Could not delete '%s': %s", node->name, ec.message());
+    return false;
+  }
+
+  auto toRemoveIt = std::begin(mLayouts);
+  std::advance(toRemoveIt, index);
+  wxLogInfo("Size: %zu", mLayouts.size());
+  for (const auto &l : mLayouts)
+  {
+    if (l == nullptr) { continue; }
+    wxLogInfo("  - %s", l->name);
+  }
+  wxLogInfo("removing index: %zu, name: %s", index, (*toRemoveIt)->name);
+  mLayouts.erase(toRemoveIt);
+  wxDataViewItem parent(0);
+  ItemDeleted(parent, item);
+  for (const auto &l : mLayouts)
+  {
+    if (l == nullptr) { continue; }
+    wxLogInfo("  - %s", l->name);
+  }
+  wxLogInfo("Size: %zu", mLayouts.size());
+
+  return true;
+}
+
 std::optional<std::string> Layouts::getLayout(const std::string &name) const
 {
   const auto it = std::find_if(
@@ -270,6 +305,7 @@ unsigned Layouts::GetChildren(
   const wxDataViewItem &/* parent */,
   wxDataViewItemArray &array
 ) const {
+  wxLogInfo("Current count: %zu", mLayouts.size() - 1);
   for (size_t i = 1; i != mLayouts.size(); ++i)
   {
     array.Add(toItem(i));

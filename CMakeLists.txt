@@ -40,6 +40,7 @@ add_executable(
   src/Transmitron/Resources/subscription/subscription-18x18.cpp
   src/Transmitron/Tabs/Client.cpp
   src/Transmitron/Tabs/Homepage.cpp
+  src/Transmitron/Tabs/Settings.cpp
   src/Transmitron/Types/Subscription.cpp
   src/Transmitron/Widgets/Edit.cpp
   src/Transmitron/Widgets/TopicCtrl.cpp
