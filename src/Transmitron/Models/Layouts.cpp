@@ -16,14 +16,14 @@ using namespace Transmitron::Models;
 
 Layouts::Layouts()
 {
-  mLayouts.push_back(nullptr);
-
+  const auto id = mAvailableId++;
   auto layout = std::make_unique<Layout>();
   layout->name = "Default";
   layout->perspective = DefaultPerspective;
   layout->path = "";
   layout->saved = true;
-  mLayouts.push_back(std::move(layout));
+  mLayouts.insert({id, std::move(layout)});
+  mRemap.push_back(id);
 }
 
 bool Layouts::load(const std::string &configDir)
@@ -103,12 +103,14 @@ bool Layouts::load(const std::string &configDir)
       continue;
     }
 
+    const auto id = mAvailableId++;
     auto layout = std::make_unique<Layout>();
     layout->name = name;
     layout->perspective = perspectiveIt->get<std::string>();
     layout->path = entry.path();
     layout->saved = false;
-    mLayouts.push_back(std::move(layout));
+    mLayouts.insert({id, std::move(layout)});
+    mRemap.push_back(id);
     wxLogInfo("Loaded %s", entry.path().u8string());
     wxLogInfo("Current size %zu", mLayouts.size());
   }
@@ -118,44 +120,32 @@ bool Layouts::load(const std::string &configDir)
 wxArrayString Layouts::getNames() const
 {
   wxArrayString result;
-  for (auto it = mLayouts.begin() + 1; it != mLayouts.end(); ++it)
+  for (const auto &layout : mLayouts)
   {
-    result.push_back((*it)->name);
+    result.push_back(layout.second->name);
   }
   return result;
 }
 
 bool Layouts::remove(wxDataViewItem item)
 {
-  const auto index = toIndex(item);
-  auto &node = mLayouts.at(index);
+  const auto index = mRemap.at(GetRow(item));
 
   std::error_code ec;
-  fs::remove_all(node->path, ec);
+  fs::remove_all(mLayouts.at(index)->path, ec);
   if (ec)
   {
-    wxLogError("Could not delete '%s': %s", node->name, ec.message());
+    wxLogError("Could not delete '%s': %s", mLayouts.at(index)->name, ec.message());
     return false;
   }
 
-  auto toRemoveIt = std::begin(mLayouts);
-  std::advance(toRemoveIt, index);
-  wxLogInfo("Size: %zu", mLayouts.size());
-  for (const auto &l : mLayouts)
-  {
-    if (l == nullptr) { continue; }
-    wxLogInfo("  - %s", l->name);
-  }
-  wxLogInfo("removing index: %zu, name: %s", index, (*toRemoveIt)->name);
-  mLayouts.erase(toRemoveIt);
+  auto toRemoveIt = std::begin(mRemap);
+  std::advance(toRemoveIt, GetRow(item));
+  mLayouts.erase(index);
+  mRemap.erase(toRemoveIt);
+
   wxDataViewItem parent(0);
   ItemDeleted(parent, item);
-  for (const auto &l : mLayouts)
-  {
-    if (l == nullptr) { continue; }
-    wxLogInfo("  - %s", l->name);
-  }
-  wxLogInfo("Size: %zu", mLayouts.size());
 
   return true;
 }
@@ -163,10 +153,10 @@ bool Layouts::remove(wxDataViewItem item)
 std::optional<std::string> Layouts::getLayout(const std::string &name) const
 {
   const auto it = std::find_if(
-    std::begin(mLayouts) + 1,
+    std::begin(mLayouts),
     std::end(mLayouts),
     [name](const auto &layout){
-      return layout->name == name;
+      return layout.second->name == name;
     }
   );
 
@@ -175,7 +165,7 @@ std::optional<std::string> Layouts::getLayout(const std::string &name) const
     return std::nullopt;
   }
 
-  return (*it)->perspective;
+  return (*it).second->perspective;
 }
 
 std::string Layouts::getUniqueName() const
@@ -184,11 +174,11 @@ std::string Layouts::getUniqueName() const
   std::string uniqueName{NewLayoutName};
   unsigned postfix = 0;
   while (std::any_of(
-      std::begin(mLayouts) + 1,
+      std::begin(mLayouts),
       std::end(mLayouts),
       [=](const auto &layout)
       {
-        return layout->name == uniqueName;
+        return layout.second->name == uniqueName;
       }
   )) {
     ++postfix;
@@ -205,11 +195,11 @@ wxDataViewItem Layouts::create(
   wxLogError("Creating layout '%s'...", name);
 
   const bool nameExists = std::any_of(
-    std::begin(mLayouts) + 1,
+    std::begin(mLayouts),
     std::end(mLayouts),
     [&name](const auto &layout)
     {
-      return layout->name == name;
+      return layout.second->name == name;
     }
   );
 
@@ -233,20 +223,19 @@ wxDataViewItem Layouts::create(
     encoded
   );
 
+  const auto id = mAvailableId++;
   auto layout = std::make_unique<Layout>();
   layout->name = name;
   layout->perspective = perspective;
   layout->path = path;
   layout->saved = false;
-  mLayouts.push_back(std::move(layout));
+  mLayouts.insert({id, std::move(layout)});
+  mRemap.push_back(id);
 
-  wxDataViewItem parent(nullptr);
-  const auto index = mLayouts.size() - 1;
-  const auto item = toItem(index);
-  save(index);
-  ItemAdded(parent, item);
+  save(id);
+  RowAppended();
 
-  return item;
+  return GetItem((unsigned)mRemap.size() - 1);
 }
 
 unsigned Layouts::GetColumnCount() const
@@ -259,12 +248,17 @@ wxString Layouts::GetColumnType(unsigned int /* col */) const
   return wxDataViewTextRenderer::GetDefaultType();
 }
 
-void Layouts::GetValue(
+unsigned Layouts::GetCount() const
+{
+  return (unsigned)mLayouts.size();
+}
+
+void Layouts::GetValueByRow(
   wxVariant &variant,
-  const wxDataViewItem &item,
+  unsigned int row,
   unsigned int col
 ) const {
-  const auto &layout = mLayouts.at(toIndex(item));
+  const auto &layout = mLayouts.at(mRemap.at(row));
 
   switch ((Column)col) {
     case Column::Name: {
@@ -274,43 +268,20 @@ void Layouts::GetValue(
   }
 }
 
-bool Layouts::SetValue(
+bool Layouts::SetValueByRow(
   const wxVariant &/* variant */,
-  const wxDataViewItem &/* item */,
+  unsigned int /* row */,
   unsigned int /* col */
 ) {
   return false;
 }
 
-bool Layouts::IsEnabled(
-  const wxDataViewItem &/* item */,
-  unsigned int /* col */
+bool Layouts::GetAttrByRow(
+  unsigned int /* row */,
+  unsigned int /* col */,
+  wxDataViewItemAttr &/* attr */
 ) const {
-  return true;
-}
-
-wxDataViewItem Layouts::GetParent(
-  const wxDataViewItem &/* item */
-) const {
-  return wxDataViewItem(nullptr);
-}
-
-bool Layouts::IsContainer(
-  const wxDataViewItem &item
-) const {
-  return !item.IsOk();
-}
-
-unsigned Layouts::GetChildren(
-  const wxDataViewItem &/* parent */,
-  wxDataViewItemArray &array
-) const {
-  wxLogInfo("Current count: %zu", mLayouts.size() - 1);
-  for (size_t i = 1; i != mLayouts.size(); ++i)
-  {
-    array.Add(toItem(i));
-  }
-  return (unsigned)mLayouts.size() - 1;
+  return false;
 }
 
 bool Layouts::save(size_t index)
@@ -332,20 +303,4 @@ bool Layouts::save(size_t index)
   output << nlohmann::json{{"perspective", layout->perspective}};
   layout->saved = true;
   return true;
-}
-
-size_t Layouts::toIndex(const wxDataViewItem &item)
-{
-  uintptr_t result = 0;
-  const void *id = item.GetID();
-  std::memcpy(&result, &id, sizeof(uintptr_t));
-  return result;
-}
-
-wxDataViewItem Layouts::toItem(size_t index)
-{
-  void *id = nullptr;
-  const uintptr_t value = index;
-  std::memcpy(&id, &value, sizeof(uintptr_t));
-  return wxDataViewItem(id);
 }

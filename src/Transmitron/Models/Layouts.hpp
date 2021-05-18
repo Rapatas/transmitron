@@ -11,7 +11,7 @@ namespace Transmitron::Models
 {
 
 class Layouts :
-  public wxDataViewModel
+  public wxDataViewVirtualListModel
 {
 public:
 
@@ -37,19 +37,23 @@ public:
 
   std::optional<std::string> getLayout(const std::string &name) const;
 
-  wxDataViewItem create(const std::string &name, const std::string &layout);
+  wxDataViewItem create(const std::string &name, const std::string &perspective);
 
 private:
 
   struct Layout
   {
+    using Id_t = size_t;
     std::string name;
     std::string perspective;
     std::filesystem::path path;
     bool saved = false;
   };
 
-  std::vector<std::unique_ptr<Layout>> mLayouts;
+  Layout::Id_t mAvailableId = 0;
+
+  std::map<Layout::Id_t, std::unique_ptr<Layout>> mLayouts;
+  std::vector<Layout::Id_t> mRemap;
   std::string mLayoutsDir;
 
   const std::string DefaultPerspective = "layout2|name=History;caption=History;state=1340;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=200;besth=100;minw=200;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=Subscriptions;caption=Subscriptions;state=1532;dir=4;layer=1;row=0;pos=0;prop=100000;bestw=200;besth=100;minw=200;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=Snippets;caption=Snippets;state=1532;dir=4;layer=1;row=0;pos=1;prop=100000;bestw=200;besth=100;minw=200;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=Publish;caption=Publish;state=1532;dir=3;layer=2;row=0;pos=0;prop=100000;bestw=200;besth=200;minw=200;minh=200;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=Preview;caption=Preview;state=1532;dir=3;layer=2;row=0;pos=1;prop=100000;bestw=200;besth=200;minw=200;minh=200;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=200|dock_size(4,1,0)=200|dock_size(3,2,0)=214|";
@@ -57,35 +61,24 @@ private:
   // wxDataViewModel interface.
   unsigned GetColumnCount() const override;
   wxString GetColumnType(unsigned int col) const override;
-  void GetValue(
+  unsigned GetCount() const override;
+  void GetValueByRow(
     wxVariant &variant,
-    const wxDataViewItem &item,
+    unsigned int row,
     unsigned int col
   ) const override;
-  bool SetValue(
+  bool GetAttrByRow(
+    unsigned int row,
+    unsigned int col,
+    wxDataViewItemAttr &attr
+  ) const override;
+  bool SetValueByRow(
     const wxVariant &variant,
-    const wxDataViewItem &item,
+    unsigned int row,
     unsigned int col
   ) override;
-  bool IsEnabled(
-    const wxDataViewItem &item,
-    unsigned int col
-  ) const override;
-  wxDataViewItem GetParent(
-    const wxDataViewItem &item
-  ) const override;
-  bool IsContainer(
-    const wxDataViewItem &item
-  ) const override;
-  unsigned int GetChildren(
-    const wxDataViewItem &parent,
-    wxDataViewItemArray &array
-  ) const override;
 
   bool save(size_t index);
-
-  static size_t toIndex(const wxDataViewItem &item);
-  static wxDataViewItem toItem(size_t index);
 };
 
 }
