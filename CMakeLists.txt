@@ -43,6 +43,7 @@ add_executable(
   src/Transmitron/Tabs/Settings.cpp
   src/Transmitron/Types/Subscription.cpp
   src/Transmitron/Widgets/Edit.cpp
+  src/Transmitron/Widgets/Layouts.cpp
   src/Transmitron/Widgets/TopicCtrl.cpp
   src/main.cpp
 )

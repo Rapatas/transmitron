@@ -10,9 +10,10 @@
 #include "MQTT/Client.hpp"
 #include "MQTT/BrokerOptions.hpp"
 #include "Transmitron/Events/Connection.hpp"
+#include "Transmitron/Events/Layout.hpp"
 #include "Transmitron/Widgets/TopicCtrl.hpp"
+#include "Transmitron/Widgets/Layouts.hpp"
 #include "Transmitron/Models/History.hpp"
-#include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Models/Subscriptions.hpp"
 #include "Transmitron/Models/Snippets.hpp"
 #include "Transmitron/Widgets/Edit.hpp"
@@ -94,18 +95,14 @@ private:
 
   wxBoxSizer *mMasterSizer = nullptr;
 
+  Widgets::Layouts *mLayouts = nullptr;
+
   // Profile:
   wxPanel *mProfileBar = nullptr;
   wxBoxSizer *mProfileSizer = nullptr;
   wxButton *mConnect = nullptr;
   wxButton *mDisconnect = nullptr;
   wxButton *mCancel = nullptr;
-
-  // Layouts:
-  wxObjectDataPtr<Models::Layouts> mLayoutsModel;
-  wxComboBox *mLayoutsLocked = nullptr;
-  wxComboBox *mLayoutsEdit = nullptr;
-  wxButton *mLayoutSave = nullptr;
 
   // History:
   wxObjectDataPtr<Models::History> mHistoryModel;
@@ -165,13 +162,6 @@ private:
   void onHistoryClearClicked(wxCommandEvent &event);
   void onHistorySelected(wxDataViewEvent &event);
 
-  // Layouts
-  void onLayoutSaveClicked(wxCommandEvent &event);
-  void onLayoutEditEnter(wxCommandEvent &event);
-  void onLayoutEditSelected(wxCommandEvent &event);
-  void onLayoutLockedSelected(wxCommandEvent &event);
-  void onLayoutSelected(const std::string &value);
-
   // Preview.
   void onPreviewSaveSnippet(Events::Edit &e);
 
@@ -180,7 +170,10 @@ private:
   void onPublishSaveSnippet(Events::Edit &e);
 
   // Setup.
-  void setupPanelConnect(wxWindow *parent);
+  void setupPanelConnect(
+    wxWindow *parent,
+    const wxObjectDataPtr<Models::Layouts> &layoutsModel
+  );
   void setupPanelHistory(wxWindow *parent);
   void setupPanelPreview(wxWindow *parent);
   void setupPanelPublish(wxWindow *parent);
@@ -199,6 +192,9 @@ private:
   void onSubscribeClicked(wxCommandEvent &event);
   void onSubscribeEnter(wxKeyEvent &event);
   void onSubscriptionSelected(wxDataViewEvent &event);
+
+  // Layouts.
+  void onLayoutSelected(Events::Layout &event);
 
   // MQTT::Client::Observer interface.
   void onConnected() override;
