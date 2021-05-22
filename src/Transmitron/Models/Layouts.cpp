@@ -192,8 +192,6 @@ wxDataViewItem Layouts::create(
   const std::string &name,
   const std::string &perspective
 ) {
-  wxLogInfo("Creating layout '%s'...", name);
-
   const bool nameExists = std::any_of(
     std::begin(mLayouts),
     std::end(mLayouts),

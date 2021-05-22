@@ -1,12 +1,12 @@
 #include "Layouts.hpp"
+#include "Transmitron/Events/Layout.hpp"
+#include "Transmitron/Notifiers/Layouts.hpp"
 
 #include <wx/artprov.h>
 #include <wx/button.h>
 #include <wx/log.h>
 
-#include "Transmitron/Events/Layout.hpp"
-
-#define wxLOG_COMPONENT "Layout" // NOLINT
+#define wxLOG_COMPONENT "Widgets/Layout" // NOLINT
 
 using namespace Transmitron::Widgets;
 using namespace Transmitron;
@@ -25,7 +25,11 @@ Layouts::Layouts(
   mLayoutsModel(layoutsModel),
   mAuiMan(auiMan)
 {
-  mLayoutsModel->AddNotifier(this);
+  auto *notifier = new Notifiers::Layouts;
+  mLayoutsModel->AddNotifier(notifier);
+
+  notifier->Bind(Events::LAYOUT_ADDED, &Layouts::onLayoutAdded, this);
+  notifier->Bind(Events::LAYOUT_REMOVED, &Layouts::onLayoutRemoved, this);
 
   wxArrayString options = mLayoutsModel->getNames();
   mLayoutsLocked = new wxComboBox(
@@ -47,7 +51,7 @@ Layouts::Layouts(
     options,
     wxTE_PROCESS_ENTER
   );
-  mLayoutsEdit->Show(false);
+  mLayoutsEdit->Hide();
 
   mSave = new wxButton(
     this,
@@ -89,10 +93,10 @@ Layouts::Layouts(
 
 void Layouts::onLayoutSaveClicked(wxCommandEvent &/* event */)
 {
+  mLayoutsEdit->Show();
   mLayoutsEdit->SetValue(mLayoutsModel->getUniqueName());
 
-  mLayoutsEdit->Show(true);
-  mLayoutsLocked->Show(false);
+  mLayoutsLocked->Hide();
   mSizer->Layout();
 
   mLayoutsEdit->SelectAll();
@@ -102,7 +106,6 @@ void Layouts::onLayoutSaveClicked(wxCommandEvent &/* event */)
 void Layouts::onLayoutEditEnter(wxCommandEvent &/* event */)
 {
   const auto value = mLayoutsEdit->GetValue().ToStdString();
-  wxLogInfo("User created: %s", value);
 
   const auto perspective = mAuiMan.SavePerspective().ToStdString();
   const auto item = mLayoutsModel->create(value, perspective);
@@ -113,11 +116,7 @@ void Layouts::onLayoutEditEnter(wxCommandEvent &/* event */)
     return;
   }
 
-  mLayoutsLocked->SetValue(value);
-
-  mLayoutsEdit->Hide();
-  mLayoutsLocked->Show();
-  mSizer->Layout();
+  mPendingSave = true;
 }
 
 void Layouts::onLayoutEditSelected(wxCommandEvent &/* event */)
@@ -132,7 +131,7 @@ void Layouts::onLayoutLockedSelected(wxCommandEvent &/* event */)
 
 void Layouts::onLayoutSelected(const std::string &value)
 {
-  wxLogInfo("User selected: %s", value);
+  wxLogInfo("Selected: %s", value);
 
   const auto layoutOpt = mLayoutsModel->getLayout(value);
   if (!layoutOpt.has_value())
@@ -147,46 +146,29 @@ void Layouts::onLayoutSelected(const std::string &value)
   wxQueueEvent(this, e);
 }
 
-// wxDataViewModelNotifier interface {
-
-bool Layouts::Cleared()
+void Layouts::onLayoutAdded(Events::Layout &event)
 {
-  return true;
-}
+  const auto item = event.getItem();
 
-bool Layouts::ItemChanged(const wxDataViewItem &/* item */)
-{
-  // mLayoutsModel->GetRow(item);
-  return true;
-}
-
-void Layouts::Resort()
-{}
-
-bool Layouts::ValueChanged(
-  const wxDataViewItem &/* item */,
-  unsigned int /* col */
-) {
-  return true;
-}
-
-bool Layouts::ItemAdded(
-  const wxDataViewItem &/* parent */,
-  const wxDataViewItem &item
-) {
   wxVariant value;
   mLayoutsModel->GetValue(value, item, 0);
 
   mLayoutsEdit->Append(value.GetString());
   mLayoutsLocked->Append(value.GetString());
 
-  return true;
+  if (mPendingSave)
+  {
+    mLayoutsLocked->SetValue(value);
+    mLayoutsEdit->SetValue(value);
+    mLayoutsEdit->Hide();
+    mLayoutsLocked->Show();
+    mSizer->Layout();
+    mPendingSave = false;
+  }
 }
 
-bool Layouts::ItemDeleted(
-  const wxDataViewItem &/* parent */,
-  const wxDataViewItem &/* item */
-) {
+void Layouts::onLayoutRemoved(Events::Layout &/* event */)
+{
   const auto newOptions = mLayoutsModel->getNames();
 
   const auto editval = mLayoutsEdit->GetValue();
@@ -197,8 +179,4 @@ bool Layouts::ItemDeleted(
 
   mLayoutsEdit->SetValue(editval);
   mLayoutsLocked->SetValue(lockval);
-
-  return true;
 }
-
-// wxDataViewModelNotifier interface }

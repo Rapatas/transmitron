@@ -4,14 +4,15 @@
 #include <wx/wx.h>
 #include <wx/aui/aui.h>
 
+#include "Transmitron/Notifiers/Layouts.hpp"
 #include "Transmitron/Models/Layouts.hpp"
+#include "Transmitron/Events/Layout.hpp"
 
 namespace Transmitron::Widgets
 {
 
 class Layouts :
-  public wxPanel,
-  public wxDataViewModelNotifier
+  public wxPanel
 {
 public:
 
@@ -36,26 +37,15 @@ private:
   wxButton *mSave = nullptr;
   wxComboBox *mLayoutsEdit = nullptr;
   wxComboBox *mLayoutsLocked = nullptr;
+  bool mPendingSave = false;
 
   void onLayoutSaveClicked(wxCommandEvent &event);
   void onLayoutEditEnter(wxCommandEvent &event);
   void onLayoutEditSelected(wxCommandEvent &event);
   void onLayoutLockedSelected(wxCommandEvent &event);
   void onLayoutSelected(const std::string &value);
-
-  // wxDataViewModelNotifier interface.
-  bool Cleared() override;
-  bool ItemChanged(const wxDataViewItem &item) override;
-  void Resort() override;
-  bool ValueChanged(const wxDataViewItem &item, unsigned int col) override;
-  bool ItemAdded(
-    const wxDataViewItem &parent,
-    const wxDataViewItem &item
-  ) override;
-  bool ItemDeleted(
-    const wxDataViewItem &parent,
-    const wxDataViewItem &item
-  ) override;
+  void onLayoutAdded(Events::Layout &event);
+  void onLayoutRemoved(Events::Layout &event);
 
 };
 

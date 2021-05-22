@@ -22,6 +22,7 @@ add_executable(
   src/Transmitron/Models/Profiles.cpp
   src/Transmitron/Models/Snippets.cpp
   src/Transmitron/Models/Subscriptions.cpp
+  src/Transmitron/Notifiers/Layouts.cpp
   src/Transmitron/Resources/history/history-18x14.cpp
   src/Transmitron/Resources/history/history-18x18.cpp
   src/Transmitron/Resources/pin/not-pinned-18x18.cpp

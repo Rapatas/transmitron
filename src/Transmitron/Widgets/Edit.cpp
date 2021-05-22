@@ -12,7 +12,7 @@
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
 
-#define wxLOG_COMPONENT "Edit" // NOLINT
+#define wxLOG_COMPONENT "Widgets/Edit" // NOLINT
 
 using namespace tinyxml2;
 using namespace nlohmann;

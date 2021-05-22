@@ -2,13 +2,15 @@
 #define TRANSMITRON_EVENTS_LAYOUT_HPP
 
 #include <wx/event.h>
+#include <wx/dataview.h>
 
 namespace Transmitron::Events
 {
 
 class Layout;
 wxDECLARE_EVENT(LAYOUT_SELECTED, Layout);
-// wxDECLARE_EVENT(LAYOUT_SAVE_SNIPPET, Layout);
+wxDECLARE_EVENT(LAYOUT_ADDED,     Layout);
+wxDECLARE_EVENT(LAYOUT_REMOVED,   Layout);
 
 // NOLINTNEXTLINE
 class Layout :
@@ -39,8 +41,19 @@ public:
     return mPerspective;
   }
 
+  wxDataViewItem getItem() const
+  {
+    return mItem;
+  }
+
+  void setItem(wxDataViewItem item)
+  {
+    mItem = item;
+  }
+
 private:
 
+  wxDataViewItem mItem;
   std::string mPerspective;
 
 };
