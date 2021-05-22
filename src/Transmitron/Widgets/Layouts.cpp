@@ -25,6 +25,8 @@ Layouts::Layouts(
   mLayoutsModel(layoutsModel),
   mAuiMan(auiMan)
 {
+  mLayoutsModel->AddNotifier(this);
+
   wxArrayString options = mLayoutsModel->getNames();
   mLayoutsLocked = new wxComboBox(
     this,
@@ -111,9 +113,6 @@ void Layouts::onLayoutEditEnter(wxCommandEvent &/* event */)
     return;
   }
 
-  mLayoutsEdit->Append(value);
-  mLayoutsLocked->Append(value);
-
   mLayoutsLocked->SetValue(value);
 
   mLayoutsEdit->Hide();
@@ -147,3 +146,59 @@ void Layouts::onLayoutSelected(const std::string &value)
   e->setPerspective(perspective);
   wxQueueEvent(this, e);
 }
+
+// wxDataViewModelNotifier interface {
+
+bool Layouts::Cleared()
+{
+  return true;
+}
+
+bool Layouts::ItemChanged(const wxDataViewItem &/* item */)
+{
+  // mLayoutsModel->GetRow(item);
+  return true;
+}
+
+void Layouts::Resort()
+{}
+
+bool Layouts::ValueChanged(
+  const wxDataViewItem &/* item */,
+  unsigned int /* col */
+) {
+  return true;
+}
+
+bool Layouts::ItemAdded(
+  const wxDataViewItem &/* parent */,
+  const wxDataViewItem &item
+) {
+  wxVariant value;
+  mLayoutsModel->GetValue(value, item, 0);
+
+  mLayoutsEdit->Append(value.GetString());
+  mLayoutsLocked->Append(value.GetString());
+
+  return true;
+}
+
+bool Layouts::ItemDeleted(
+  const wxDataViewItem &/* parent */,
+  const wxDataViewItem &/* item */
+) {
+  const auto newOptions = mLayoutsModel->getNames();
+
+  const auto editval = mLayoutsEdit->GetValue();
+  const auto lockval = mLayoutsLocked->GetValue();
+
+  mLayoutsEdit->Set(newOptions);
+  mLayoutsLocked->Set(newOptions);
+
+  mLayoutsEdit->SetValue(editval);
+  mLayoutsLocked->SetValue(lockval);
+
+  return true;
+}
+
+// wxDataViewModelNotifier interface }

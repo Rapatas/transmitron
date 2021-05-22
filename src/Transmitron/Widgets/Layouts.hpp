@@ -10,8 +10,8 @@ namespace Transmitron::Widgets
 {
 
 class Layouts :
-  public wxPanel
-  // public wxDataViewModelNotifier
+  public wxPanel,
+  public wxDataViewModelNotifier
 {
 public:
 
@@ -44,18 +44,18 @@ private:
   void onLayoutSelected(const std::string &value);
 
   // wxDataViewModelNotifier interface.
-  // bool Cleared() override;
-  // bool ItemChanged(const wxDataViewItem &item) override;
-  // void Resort() override;
-  // bool ValueChanged(const wxDataViewItem &item, unsigned int col) override;
-  // bool ItemAdded(
-  //   const wxDataViewItem &parent,
-  //   const wxDataViewItem &item
-  // ) override;
-  // bool ItemDeleted(
-  //   const wxDataViewItem &parent,
-  //   const wxDataViewItem &item
-  // ) override;
+  bool Cleared() override;
+  bool ItemChanged(const wxDataViewItem &item) override;
+  void Resort() override;
+  bool ValueChanged(const wxDataViewItem &item, unsigned int col) override;
+  bool ItemAdded(
+    const wxDataViewItem &parent,
+    const wxDataViewItem &item
+  ) override;
+  bool ItemDeleted(
+    const wxDataViewItem &parent,
+    const wxDataViewItem &item
+  ) override;
 
 };
 

@@ -24,6 +24,7 @@ Layouts::Layouts()
   layout->saved = true;
   mLayouts.insert({id, std::move(layout)});
   mRemap.push_back(id);
+  RowAppended();
 }
 
 bool Layouts::load(const std::string &configDir)
@@ -111,8 +112,7 @@ bool Layouts::load(const std::string &configDir)
     layout->saved = false;
     mLayouts.insert({id, std::move(layout)});
     mRemap.push_back(id);
-    wxLogInfo("Loaded %s", entry.path().u8string());
-    wxLogInfo("Current size %zu", mLayouts.size());
+    RowAppended();
   }
 
   return true;
@@ -129,7 +129,8 @@ wxArrayString Layouts::getNames() const
 
 bool Layouts::remove(wxDataViewItem item)
 {
-  const auto index = mRemap.at(GetRow(item));
+  const auto row = GetRow(item);
+  const auto index = mRemap.at(row);
 
   std::error_code ec;
   fs::remove_all(mLayouts.at(index)->path, ec);
@@ -144,8 +145,7 @@ bool Layouts::remove(wxDataViewItem item)
   mLayouts.erase(index);
   mRemap.erase(toRemoveIt);
 
-  wxDataViewItem parent(0);
-  ItemDeleted(parent, item);
+  RowDeleted(row);
 
   return true;
 }
@@ -192,7 +192,7 @@ wxDataViewItem Layouts::create(
   const std::string &name,
   const std::string &perspective
 ) {
-  wxLogError("Creating layout '%s'...", name);
+  wxLogInfo("Creating layout '%s'...", name);
 
   const bool nameExists = std::any_of(
     std::begin(mLayouts),
