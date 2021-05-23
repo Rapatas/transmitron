@@ -9,8 +9,9 @@ namespace Transmitron::Events
 
 class Layout;
 wxDECLARE_EVENT(LAYOUT_SELECTED, Layout);
-wxDECLARE_EVENT(LAYOUT_ADDED,     Layout);
-wxDECLARE_EVENT(LAYOUT_REMOVED,   Layout);
+wxDECLARE_EVENT(LAYOUT_ADDED,    Layout);
+wxDECLARE_EVENT(LAYOUT_REMOVED,  Layout);
+wxDECLARE_EVENT(LAYOUT_CHANGED,  Layout);
 
 // NOLINTNEXTLINE
 class Layout :

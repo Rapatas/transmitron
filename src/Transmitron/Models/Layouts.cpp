@@ -27,6 +27,11 @@ Layouts::Layouts()
   RowAppended();
 }
 
+wxDataViewItem Layouts::getDefault() const
+{
+  return GetItem(0);
+}
+
 bool Layouts::load(const std::string &configDir)
 {
   if (configDir.empty())
@@ -117,14 +122,41 @@ bool Layouts::load(const std::string &configDir)
 
   return true;
 }
-wxArrayString Layouts::getNames() const
+
+// wxArrayString Layouts::getNames() const
+// {
+//   wxArrayString result;
+//   for (const auto &layout : mLayouts)
+//   {
+//     result.push_back(layout.second->name);
+//   }
+//   return result;
+// }
+
+wxDataViewItem Layouts::getItem(const std::string &name) const
 {
-  wxArrayString result;
-  for (const auto &layout : mLayouts)
+  const auto it = std::find_if(
+    std::begin(mLayouts),
+    std::end(mLayouts),
+    [name](const auto &layout){
+      return layout.second->name == name;
+    }
+  );
+
+  if (it == std::end(mLayouts))
   {
-    result.push_back(layout.second->name);
+    return wxDataViewItem(nullptr);
   }
-  return result;
+
+  for (size_t i = 0; i < mRemap.size(); ++i)
+  {
+    if (mRemap.at(i) == it->first)
+    {
+      return GetItem(static_cast<unsigned>(i));
+    }
+  }
+
+  return wxDataViewItem(nullptr);
 }
 
 bool Layouts::remove(wxDataViewItem item)
@@ -267,11 +299,69 @@ void Layouts::GetValueByRow(
 }
 
 bool Layouts::SetValueByRow(
-  const wxVariant &/* variant */,
-  unsigned int /* row */,
-  unsigned int /* col */
+  const wxVariant &value,
+  unsigned int row,
+  unsigned int col
 ) {
-  return false;
+  if (row == 0) { return false; }
+  if (row >= mRemap.size()) { return false; }
+  if (col != (unsigned)Column::Name) { return false; }
+  if (value.GetType() != "string") { return false; }
+  if (value.GetString().empty()) { return false; }
+
+  const std::string newName = value.GetString().ToStdString();
+
+  const auto index = mRemap.at(row);
+  auto &node = mLayouts.at(index);
+
+  if (node->name == newName)
+  {
+    return true;
+  }
+
+  for (const auto &layout : mLayouts)
+  {
+    if (layout.second->name == newName)
+    {
+      return false;
+    }
+  }
+
+  wxLogInfo("Renaming '%s' to '%s'", node->name, newName);
+
+  std::string encoded;
+  try { encoded = cppcodec::base32_rfc4648::encode(newName); }
+  catch (cppcodec::parse_error &e)
+  {
+    wxLogError("Could not encode '%s': %s", newName, e.what());
+    return false;
+  }
+
+  const std::string newPath = fmt::format(
+    "{}/{}",
+    mLayoutsDir,
+    encoded
+  );
+
+  std::error_code ec;
+  fs::rename(node->path, newPath, ec);
+  if (ec)
+  {
+    wxLogError(
+      "Could not rename '%s' to '%s': %s",
+      node->path.c_str(),
+      newPath,
+      ec.message()
+    );
+    return false;
+  }
+
+  node->name = newName;
+  node->path = newPath;
+
+  RowChanged(row);
+
+  return true;
 }
 
 bool Layouts::GetAttrByRow(

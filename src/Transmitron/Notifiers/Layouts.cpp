@@ -7,8 +7,9 @@
 using namespace Transmitron::Notifiers;
 using namespace Transmitron;
 
-wxDEFINE_EVENT(Events::LAYOUT_ADDED, Events::Layout); // NOLINT
+wxDEFINE_EVENT(Events::LAYOUT_ADDED,   Events::Layout); // NOLINT
 wxDEFINE_EVENT(Events::LAYOUT_REMOVED, Events::Layout); // NOLINT
+wxDEFINE_EVENT(Events::LAYOUT_CHANGED, Events::Layout); // NOLINT
 
 // wxDataViewModelNotifier interface {
 
@@ -17,9 +18,11 @@ bool Layouts::Cleared()
   return true;
 }
 
-bool Layouts::ItemChanged(const wxDataViewItem &/* item */)
+bool Layouts::ItemChanged(const wxDataViewItem &item)
 {
-  // mLayoutsModel->GetRow(item);
+  auto *e = new Events::Layout(Events::LAYOUT_CHANGED);
+  e->setItem(item);
+  wxQueueEvent(this, e);
   return true;
 }
 

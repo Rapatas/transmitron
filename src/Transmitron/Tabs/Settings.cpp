@@ -1,4 +1,5 @@
 #include "Settings.hpp"
+#include "Transmitron/Models/Layouts.hpp"
 
 #include <wx/button.h>
 #include <wx/wx.h>
@@ -34,9 +35,14 @@ Settings::Settings(
 
 void Settings::setupLayouts()
 {
-  wxDataViewColumn* const name = new wxDataViewColumn(
-    "Name",
-    new wxDataViewTextRenderer(),
+  auto *renderer = new wxDataViewTextRenderer(
+    wxDataViewTextRenderer::GetDefaultType(),
+    wxDATAVIEW_CELL_EDITABLE
+  );
+
+  mLayoutColumnName = new wxDataViewColumn(
+    L"name",
+    renderer,
     (unsigned)Models::Layouts::Column::Name,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
@@ -47,9 +53,15 @@ void Settings::setupLayouts()
   auto *label = new wxStaticText(mLayouts, -1, "Layouts");
   label->SetFont(labelFont);
 
-  mLayoutsCtrl = new wxDataViewCtrl(mLayouts, -1);
+  mLayoutsCtrl = new wxDataViewListCtrl(
+    mLayouts,
+    -1,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxDV_NO_HEADER
+  );
+  mLayoutsCtrl->AppendColumn(mLayoutColumnName);
   mLayoutsCtrl->AssociateModel(mLayoutsModel.get());
-  mLayoutsCtrl->AppendColumn(name);
   mLayoutsCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
     &Settings::onLayoutsContext,
@@ -60,17 +72,38 @@ void Settings::setupLayouts()
   vsizer->Add(label,        0, wxEXPAND);
   vsizer->Add(mLayoutsCtrl, 1, wxEXPAND);
   mLayouts->SetSizer(vsizer);
+
+  mLayoutsCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_START_EDITING,
+    &Settings::onLayoutsEdit,
+    this
+  );
 }
 
-void Settings::onLayoutsContext(wxDataViewEvent &e)
+void Settings::onLayoutsContext(wxDataViewEvent &event)
 {
-  if (!e.GetItem().IsOk())
+  const auto item = event.GetItem();
+  if (!item.IsOk())
   {
-    e.Skip();
+    event.Skip();
+    return;
+  }
+
+  if (mLayoutsModel->getDefault() == item)
+  {
+    event.Skip();
     return;
   }
 
   wxMenu menu;
+
+  auto *rename = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::LayoutsRename,
+    "Rename"
+  );
+  rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
+  menu.Append(rename);
 
   auto *del = new wxMenuItem(
     nullptr,
@@ -83,27 +116,44 @@ void Settings::onLayoutsContext(wxDataViewEvent &e)
   PopupMenu(&menu);
 }
 
-void Settings::onContextSelected(wxCommandEvent &e)
+void Settings::onContextSelected(wxCommandEvent &event)
 {
-  switch ((ContextIDs)e.GetId())
+  switch ((ContextIDs)event.GetId())
   {
-    case ContextIDs::LayoutsDelete: onLayoutsDelete(e); break;
-    case ContextIDs::LayoutsRename: onLayoutsRename(e); break;
+    case ContextIDs::LayoutsDelete: onLayoutsDelete(event); break;
+    case ContextIDs::LayoutsRename: onLayoutsRename(event); break;
   }
-  e.Skip();
+  event.Skip();
 }
 
-void Settings::onLayoutsDelete(wxCommandEvent & /* event */)
+void Settings::onLayoutsDelete(wxCommandEvent &/* event */)
 {
   wxLogMessage("Requesting delete");
   const auto item = mLayoutsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+  if (mLayoutsModel->getDefault() == item) { return; }
   mLayoutsModel->remove(item);
 }
 
-void Settings::onLayoutsRename(wxCommandEvent & /* event */)
+void Settings::onLayoutsRename(wxCommandEvent &/* event */)
 {
   wxLogMessage("Requesting rename");
-  // const auto item = mLayoutsCtrl->GetSelection();
-  // mLayoutsModel->remove(item);
+  const auto item = mLayoutsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+
+  mLayoutsCtrl->EditItem(item, mLayoutColumnName);
 }
 
+void Settings::onLayoutsEdit(wxDataViewEvent &event)
+{
+  wxLogMessage("Requesting edit");
+  const auto item = event.GetItem();
+  if (mLayoutsModel->getDefault() == item)
+  {
+    event.Veto();
+  }
+  else
+  {
+    event.Skip();
+  }
+}

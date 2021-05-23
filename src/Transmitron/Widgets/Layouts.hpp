@@ -29,6 +29,7 @@ private:
   const size_t mOptionsHeight;
 
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
+  wxDataViewItem mCurrentSelection;
   wxAuiManager &mAuiMan;
   bool mReadOnly = false;
   wxFont mFont;
@@ -46,7 +47,9 @@ private:
   void onLayoutSelected(const std::string &value);
   void onLayoutAdded(Events::Layout &event);
   void onLayoutRemoved(Events::Layout &event);
+  void onLayoutChanged(Events::Layout &event);
 
+  wxArrayString getNames() const;
 };
 
 }

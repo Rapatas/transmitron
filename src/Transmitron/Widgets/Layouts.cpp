@@ -1,5 +1,6 @@
 #include "Layouts.hpp"
 #include "Transmitron/Events/Layout.hpp"
+#include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Notifiers/Layouts.hpp"
 
 #include <wx/artprov.h>
@@ -30,8 +31,11 @@ Layouts::Layouts(
 
   notifier->Bind(Events::LAYOUT_ADDED, &Layouts::onLayoutAdded, this);
   notifier->Bind(Events::LAYOUT_REMOVED, &Layouts::onLayoutRemoved, this);
+  notifier->Bind(Events::LAYOUT_CHANGED, &Layouts::onLayoutChanged, this);
 
-  wxArrayString options = mLayoutsModel->getNames();
+  const auto options = getNames();
+  mCurrentSelection = mLayoutsModel->getDefault();
+
   mLayoutsLocked = new wxComboBox(
     this,
     -1,
@@ -131,7 +135,7 @@ void Layouts::onLayoutLockedSelected(wxCommandEvent &/* event */)
 
 void Layouts::onLayoutSelected(const std::string &value)
 {
-  wxLogInfo("Selected: %s", value);
+  wxLogInfo("onLayoutSelected(%s)", value);
 
   const auto layoutOpt = mLayoutsModel->getLayout(value);
   if (!layoutOpt.has_value())
@@ -139,15 +143,25 @@ void Layouts::onLayoutSelected(const std::string &value)
     return;
   }
 
+  const auto item = mLayoutsModel->getItem(value);
+  if (!item.IsOk())
+  {
+    return;
+  }
+
+  mCurrentSelection = item;
+
   const auto &perspective = layoutOpt.value();
 
   auto *e = new Events::Layout(Events::LAYOUT_SELECTED);
   e->setPerspective(perspective);
+  e->setItem(item);
   wxQueueEvent(this, e);
 }
 
 void Layouts::onLayoutAdded(Events::Layout &event)
 {
+  wxLogInfo("onLayoutAdded");
   const auto item = event.getItem();
 
   wxVariant value;
@@ -169,7 +183,8 @@ void Layouts::onLayoutAdded(Events::Layout &event)
 
 void Layouts::onLayoutRemoved(Events::Layout &/* event */)
 {
-  const auto newOptions = mLayoutsModel->getNames();
+  wxLogInfo("onLayoutRemoved");
+  const auto newOptions = getNames();
 
   const auto editval = mLayoutsEdit->GetValue();
   const auto lockval = mLayoutsLocked->GetValue();
@@ -179,4 +194,32 @@ void Layouts::onLayoutRemoved(Events::Layout &/* event */)
 
   mLayoutsEdit->SetValue(editval);
   mLayoutsLocked->SetValue(lockval);
+}
+
+void Layouts::onLayoutChanged(Events::Layout &/* event */)
+{
+  wxLogInfo("onLayoutChanged");
+  const auto newOptions = getNames();
+
+  mLayoutsEdit->Set(newOptions);
+  mLayoutsLocked->Set(newOptions);
+
+  wxVariant value;
+  mLayoutsModel->GetValue(value, mCurrentSelection, (unsigned)Models::Layouts::Column::Name);
+
+  mLayoutsEdit->SetValue(value.GetString());
+  mLayoutsLocked->SetValue(value.GetString());
+}
+
+wxArrayString Layouts::getNames() const
+{
+  wxArrayString result;
+  wxLogInfo("Currently %d", mLayoutsModel->GetCount());
+  for (unsigned i = 0; i < mLayoutsModel->GetCount(); ++i)
+  {
+    wxVariant value;
+    mLayoutsModel->GetValueByRow(value, i, (unsigned)Models::Layouts::Column::Name);
+    result.push_back(value.GetString());
+  }
+  return result;
 }

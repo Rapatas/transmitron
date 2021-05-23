@@ -33,8 +33,9 @@ private:
 
   // Layouts.
   wxPanel *mLayouts = nullptr;
-  wxDataViewCtrl *mLayoutsCtrl = nullptr;
+  wxDataViewListCtrl *mLayoutsCtrl = nullptr;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
+  wxDataViewColumn *mLayoutColumnName = nullptr;
 
   void setupLayouts();
 
@@ -42,6 +43,7 @@ private:
   void onContextSelected(wxCommandEvent &event);
   void onLayoutsDelete(wxCommandEvent &event);
   void onLayoutsRename(wxCommandEvent &event);
+  void onLayoutsEdit(wxDataViewEvent &event);
 };
 
 }
