@@ -50,6 +50,7 @@ private:
   void onLayoutChanged(Events::Layout &event);
 
   wxArrayString getNames() const;
+  void resize();
 };
 
 }

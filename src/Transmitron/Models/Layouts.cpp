@@ -123,16 +123,6 @@ bool Layouts::load(const std::string &configDir)
   return true;
 }
 
-// wxArrayString Layouts::getNames() const
-// {
-//   wxArrayString result;
-//   for (const auto &layout : mLayouts)
-//   {
-//     result.push_back(layout.second->name);
-//   }
-//   return result;
-// }
-
 wxDataViewItem Layouts::getItem(const std::string &name) const
 {
   const auto it = std::find_if(

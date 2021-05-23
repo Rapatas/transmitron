@@ -265,6 +265,7 @@ void Client::setupPanelConnect(
 
   mLayouts = new Widgets::Layouts(mProfileBar, -1, layoutsModel, mAuiMan, OptionsHeight);
   mLayouts->Bind(Events::LAYOUT_SELECTED, &Client::onLayoutSelected, this);
+  mLayouts->Bind(Events::LAYOUT_RESIZED,  &Client::onLayoutResized,  this);
 
   auto cb = [this](Panes pane, wxCommandEvent &/* event */)
   {
@@ -1279,6 +1280,13 @@ void Client::onLayoutSelected(Events::Layout &event)
   }
 
   mAuiMan.Update();
+}
+
+void Client::onLayoutResized(Events::Layout &/* event */)
+{
+  mLayouts->Hide();
+  mLayouts->Show();
+  mProfileSizer->Layout();
 }
 
 // Layouts }

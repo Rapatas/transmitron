@@ -1,5 +1,7 @@
 #include "Layouts.hpp"
 
+#include <wx/log.h>
+
 #include "Transmitron/Events/Layout.hpp"
 
 #define wxLOG_COMPONENT "Notifiers/Layout" // NOLINT

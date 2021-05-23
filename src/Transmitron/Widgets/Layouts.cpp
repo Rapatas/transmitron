@@ -5,6 +5,7 @@
 
 #include <wx/artprov.h>
 #include <wx/button.h>
+#include <wx/event.h>
 #include <wx/log.h>
 
 #define wxLOG_COMPONENT "Widgets/Layout" // NOLINT
@@ -13,6 +14,7 @@ using namespace Transmitron::Widgets;
 using namespace Transmitron;
 
 wxDEFINE_EVENT(Events::LAYOUT_SELECTED, Events::Layout); // NOLINT
+wxDEFINE_EVENT(Events::LAYOUT_RESIZED,  Events::Layout); // NOLINT
 
 Layouts::Layouts(
   wxWindow* parent,
@@ -135,8 +137,6 @@ void Layouts::onLayoutLockedSelected(wxCommandEvent &/* event */)
 
 void Layouts::onLayoutSelected(const std::string &value)
 {
-  wxLogInfo("onLayoutSelected(%s)", value);
-
   const auto layoutOpt = mLayoutsModel->getLayout(value);
   if (!layoutOpt.has_value())
   {
@@ -161,7 +161,6 @@ void Layouts::onLayoutSelected(const std::string &value)
 
 void Layouts::onLayoutAdded(Events::Layout &event)
 {
-  wxLogInfo("onLayoutAdded");
   const auto item = event.getItem();
 
   wxVariant value;
@@ -175,15 +174,13 @@ void Layouts::onLayoutAdded(Events::Layout &event)
     mLayoutsLocked->SetValue(value);
     mLayoutsEdit->SetValue(value);
     mLayoutsEdit->Hide();
-    mLayoutsLocked->Show();
-    mSizer->Layout();
+    resize();
     mPendingSave = false;
   }
 }
 
 void Layouts::onLayoutRemoved(Events::Layout &/* event */)
 {
-  wxLogInfo("onLayoutRemoved");
   const auto newOptions = getNames();
 
   const auto editval = mLayoutsEdit->GetValue();
@@ -194,11 +191,11 @@ void Layouts::onLayoutRemoved(Events::Layout &/* event */)
 
   mLayoutsEdit->SetValue(editval);
   mLayoutsLocked->SetValue(lockval);
+  resize();
 }
 
 void Layouts::onLayoutChanged(Events::Layout &/* event */)
 {
-  wxLogInfo("onLayoutChanged");
   const auto newOptions = getNames();
 
   mLayoutsEdit->Set(newOptions);
@@ -209,12 +206,12 @@ void Layouts::onLayoutChanged(Events::Layout &/* event */)
 
   mLayoutsEdit->SetValue(value.GetString());
   mLayoutsLocked->SetValue(value.GetString());
+  resize();
 }
 
 wxArrayString Layouts::getNames() const
 {
   wxArrayString result;
-  wxLogInfo("Currently %d", mLayoutsModel->GetCount());
   for (unsigned i = 0; i < mLayoutsModel->GetCount(); ++i)
   {
     wxVariant value;
@@ -222,4 +219,14 @@ wxArrayString Layouts::getNames() const
     result.push_back(value.GetString());
   }
   return result;
+}
+
+void Layouts::resize()
+{
+  mLayoutsLocked->Hide();
+  mLayoutsLocked->Show();
+  mSizer->Layout();
+
+  auto *e = new Events::Layout(Events::LAYOUT_RESIZED);
+  wxQueueEvent(this, e);
 }

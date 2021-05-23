@@ -195,6 +195,7 @@ private:
 
   // Layouts.
   void onLayoutSelected(Events::Layout &event);
+  void onLayoutResized(Events::Layout &event);
 
   // MQTT::Client::Observer interface.
   void onConnected() override;

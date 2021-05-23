@@ -25,7 +25,6 @@ public:
 
   bool load(const std::string &configDir);
   wxDataViewItem getDefault() const;
-  // wxArrayString getNames() const;
   wxDataViewItem getItem(const std::string &name) const;
   std::string getUniqueName() const;
   std::optional<std::string> getLayout(const std::string &name) const;
