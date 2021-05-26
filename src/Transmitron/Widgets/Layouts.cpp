@@ -3,6 +3,7 @@
 #include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Notifiers/Layouts.hpp"
 
+#include <iterator>
 #include <wx/artprov.h>
 #include <wx/button.h>
 #include <wx/event.h>
@@ -37,11 +38,12 @@ Layouts::Layouts(
 
   const auto options = getNames();
   mCurrentSelection = mLayoutsModel->getDefault();
+  const auto currentValue = mLayoutsModel->getName(mCurrentSelection);
 
   mLayoutsLocked = new wxComboBox(
     this,
     -1,
-    options.front(),
+    currentValue,
     wxDefaultPosition,
     wxDefaultSize,
     options,
@@ -51,7 +53,7 @@ Layouts::Layouts(
   mLayoutsEdit = new wxComboBox(
     this,
     -1,
-    options.front(),
+    currentValue,
     wxDefaultPosition,
     wxDefaultSize,
     options,
@@ -162,32 +164,41 @@ void Layouts::onLayoutSelected(const std::string &value)
 void Layouts::onLayoutAdded(Events::Layout &event)
 {
   const auto item = event.getItem();
+  const auto editval = mLayoutsEdit->GetValue();
+  const auto lockval = mLayoutsLocked->GetValue();
 
   wxVariant value;
   mLayoutsModel->GetValue(value, item, 0);
 
-  mLayoutsEdit->Append(value.GetString());
-  mLayoutsLocked->Append(value.GetString());
+  auto options = getNames();
+  mLayoutsEdit->Set(options);
+  mLayoutsLocked->Set(options);
 
   if (mPendingSave)
   {
     mLayoutsLocked->SetValue(value);
     mLayoutsEdit->SetValue(value);
     mLayoutsEdit->Hide();
-    resize();
     mPendingSave = false;
   }
+  else
+  {
+    mLayoutsEdit->SetValue(editval);
+    mLayoutsLocked->SetValue(lockval);
+  }
+
+  resize();
 }
 
 void Layouts::onLayoutRemoved(Events::Layout &/* event */)
 {
-  const auto newOptions = getNames();
-
   const auto editval = mLayoutsEdit->GetValue();
   const auto lockval = mLayoutsLocked->GetValue();
 
-  mLayoutsEdit->Set(newOptions);
-  mLayoutsLocked->Set(newOptions);
+  auto options = getNames();
+
+  mLayoutsEdit->Set(options);
+  mLayoutsLocked->Set(options);
 
   mLayoutsEdit->SetValue(editval);
   mLayoutsLocked->SetValue(lockval);
@@ -196,10 +207,10 @@ void Layouts::onLayoutRemoved(Events::Layout &/* event */)
 
 void Layouts::onLayoutChanged(Events::Layout &/* event */)
 {
-  const auto newOptions = getNames();
+  auto options = getNames();
 
-  mLayoutsEdit->Set(newOptions);
-  mLayoutsLocked->Set(newOptions);
+  mLayoutsEdit->Set(options);
+  mLayoutsLocked->Set(options);
 
   wxVariant value;
   mLayoutsModel->GetValue(value, mCurrentSelection, (unsigned)Models::Layouts::Column::Name);
@@ -212,10 +223,13 @@ void Layouts::onLayoutChanged(Events::Layout &/* event */)
 wxArrayString Layouts::getNames() const
 {
   wxArrayString result;
-  for (unsigned i = 0; i < mLayoutsModel->GetCount(); ++i)
+  wxDataViewItem parent(nullptr);
+  wxDataViewItemArray children;
+  mLayoutsModel->GetChildren(parent, children);
+  for (const auto &child : children)
   {
     wxVariant value;
-    mLayoutsModel->GetValueByRow(value, i, (unsigned)Models::Layouts::Column::Name);
+    mLayoutsModel->GetValue(value, child, (unsigned)Models::Layouts::Column::Name);
     result.push_back(value.GetString());
   }
   return result;

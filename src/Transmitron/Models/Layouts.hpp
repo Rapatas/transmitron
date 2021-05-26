@@ -11,7 +11,7 @@ namespace Transmitron::Models
 {
 
 class Layouts :
-  public wxDataViewVirtualListModel
+  public wxDataViewModel
 {
 public:
 
@@ -28,6 +28,7 @@ public:
   wxDataViewItem getItem(const std::string &name) const;
   std::string getUniqueName() const;
   std::optional<std::string> getLayout(const std::string &name) const;
+  std::string getName(wxDataViewItem item) const;
   wxDataViewItem create(const std::string &name, const std::string &perspective);
   bool remove(wxDataViewItem item);
   bool updateName(
@@ -35,29 +36,36 @@ public:
     const std::string &name
   );
 
-  // wxDataViewModel interface.
   unsigned GetColumnCount() const override;
   wxString GetColumnType(unsigned int col) const override;
-  unsigned GetCount() const override;
-  void GetValueByRow(
-    wxVariant &variant,
-    unsigned int row,
+  void GetValue(
+    wxVariant &value,
+    const wxDataViewItem &item,
     unsigned int col
   ) const override;
-  bool GetAttrByRow(
-    unsigned int row,
-    unsigned int col,
-    wxDataViewItemAttr &attr
-  ) const override;
-  bool SetValueByRow(
+  bool SetValue(
     const wxVariant &value,
-    unsigned int row,
+    const wxDataViewItem &item,
     unsigned int col
   ) override;
+  bool IsEnabled(
+    const wxDataViewItem &item,
+    unsigned int col
+  ) const override;
+  wxDataViewItem GetParent(
+    const wxDataViewItem &item
+  ) const override;
+  bool IsContainer(
+    const wxDataViewItem &item
+  ) const override;
+  unsigned int GetChildren(
+    const wxDataViewItem &parent,
+    wxDataViewItemArray &children
+  ) const override;
 
 private:
 
-  struct Layout
+  struct Node
   {
     using Id_t = size_t;
     std::string name;
@@ -66,14 +74,16 @@ private:
     bool saved = false;
   };
 
-  Layout::Id_t mAvailableId = 0;
-  std::map<Layout::Id_t, std::unique_ptr<Layout>> mLayouts;
-  std::vector<Layout::Id_t> mRemap;
+  Node::Id_t mAvailableId = 1;
+  std::map<Node::Id_t, std::unique_ptr<Node>> mLayouts;
   std::string mLayoutsDir;
 
   const std::string DefaultPerspective = "layout2|name=History;caption=History;state=1340;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=200;besth=100;minw=200;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=Subscriptions;caption=Subscriptions;state=1532;dir=4;layer=1;row=0;pos=0;prop=100000;bestw=200;besth=100;minw=200;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=Snippets;caption=Snippets;state=1532;dir=4;layer=1;row=0;pos=1;prop=100000;bestw=200;besth=100;minw=200;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=Publish;caption=Publish;state=1532;dir=3;layer=2;row=0;pos=0;prop=100000;bestw=200;besth=200;minw=200;minh=200;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=Preview;caption=Preview;state=1532;dir=3;layer=2;row=0;pos=1;prop=100000;bestw=200;besth=200;minw=200;minh=200;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=200|dock_size(4,1,0)=200|dock_size(3,2,0)=214|";
 
   bool save(size_t index);
+
+  static Node::Id_t toId(const wxDataViewItem &item);
+  static wxDataViewItem toItem(Node::Id_t id);
 };
 
 }
