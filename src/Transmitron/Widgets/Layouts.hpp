@@ -38,11 +38,11 @@ private:
   wxButton *mSave = nullptr;
   wxComboBox *mLayoutsEdit = nullptr;
   wxComboBox *mLayoutsLocked = nullptr;
-  bool mPendingSave = false;
 
   void onLayoutSaveClicked(wxCommandEvent &event);
   void onLayoutEditEnter(wxCommandEvent &event);
   void onLayoutEditSelected(wxCommandEvent &event);
+  void onLayoutEditLostFocus(wxFocusEvent &event);
   void onLayoutLockedSelected(wxCommandEvent &event);
   void onLayoutSelected(const std::string &value);
   void onLayoutAdded(Events::Layout &event);

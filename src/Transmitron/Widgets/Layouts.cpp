@@ -85,6 +85,11 @@ Layouts::Layouts(
     &Layouts::onLayoutEditEnter,
     this
   );
+  mLayoutsEdit->Bind(
+    wxEVT_KILL_FOCUS,
+    &Layouts::onLayoutEditLostFocus,
+    this
+  );
   mLayoutsLocked->Bind(
     wxEVT_COMBOBOX,
     &Layouts::onLayoutLockedSelected,
@@ -101,35 +106,52 @@ Layouts::Layouts(
 
 void Layouts::onLayoutSaveClicked(wxCommandEvent &/* event */)
 {
-  mLayoutsEdit->Show();
-  mLayoutsEdit->SetValue(mLayoutsModel->getUniqueName());
+  const auto newName = mLayoutsModel->getUniqueName();
 
-  mLayoutsLocked->Hide();
-  mSizer->Layout();
+  const auto perspective = mAuiMan.SavePerspective().ToStdString();
+  const auto item = mLayoutsModel->create(newName, perspective);
 
-  mLayoutsEdit->SelectAll();
-  mLayoutsEdit->SetFocus();
+  if (!item.IsOk())
+  {
+    wxLogWarning("Could not store perspective");
+    return;
+  }
+
+  mCurrentSelection = item;
 }
 
 void Layouts::onLayoutEditEnter(wxCommandEvent &/* event */)
 {
-  const auto value = mLayoutsEdit->GetValue().ToStdString();
+  const auto newName = mLayoutsEdit->GetValue().ToStdString();
 
-  const auto perspective = mAuiMan.SavePerspective().ToStdString();
-  const auto item = mLayoutsModel->create(value, perspective);
+  wxVariant value = newName;
+  const auto saved = mLayoutsModel->SetValue(
+    value,
+    mCurrentSelection,
+    (unsigned)Models::Layouts::Column::Name
+  );
 
-  if (!item.IsOk())
+  if (!saved)
   {
-    wxLogWarning("Could not load perspective");
     return;
   }
 
-  mPendingSave = true;
+  mLayoutsEdit->SetValue(value.GetString());
+  mLayoutsLocked->SetValue(value.GetString());
+  resize();
 }
 
 void Layouts::onLayoutEditSelected(wxCommandEvent &/* event */)
 {
   onLayoutSelected(mLayoutsEdit->GetValue().ToStdString());
+}
+
+void Layouts::onLayoutEditLostFocus(wxFocusEvent &/* event */)
+{
+  const auto value = mLayoutsModel->getName(mCurrentSelection);
+  mLayoutsEdit->SetValue(value);
+  mLayoutsLocked->SetValue(value);
+  resize();
 }
 
 void Layouts::onLayoutLockedSelected(wxCommandEvent &/* event */)
@@ -164,30 +186,32 @@ void Layouts::onLayoutSelected(const std::string &value)
 void Layouts::onLayoutAdded(Events::Layout &event)
 {
   const auto item = event.getItem();
-  const auto editval = mLayoutsEdit->GetValue();
-  const auto lockval = mLayoutsLocked->GetValue();
+  const auto prevValue = mLayoutsLocked->GetValue();
 
-  wxVariant value;
-  mLayoutsModel->GetValue(value, item, 0);
+  const auto value = mLayoutsModel->getName(item);
 
   auto options = getNames();
   mLayoutsEdit->Set(options);
   mLayoutsLocked->Set(options);
 
-  if (mPendingSave)
+  if (item == mCurrentSelection)
   {
     mLayoutsLocked->SetValue(value);
     mLayoutsEdit->SetValue(value);
-    mLayoutsEdit->Hide();
-    mPendingSave = false;
+
+    mLayoutsLocked->Hide();
+    mLayoutsEdit->Show();
+    mSizer->Layout();
+
+    mLayoutsEdit->SelectAll();
+    mLayoutsEdit->SetFocus();
   }
   else
   {
-    mLayoutsEdit->SetValue(editval);
-    mLayoutsLocked->SetValue(lockval);
+    mLayoutsEdit->SetValue(prevValue);
+    mLayoutsLocked->SetValue(prevValue);
+    resize();
   }
-
-  resize();
 }
 
 void Layouts::onLayoutRemoved(Events::Layout &/* event */)
@@ -237,8 +261,11 @@ wxArrayString Layouts::getNames() const
 
 void Layouts::resize()
 {
+  mLayoutsEdit->Hide();
+
   mLayoutsLocked->Hide();
   mLayoutsLocked->Show();
+
   mSizer->Layout();
 
   auto *e = new Events::Layout(Events::LAYOUT_RESIZED);
