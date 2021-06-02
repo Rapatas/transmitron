@@ -63,62 +63,13 @@ bool Layouts::load(const std::string &configDir)
 
   for (const auto &entry : fs::directory_iterator(mLayoutsDir))
   {
-    wxLogMessage("Checking %s", entry.path().u8string());
-
-    // Get name.
-    std::vector<uint8_t> decoded;
-    try
+    const auto item = loadLayoutFile(entry.path());
+    if (!item.IsOk())
     {
-      decoded = cppcodec::base32_rfc4648::decode(
-        entry.path().stem().u8string()
-      );
-    }
-    catch (cppcodec::parse_error &e)
-    {
-      wxLogError(
-        "Could not decode '%s': %s",
-        entry.path().u8string(),
-        e.what()
-      );
       continue;
     }
-    const std::string name{decoded.begin(), decoded.end()};
-
-    std::ifstream input(entry.path());
-    if (!input.is_open())
-    {
-      wxLogWarning("Could not open '%s'", entry.path().u8string());
-      continue;
-    }
-
-    std::stringstream buffer;
-    buffer << input.rdbuf();
-    if (!nlohmann::json::accept(buffer.str()))
-    {
-      wxLogWarning("Could not parse '%s'", entry.path().u8string());
-      continue;
-    }
-
-    const auto j = nlohmann::json::parse(buffer.str());
-    const auto perspectiveIt = j.find("perspective");
-    if (
-      perspectiveIt == std::end(j)
-      || perspectiveIt->type() != nlohmann::json::value_t::string
-    ) {
-      wxLogWarning("Could not parse '%s'", entry.path().u8string());
-      continue;
-    }
-
-    const auto id = mAvailableId++;
-    auto layout = std::make_unique<Node>();
-    layout->name        = name;
-    layout->perspective = perspectiveIt->get<std::string>();
-    layout->path        = entry.path();
-    layout->saved       = false;
-    mLayouts.insert({id, std::move(layout)});
 
     const auto parent = wxDataViewItem(nullptr);
-    const auto item = toItem(id);
     ItemAdded(parent, item);
   }
 
@@ -425,6 +376,65 @@ bool Layouts::SetValue(
 // Public }
 
 // Private {
+
+wxDataViewItem Layouts::loadLayoutFile(const std::filesystem::path &filepath)
+{
+    wxLogMessage("Checking %s", filepath.u8string());
+
+    // Get name.
+    std::vector<uint8_t> decoded;
+    try
+    {
+      decoded = cppcodec::base32_rfc4648::decode(
+        filepath.stem().u8string()
+      );
+    }
+    catch (cppcodec::parse_error &e)
+    {
+      wxLogError(
+        "Could not decode '%s': %s",
+        filepath.u8string(),
+        e.what()
+      );
+      return wxDataViewItem(nullptr);
+    }
+    const std::string name{decoded.begin(), decoded.end()};
+
+    std::ifstream input(filepath);
+    if (!input.is_open())
+    {
+      wxLogWarning("Could not open '%s'", filepath.u8string());
+      return wxDataViewItem(nullptr);
+    }
+
+    std::stringstream buffer;
+    buffer << input.rdbuf();
+    if (!nlohmann::json::accept(buffer.str()))
+    {
+      wxLogWarning("Could not parse '%s'", filepath.u8string());
+      return wxDataViewItem(nullptr);
+    }
+
+    const auto j = nlohmann::json::parse(buffer.str());
+    const auto perspectiveIt = j.find("perspective");
+    if (
+      perspectiveIt == std::end(j)
+      || perspectiveIt->type() != nlohmann::json::value_t::string
+    ) {
+      wxLogWarning("Could not parse '%s'", filepath.u8string());
+      return wxDataViewItem(nullptr);
+    }
+
+    const auto id = mAvailableId++;
+    auto layout = std::make_unique<Node>();
+    layout->name        = name;
+    layout->perspective = perspectiveIt->get<std::string>();
+    layout->path        = filepath;
+    layout->saved       = false;
+    mLayouts.insert({id, std::move(layout)});
+
+    return toItem(id);
+}
 
 bool Layouts::save(size_t index)
 {
