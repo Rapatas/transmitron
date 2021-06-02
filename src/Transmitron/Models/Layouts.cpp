@@ -30,10 +30,7 @@ Layouts::Layouts()
   ItemAdded(parent, item);
 }
 
-wxDataViewItem Layouts::getDefault() const
-{
-  return toItem(1);
-}
+// Public {
 
 bool Layouts::load(const std::string &configDir)
 {
@@ -45,8 +42,8 @@ bool Layouts::load(const std::string &configDir)
 
   mLayoutsDir = configDir + "/layouts";
 
-  bool exists = fs::exists(mLayoutsDir);
-  bool isDir = fs::is_directory(mLayoutsDir);
+  const bool exists = fs::exists(mLayoutsDir);
+  const bool isDir = fs::is_directory(mLayoutsDir);
 
   std::error_code ec;
   if (exists && !isDir && !fs::remove(mLayoutsDir, ec))
@@ -128,24 +125,6 @@ bool Layouts::load(const std::string &configDir)
   return true;
 }
 
-wxDataViewItem Layouts::getItem(const std::string &name) const
-{
-  const auto it = std::find_if(
-    std::begin(mLayouts),
-    std::end(mLayouts),
-    [name](const auto &layout){
-      return layout.second->name == name;
-    }
-  );
-
-  if (it == std::end(mLayouts))
-  {
-    return wxDataViewItem(nullptr);
-  }
-
-  return toItem(it->first);
-}
-
 bool Layouts::remove(wxDataViewItem item)
 {
   const auto id = toId(item);
@@ -165,51 +144,6 @@ bool Layouts::remove(wxDataViewItem item)
   ItemDeleted(parent, item);
 
   return true;
-}
-
-std::optional<std::string> Layouts::getLayout(const std::string &name) const
-{
-  const auto it = std::find_if(
-    std::begin(mLayouts),
-    std::end(mLayouts),
-    [name](const auto &layout){
-      return layout.second->name == name;
-    }
-  );
-
-  if (it == std::end(mLayouts))
-  {
-    return std::nullopt;
-  }
-
-  return (*it).second->perspective;
-}
-
-std::string Layouts::getName(wxDataViewItem item) const
-{
-  const auto id = toId(item);
-  const auto &node = mLayouts.at(id);
-  return node->name;
-}
-
-std::string Layouts::getUniqueName() const
-{
-  const constexpr std::string_view NewLayoutName{"New Layout"};
-  std::string uniqueName{NewLayoutName};
-  unsigned postfix = 0;
-  while (std::any_of(
-      std::begin(mLayouts),
-      std::end(mLayouts),
-      [=](const auto &layout)
-      {
-        return layout.second->name == uniqueName;
-      }
-  )) {
-    ++postfix;
-    uniqueName = fmt::format("{} - {}", NewLayoutName, postfix);
-  }
-
-  return uniqueName;
 }
 
 wxDataViewItem Layouts::create(
@@ -260,6 +194,121 @@ wxDataViewItem Layouts::create(
   save(id);
 
   return item;
+}
+
+// Getters {
+
+wxDataViewItem Layouts::getDefault()
+{
+  return toItem(1);
+}
+
+const Layouts::Perspective_t &Layouts::getPerspective(wxDataViewItem item) const
+{
+  const auto id = toId(item);
+  const auto &node = mLayouts.at(id);
+  return node->perspective;
+}
+
+const std::string &Layouts::getName(wxDataViewItem item) const
+{
+  const auto id = toId(item);
+  const auto &node = mLayouts.at(id);
+  return node->name;
+}
+
+std::string Layouts::getUniqueName() const
+{
+  const constexpr std::string_view NewLayoutName{"New Layout"};
+  std::string uniqueName{NewLayoutName};
+  unsigned postfix = 0;
+  while (std::any_of(
+      std::begin(mLayouts),
+      std::end(mLayouts),
+      [=](const auto &layout)
+      {
+        return layout.second->name == uniqueName;
+      }
+  )) {
+    ++postfix;
+    uniqueName = fmt::format("{} - {}", NewLayoutName, postfix);
+  }
+
+  return uniqueName;
+}
+
+wxDataViewItem Layouts::findItemByName(const std::string &name) const
+{
+  const auto it = std::find_if(
+    std::begin(mLayouts),
+    std::end(mLayouts),
+    [name](const auto &layout){
+      return layout.second->name == name;
+    }
+  );
+
+  if (it == std::end(mLayouts))
+  {
+    return wxDataViewItem(nullptr);
+  }
+
+  return toItem(it->first);
+}
+
+// Getters }
+
+// wxDataViewModel interface {
+
+unsigned Layouts::GetChildren(
+  const wxDataViewItem &parent,
+  wxDataViewItemArray &children
+) const {
+  if (parent.IsOk())
+  {
+    return 0;
+  }
+
+  for (const auto &node : mLayouts)
+  {
+    children.push_back(toItem(node.first));
+  }
+
+  std::sort(
+    std::begin(children),
+    std::end(children),
+    [this](wxDataViewItem lhs, wxDataViewItem rhs)
+    {
+      const auto lhsid = toId(lhs);
+      const auto rhsid = toId(rhs);
+
+      auto lhsv = mLayouts.at(lhsid)->name;
+      auto rhsv = mLayouts.at(rhsid)->name;
+
+      std::transform(
+        rhsv.begin(),
+        rhsv.end(),
+        rhsv.begin(),
+        [](unsigned char c)
+        {
+          return std::tolower(c);
+        }
+      );
+
+      std::transform(
+        lhsv.begin(),
+        lhsv.end(),
+        lhsv.begin(),
+        [](unsigned char c)
+        {
+          return std::tolower(c);
+        }
+      );
+
+      return lhsv < rhsv;
+    }
+  );
+
+  return (unsigned)children.size();
 }
 
 unsigned Layouts::GetColumnCount() const
@@ -371,6 +420,12 @@ bool Layouts::SetValue(
   return true;
 }
 
+// wxDataViewModel interface }
+
+// Public }
+
+// Private {
+
 bool Layouts::save(size_t index)
 {
   auto &layout = mLayouts.at(index);
@@ -392,57 +447,7 @@ bool Layouts::save(size_t index)
   return true;
 }
 
-unsigned Layouts::GetChildren(
-  const wxDataViewItem &parent,
-  wxDataViewItemArray &children
-) const {
-  if (parent.IsOk())
-  {
-    return 0;
-  }
-
-  for (const auto &node : mLayouts)
-  {
-    children.push_back(toItem(node.first));
-  }
-
-  std::sort(
-    std::begin(children),
-    std::end(children),
-    [this](wxDataViewItem lhs, wxDataViewItem rhs)
-    {
-      const auto lhsid = toId(lhs);
-      const auto rhsid = toId(rhs);
-
-      auto lhsv = mLayouts.at(lhsid)->name;
-      auto rhsv = mLayouts.at(rhsid)->name;
-
-      std::transform(
-        rhsv.begin(),
-        rhsv.end(),
-        rhsv.begin(),
-        [](unsigned char c)
-        {
-          return std::tolower(c);
-        }
-      );
-
-      std::transform(
-        lhsv.begin(),
-        lhsv.end(),
-        lhsv.begin(),
-        [](unsigned char c)
-        {
-          return std::tolower(c);
-        }
-      );
-
-      return lhsv < rhsv;
-    }
-  );
-
-  return (unsigned)children.size();
-}
+// Static {
 
 Layouts::Node::Id_t Layouts::toId(const wxDataViewItem &item)
 {
@@ -460,3 +465,6 @@ wxDataViewItem Layouts::toItem(Node::Id_t id)
   return wxDataViewItem(itemId);
 }
 
+// Static }
+
+// Private }

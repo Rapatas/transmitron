@@ -161,21 +161,14 @@ void Layouts::onLayoutLockedSelected(wxCommandEvent &/* event */)
 
 void Layouts::onLayoutSelected(const std::string &value)
 {
-  const auto layoutOpt = mLayoutsModel->getLayout(value);
-  if (!layoutOpt.has_value())
-  {
-    return;
-  }
-
-  const auto item = mLayoutsModel->getItem(value);
+  const auto item = mLayoutsModel->findItemByName(value);
   if (!item.IsOk())
   {
     return;
   }
 
   mCurrentSelection = item;
-
-  const auto &perspective = layoutOpt.value();
+  const auto perspective = mLayoutsModel->getPerspective(item);
 
   auto *e = new Events::Layout(Events::LAYOUT_SELECTED);
   e->setPerspective(perspective);
