@@ -18,7 +18,7 @@ Homepage::Homepage(
   const wxObjectDataPtr<Models::Profiles> &profilesModel
 ) :
   wxPanel(parent),
-  labelFont(std::move(labelFont)),
+  mLabelFont(std::move(labelFont)),
   mProfilesModel(profilesModel)
 {
   auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
@@ -54,7 +54,7 @@ void Homepage::setupProfiles()
   mProfiles = new wxPanel(this, -1);
 
   auto *label = new wxStaticText(mProfiles, -1, "Profiles");
-  label->SetFont(labelFont);
+  label->SetFont(mLabelFont);
 
   auto *newProfile = new wxButton(mProfiles, -1, "New Profile");
   newProfile->Bind(wxEVT_BUTTON, &Homepage::onNewProfileClicked, this);
@@ -101,7 +101,7 @@ void Homepage::setupProfileForm()
   mProfileForm = new wxPanel(this, -1);
 
   auto *label = new wxStaticText(mProfileForm, -1, "Profile Options");
-  label->SetFont(labelFont);
+  label->SetFont(mLabelFont);
 
   mProfileFormGrid = new wxPropertyGrid(
     mProfileForm,

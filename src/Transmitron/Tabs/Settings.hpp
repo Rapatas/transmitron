@@ -29,7 +29,7 @@ private:
     LayoutsRename,
   };
 
-  const wxFontInfo labelFont;
+  const wxFontInfo mLabelFont;
 
   // Layouts.
   wxPanel *mLayouts = nullptr;

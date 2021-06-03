@@ -16,7 +16,7 @@ Settings::Settings(
   const wxObjectDataPtr<Models::Layouts> &layoutsModel
 ) :
   wxPanel(parent),
-  labelFont(std::move(labelFont)),
+  mLabelFont(std::move(labelFont)),
   mLayoutsModel(layoutsModel)
 {
   setupLayouts();
@@ -51,7 +51,7 @@ void Settings::setupLayouts()
   mLayouts = new wxPanel(this, -1);
 
   auto *label = new wxStaticText(mLayouts, -1, "Layouts");
-  label->SetFont(labelFont);
+  label->SetFont(mLabelFont);
 
   mLayoutsCtrl = new wxDataViewListCtrl(
     mLayouts,

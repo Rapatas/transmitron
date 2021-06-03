@@ -50,7 +50,7 @@ private:
     Max
   };
 
-  const wxFontInfo labelFont;
+  const wxFontInfo mLabelFont;
 
   wxButton *mConnect = nullptr;
   wxButton *mSave = nullptr;
