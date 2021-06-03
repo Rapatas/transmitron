@@ -5,11 +5,14 @@
 #include <wx/splitter.h>
 #include <wx/aui/aui.h>
 #include <wx/tglbtn.h>
+#include <wx/combobox.h>
 
 #include "MQTT/Client.hpp"
 #include "MQTT/BrokerOptions.hpp"
 #include "Transmitron/Events/Connection.hpp"
+#include "Transmitron/Events/Layout.hpp"
 #include "Transmitron/Widgets/TopicCtrl.hpp"
+#include "Transmitron/Widgets/Layouts.hpp"
 #include "Transmitron/Models/History.hpp"
 #include "Transmitron/Models/Subscriptions.hpp"
 #include "Transmitron/Models/Snippets.hpp"
@@ -29,6 +32,7 @@ public:
     wxWindow* parent,
     const MQTT::BrokerOptions &brokerOptions,
     const wxObjectDataPtr<Models::Snippets> &snippetsModel,
+    const wxObjectDataPtr<Models::Layouts> &layoutsModel,
     bool darkMode
   );
   Client(const Client &other) = delete;
@@ -61,10 +65,10 @@ private:
   enum class Panes : unsigned
   {
     History = 0,
-    Preview = 4,
-    Publish = 3,
-    Snippets = 2,
     Subscriptions = 1,
+    Snippets = 2,
+    Publish = 3,
+    Preview = 4,
   };
 
   struct Pane
@@ -77,6 +81,10 @@ private:
     wxButton *toggle = nullptr;
   };
 
+  static constexpr size_t PaneMinWidth = 200;
+  static constexpr size_t PaneMinHeight = 100;
+  static constexpr size_t EditorMinHeight = 200;
+
   std::map<Panes, Pane> mPanes;
 
   static constexpr size_t OptionsHeight = 26;
@@ -86,6 +94,8 @@ private:
   const bool mDarkMode;
 
   wxBoxSizer *mMasterSizer = nullptr;
+
+  Widgets::Layouts *mLayouts = nullptr;
 
   // Profile:
   wxPanel *mProfileBar = nullptr;
@@ -160,7 +170,10 @@ private:
   void onPublishSaveSnippet(Events::Edit &e);
 
   // Setup.
-  void setupPanelConnect(wxWindow *parent);
+  void setupPanelConnect(
+    wxWindow *parent,
+    const wxObjectDataPtr<Models::Layouts> &layoutsModel
+  );
   void setupPanelHistory(wxWindow *parent);
   void setupPanelPreview(wxWindow *parent);
   void setupPanelPublish(wxWindow *parent);
@@ -179,6 +192,10 @@ private:
   void onSubscribeClicked(wxCommandEvent &event);
   void onSubscribeEnter(wxKeyEvent &event);
   void onSubscriptionSelected(wxDataViewEvent &event);
+
+  // Layouts.
+  void onLayoutSelected(Events::Layout &event);
+  void onLayoutResized(Events::Layout &event);
 
   // MQTT::Client::Observer interface.
   void onConnected() override;

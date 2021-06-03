@@ -14,9 +14,11 @@ wxDEFINE_EVENT(Events::CONNECTION, Events::Connection); // NOLINT
 
 Homepage::Homepage(
   wxWindow *parent,
+  wxFontInfo labelFont,
   const wxObjectDataPtr<Models::Profiles> &profilesModel
 ) :
   wxPanel(parent),
+  mLabelFont(std::move(labelFont)),
   mProfilesModel(profilesModel)
 {
   auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
@@ -50,6 +52,9 @@ void Homepage::setupProfiles()
   );
 
   mProfiles = new wxPanel(this, -1);
+
+  auto *label = new wxStaticText(mProfiles, -1, "Profiles");
+  label->SetFont(mLabelFont);
 
   auto *newProfile = new wxButton(mProfiles, -1, "New Profile");
   newProfile->Bind(wxEVT_BUTTON, &Homepage::onNewProfileClicked, this);
@@ -85,14 +90,18 @@ void Homepage::setupProfiles()
   hsizer->AddStretchSpacer(1);
   hsizer->Add(mConnect, 0, wxEXPAND);
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
+  vsizer->Add(label,         0, wxEXPAND);
   vsizer->Add(mProfilesCtrl, 1, wxEXPAND);
-  vsizer->Add(hsizer, 0, wxEXPAND);
+  vsizer->Add(hsizer,        0, wxEXPAND);
   mProfiles->SetSizer(vsizer);
 }
 
 void Homepage::setupProfileForm()
 {
   mProfileForm = new wxPanel(this, -1);
+
+  auto *label = new wxStaticText(mProfileForm, -1, "Profile Options");
+  label->SetFont(mLabelFont);
 
   mProfileFormGrid = new wxPropertyGrid(
     mProfileForm,
@@ -141,8 +150,9 @@ void Homepage::setupProfileForm()
   mSave->Enable(false);
 
   auto *sizer = new wxBoxSizer(wxVERTICAL);
+  sizer->Add(label,            0, wxEXPAND);
   sizer->Add(mProfileFormGrid, 1, wxEXPAND);
-  sizer->Add(mSave, 0, wxEXPAND);
+  sizer->Add(mSave,            0, wxEXPAND);
   mProfileForm->SetSizer(sizer);
 
   mSave->Bind(wxEVT_BUTTON, &Homepage::onSaveClicked, this);

@@ -22,6 +22,7 @@ public:
 
   explicit Homepage(
     wxWindow *parent,
+    wxFontInfo labelFont,
     const wxObjectDataPtr<Models::Profiles> &profilesModel
   );
 
@@ -48,6 +49,8 @@ private:
     Username,
     Max
   };
+
+  const wxFontInfo mLabelFont;
 
   wxButton *mConnect = nullptr;
   wxButton *mSave = nullptr;

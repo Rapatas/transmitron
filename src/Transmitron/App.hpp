@@ -4,6 +4,7 @@
 #include <wx/wx.h>
 #include <wx/aui/auibook.h>
 #include "Transmitron/Models/Profiles.hpp"
+#include "Transmitron/Models/Layouts.hpp"
 
 namespace Transmitron
 {
@@ -13,20 +14,26 @@ class App :
 {
 public:
 
+  explicit App();
+
   bool OnInit() override;
 
 private:
 
   size_t mCount = 0;
-  wxAuiNotebook *mNote;
+  wxAuiNotebook *mNote = nullptr;
   bool mDarkMode = false;
 
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
+  wxObjectDataPtr<Models::Layouts> mLayoutsModel;
+
+  const wxFontInfo LabelFontInfo;
 
   void onPageClosing(wxBookCtrlEvent& event);
   void onPageSelected(wxBookCtrlEvent& event);
 
   void createProfilesTab(size_t index);
+  void createSettingsTab();
 
   /// Empty if it fails.
   static std::string getConfigDir();

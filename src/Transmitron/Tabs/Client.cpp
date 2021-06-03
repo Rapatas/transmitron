@@ -3,8 +3,10 @@
 #include <sstream>
 #include <wx/artprov.h>
 #include <nlohmann/json.hpp>
+#include <wx/log.h>
 
 #include "Helpers/Helpers.hpp"
+#include "Transmitron/Events/Layout.hpp"
 #include "Transmitron/Resources/plus/plus-18x18.hpp"
 #include "Transmitron/Resources/history/history-18x14.hpp"
 #include "Transmitron/Resources/history/history-18x18.hpp"
@@ -34,6 +36,7 @@ Client::Client(
   wxWindow* parent,
   const MQTT::BrokerOptions &brokerOptions,
   const wxObjectDataPtr<Models::Snippets> &snippetsModel,
+  const wxObjectDataPtr<Models::Layouts> &layoutsModel,
   bool darkMode
 ) :
   wxPanel(parent),
@@ -95,12 +98,22 @@ Client::Client(
     }},
   };
 
-  constexpr size_t PaneMinWidth = 250;
-  constexpr size_t PaneMinHeight = 100;
-  constexpr size_t EditorMinHeight = 200;
+  mPanes.at(Panes::History).info.Center();
+  mPanes.at(Panes::Subscriptions).info.Left();
+  mPanes.at(Panes::Snippets).info.Left();
+  mPanes.at(Panes::Publish).info.Bottom();
+  mPanes.at(Panes::Preview).info.Bottom();
+
+  mPanes.at(Panes::History).info.Layer(0);
+  mPanes.at(Panes::Subscriptions).info.Layer(1);
+  mPanes.at(Panes::Snippets).info.Layer(1);
+  mPanes.at(Panes::Publish).info.Layer(2);
+  mPanes.at(Panes::Preview).info.Layer(2);
 
   for (auto &pane : mPanes)
   {
+    pane.second.info.Name(pane.second.name);
+
     const bool isEditor =
       pane.first == Panes::Preview
       || pane.first == Panes::Publish;
@@ -127,26 +140,14 @@ Client::Client(
     }
   }
 
-  mPanes.at(Panes::History).info.Center();
-  mPanes.at(Panes::Subscriptions).info.Left();
-  mPanes.at(Panes::Snippets).info.Left();
-  mPanes.at(Panes::Preview).info.Bottom();
-  mPanes.at(Panes::Publish).info.Bottom();
-
-  mPanes.at(Panes::History).info.Layer(0);
-  mPanes.at(Panes::Subscriptions).info.Layer(1);
-  mPanes.at(Panes::Snippets).info.Layer(1);
-  mPanes.at(Panes::Preview).info.Layer(2);
-  mPanes.at(Panes::Publish).info.Layer(2);
-
   auto *wrapper = new wxPanel(this, -1);
 
+  setupPanelSnippets(wrapper);
   setupPanelPublish(wrapper);
   setupPanelSubscriptions(wrapper);
-  setupPanelHistory(wrapper);
   setupPanelPreview(wrapper);
-  setupPanelSnippets(wrapper);
-  setupPanelConnect(this);
+  setupPanelHistory(wrapper);
+  setupPanelConnect(this, layoutsModel);
 
   mMasterSizer = new wxBoxSizer(wxVERTICAL);
   mMasterSizer->Add(mProfileBar, 0, wxEXPAND);
@@ -252,13 +253,19 @@ void Client::setupPanelHistory(wxWindow *parent)
   );
 }
 
-void Client::setupPanelConnect(wxWindow *parent)
-{
+void Client::setupPanelConnect(
+  wxWindow *parent,
+  const wxObjectDataPtr<Models::Layouts> &layoutsModel
+) {
   mProfileBar = new wxPanel(parent, -1);
 
   mConnect    = new wxButton(mProfileBar, -1, "Connect");
   mDisconnect = new wxButton(mProfileBar, -1, "Disconnect");
   mCancel     = new wxButton(mProfileBar, -1, "Cancel");
+
+  mLayouts = new Widgets::Layouts(mProfileBar, -1, layoutsModel, mAuiMan, OptionsHeight);
+  mLayouts->Bind(Events::LAYOUT_SELECTED, &Client::onLayoutSelected, this);
+  mLayouts->Bind(Events::LAYOUT_RESIZED,  &Client::onLayoutResized,  this);
 
   auto cb = [this](Panes pane, wxCommandEvent &/* event */)
   {
@@ -323,11 +330,26 @@ void Client::setupPanelConnect(wxWindow *parent)
     pane.second.toggle = button;
   }
 
+  mProfileSizer->AddStretchSpacer(1);
+  mProfileSizer->Add(mLayouts, 0, wxEXPAND);
+
   mProfileBar->SetSizer(mProfileSizer);
 
-  mConnect->Bind(wxEVT_BUTTON, &Client::onConnectClicked, this);
-  mDisconnect->Bind(wxEVT_BUTTON, &Client::onDisconnectClicked, this);
-  mCancel->Bind(wxEVT_BUTTON, &Client::onCancelClicked, this);
+  mConnect->Bind(
+    wxEVT_BUTTON,
+    &Client::onConnectClicked,
+    this
+  );
+  mDisconnect->Bind(
+    wxEVT_BUTTON,
+    &Client::onDisconnectClicked,
+    this
+  );
+  mCancel->Bind(
+    wxEVT_BUTTON,
+    &Client::onCancelClicked,
+    this
+  );
 }
 
 void Client::setupPanelSubscriptions(wxWindow *parent)
@@ -401,8 +423,16 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
     &Client::onSubscriptionContext,
     this
   );
-  mSubscribe->Bind(wxEVT_BUTTON, &Client::onSubscribeClicked, this);
-  mFilter->Bind(wxEVT_KEY_DOWN, &Client::onSubscribeEnter, this);
+  mSubscribe->Bind(
+    wxEVT_BUTTON,
+    &Client::onSubscribeClicked,
+    this
+  );
+  mFilter->Bind(
+    wxEVT_KEY_DOWN,
+    &Client::onSubscribeEnter,
+    this
+  );
 }
 
 void Client::setupPanelPreview(wxWindow *parent)
@@ -410,15 +440,27 @@ void Client::setupPanelPreview(wxWindow *parent)
   auto *panel = new Widgets::Edit(parent, -1, OptionsHeight, mDarkMode);
   mPanes.at(Panes::Preview).panel = panel;
   panel->setReadOnly(true);
-  panel->Bind(Events::EDIT_SAVE_SNIPPET, &Client::onPreviewSaveSnippet, this);
+  panel->Bind(
+    Events::EDIT_SAVE_SNIPPET,
+    &Client::onPreviewSaveSnippet,
+    this
+  );
 }
 
 void Client::setupPanelPublish(wxWindow *parent)
 {
   auto *panel = new Widgets::Edit(parent, -1, OptionsHeight, mDarkMode);
   mPanes.at(Panes::Publish).panel = panel;
-  panel->Bind(Events::EDIT_PUBLISH, &Client::onPublishClicked, this);
-  panel->Bind(Events::EDIT_SAVE_SNIPPET, &Client::onPublishSaveSnippet, this);
+  panel->Bind(
+    Events::EDIT_PUBLISH,
+    &Client::onPublishClicked,
+    this
+  );
+  panel->Bind(
+    Events::EDIT_SAVE_SNIPPET,
+    &Client::onPublishSaveSnippet,
+    this
+  );
 }
 
 void Client::setupPanelSnippets(wxWindow *parent)
@@ -1212,6 +1254,43 @@ void Client::onSubscriptionSelected(wxDataViewEvent &/* event */)
 
 // Subscriptions }
 
+// Layouts {
+
+void Client::onLayoutSelected(Events::Layout &event)
+{
+  mAuiMan.LoadPerspective(event.getPerspective(), false);
+
+  for (auto &pane : mPanes)
+  {
+    auto &info = mAuiMan.GetPane(pane.second.panel);
+
+    const bool isEditor =
+      pane.first == Panes::Preview
+      || pane.first == Panes::Publish;
+
+    const auto minSize = isEditor
+      ? wxSize(PaneMinWidth, EditorMinHeight)
+      : wxSize(PaneMinWidth, PaneMinHeight);
+
+    info.MinSize(minSize);
+    info.Caption(pane.second.name);
+    info.CloseButton(false);
+    info.Icon(*pane.second.icon18x14);
+    info.PaneBorder(false);
+  }
+
+  mAuiMan.Update();
+}
+
+void Client::onLayoutResized(Events::Layout &/* event */)
+{
+  mLayouts->Hide();
+  mLayouts->Show();
+  mProfileSizer->Layout();
+}
+
+// Layouts }
+
 // Publish {
 
 void Client::onPublishClicked(wxCommandEvent &/* event */)
@@ -1284,6 +1363,7 @@ void Client::onHistoryClearClicked(wxCommandEvent &/* event */)
 }
 
 // History }
+
 
 // Preview {
 

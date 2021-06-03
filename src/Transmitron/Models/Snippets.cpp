@@ -705,7 +705,7 @@ bool Snippets::SetValue(
   try { encoded = cppcodec::base32_rfc4648::encode(newName); }
   catch (cppcodec::parse_error &e)
   {
-    wxLogError("Could not rename '%s': %s", newName, e.what());
+    wxLogError("Could not encode '%s': %s", newName, e.what());
     return false;
   }
 

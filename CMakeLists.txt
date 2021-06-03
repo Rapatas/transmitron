@@ -18,9 +18,11 @@ add_executable(
   src/MQTT/Subscription.cpp
   src/Transmitron/App.cpp
   src/Transmitron/Models/History.cpp
+  src/Transmitron/Models/Layouts.cpp
   src/Transmitron/Models/Profiles.cpp
   src/Transmitron/Models/Snippets.cpp
   src/Transmitron/Models/Subscriptions.cpp
+  src/Transmitron/Notifiers/Layouts.cpp
   src/Transmitron/Resources/history/history-18x14.cpp
   src/Transmitron/Resources/history/history-18x18.cpp
   src/Transmitron/Resources/pin/not-pinned-18x18.cpp
@@ -39,8 +41,10 @@ add_executable(
   src/Transmitron/Resources/subscription/subscription-18x18.cpp
   src/Transmitron/Tabs/Client.cpp
   src/Transmitron/Tabs/Homepage.cpp
+  src/Transmitron/Tabs/Settings.cpp
   src/Transmitron/Types/Subscription.cpp
   src/Transmitron/Widgets/Edit.cpp
+  src/Transmitron/Widgets/Layouts.cpp
   src/Transmitron/Widgets/TopicCtrl.cpp
   src/main.cpp
 )

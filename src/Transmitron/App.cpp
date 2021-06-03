@@ -26,7 +26,9 @@
 #include "Resources/subscription/subscription-18x14.hpp"
 #include "Tabs/Client.hpp"
 #include "Tabs/Homepage.hpp"
+#include "Tabs/Settings.hpp"
 #include "Events/Connection.hpp"
+#include "Transmitron/Models/Layouts.hpp"
 
 #define wxLOG_COMPONENT "Transmitron" // NOLINT
 
@@ -35,8 +37,13 @@ namespace fs = std::filesystem;
 
 constexpr size_t DefaultWindowWidth = 800;
 constexpr size_t DefaultWindowHeight = 600;
-constexpr size_t MinWindowWidth = 400;
+constexpr size_t MinWindowWidth = 550;
 constexpr size_t MinWindowHeight = 300;
+constexpr size_t LabelFontSize = 15;
+
+App::App() :
+  LabelFontInfo(LabelFontSize)
+{}
 
 bool App::OnInit()
 {
@@ -72,12 +79,13 @@ bool App::OnInit()
   mProfilesModel = new Models::Profiles();
   mProfilesModel->load(getConfigDir());
 
+  mLayoutsModel = new Models::Layouts();
+  mLayoutsModel->load(getConfigDir());
+
   const auto appearance = wxSystemSettings::GetAppearance();
   mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();
 
-  auto *settingsTab = new wxPanel(mNote);
-  mNote->AddPage(settingsTab, "", false, wxArtProvider::GetBitmap(wxART_EDIT));
-  ++mCount;
+  createSettingsTab();
 
   createProfilesTab(1);
 
@@ -159,7 +167,7 @@ void App::onPageClosing(wxBookCtrlEvent& event)
 
 void App::createProfilesTab(size_t index)
 {
-  auto *homepage = new Tabs::Homepage(mNote, mProfilesModel);
+  auto *homepage = new Tabs::Homepage(mNote, LabelFontInfo, mProfilesModel);
   mNote->InsertPage(index, homepage, "Homepage");
   ++mCount;
   mNote->SetSelection(index);
@@ -178,6 +186,7 @@ void App::createProfilesTab(size_t index)
       mNote,
       mProfilesModel->getBrokerOptions(profileItem),
       mProfilesModel->getSnippetsModel(profileItem),
+      mLayoutsModel,
       mDarkMode
     );
     mNote->RemovePage(selected);
@@ -185,6 +194,13 @@ void App::createProfilesTab(size_t index)
     mNote->SetSelection(selected);
     mNote->SetPageText(selected, mProfilesModel->getName(profileItem));
   });
+}
+
+void App::createSettingsTab()
+{
+  auto *settingsTab = new Tabs::Settings(mNote, LabelFontInfo, mLayoutsModel);
+  mNote->AddPage(settingsTab, "", false, wxArtProvider::GetBitmap(wxART_EDIT));
+  ++mCount;
 }
 
 std::string App::getConfigDir()

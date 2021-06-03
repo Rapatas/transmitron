@@ -1,7 +1,6 @@
 #include "TopicCtrl.hpp"
 #include <wx/artprov.h>
 #include <wx/clipbrd.h>
-#include <wx/log.h>
 #include <wx/menu.h>
 
 using namespace Transmitron::Widgets;
