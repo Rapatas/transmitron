@@ -26,7 +26,7 @@ public:
   explicit Layouts();
 
   bool load(const std::string &configDir);
-  wxDataViewItem create(const std::string &name, const std::string &perspective);
+  wxDataViewItem create(const Perspective_t &perspective);
   bool remove(wxDataViewItem item);
 
   // Getters

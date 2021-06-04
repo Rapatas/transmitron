@@ -35,6 +35,7 @@ public:
   );
   wxDataViewItem createProfile();
   bool remove(wxDataViewItem item);
+  std::string getUniqueName() const;
 
   const MQTT::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
   std::string getName(wxDataViewItem item) const;
@@ -43,8 +44,9 @@ public:
 
 private:
 
-  struct Profile
+  struct Node
   {
+    using Id_t = size_t;
     std::string name;
     MQTT::BrokerOptions brokerOptions;
     std::filesystem::path path;
@@ -55,7 +57,8 @@ private:
   static constexpr const char *BrokerOptionsFilename =
     "broker-options.json";
 
-  std::vector<std::unique_ptr<Profile>> mProfiles;
+  Node::Id_t mAvailableId = 1;
+  std::map<Node::Id_t, std::unique_ptr<Node>> mProfiles;
   std::string mProfilesDir;
 
   // wxDataViewModel interface.
@@ -83,13 +86,13 @@ private:
   ) const override;
   unsigned int GetChildren(
     const wxDataViewItem &parent,
-    wxDataViewItemArray &array
+    wxDataViewItemArray &children
   ) const override;
 
-  bool save(size_t index);
+  bool save(size_t id);
 
-  static size_t toIndex(const wxDataViewItem &item);
-  static wxDataViewItem toItem(size_t index);
+  static size_t toId(const wxDataViewItem &item);
+  static wxDataViewItem toItem(size_t id);
 };
 
 }

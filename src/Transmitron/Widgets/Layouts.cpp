@@ -106,10 +106,8 @@ Layouts::Layouts(
 
 void Layouts::onLayoutSaveClicked(wxCommandEvent &/* event */)
 {
-  const auto newName = mLayoutsModel->getUniqueName();
-
   const auto perspective = mAuiMan.SavePerspective().ToStdString();
-  const auto item = mLayoutsModel->create(newName, perspective);
+  const auto item = mLayoutsModel->create(perspective);
 
   if (!item.IsOk())
   {

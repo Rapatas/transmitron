@@ -97,24 +97,9 @@ bool Layouts::remove(wxDataViewItem item)
   return true;
 }
 
-wxDataViewItem Layouts::create(
-  const std::string &name,
-  const std::string &perspective
-) {
-  const bool nameExists = std::any_of(
-    std::begin(mLayouts),
-    std::end(mLayouts),
-    [&name](const auto &layout)
-    {
-      return layout.second->name == name;
-    }
-  );
-
-  if (nameExists)
-  {
-    wxLogError("Could not create '%s': layout exists", name);
-    return wxDataViewItem(0);
-  }
+wxDataViewItem Layouts::create(const Perspective_t &perspective)
+{
+  const std::string name = getUniqueName();
 
   std::string encoded;
   try { encoded = cppcodec::base32_rfc4648::encode(name); }
@@ -138,11 +123,11 @@ wxDataViewItem Layouts::create(
   layout->saved = false;
   mLayouts.insert({id, std::move(layout)});
 
+  save(id);
+
   const auto parent = wxDataViewItem(nullptr);
   const auto item = toItem(id);
   ItemAdded(parent, item);
-
-  save(id);
 
   return item;
 }
@@ -436,9 +421,9 @@ wxDataViewItem Layouts::loadLayoutFile(const std::filesystem::path &filepath)
     return toItem(id);
 }
 
-bool Layouts::save(size_t index)
+bool Layouts::save(size_t id)
 {
-  auto &layout = mLayouts.at(index);
+  auto &layout = mLayouts.at(id);
   if (layout->saved) { return true; }
 
   std::ofstream output(layout->path);

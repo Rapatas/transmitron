@@ -12,10 +12,7 @@ namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 using namespace Transmitron;
 
-Profiles::Profiles()
-{
-  mProfiles.push_back(nullptr);
-}
+Profiles::Profiles() {}
 
 bool Profiles::load(const std::string &configDir)
 {
@@ -97,14 +94,15 @@ bool Profiles::load(const std::string &configDir)
     wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
     snippetsModel->load(entry.path());
 
-    auto profile = std::make_unique<Profile>(Profile{
+    const auto id = mAvailableId++;
+    auto profile = std::make_unique<Node>(Node{
       name,
       brokerOptions,
       entry.path(),
       snippetsModel,
       true
     });
-    mProfiles.push_back(std::move(profile));
+    mProfiles.insert({id, std::move(profile)});
     wxLogMessage("Loaded %s", entry.path().u8string());
   }
 
@@ -120,12 +118,12 @@ bool Profiles::updateBrokerOptions(
     return false;
   }
 
-  const auto index = toIndex(item);
-  auto &profile = mProfiles.at(index);
+  const auto id = toId(item);
+  auto &profile = mProfiles.at(id);
   profile->brokerOptions = brokerOptions;
   profile->saved = false;
 
-  save(index);
+  save(id);
   ItemChanged(item);
   return true;
 }
@@ -139,8 +137,8 @@ bool Profiles::updateName(
     return false;
   }
 
-  const auto index = toIndex(item);
-  auto &profile = mProfiles.at(index);
+  const auto id = toId(item);
+  auto &profile = mProfiles.at(id);
 
   if (profile->name == name)
   {
@@ -148,11 +146,11 @@ bool Profiles::updateName(
   }
 
   const bool nameExists = std::any_of(
-    std::begin(mProfiles) + 1,
+    std::begin(mProfiles),
     std::end(mProfiles),
     [&name](const auto &profile)
     {
-      return profile->name == name;
+      return profile.second->name == name;
     }
   );
   if (nameExists)
@@ -192,7 +190,7 @@ bool Profiles::updateName(
   profile->path = pathNew;
   profile->saved = false;
 
-  save(index);
+  save(id);
   ItemChanged(item);
 
   return true;
@@ -200,8 +198,8 @@ bool Profiles::updateName(
 
 bool Profiles::remove(wxDataViewItem item)
 {
-  const auto index = toIndex(item);
-  auto &node = mProfiles.at(index);
+  const auto id = toId(item);
+  auto &node = mProfiles.at(id);
 
   std::error_code ec;
   fs::remove_all(node->path, ec);
@@ -211,31 +209,37 @@ bool Profiles::remove(wxDataViewItem item)
     return false;
   }
 
-  auto toRemoveIt = std::begin(mProfiles);
-  std::advance(toRemoveIt, index);
-  mProfiles.erase(toRemoveIt);
-  wxDataViewItem parent(0);
+  mProfiles.erase(id);
+
+  const auto parent = wxDataViewItem(nullptr);
   ItemDeleted(parent, item);
 
   return true;
 }
 
-wxDataViewItem Profiles::createProfile()
+std::string Profiles::getUniqueName() const
 {
   const constexpr std::string_view NewProfileName{"New Profile"};
   std::string uniqueName{NewProfileName};
   unsigned postfix = 0;
   while (std::any_of(
-      std::begin(mProfiles) + 1,
+      std::begin(mProfiles),
       std::end(mProfiles),
       [=](const auto &profile)
       {
-        return profile->name == uniqueName;
+        return profile.second->name == uniqueName;
       }
   )) {
     ++postfix;
     uniqueName = fmt::format("{} - {}", NewProfileName, postfix);
   }
+
+  return uniqueName;
+}
+
+wxDataViewItem Profiles::createProfile()
+{
+  const std::string uniqueName = getUniqueName();
 
   std::string encoded;
   try { encoded = cppcodec::base32_rfc4648::encode(uniqueName); }
@@ -260,17 +264,18 @@ wxDataViewItem Profiles::createProfile()
   wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
   snippetsModel->load(path);
 
-  auto profile = std::make_unique<Profile>();
+  const auto id = mAvailableId++;
+  auto profile = std::make_unique<Node>();
   profile->name = uniqueName;
   profile->path = path;
   profile->saved = false;
   profile->snippetsModel = snippetsModel;
-  mProfiles.push_back(std::move(profile));
+  mProfiles.insert({id, std::move(profile)});
 
-  wxDataViewItem parent(nullptr);
-  const auto index = mProfiles.size() - 1;
-  const auto item = toItem(index);
-  save(index);
+  save(id);
+
+  const auto parent = wxDataViewItem(nullptr);
+  const auto item = toItem(id);
   ItemAdded(parent, item);
 
   return item;
@@ -278,17 +283,17 @@ wxDataViewItem Profiles::createProfile()
 
 const MQTT::BrokerOptions &Profiles::getBrokerOptions(wxDataViewItem item) const
 {
-  return mProfiles.at(toIndex(item))->brokerOptions;
+  return mProfiles.at(toId(item))->brokerOptions;
 }
 
 std::string Profiles::getName(wxDataViewItem item) const
 {
-  return mProfiles.at(toIndex(item))->name;
+  return mProfiles.at(toId(item))->name;
 }
 
 wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
 {
-  return mProfiles.at(toIndex(item))->snippetsModel;
+  return mProfiles.at(toId(item))->snippetsModel;
 }
 
 unsigned Profiles::GetColumnCount() const
@@ -306,7 +311,7 @@ void Profiles::GetValue(
   const wxDataViewItem &item,
   unsigned int col
 ) const {
-  const auto &profile = mProfiles.at(toIndex(item));
+  const auto &profile = mProfiles.at(toId(item));
 
   switch ((Column)col) {
     case Column::Name: {
@@ -350,19 +355,60 @@ bool Profiles::IsContainer(
 }
 
 unsigned Profiles::GetChildren(
-  const wxDataViewItem &/* parent */,
-  wxDataViewItemArray &array
+  const wxDataViewItem &parent,
+  wxDataViewItemArray &children
 ) const {
-  for (size_t i = 1; i != mProfiles.size(); ++i)
+  if (parent.IsOk())
   {
-    array.Add(toItem(i));
+    return 0;
   }
-  return (unsigned)mProfiles.size() - 1;
+
+  for (const auto &node : mProfiles)
+  {
+    children.Add(toItem(node.first));
+  }
+
+  std::sort(
+    std::begin(children),
+    std::end(children),
+    [this](wxDataViewItem lhs, wxDataViewItem rhs)
+    {
+      const auto lhsid = toId(lhs);
+      const auto rhsid = toId(rhs);
+
+      auto lhsv = mProfiles.at(lhsid)->name;
+      auto rhsv = mProfiles.at(rhsid)->name;
+
+      std::transform(
+        rhsv.begin(),
+        rhsv.end(),
+        rhsv.begin(),
+        [](unsigned char c)
+        {
+          return std::tolower(c);
+        }
+      );
+
+      std::transform(
+        lhsv.begin(),
+        lhsv.end(),
+        lhsv.begin(),
+        [](unsigned char c)
+        {
+          return std::tolower(c);
+        }
+      );
+
+      return lhsv < rhsv;
+    }
+  );
+
+  return (unsigned)children.size();
 }
 
-bool Profiles::save(size_t index)
+bool Profiles::save(size_t id)
 {
-  auto &profile = mProfiles.at(index);
+  auto &profile = mProfiles.at(id);
   if (profile->saved) { return true; }
 
   const auto brokerOptionsFilepath = fmt::format(
@@ -387,7 +433,7 @@ bool Profiles::save(size_t index)
   return true;
 }
 
-size_t Profiles::toIndex(const wxDataViewItem &item)
+size_t Profiles::toId(const wxDataViewItem &item)
 {
   uintptr_t result = 0;
   const void *id = item.GetID();
@@ -395,11 +441,11 @@ size_t Profiles::toIndex(const wxDataViewItem &item)
   return result;
 }
 
-wxDataViewItem Profiles::toItem(size_t index)
+wxDataViewItem Profiles::toItem(size_t id)
 {
-  void *id = nullptr;
-  const uintptr_t value = index;
-  std::memcpy(&id, &value, sizeof(uintptr_t));
-  return wxDataViewItem(id);
+  void *itemId = nullptr;
+  const uintptr_t value = id;
+  std::memcpy(&itemId, &value, sizeof(uintptr_t));
+  return wxDataViewItem(itemId);
 }
 
