@@ -257,10 +257,14 @@ wxDataViewItem Profiles::createProfile()
     return wxDataViewItem(0);
   }
 
+  wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
+  snippetsModel->load(path);
+
   auto profile = std::make_unique<Profile>();
   profile->name = uniqueName;
   profile->path = path;
   profile->saved = false;
+  profile->snippetsModel = snippetsModel;
   mProfiles.push_back(std::move(profile));
 
   wxDataViewItem parent(nullptr);
