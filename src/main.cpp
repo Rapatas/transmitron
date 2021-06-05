@@ -4,11 +4,12 @@
 
 int main(int argc, char **argv)
 {
-  wxApp::SetInstance(new Transmitron::App);
+  auto *app = new Transmitron::App;
+  wxApp::SetInstance(app);
   wxEntryStart(argc, argv);
-  wxTheApp->CallOnInit();
-  wxTheApp->OnRun();
-  wxTheApp->OnExit();
+  app->CallOnInit();
+  app->OnRun();
+  app->OnExit();
   wxEntryCleanup();
   return 0;
 }
