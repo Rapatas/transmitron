@@ -217,7 +217,7 @@ void Homepage::onSaveClicked(wxCommandEvent &/* event */)
   }
 
   const auto name = mProfileFormProperties.at(Properties::Name)->GetValue();
-  mProfilesModel->updateName(item, name);
+  mProfilesModel->rename(item, name);
 
   const auto options = optionsFromPropertyGrid();
   mProfilesModel->updateBrokerOptions(item, options);

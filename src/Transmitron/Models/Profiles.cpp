@@ -24,8 +24,8 @@ bool Profiles::load(const std::string &configDir)
 
   mProfilesDir = configDir + "/profiles";
 
-  bool exists = fs::exists(mProfilesDir);
-  bool isDir = fs::is_directory(mProfilesDir);
+  const bool exists = fs::exists(mProfilesDir);
+  const bool isDir = fs::is_directory(mProfilesDir);
 
   if (exists && !isDir && !fs::remove(mProfilesDir))
   {
@@ -47,62 +47,12 @@ bool Profiles::load(const std::string &configDir)
     wxLogMessage("Checking %s", entry.path().u8string());
     if (entry.status().type() != fs::file_type::directory) { continue; }
 
-    // Get name.
-    std::vector<uint8_t> decoded;
-    try
+    const auto item = loadProfileFile(entry.path());
+    if (!item.IsOk())
     {
-      decoded = cppcodec::base32_rfc4648::decode(
-        entry.path().stem().u8string()
-      );
-    }
-    catch (cppcodec::parse_error &e)
-    {
-      wxLogError(
-        "Could not decode '%s': %s",
-        entry.path().u8string(),
-        e.what()
-      );
-      continue;
-    }
-    const std::string name{decoded.begin(), decoded.end()};
-
-    // Get BrokerOptions.
-    const auto brokerOptionsFilepath = fmt::format(
-      "{}/{}",
-      entry.path().c_str(),
-      BrokerOptionsFilename
-    );
-
-    std::ifstream brokerOptionsFile(brokerOptionsFilepath);
-    if (!brokerOptionsFile.is_open())
-    {
-      wxLogWarning("Could not open '%s'", entry.path().u8string());
       continue;
     }
 
-    std::stringstream buffer;
-    buffer << brokerOptionsFile.rdbuf();
-    if (!nlohmann::json::accept(buffer.str()))
-    {
-      wxLogWarning("Could not parse '%s'", entry.path().u8string());
-      continue;
-    }
-
-    auto j = nlohmann::json::parse(buffer.str());
-    auto brokerOptions = MQTT::BrokerOptions::fromJson(j);
-
-    wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
-    snippetsModel->load(entry.path());
-
-    const auto id = mAvailableId++;
-    auto profile = std::make_unique<Node>(Node{
-      name,
-      brokerOptions,
-      entry.path(),
-      snippetsModel,
-      true
-    });
-    mProfiles.insert({id, std::move(profile)});
     wxLogMessage("Loaded %s", entry.path().u8string());
   }
 
@@ -128,7 +78,7 @@ bool Profiles::updateBrokerOptions(
   return true;
 }
 
-bool Profiles::updateName(
+bool Profiles::rename(
   wxDataViewItem item,
   const std::string &name
 ) {
@@ -431,6 +381,66 @@ bool Profiles::save(size_t id)
   output << profile->brokerOptions.toJson();
   profile->saved = true;
   return true;
+}
+
+wxDataViewItem Profiles::loadProfileFile(const std::filesystem::path &filepath)
+{
+  std::vector<uint8_t> decoded;
+  try
+  {
+    decoded = cppcodec::base32_rfc4648::decode(
+      filepath.stem().u8string()
+    );
+  }
+  catch (cppcodec::parse_error &e)
+  {
+    wxLogError(
+      "Could not decode '%s': %s",
+      filepath.u8string(),
+      e.what()
+    );
+    return wxDataViewItem(nullptr);
+  }
+  const std::string name{decoded.begin(), decoded.end()};
+
+  const auto brokerOptionsFilepath = fmt::format(
+    "{}/{}",
+    filepath.c_str(),
+    BrokerOptionsFilename
+  );
+
+  std::ifstream brokerOptionsFile(brokerOptionsFilepath);
+  if (!brokerOptionsFile.is_open())
+  {
+    wxLogWarning("Could not open '%s'", filepath.u8string());
+    return wxDataViewItem(nullptr);
+  }
+
+  std::stringstream buffer;
+  buffer << brokerOptionsFile.rdbuf();
+  if (!nlohmann::json::accept(buffer.str()))
+  {
+    wxLogWarning("Could not parse '%s'", filepath.u8string());
+    return wxDataViewItem(nullptr);
+  }
+
+  auto j = nlohmann::json::parse(buffer.str());
+  auto brokerOptions = MQTT::BrokerOptions::fromJson(j);
+
+  wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
+  snippetsModel->load(filepath);
+
+  const auto id = mAvailableId++;
+  auto profile = std::make_unique<Node>(Node{
+    name,
+    brokerOptions,
+    filepath,
+    snippetsModel,
+    true
+  });
+  mProfiles.insert({id, std::move(profile)});
+
+  return toItem(id);
 }
 
 size_t Profiles::toId(const wxDataViewItem &item)

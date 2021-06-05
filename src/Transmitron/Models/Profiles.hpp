@@ -29,7 +29,7 @@ public:
     wxDataViewItem item,
     const MQTT::BrokerOptions &brokerOptions
   );
-  bool updateName(
+  bool rename(
     wxDataViewItem item,
     const std::string &name
   );
@@ -90,6 +90,7 @@ private:
   ) const override;
 
   bool save(size_t id);
+  wxDataViewItem loadProfileFile(const std::filesystem::path &filepath);
 
   static size_t toId(const wxDataViewItem &item);
   static wxDataViewItem toItem(size_t id);
