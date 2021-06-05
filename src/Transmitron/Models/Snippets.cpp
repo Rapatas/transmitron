@@ -857,57 +857,73 @@ bool Snippets::save(Node::Id_t id)
   if (node.saved) { return true; }
   if (id != 0 && !save(node.parent)) { return false; }
 
+  switch (node.type)
+  {
+    case Node::Type::Snippet: return saveSnippet(id);
+    case Node::Type::Folder:  return saveFolder(id);
+  }
+  return false;
+}
+
+bool Snippets::saveSnippet(Node::Id_t id)
+{
+  auto &node = mNodes.at(id);
   const auto nodePath = getNodePath(id);
 
-  if (node.type == Node::Type::Snippet)
+  std::ofstream output(nodePath);
+  if (!output.is_open())
   {
-    std::ofstream output(nodePath);
-    if (!output.is_open())
-    {
-      wxLogError("Could not save '%s'", node.name);
-      return false;
-    }
-
-    if (node.message)
-    {
-      output << MQTT::Message::toJson(*node.message);
-    }
+    wxLogError("Could not save '%s'", node.name);
+    return false;
   }
-  else if (node.type == Node::Type::Folder)
+
+  if (node.message)
   {
-    bool exists = fs::exists(nodePath);
-    bool isDir = fs::is_directory(nodePath);
+    output << MQTT::Message::toJson(*node.message);
+  }
 
-    if (exists && !isDir && !fs::remove(nodePath))
-    {
-      wxLogWarning("Could not remove file %s", nodePath.c_str());
-      return false;
-    }
+  node.saved = true;
 
-    if (!exists && !fs::create_directory(nodePath))
-    {
-      wxLogWarning(
-        "Could not create directory: %s",
-        nodePath.c_str()
-      );
-      return false;
-    }
+  return true;
+}
 
-    const auto indexPath = nodePath + "/index.json";
-    std::ofstream output(indexPath);
-    if (!output.is_open())
+bool Snippets::saveFolder(Node::Id_t id)
+{
+  auto &node = mNodes.at(id);
+  const auto nodePath = getNodePath(id);
+
+  const bool exists = fs::exists(nodePath);
+  const bool isDir = fs::is_directory(nodePath);
+
+  if (exists && !isDir && !fs::remove(nodePath))
+  {
+    wxLogWarning("Could not remove file %s", nodePath.c_str());
+    return false;
+  }
+
+  if (!exists && !fs::create_directory(nodePath))
+  {
+    wxLogWarning(
+      "Could not create directory: %s",
+      nodePath.c_str()
+    );
+    return false;
+  }
+
+  const auto indexPath = nodePath + "/index.json";
+  std::ofstream output(indexPath);
+  if (!output.is_open())
+  {
+    wxLogWarning("Could not save '%s'", indexPath);
+  }
+  else
+  {
+    nlohmann::json data;
+    for (const auto &child : node.children)
     {
-      wxLogWarning("Could not save '%s'", indexPath);
+      data.push_back(mNodes.at(child).encoded);
     }
-    else
-    {
-      nlohmann::json data;
-      for (const auto &child : node.children)
-      {
-        data.push_back(mNodes.at(child).encoded);
-      }
-      output << data;
-    }
+    output << data;
   }
 
   node.saved = true;

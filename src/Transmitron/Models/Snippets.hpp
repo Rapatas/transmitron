@@ -116,6 +116,8 @@ private:
     Node::Id_t parentId
   );
   bool save(Node::Id_t id);
+  bool saveSnippet(Node::Id_t id);
+  bool saveFolder(Node::Id_t id);
   Node::Id_t getNextId();
   bool isRecursive(wxDataViewItem parent, wxDataViewItem item) const;
   std::string getNodePath(Node::Id_t id) const;
