@@ -7,10 +7,10 @@
 using namespace MQTT;
 
 constexpr bool DefaultAutoReconnect = false;
-constexpr const std::string_view DefaultClientId = "";
+constexpr const std::string_view DefaultClientId{};
 constexpr const std::string_view DefaultHostname = "127.0.0.1";
-constexpr const std::string_view DefaultPassword = "";
-constexpr const std::string_view DefaultUsername = "";
+constexpr const std::string_view DefaultPassword{};
+constexpr const std::string_view DefaultUsername{};
 constexpr size_t DefaultKeepAliveIntervalSec = 60;
 constexpr size_t DefaultMaxInFlight = 10;
 constexpr size_t DefaultPort = 1883;
