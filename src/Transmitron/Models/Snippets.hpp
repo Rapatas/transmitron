@@ -118,6 +118,22 @@ private:
   bool save(Node::Id_t id);
   bool saveSnippet(Node::Id_t id);
   bool saveFolder(Node::Id_t id);
+  bool moveFile(Node::Id_t nodeId, Node::Id_t newParentId);
+  bool moveCheck(
+    wxDataViewItem item,
+    wxDataViewItem parent,
+    wxDataViewItem sibling
+  );
+  void moveUnderNewParent(
+    Node::Id_t nodeId,
+    Node::Id_t newParentId,
+    wxDataViewItem sibling
+  );
+  void moveUnderSameParent(
+    Node::Id_t nodeId,
+    Node::Id_t newParentId,
+    wxDataViewItem sibling
+  );
   Node::Id_t getNextId();
   bool isRecursive(wxDataViewItem parent, wxDataViewItem item) const;
   std::string getNodePath(Node::Id_t id) const;
