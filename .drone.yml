@@ -20,11 +20,13 @@ steps:
         path: /cache_dir
 
   - name: Build
-    image: transmitron_linux_amd64:latest
+    image: conanio/gcc8:latest
     user: 0
     environment:
       CONAN_USER_HOME: /drone/src/conan_data/linux/amd64
     commands:
+      - apt-get update
+      - apt-get install -y libgtk2.0-dev libgl1-mesa-dev
       - conan remote add -f bincrafters https://api.bintray.com/conan/bincrafters/public-conan
       - mkdir build-release-linux-amd64
       - cd    build-release-linux-amd64
