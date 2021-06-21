@@ -1,0 +1,49 @@
+kind: pipeline
+name: Linux AMD64
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+
+  - name: Restore Cache
+    image: meltwater/drone-cache
+    settings:
+      backend: "filesystem"
+      restore: true
+      archive_format: "gzip"
+      filesystem_cache_root: /cache_dir
+      mount:
+        - conan_data
+    volumes:
+      - name: cache_volume
+        path: /cache_dir
+
+  - name: Build
+    image: conanio/gcc8:latest
+    user: 0
+    environment:
+      CONAN_USER_HOME: /drone/src/conan_data/linux/amd64
+    commands:
+      - conan remote add -f bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+      - mkdir build-release-linux-amd64
+      - cd    build-release-linux-amd64
+      - conan install ../conan/ --build=missing
+
+  - name: Rebuild Cache
+    image: meltwater/drone-cache
+    settings:
+      backend: "filesystem"
+      rebuild: true
+      archive_format: "gzip"
+      filesystem_cache_root: /cache_dir/
+      mount:
+        - conan_data
+    volumes:
+      - name: cache_volume
+        path: /cache_dir
+
+volumes:
+  - name: cache_volume
+    host:
+      path: /tmp/drone/cache
