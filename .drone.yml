@@ -20,7 +20,7 @@ steps:
         path: /cache_dir
 
   - name: Build
-    image: conanio/gcc8:latest
+    image: transmitron_linux_amd64:latest
     user: 0
     environment:
       CONAN_USER_HOME: /drone/src/conan_data/linux/amd64
