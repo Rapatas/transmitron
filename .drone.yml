@@ -26,6 +26,8 @@ steps:
     environment:
       CONAN_USER_HOME: /drone/src/conan_data/linux/amd64
     commands:
+      - conan profile new default --detect
+      - conan profile update settings.compiler.libcxx=libstdc++11 default
       - conan remote add -f bincrafters https://api.bintray.com/conan/bincrafters/public-conan
       - mkdir build-release-linux-amd64
       - cd    build-release-linux-amd64
