@@ -30,6 +30,9 @@ steps:
       - mkdir build-release-linux-amd64
       - cd    build-release-linux-amd64
       - conan install ../conan/ --build=missing
+      - cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_BUILD_TYPE=Release ..
+      - echo "Building with $(nproc) threads."
+      - make -j $(nproc)
 
   - name: Rebuild Cache
     image: meltwater/drone-cache
