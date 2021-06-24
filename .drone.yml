@@ -42,7 +42,7 @@ steps:
       backend: "filesystem"
       rebuild: true
       archive_format: "gzip"
-      backend.operation-timeout: "5m0s"
+      backend_operation-timeout: "5m0s"
       filesystem_cache_root: /cache_dir/
       mount:
         - conan_data
