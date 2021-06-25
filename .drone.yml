@@ -10,7 +10,7 @@ steps:
     image: meltwater/drone-cache
     settings:
       backend: "filesystem"
-      cache_key: '{{ .Repo.Name  }}_{{ checksum "go.mod"  }}_{{ checksum "conan/conanfile.py"  }}_{{ os }}_{{ arch }}'
+      cache_key: '{{ .Repo.Name }}_{{ checksum "conan/conanfile.py" }}_{{ os }}_{{ arch }}'
       restore: true
       archive_format: "gzip"
       filesystem_cache_root: /cache_dir
