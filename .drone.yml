@@ -29,7 +29,8 @@ steps:
     commands:
       - conan profile new --force default --detect
       - conan profile update settings.compiler.libcxx=libstdc++11 default
-      - conan remote add -f bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+      - conan config set general.revisions_enabled=1
+      - conan remote add -f bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
       - mkdir build-release-linux-amd64
       - cd    build-release-linux-amd64
       - conan install ../conan/ --build=missing

@@ -22,7 +22,8 @@ sudo apt-get install -y gcc-8
 
 ```bash
 pip3 install conan --upgrade
-conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan
+conan config set general.revisions_enabled=1
+conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
 ```
 
 **libgtk2.0-dev**
