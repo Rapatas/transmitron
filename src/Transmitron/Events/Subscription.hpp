@@ -3,6 +3,7 @@
 
 #include <wx/event.h>
 #include "MQTT/Subscription.hpp"
+#include "MQTT/Message.hpp"
 
 namespace Transmitron::Events
 {
@@ -39,12 +40,12 @@ public:
     return mId;
   }
 
-  mqtt::const_message_ptr getMessage() const
+  MQTT::Message getMessage() const
   {
     return mMsg;
   }
 
-  void setMessage(mqtt::const_message_ptr msg)
+  void setMessage(MQTT::Message msg)
   {
     mMsg = std::move(msg);
   }
@@ -56,8 +57,8 @@ public:
 
 private:
 
+  MQTT::Message mMsg;
   MQTT::Subscription::Id_t mId = 0;
-  mqtt::const_message_ptr mMsg;
 };
 
 }

@@ -22,10 +22,7 @@ public:
       MQTT::Subscription::Id_t subscriptionId,
       wxColor color
     ) = 0;
-    virtual void onMessage(
-      MQTT::Subscription::Id_t subscriptionId,
-      mqtt::const_message_ptr message
-    ) = 0;
+    virtual void onMessage(const MQTT::Message &message) = 0;
     virtual void onMuted(MQTT::Subscription::Id_t subscriptionId) = 0;
     virtual void onSolo(MQTT::Subscription::Id_t subscriptionId) = 0;
     virtual void onUnmuted(MQTT::Subscription::Id_t subscriptionId) = 0;

@@ -1,4 +1,7 @@
 #include "Subscription.hpp"
+#include "Message.hpp"
+#include <chrono>
+#include <cstdlib>
 
 #define wxLOG_COMPONENT "mqtt/subscription" // NOLINT
 
@@ -63,7 +66,27 @@ void Subscription::onMessage(
 ) {
   for (const auto &o : mObservers)
   {
-    o.second->onMessage(msg);
+    const std::string payload {
+      std::begin(msg->get_payload()),
+      std::end(msg->get_payload())
+    };
+
+    QoS qos = QoS::AtLeastOnce;
+    switch (msg->get_qos())
+    {
+      case 0: qos = MQTT::QoS::AtLeastOnce; break;
+      case 1: qos = MQTT::QoS::AtMostOnce;  break;
+      case 2: qos = MQTT::QoS::ExactlyOnce; break;
+    }
+
+    o.second->onMessage({
+      msg->get_topic(),
+      payload,
+      qos,
+      msg->is_retained(),
+      mId,
+      std::chrono::system_clock::now()
+    });
   }
 }
 

@@ -46,13 +46,10 @@ void History::clear()
   remap();
 }
 
-void History::onMessage(
-  MQTT::Subscription::Id_t subscriptionId,
-  mqtt::const_message_ptr message
-) {
-  const Message m{subscriptionId, message};
-  mMessages.push_back(m);
-  const bool muted = mSubscriptions->getMuted(subscriptionId);
+void History::onMessage(const MQTT::Message &message)
+{
+  mMessages.push_back(message);
+  const bool muted = mSubscriptions->getMuted(message.subscriptionId);
 
   if (!muted)
   {
@@ -177,34 +174,27 @@ void History::refresh(MQTT::Subscription::Id_t subscriptionId)
 
 std::string History::getPayload(const wxDataViewItem &item) const
 {
-  return mMessages.at(mRemap.at(GetRow(item))).message->get_payload();
+  return mMessages.at(mRemap.at(GetRow(item))).payload;
 }
 
 std::string History::getTopic(const wxDataViewItem &item) const
 {
-  return mMessages.at(mRemap.at(GetRow(item))).message->get_topic();
+  return mMessages.at(mRemap.at(GetRow(item))).topic;
 }
 
 MQTT::QoS History::getQos(const wxDataViewItem &item) const
 {
-  return (MQTT::QoS)mMessages.at(mRemap.at(GetRow(item))).message->get_qos();
+  return (MQTT::QoS)mMessages.at(mRemap.at(GetRow(item))).qos;
 }
 
 bool History::getRetained(const wxDataViewItem &item) const
 {
-  return mMessages.at(mRemap.at(GetRow(item))).message->is_retained();
+  return mMessages.at(mRemap.at(GetRow(item))).retained;
 }
 
-std::shared_ptr<MQTT::Message> History::getMessage(const wxDataViewItem &item) const
+const MQTT::Message &History::getMessage(const wxDataViewItem &item) const
 {
-  auto message = mMessages.at(mRemap.at(GetRow(item))).message;
-  MQTT::Message m {
-    message->get_topic(),
-    message->get_payload(),
-    static_cast<MQTT::QoS>(message->get_qos()),
-    message->is_retained()
-  };
-  return std::make_shared<MQTT::Message>(std::move(m));
+  return mMessages.at(mRemap.at(GetRow(item)));
 }
 
 unsigned History::GetColumnCount() const
@@ -270,8 +260,8 @@ void History::GetValueByRow(
     } break;
     case Column::Topic: {
       wxDataViewIconText result;
-      result.SetText(m.message->get_topic());
-      if (m.message->is_retained())
+      result.SetText(m.topic);
+      if (m.retained)
       {
         wxIcon icon;
         icon.CopyFromBitmap(*bin2cPinned18x18());
@@ -281,7 +271,7 @@ void History::GetValueByRow(
     } break;
     case Column::Qos: {
       const wxBitmap *result = nullptr;
-      switch ((MQTT::QoS)m.message->get_qos()) {
+      switch ((MQTT::QoS)m.qos) {
         case MQTT::QoS::AtLeastOnce: { result = bin2cQos0(); } break;
         case MQTT::QoS::AtMostOnce:  { result = bin2cQos1(); } break;
         case MQTT::QoS::ExactlyOnce: { result = bin2cQos2(); } break;

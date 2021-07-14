@@ -32,16 +32,16 @@ public:
   );
   wxDataViewItem createSnippet(
     wxDataViewItem parent,
-    std::shared_ptr<MQTT::Message> message
+    const MQTT::Message &message
   );
   wxDataViewItem insert(
     const std::string &name,
-    std::shared_ptr<MQTT::Message> message,
+    const MQTT::Message &message,
     wxDataViewItem parent
   );
   wxDataViewItem replace(
     wxDataViewItem item,
-    std::shared_ptr<MQTT::Message> message
+    const MQTT::Message &message
   );
   bool remove(wxDataViewItem item);
 
@@ -99,7 +99,7 @@ private:
     std::string encoded;
     Type type;
     std::list<Id_t> children;
-    std::shared_ptr<MQTT::Message> message;
+    MQTT::Message message;
     bool saved;
   };
 

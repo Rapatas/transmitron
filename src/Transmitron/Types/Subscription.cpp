@@ -31,10 +31,10 @@ void Subscription::onUnsubscribed()
   wxQueueEvent(this, e);
 }
 
-void Subscription::onMessage(mqtt::const_message_ptr msg)
+void Subscription::onMessage(const MQTT::Message &message)
 {
   auto *e = new Events::Subscription(Events::RECEIVED);
-  e->setMessage(msg);
+  e->setMessage(message);
   e->setId(mSub->getId());
   wxQueueEvent(this, e);
 }

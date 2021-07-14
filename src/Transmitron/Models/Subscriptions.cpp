@@ -273,6 +273,6 @@ void Subscriptions::onMessage(Events::Subscription &e)
 {
   for (const auto &o : mObservers)
   {
-    o.second->onMessage(e.getId(), e.getMessage());
+    o.second->onMessage(e.getMessage());
   }
 }

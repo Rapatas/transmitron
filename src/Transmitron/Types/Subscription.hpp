@@ -20,7 +20,7 @@ public:
   // MQTT::Subscription::Observer interface.
   void onSubscribed() override;
   void onUnsubscribed() override;
-  void onMessage(mqtt::const_message_ptr msg) override;
+  void onMessage(const MQTT::Message &message) override;
 
   void setMuted(bool muted);
   void setColor(const wxColor &color);

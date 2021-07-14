@@ -275,7 +275,9 @@ MQTT::Message Edit::getMessage() const
     getTopic(),
     getPayload(),
     mQoS,
-    mRetained
+    mRetained,
+    0,
+    {}
   };
 }
 

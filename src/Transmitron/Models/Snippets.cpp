@@ -24,7 +24,7 @@ Snippets::Snippets()
     {},
     Node::Type::Folder,
     {},
-    nullptr,
+    {},
     true
   };
 
@@ -40,13 +40,7 @@ MQTT::Message Snippets::getMessage(wxDataViewItem item) const
 
   const auto id = toId(item);
   const auto &node = mNodes.at(id);
-
-  if (!node.message)
-  {
-    return {};
-  }
-
-  return *node.message;
+  return node.message;
 }
 
 wxDataViewItem Snippets::getRootItem()
@@ -136,7 +130,7 @@ wxDataViewItem Snippets::createFolder(
     encoded,
     Node::Type::Folder,
     {},
-    nullptr,
+    {},
     false,
   };
   const auto newId = getNextId();
@@ -154,7 +148,7 @@ wxDataViewItem Snippets::createFolder(
 
 wxDataViewItem Snippets::createSnippet(
   wxDataViewItem parentItem,
-  std::shared_ptr<MQTT::Message> message
+  const MQTT::Message &message
 ) {
   const constexpr std::string_view NewName{"New Snippet"};
 
@@ -201,7 +195,7 @@ wxDataViewItem Snippets::createSnippet(
     encoded,
     Node::Type::Snippet,
     {},
-    std::move(message),
+    message,
     false,
   };
   const auto newId = getNextId();
@@ -219,7 +213,7 @@ wxDataViewItem Snippets::createSnippet(
 
 wxDataViewItem Snippets::insert(
   const std::string &name,
-  std::shared_ptr<MQTT::Message> message,
+  const MQTT::Message &message,
   wxDataViewItem parentItem
 ) {
   const auto parentId = toId(parentItem);
@@ -263,7 +257,7 @@ wxDataViewItem Snippets::insert(
     encoded,
     Node::Type::Snippet,
     {},
-    std::move(message),
+    message,
     false,
   };
   const auto newId = getNextId();
@@ -280,7 +274,7 @@ wxDataViewItem Snippets::insert(
 
 wxDataViewItem Snippets::replace(
   wxDataViewItem item,
-  std::shared_ptr<MQTT::Message> message
+  const MQTT::Message &message
 ) {
   const auto id = toId(item);
   auto &node = mNodes.at(id);
@@ -298,11 +292,9 @@ wxDataViewItem Snippets::replace(
     return wxDataViewItem(nullptr);
   }
 
-  if (message)
-  {
-    output << MQTT::Message::toJson(*message);
-  }
-  node.message = std::move(message);
+  output << MQTT::Message::toJson(message);
+
+  node.message = message;
   return item;
 }
 
@@ -415,7 +407,7 @@ void Snippets::loadDirectoryRecursive(
       path.filename(),
       Node::Type::Folder,
       {},
-      nullptr,
+      {},
       true,
     };
 
@@ -506,7 +498,7 @@ void Snippets::loadSnippet(
   buffer << snippetFile.rdbuf();
   const std::string &sbuffer = buffer.str();
 
-  std::unique_ptr<MQTT::Message> message;
+  MQTT::Message message;
 
   if (!sbuffer.empty())
   {
@@ -517,7 +509,7 @@ void Snippets::loadSnippet(
     }
 
     auto j = nlohmann::json::parse(sbuffer);
-    message = std::make_unique<MQTT::Message>(MQTT::Message::fromJson(j));
+    message = MQTT::Message::fromJson(j);
   }
 
   Node newNode {
@@ -526,7 +518,7 @@ void Snippets::loadSnippet(
     path.filename(),
     Node::Type::Snippet,
     {},
-    std::move(message),
+    message,
     true,
   };
   const auto newId = getNextId();
@@ -793,10 +785,7 @@ bool Snippets::saveSnippet(Node::Id_t id)
     return false;
   }
 
-  if (node.message)
-  {
-    output << MQTT::Message::toJson(*node.message);
-  }
+  output << MQTT::Message::toJson(node.message);
 
   node.saved = true;
 

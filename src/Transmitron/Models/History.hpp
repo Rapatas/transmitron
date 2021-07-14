@@ -5,6 +5,7 @@
 #include <mqtt/message.h>
 #include "MQTT/Client.hpp"
 #include "MQTT/Message.hpp"
+#include "MQTT/Subscription.hpp"
 #include "Transmitron/Models/Subscriptions.hpp"
 
 namespace Transmitron::Models
@@ -20,12 +21,6 @@ public:
   struct Observer
   {
     virtual void onMessage(wxDataViewItem item) = 0;
-  };
-
-  struct Message
-  {
-    MQTT::Subscription::Id_t subscriptionId;
-    mqtt::const_message_ptr message;
   };
 
   enum class Column : unsigned
@@ -46,11 +41,11 @@ public:
   std::string getTopic(const wxDataViewItem &item) const;
   MQTT::QoS getQos(const wxDataViewItem &item) const;
   bool getRetained(const wxDataViewItem &item) const;
-  std::shared_ptr<MQTT::Message> getMessage(const wxDataViewItem &item) const;
+  const MQTT::Message &getMessage(const wxDataViewItem &item) const;
 
 private:
 
-  std::vector<Message> mMessages;
+  std::vector<MQTT::Message> mMessages;
   std::vector<size_t> mRemap;
   wxObjectDataPtr<Subscriptions> mSubscriptions;
   std::map<size_t, Observer *> mObservers;
@@ -85,10 +80,7 @@ private:
   void onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor color) override;
   void onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) override;
   void onCleared(MQTT::Subscription::Id_t subscriptionId) override;
-  void onMessage(
-    MQTT::Subscription::Id_t subscriptionId,
-    mqtt::const_message_ptr message
-  ) override;
+  void onMessage(const MQTT::Message &message) override;
 };
 
 }

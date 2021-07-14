@@ -6,6 +6,7 @@
 #include <wx/log.h>
 
 #include "Helpers/Helpers.hpp"
+#include "MQTT/Message.hpp"
 #include "Transmitron/Events/Layout.hpp"
 #include "Transmitron/Resources/plus/plus-18x18.hpp"
 #include "Transmitron/Resources/history/history-18x14.hpp"
@@ -1026,7 +1027,7 @@ void Client::onContextSelectedHistorySaveSnippet(wxCommandEvent &/* event */)
   }
 
   const auto historyItem = mHistoryCtrl->GetSelection();
-  const auto message = mHistoryModel->getMessage(historyItem);
+  const auto &message = mHistoryModel->getMessage(historyItem);
   const auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
 
   if (!inserted.IsOk())
@@ -1099,7 +1100,7 @@ void Client::onContextSelectedSnippetNewSnippet(wxCommandEvent &/* event */)
     item = mSnippetsModel->GetParent(item);
   }
 
-  const auto inserted = mSnippetsModel->createSnippet(item, nullptr);
+  const auto inserted = mSnippetsModel->createSnippet(item, {});
   if (!inserted.IsOk())
   {
     return;
@@ -1322,8 +1323,8 @@ void Client::onPublishSaveSnippet(Events::Edit &/* event */)
     mPanes.at(Panes::Publish).panel
   );
 
-  auto message = std::make_shared<MQTT::Message>(publish->getMessage());
-  wxLogInfo("Storing %s", message->topic);
+  const auto &message = publish->getMessage();
+  wxLogInfo("Storing %s", message.topic);
   auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
   if (inserted.IsOk())
   {
@@ -1381,8 +1382,8 @@ void Client::onPreviewSaveSnippet(Events::Edit &/* event */)
     mPanes.at(Panes::Preview).panel
   );
 
-  auto message = std::make_shared<MQTT::Message>(preview->getMessage());
-  wxLogInfo("Storing %s", message->topic);
+  const auto &message = preview->getMessage();
+  wxLogInfo("Storing %s", message.topic);
   auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
   if (inserted.IsOk())
   {

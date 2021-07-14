@@ -9,8 +9,11 @@
 
 #include "Client.hpp"
 
+
 namespace MQTT
 {
+
+struct Message;
 
 class Subscription :
   public std::enable_shared_from_this<Subscription>
@@ -37,7 +40,7 @@ public:
     virtual ~Observer() = default;
     virtual void onSubscribed() = 0;
     virtual void onUnsubscribed() = 0;
-    virtual void onMessage(mqtt::const_message_ptr msg) = 0;
+    virtual void onMessage(const Message &message) = 0;
   };
 
   explicit Subscription(
