@@ -1208,10 +1208,7 @@ void Client::onMessage(wxDataViewItem item)
   mHistoryCtrl->EnsureVisible(item);
 
   auto *preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
-  preview->setPayload(mHistoryModel->getPayload(item));
-  preview->setTopic(mHistoryModel->getTopic(item));
-  preview->setQos(mHistoryModel->getQos(item));
-  preview->setRetained(mHistoryModel->getRetained(item));
+  preview->setMessage(mHistoryModel->getMessage(item));
 }
 
 // Models::History::Observer }
@@ -1351,11 +1348,7 @@ void Client::onHistorySelected(wxDataViewEvent &event)
   auto item = event.GetItem();
 
   auto *preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
-
-  preview->setPayload(mHistoryModel->getPayload(item));
-  preview->setTopic(mHistoryModel->getTopic(item));
-  preview->setQos(mHistoryModel->getQos(item));
-  preview->setRetained(mHistoryModel->getRetained(item));
+  preview->setMessage(mHistoryModel->getMessage(item));
 }
 
 void Client::onHistoryClearClicked(wxCommandEvent &/* event */)

@@ -1,6 +1,8 @@
 #ifndef TRANSMITRON_WIDGETS_EDIT_HPP
 #define TRANSMITRON_WIDGETS_EDIT_HPP
 
+#include <chrono>
+#include <wx/stattext.h>
 #include <wx/stc/stc.h>
 #include <wx/wx.h>
 
@@ -41,6 +43,7 @@ public:
   void setRetained(bool retained);
   void setTopic(const std::string &topic);
   void setQos(MQTT::QoS qos);
+  void setTimestamp(const std::chrono::system_clock::time_point &timestamp);
 
 private:
 
@@ -121,6 +124,8 @@ private:
   wxBitmapButton *mPublish = nullptr;
 
   wxStyledTextCtrl *mText = nullptr;
+
+  wxStaticText *mTimestamp = nullptr;
 
   wxButton *mSaveSnippet = nullptr;
   wxComboBox *mFormatSelect = nullptr;

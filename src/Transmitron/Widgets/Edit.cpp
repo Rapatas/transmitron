@@ -1,4 +1,7 @@
+#include <chrono>
+#include <iomanip>
 #include <nlohmann/json.hpp>
+#include <sstream>
 #include <tinyxml2.h>
 #include <wx/clipbrd.h>
 #include <wx/artprov.h>
@@ -36,6 +39,10 @@ Edit::Edit(
   mFont = wxFont(wxFontInfo(FontSize).FaceName("Consolas"));
 
   setupScintilla();
+
+  mTimestamp = new wxStaticText(this, -1, "This is time");
+  mTimestamp->SetFont(mFont);
+  mTimestamp->Hide();
 
   mTopic = new TopicCtrl(this, -1);
   mTopic->Bind(wxEVT_KEY_UP, &Edit::onTopicKeyDown, this);
@@ -127,6 +134,7 @@ Edit::Edit(
   mBottom->AddStretchSpacer(1);
   mBottom->Add(mFormatSelect, 0, wxEXPAND);
   mVsizer->Add(mTop, 0, wxEXPAND);
+  mVsizer->Add(mTimestamp, 0, wxEXPAND);
   mVsizer->Add(mText, 1, wxEXPAND);
   mVsizer->Add(mBottom, 0, wxEXPAND);
 
@@ -236,6 +244,7 @@ void Edit::setMessage(const MQTT::Message &message)
   setPayload(message.payload);
   setQos(message.qos);
   setRetained(message.retained);
+  setTimestamp(message.timestamp);
 }
 
 void Edit::setPayload(const std::string &text)
@@ -258,12 +267,34 @@ void Edit::setPayload(const std::string &text)
   }
 }
 
+void Edit::setTimestamp(const std::chrono::system_clock::time_point &timestamp)
+{
+  const std::time_t timestampC = std::chrono::system_clock::to_time_t(timestamp);
+  const std::tm timestampTm = *std::localtime(&timestampC);
+  const std::string format = "%Y-%m-%d %H:%M:%S";
+  std::stringstream ss;
+  ss << std::put_time(&timestampTm, format.c_str());
+
+  const auto seconds = std::chrono::time_point_cast<std::chrono::seconds>(timestamp);
+  const auto fraction = timestamp - seconds;
+  const auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(fraction).count();
+  ss << "." << millis;
+
+  wxLogInfo("Setting timestamp to: %s", ss.str());
+  mTimestamp->SetLabel(ss.str());
+}
+
 void Edit::setReadOnly(bool readonly)
 {
   mReadOnly = readonly;
 
   mText->SetReadOnly(readonly);
   mTopic->setReadOnly(readonly);
+  if (readonly)
+  {
+    mTimestamp->Show(readonly);
+    mVsizer->Layout();
+  }
 
   mPublish->Show(!readonly);
   mTop->Layout();
