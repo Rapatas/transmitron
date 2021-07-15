@@ -41,7 +41,7 @@ Edit::Edit(
   setupScintilla();
 
   const int timestampBorderPx = 5;
-  mTimestamp = new wxStaticText(this, -1, "This is time");
+  mTimestamp = new wxStaticText(this, -1, "0000-00-00 00:00:00.000");
   mTimestamp->SetFont(mFont);
   mTimestamp->Hide();
 
