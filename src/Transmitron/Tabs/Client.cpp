@@ -243,6 +243,11 @@ void Client::setupPanelHistory(wxWindow *parent)
     this
   );
   mHistoryCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_ACTIVATED,
+    &Client::onHistoryDoubleClicked,
+    this
+  );
+  mHistoryCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
     &Client::onHistoryContext,
     this
@@ -1345,7 +1350,7 @@ void Client::onPublishSaveSnippet(Events::Edit &/* event */)
 void Client::onHistorySelected(wxDataViewEvent &event)
 {
   if (!event.GetItem().IsOk()) { return; }
-  auto item = event.GetItem();
+  const auto item = event.GetItem();
 
   auto *preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
   preview->setMessage(mHistoryModel->getMessage(item));
@@ -1354,6 +1359,15 @@ void Client::onHistorySelected(wxDataViewEvent &event)
 void Client::onHistoryClearClicked(wxCommandEvent &/* event */)
 {
   mHistoryModel->clear();
+}
+
+void Client::onHistoryDoubleClicked(wxDataViewEvent &event)
+{
+  if (!event.GetItem().IsOk()) { return; }
+  const auto item = event.GetItem();
+
+  auto *publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
+  publish->setMessage(mHistoryModel->getMessage(item));
 }
 
 // History }

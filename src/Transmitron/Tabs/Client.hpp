@@ -161,6 +161,7 @@ private:
   // History.
   void onHistoryClearClicked(wxCommandEvent &event);
   void onHistorySelected(wxDataViewEvent &event);
+  void onHistoryDoubleClicked(wxDataViewEvent &event);
 
   // Preview.
   void onPreviewSaveSnippet(Events::Edit &e);
