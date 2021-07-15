@@ -40,6 +40,7 @@ Edit::Edit(
 
   setupScintilla();
 
+  const int timestampBorderPx = 5;
   mTimestamp = new wxStaticText(this, -1, "This is time");
   mTimestamp->SetFont(mFont);
   mTimestamp->Hide();
@@ -134,7 +135,7 @@ Edit::Edit(
   mBottom->AddStretchSpacer(1);
   mBottom->Add(mFormatSelect, 0, wxEXPAND);
   mVsizer->Add(mTop, 0, wxEXPAND);
-  mVsizer->Add(mTimestamp, 0, wxEXPAND);
+  mVsizer->Add(mTimestamp, 0, (int)wxEXPAND | (int)wxLEFT, timestampBorderPx);
   mVsizer->Add(mText, 1, wxEXPAND);
   mVsizer->Add(mBottom, 0, wxEXPAND);
 
