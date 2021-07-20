@@ -1,6 +1,6 @@
 from conans import ConanFile
 
-class SaladConan(ConanFile):
+class TransmitronConan(ConanFile):
     generators = [
         "cmake_find_package",
         "cmake_paths"
@@ -14,5 +14,5 @@ class SaladConan(ConanFile):
         "fmt/7.1.3"
     ]
     default_options = {
-        "wxwidgets:webview": False
+        "wxwidgets:webview": False,
     }
