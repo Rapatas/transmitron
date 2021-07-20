@@ -22,13 +22,15 @@ public:
     Copy
   };
 
-  struct NotAllowedDropTarget :
-    public wxDropTarget
-  {};
-
   void setReadOnly(bool readonly);
 
 private:
+
+  struct NotAllowedDropTarget :
+    public wxDropTarget
+  {
+    wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult defResult) override;
+  };
 
   const wxFont mFont;
   bool mFakeSelection = false;

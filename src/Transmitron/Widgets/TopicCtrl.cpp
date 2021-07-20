@@ -155,3 +155,11 @@ void TopicCtrl::onKeyDown(wxKeyEvent &e)
     e.Skip(false);
   }
 }
+
+wxDragResult TopicCtrl::NotAllowedDropTarget::OnData(
+  wxCoord /* x */,
+  wxCoord /* y */,
+  wxDragResult /* defResult */
+) {
+  return wxDragResult::wxDragNone;
+}
