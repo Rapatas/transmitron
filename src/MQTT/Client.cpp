@@ -307,7 +307,7 @@ void Client::onFailureConnect(const mqtt::token& tok)
 {
   wxLogWarning(
     "Connection attempt failed: %s",
-    mReturnCodes.at(tok.get_return_code()).c_str()
+    mReturnCodes.at(tok.get_return_code())
   );
   reconnect();
 }
@@ -316,7 +316,7 @@ void Client::onFailureDisconnect(const mqtt::token& tok)
 {
   wxLogWarning(
     "Disconnection attempt failed: %s",
-    mReturnCodes.at(tok.get_return_code()).c_str()
+    mReturnCodes.at(tok.get_return_code())
   );
 }
 
@@ -324,7 +324,7 @@ void Client::onFailurePublish(const mqtt::token& tok)
 {
   wxLogWarning(
     "Publishing attempt failed: %s",
-    mReturnCodes.at(tok.get_return_code()).c_str()
+    mReturnCodes.at(tok.get_return_code())
   );
 }
 
@@ -332,7 +332,7 @@ void Client::onFailureSubscribe(const mqtt::token& tok)
 {
   wxLogWarning(
     "Subscription attempt failed: %s",
-    mReturnCodes.at(tok.get_return_code()).c_str()
+    mReturnCodes.at(tok.get_return_code())
   );
 }
 
@@ -340,7 +340,7 @@ void Client::onFailureUnsubscribe(const mqtt::token& tok)
 {
   wxLogWarning(
     "Unsubscription attempt failed: %s",
-    mReturnCodes.at(tok.get_return_code()).c_str()
+    mReturnCodes.at(tok.get_return_code())
   );
 }
 

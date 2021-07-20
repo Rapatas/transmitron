@@ -341,7 +341,7 @@ bool Layouts::SetValue(
   {
     wxLogError(
       "Could not rename '%s' to '%s': %s",
-      node->path.c_str(),
+      node->path.string(),
       newPath,
       ec.message()
     );
@@ -431,7 +431,7 @@ bool Layouts::save(size_t id)
   {
     wxLogError(
       "Could not save '%s':",
-      layout->path.c_str(),
+      layout->path.string(),
       std::strerror(errno)
     );
     return false;

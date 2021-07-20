@@ -363,7 +363,7 @@ bool Profiles::save(size_t id)
 
   const auto brokerOptionsFilepath = fmt::format(
     "{}/{}",
-    profile->path.c_str(),
+    profile->path.string(),
     BrokerOptionsFilename
   );
 
@@ -405,7 +405,7 @@ wxDataViewItem Profiles::loadProfileFile(const std::filesystem::path &filepath)
 
   const auto brokerOptionsFilepath = fmt::format(
     "{}/{}",
-    filepath.c_str(),
+    filepath.string(),
     BrokerOptionsFilename
   );
 
@@ -428,7 +428,7 @@ wxDataViewItem Profiles::loadProfileFile(const std::filesystem::path &filepath)
   auto brokerOptions = MQTT::BrokerOptions::fromJson(j);
 
   wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
-  snippetsModel->load(filepath);
+  snippetsModel->load(filepath.string());
 
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>(Node{

@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <ios>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <string_view>
@@ -247,7 +248,7 @@ wxDataViewItem Snippets::insert(
   const auto parentPath = getNodePath(parentId);
   const std::string path = fmt::format(
     "{}/{}",
-    parentPath.c_str(),
+    parentPath,
     encoded
   );
 
@@ -288,7 +289,7 @@ wxDataViewItem Snippets::replace(
   std::ofstream output(path);
   if (!output.is_open())
   {
-    wxLogWarning("Could not open '%s'", path.c_str());
+    wxLogWarning("Could not open '%s'", path);
     return wxDataViewItem(nullptr);
   }
 
@@ -397,14 +398,14 @@ void Snippets::loadDirectoryRecursive(
   const bool isRoot = parentId == std::numeric_limits<Node::Id_t>::max();
 
   const auto currentId = isRoot ? 0   : getNextId();
-  const auto name      = isRoot ? "_" : decode(path.stem());
+  const auto name      = isRoot ? "_" : decode(path.stem().string());
 
   if (!isRoot)
   {
     Node newNode {
       parentId,
       name,
-      path.filename(),
+      path.filename().string(),
       Node::Type::Folder,
       {},
       {},
@@ -434,14 +435,18 @@ void Snippets::loadDirectoryRecursive(
     return;
   }
 
-  const auto indexPath = path.native() + "/index.json";
+  const std::string indexPath = fmt::format(
+    "{}/{}",
+    path.string(),
+    "/index.json"
+  );
   if (!fs::exists(indexPath))
   {
     wxLogError("Could not sort '%s': No index.json found", name);
     return;
   }
 
-  std::ifstream indexFile(indexPath);
+  std::ifstream indexFile(indexPath, std::ios::in);
   if (!indexFile.is_open())
   {
     wxLogError("Could not sort '%s': Failed to open index.json", name);
@@ -490,7 +495,7 @@ void Snippets::loadSnippet(
   std::ifstream snippetFile(path);
   if (!snippetFile.is_open())
   {
-    wxLogWarning("Could not load '%s': failed to open", path.c_str());
+    wxLogWarning("Could not load '%s': failed to open", path.string());
     return;
   }
 
@@ -504,7 +509,7 @@ void Snippets::loadSnippet(
   {
     if (!nlohmann::json::accept(sbuffer))
     {
-      wxLogWarning("Could not load '%s': malformed json", path.c_str());
+      wxLogWarning("Could not load '%s': malformed json", path.string());
       return;
     }
 
@@ -515,7 +520,7 @@ void Snippets::loadSnippet(
   Node newNode {
     parentId,
     name,
-    path.filename(),
+    path.filename().string(),
     Node::Type::Snippet,
     {},
     message,
@@ -802,7 +807,7 @@ bool Snippets::saveFolder(Node::Id_t id)
 
   if (exists && !isDir && !fs::remove(nodePath))
   {
-    wxLogWarning("Could not remove file %s", nodePath.c_str());
+    wxLogWarning("Could not remove file %s", nodePath);
     return false;
   }
 
@@ -810,7 +815,7 @@ bool Snippets::saveFolder(Node::Id_t id)
   {
     wxLogWarning(
       "Could not create directory: %s",
-      nodePath.c_str()
+      nodePath
     );
     return false;
   }

@@ -232,7 +232,7 @@ std::string App::getConfigDir()
   {
     if (!fs::create_directory(result))
     {
-      wxLogWarning("Could not create directory '%s'", result.c_str());
+      wxLogWarning("Could not create directory '%s'", result);
       result = {};
     }
   }

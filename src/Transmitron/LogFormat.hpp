@@ -22,7 +22,7 @@ class LogFormat :
       color,
       (unsigned)info.threadId,
       info.component,
-      msg.c_str().operator const char *()
+      msg
     );
   }
 };
