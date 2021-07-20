@@ -31,7 +31,7 @@ constexpr size_t FontSize = 9;
 wxDEFINE_EVENT(Events::CONNECTED, Events::Connection); // NOLINT
 wxDEFINE_EVENT(Events::DISCONNECTED, Events::Connection); // NOLINT
 wxDEFINE_EVENT(Events::LOST, Events::Connection); // NOLINT
-wxDEFINE_EVENT(Events::FAILED, Events::Connection); // NOLINT
+wxDEFINE_EVENT(Events::FAILURE, Events::Connection); // NOLINT
 
 Client::Client(
   wxWindow* parent,
@@ -50,7 +50,7 @@ Client::Client(
   Bind(Events::CONNECTED, &Client::onConnectedSync, this);
   Bind(Events::DISCONNECTED, &Client::onDisconnectedSync, this);
   Bind(Events::LOST, &Client::onConnectionLostSync, this);
-  Bind(Events::FAILED, &Client::onConnectionFailureSync, this);
+  Bind(Events::FAILURE, &Client::onConnectionFailureSync, this);
   mMqttObserverId = mClient->attachObserver(this);
   Bind(wxEVT_CLOSE_WINDOW, &Client::onClose, this);
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Client::onContextSelected, this);
@@ -1170,7 +1170,7 @@ void Client::onConnectionLost()
 
 void Client::onConnectionFailure()
 {
-  auto *e = new Events::Connection(Events::FAILED);
+  auto *e = new Events::Connection(Events::FAILURE);
   wxQueueEvent(this, e);
 }
 
