@@ -17,7 +17,6 @@
 
 #define wxLOG_COMPONENT "Widgets/Edit" // NOLINT
 
-using namespace tinyxml2;
 using namespace nlohmann;
 using namespace Transmitron;
 using namespace Transmitron::Widgets;
@@ -377,11 +376,11 @@ std::string Edit::formatTry(
 
   if (format == Format::Xml)
   {
-    XMLDocument doc;
+    tinyxml2::XMLDocument doc;
     auto res = doc.Parse(text.c_str());
-    if (res == XMLError::XML_SUCCESS)
+    if (res == tinyxml2::XMLError::XML_SUCCESS)
     {
-      XMLPrinter p;
+      tinyxml2::XMLPrinter p;
       doc.Print(&p);
       return p.CStr();
     }
