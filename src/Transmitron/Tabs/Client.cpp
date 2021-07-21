@@ -1359,6 +1359,11 @@ void Client::onHistorySelected(wxDataViewEvent &event)
 void Client::onHistoryClearClicked(wxCommandEvent &/* event */)
 {
   mHistoryModel->clear();
+
+  auto *preview = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Preview).panel
+  );
+  preview->clear();
 }
 
 void Client::onHistoryDoubleClicked(wxDataViewEvent &event)
