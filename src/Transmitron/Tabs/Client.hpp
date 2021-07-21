@@ -55,6 +55,8 @@ private:
     HistoryResend,
     HistoryEdit,
     HistorySaveSnippet,
+    HistoryCopyTopic,
+    HistoryCopyPayload,
     SnippetRename,
     SnippetDelete,
     SnippetNewSnippet,
@@ -143,6 +145,8 @@ private:
   void onContextSelectedHistoryResend(wxCommandEvent &event);
   void onContextSelectedHistoryRetainedClear(wxCommandEvent &event);
   void onContextSelectedHistorySaveSnippet(wxCommandEvent &event);
+  void onContextSelectedHistoryCopyTopic(wxCommandEvent &event);
+  void onContextSelectedHistoryCopyPayload(wxCommandEvent &event);
   void onContextSelectedSnippetDelete(wxCommandEvent &event);
   void onContextSelectedSnippetNewFolder(wxCommandEvent &event);
   void onContextSelectedSnippetNewSnippet(wxCommandEvent &event);

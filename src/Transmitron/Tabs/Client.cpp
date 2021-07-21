@@ -4,6 +4,7 @@
 #include <wx/artprov.h>
 #include <nlohmann/json.hpp>
 #include <wx/log.h>
+#include <wx/clipbrd.h>
 
 #include "Helpers/Helpers.hpp"
 #include "MQTT/Message.hpp"
@@ -776,6 +777,22 @@ void Client::onHistoryContext(wxDataViewEvent& e)
 
   wxMenu menu;
 
+  auto *copyTopic = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::HistoryCopyTopic,
+    "Copy Topic"
+  );
+  copyTopic->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY));
+  menu.Append(copyTopic);
+
+  auto *copyPayload = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::HistoryCopyPayload,
+    "Copy Payload"
+  );
+  copyPayload->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY));
+  menu.Append(copyPayload);
+
   auto *edit = new wxMenuItem(
     nullptr,
     (unsigned)ContextIDs::HistoryEdit,
@@ -906,6 +923,12 @@ void Client::onContextSelected(wxCommandEvent& event)
     } break;
     case ContextIDs::HistorySaveSnippet: {
       onContextSelectedHistorySaveSnippet(event);
+    } break;
+    case ContextIDs::HistoryCopyTopic: {
+      onContextSelectedHistoryCopyTopic(event);
+    } break;
+    case ContextIDs::HistoryCopyPayload: {
+      onContextSelectedHistoryCopyPayload(event);
     } break;
     case ContextIDs::SnippetNewFolder: {
       onContextSelectedSnippetNewFolder(event);
@@ -1051,6 +1074,32 @@ void Client::onContextSelectedHistorySaveSnippet(wxCommandEvent &/* event */)
   auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
   mSnippetExplicitEditRequest = true;
   mSnippetsCtrl->EditItem(inserted, nameColumn);
+}
+
+void Client::onContextSelectedHistoryCopyTopic(wxCommandEvent &/* event */)
+{
+  const auto historyItem = mHistoryCtrl->GetSelection();
+  const auto &message = mHistoryModel->getMessage(historyItem);
+
+  if (wxTheClipboard->Open())
+  {
+    auto *dataObject = new wxTextDataObject(message.topic);
+    wxTheClipboard->SetData(dataObject);
+    wxTheClipboard->Close();
+  }
+}
+
+void Client::onContextSelectedHistoryCopyPayload(wxCommandEvent &/* event */)
+{
+  const auto historyItem = mHistoryCtrl->GetSelection();
+  const auto &message = mHistoryModel->getMessage(historyItem);
+
+  if (wxTheClipboard->Open())
+  {
+    auto *dataObject = new wxTextDataObject(message.payload);
+    wxTheClipboard->SetData(dataObject);
+    wxTheClipboard->Close();
+  }
 }
 
 void Client::onContextSelectedSnippetRename(wxCommandEvent &/* event */)
