@@ -849,6 +849,14 @@ void Client::onSnippetsContext(wxDataViewEvent& e)
       menu.Append(publish);
     }
 
+    auto *overwrite = new wxMenuItem(
+      nullptr,
+      (unsigned)ContextIDs::SnippetOverwrite,
+      "Overwrite"
+    );
+    overwrite->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE_AS));
+    menu.Append(overwrite);
+
     auto *rename = new wxMenuItem(
       nullptr,
       (unsigned)ContextIDs::SnippetRename,
@@ -944,6 +952,9 @@ void Client::onContextSelected(wxCommandEvent& event)
     } break;
     case ContextIDs::SnippetPublish: {
       onContextSelectedSnippetPublish(event);
+    } break;
+    case ContextIDs::SnippetOverwrite: {
+      onContextSelectedSnippetOverwrite(event);
     } break;
   }
   event.Skip();
@@ -1129,6 +1140,19 @@ void Client::onContextSelectedSnippetPublish(wxCommandEvent &/* event */)
     message.qos,
     message.retained
   );
+}
+
+void Client::onContextSelectedSnippetOverwrite(wxCommandEvent &/* event */)
+{
+  const auto item = mSnippetsCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+
+  auto *publish = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Publish).panel
+  );
+  const auto message = publish->getMessage();
+
+  mSnippetsModel->replace(item, message);
 }
 
 void Client::onContextSelectedSnippetDelete(wxCommandEvent &/* event */)
