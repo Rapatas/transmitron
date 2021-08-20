@@ -49,9 +49,11 @@ void History::clear()
 void History::onMessage(const MQTT::Message &message)
 {
   mMessages.push_back(message);
-  const bool muted = mSubscriptions->getMuted(message.subscriptionId);
+  const bool isMuted = mSubscriptions->getMuted(message.subscriptionId);
+  const bool isFiltered = mFilter.empty()
+    || message.topic.find(mFilter) != std::string::npos;
 
-  if (!muted)
+  if (!isMuted && isFiltered)
   {
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
@@ -126,7 +128,11 @@ void History::remap()
 
   for (size_t i = 0; i < mMessages.size(); ++i)
   {
-    if (!mSubscriptions->getMuted(mMessages[i].subscriptionId))
+    const bool isMuted = mSubscriptions->getMuted(mMessages[i].subscriptionId);
+    const bool isFiltered = mFilter.empty()
+      || mMessages[i].topic.find(mFilter) != std::string::npos;
+
+    if (!isMuted && isFiltered)
     {
       mRemap.push_back(i);
     }
@@ -195,6 +201,17 @@ bool History::getRetained(const wxDataViewItem &item) const
 const MQTT::Message &History::getMessage(const wxDataViewItem &item) const
 {
   return mMessages.at(mRemap.at(GetRow(item)));
+}
+
+void History::setFilter(const std::string &filter)
+{
+  mFilter = filter;
+  remap();
+}
+
+std::string History::getFilter() const
+{
+  return mFilter;
 }
 
 unsigned History::GetColumnCount() const

@@ -42,6 +42,8 @@ public:
   MQTT::QoS getQos(const wxDataViewItem &item) const;
   bool getRetained(const wxDataViewItem &item) const;
   const MQTT::Message &getMessage(const wxDataViewItem &item) const;
+  void setFilter(const std::string &filter);
+  std::string getFilter() const;
 
 private:
 
@@ -49,6 +51,7 @@ private:
   std::vector<size_t> mRemap;
   wxObjectDataPtr<Subscriptions> mSubscriptions;
   std::map<size_t, Observer *> mObservers;
+  std::string mFilter;
 
   void remap();
   void refresh(MQTT::Subscription::Id_t subscriptionId);

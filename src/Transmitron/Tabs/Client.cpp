@@ -222,18 +222,44 @@ void Client::setupPanelHistory(wxWindow *parent)
   mHistoryCtrl->AppendColumn(qos);
   mHistoryCtrl->AppendColumn(topic);
 
+  mHistorySearchFilter = new Widgets::TopicCtrl(panel, -1);
+  mHistorySearchFilter->SetHint("Filter...");
+  mHistorySearchFilter->Bind(
+    wxEVT_KEY_DOWN,
+    &Client::onHistorySearchKey,
+    this
+  );
+
+  mHistorySearchButton = new wxButton(
+    panel,
+    -1,
+    "",
+    wxDefaultPosition,
+    wxSize(OptionsHeight, OptionsHeight)
+  );
+  mHistorySearchButton->SetBitmap(wxArtProvider::GetBitmap(wxART_FIND));
+  mHistorySearchButton->Bind(
+    wxEVT_BUTTON,
+    &Client::onHistorySearchButton,
+    this
+  );
+
   mAutoScroll = new wxCheckBox(panel, -1, "auto-scroll");
   mAutoScroll->SetValue(true);
 
   mHistoryClear = new wxButton(panel, -1, "Clear");
   mHistoryClear->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
 
+  auto *topSizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
+  topSizer->Add(mHistorySearchFilter, 1, wxEXPAND);
+  topSizer->Add(mHistorySearchButton, 0, wxEXPAND);
   auto *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   hsizer->SetMinSize(0, OptionsHeight);
   hsizer->Add(mAutoScroll, 0, wxEXPAND);
   hsizer->AddStretchSpacer(1);
   hsizer->Add(mHistoryClear, 0, wxEXPAND);
   auto *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
+  vsizer->Add(topSizer, 0, wxEXPAND);
   vsizer->Add(mHistoryCtrl, 1, wxEXPAND);
   vsizer->Add(hsizer, 0, wxEXPAND);
   panel->SetSizer(vsizer);
@@ -1446,6 +1472,37 @@ void Client::onHistoryDoubleClicked(wxDataViewEvent &event)
 
   auto *publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
   publish->setMessage(mHistoryModel->getMessage(item));
+}
+
+void Client::onHistorySearchKey(wxKeyEvent &event)
+{
+  const auto filter = mHistorySearchFilter->GetValue().ToStdString();
+  long from = 0;
+  long to = 0;
+  mHistorySearchFilter->GetSelection(&from, &to);
+
+  const auto isBackspace = event.GetKeyCode() == WXK_BACK;
+  const auto isEnter     = event.GetKeyCode() == WXK_RETURN;
+
+  const auto isAllSelected = (from == 0 && to == (long)filter.size());
+  const auto willBeEmpty   = filter.empty() || filter.size() == 1 || isAllSelected;
+
+  if (isBackspace && willBeEmpty)
+  {
+    mHistoryModel->setFilter({});
+  }
+  else if (isEnter)
+  {
+    mHistoryModel->setFilter(filter);
+  }
+
+  event.Skip();
+}
+
+void Client::onHistorySearchButton(wxCommandEvent &/* event */)
+{
+  const auto filter = mHistorySearchFilter->GetValue().ToStdString();
+  mHistoryModel->setFilter(filter);
 }
 
 // History }

@@ -1,6 +1,7 @@
 #ifndef TRANSMITRON_TABS_CLIENT_HPP
 #define TRANSMITRON_TABS_CLIENT_HPP
 
+#include <wx/event.h>
 #include <wx/listctrl.h>
 #include <wx/splitter.h>
 #include <wx/aui/aui.h>
@@ -112,6 +113,8 @@ private:
   wxDataViewCtrl *mHistoryCtrl = nullptr;
   wxCheckBox *mAutoScroll = nullptr;
   wxButton *mHistoryClear = nullptr;
+  Widgets::TopicCtrl *mHistorySearchFilter = nullptr;
+  wxButton *mHistorySearchButton = nullptr;
 
   // Subscriptions:
   wxBitmapButton *mSubscribe = nullptr;
@@ -168,6 +171,8 @@ private:
   void onHistoryClearClicked(wxCommandEvent &event);
   void onHistorySelected(wxDataViewEvent &event);
   void onHistoryDoubleClicked(wxDataViewEvent &event);
+  void onHistorySearchKey(wxKeyEvent &event);
+  void onHistorySearchButton(wxCommandEvent &event);
 
   // Preview.
   void onPreviewSaveSnippet(Events::Edit &e);
