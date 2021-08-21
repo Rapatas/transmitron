@@ -78,6 +78,24 @@ steps:
       - name: cache_volume
         path: /cache_dir
 
+  - name: Release
+    image: plugins/github-release
+    settings:
+      api_key:
+        from_secret: drone.io-release
+      files:
+        - build-release-*-*/transmitron_*_*_*
+    checksum:
+      - md5
+      - sha1
+      - sha256
+      - sha512
+      - adler32
+      - crc32
+    note: CHANGELOG.md
+    when:
+      event: tag
+
 volumes:
   - name: cache_volume
     host:
