@@ -1,5 +1,5 @@
 kind: pipeline
-name: Linux AMD64
+name: all-in-one
 platform:
   os: linux
   arch: amd64
@@ -10,7 +10,7 @@ steps:
     image: meltwater/drone-cache
     settings:
       backend: "filesystem"
-      cache_key: '{{ .Repo.Name }}_{{ checksum "conan/conanfile.py" }}_linux_{{ arch }}'
+      cache_key: '{{ .Repo.Name }}_{{ checksum "conan/conanfile.py" }}_{{ arch }}'
       restore: true
       archive_format: "gzip"
       filesystem_cache_root: /cache_dir
@@ -20,12 +20,14 @@ steps:
       - name: cache_volume
         path: /cache_dir
 
-  - name: Build
+  - name: Build Linux
     image: transmitron_linux_amd64
     pull: if-not-exists
     user: 0
     environment:
-      CONAN_USER_HOME: /drone/src/conan_data/linux/amd64
+      CONAN_USER_HOME: /drone/src/conan_data/amd64
+    depends_on:
+      - Restore Cache
     commands:
       - conan profile new --force default --detect
       - conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -38,56 +40,14 @@ steps:
       - echo "Building with $(nproc) threads."
       - make -j $(nproc)
 
-  - name: Rebuild Cache
-    image: meltwater/drone-cache
-    settings:
-      backend: "filesystem"
-      rebuild: true
-      archive_format: "gzip"
-      cache_key: '{{ .Repo.Name }}_{{ checksum "conan/conanfile.py" }}_linux_{{ arch }}'
-      backend_operation_timeout: "5m0s"
-      filesystem_cache_root: /cache_dir/
-      mount:
-        - conan_data
-    volumes:
-      - name: cache_volume
-        path: /cache_dir
-
-volumes:
-  - name: cache_volume
-    host:
-      path: /tmp/drone/cache
-
----
-
-kind: pipeline
-name: Windows AMD64
-platform:
-  os: linux
-  arch: amd64
-
-steps:
-
-  - name: Restore Cache
-    image: meltwater/drone-cache
-    settings:
-      backend: "filesystem"
-      cache_key: '{{ .Repo.Name }}_{{ checksum "conan/conanfile.py" }}_windows_{{ arch }}'
-      restore: true
-      archive_format: "gzip"
-      filesystem_cache_root: /cache_dir
-      mount:
-        - conan_data
-    volumes:
-      - name: cache_volume
-        path: /cache_dir
-
-  - name: Build
+  - name: Build Windows
     image: transmitron_windows_amd64
     pull: if-not-exists
     user: 0
     environment:
-      CONAN_USER_HOME: /drone/src/conan_data/windows/amd64
+      CONAN_USER_HOME: /drone/src/conan_data/amd64
+    depends_on:
+      - Restore Cache
     commands:
       - conan profile new --force default --detect
       - cp /workspace/windows $CONAN_USER_HOME/.conan/profiles/windows
@@ -102,11 +62,14 @@ steps:
 
   - name: Rebuild Cache
     image: meltwater/drone-cache
+    depends_on:
+      - Build Windows
+      - Build Linux
     settings:
       backend: "filesystem"
       rebuild: true
       archive_format: "gzip"
-      cache_key: '{{ .Repo.Name }}_{{ checksum "conan/conanfile.py" }}_windows_{{ arch }}'
+      cache_key: '{{ .Repo.Name }}_{{ checksum "conan/conanfile.py" }}_{{ arch }}'
       backend_operation_timeout: "5m0s"
       filesystem_cache_root: /cache_dir/
       mount:
