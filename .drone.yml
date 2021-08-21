@@ -70,7 +70,7 @@ steps:
       rebuild: true
       archive_format: "gzip"
       cache_key: '{{ .Repo.Name }}_{{ checksum "conan/conanfile.py" }}_{{ arch }}'
-      backend_operation_timeout: "5m0s"
+      backend_operation_timeout: "15m0s"
       filesystem_cache_root: /cache_dir/
       mount:
         - conan_data
