@@ -4,7 +4,16 @@ platform:
   os: linux
   arch: amd64
 
+clone:
+  disable: true
+
 steps:
+
+  - name: Clone
+    image: alpine/git
+    commands:
+      - git clone https://github.com/rapatas/transmitron.git .
+      - git checkout ${DRONE_COMMIT}
 
   - name: Restore Cache
     image: meltwater/drone-cache
@@ -26,8 +35,6 @@ steps:
     user: 0
     environment:
       CONAN_USER_HOME: /drone/src/conan_data/amd64
-    depends_on:
-      - Restore Cache
     commands:
       - conan profile new --force default --detect
       - conan profile update settings.compiler.libcxx=libstdc++11 default
@@ -46,8 +53,6 @@ steps:
     user: 0
     environment:
       CONAN_USER_HOME: /drone/src/conan_data/amd64
-    depends_on:
-      - Restore Cache
     commands:
       - conan profile new --force default --detect
       - cp /workspace/windows $CONAN_USER_HOME/.conan/profiles/windows
@@ -62,9 +67,6 @@ steps:
 
   - name: Rebuild Cache
     image: meltwater/drone-cache
-    depends_on:
-      - Build Windows
-      - Build Linux
     settings:
       backend: "filesystem"
       rebuild: true
@@ -77,6 +79,15 @@ steps:
     volumes:
       - name: cache_volume
         path: /cache_dir
+
+  - name: Release Notes
+    image: transmitron_linux_amd64
+    pull: if-not-exists
+    commands:
+      - echo "$(awk -v section=[${DRONE_TAG}] '$2==section{ f=1; next }; /^## /{ f=0; next }; f==1{ print $0 };' ./CHANGELOG.md)" > release_notes_${DRONE_TAG}.md
+      - cat release_notes_${DRONE_TAG}.md
+    when:
+      event: tag
 
   - name: Release
     image: plugins/github-release
@@ -92,11 +103,12 @@ steps:
       - sha512
       - adler32
       - crc32
-    note: CHANGELOG.md
+    title: ${DRONE_TAG}
+    note: release_notes_${DRONE_TAG}.md
     when:
       event: tag
 
 volumes:
   - name: cache_volume
     host:
-      path: /tmp/drone/cache
+      path: /opt/drone/cache
