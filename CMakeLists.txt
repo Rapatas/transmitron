@@ -2,15 +2,18 @@ cmake_minimum_required(VERSION 3.5)
 
 project(
   transmitron
-  VERSION 0.0.0
 )
 
-set(INFO_PRE_CONF ./src/Transmitron/Info.in.cpp)
-set(INFO_POST_CONF ${CMAKE_CURRENT_BINARY_DIR}/Transmitron/Info.cpp)
+set(INFO_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/src/Transmitron/Info.in.cpp")
+set(INFO_POST_CONF "${CMAKE_CURRENT_BINARY_DIR}/Transmitron/Info.cpp")
+
+set(VERSION_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/src/Transmitron/Version.in.cpp")
+set(VERSION_POST_CONF "${CMAKE_CURRENT_BINARY_DIR}/Transmitron/Version.cpp")
 
 add_executable(
   ${PROJECT_NAME}
   ${INFO_POST_CONF}
+  ${VERSION_POST_CONF}
   src/Helpers/Helpers.cpp
   src/MQTT/BrokerOptions.cpp
   src/MQTT/Client.cpp
@@ -49,15 +52,40 @@ add_executable(
   src/main.cpp
 )
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/git-monitor/configure.cmake)
+SetupGitMonitor(
+    ${PROJECT_NAME}
+    ${VERSION_PRE_CONF}
+    ${VERSION_POST_CONF}
+)
+GetGitDescribe(PROJECT_VERSION)
+
+string(CONCAT PROJECT_OUTPUT_NAME
+    ${PROJECT_NAME}
+    "_"
+    ${PROJECT_VERSION}
+    "_"
+    ${CMAKE_SYSTEM_NAME}
+    "_"
+    ${CMAKE_SYSTEM_PROCESSOR}
+)
+
 configure_file(
   ${INFO_PRE_CONF}
   ${INFO_POST_CONF}
+  @ONLY
 )
 
 target_compile_features(
   ${PROJECT_NAME}
   PRIVATE
     cxx_std_17
+)
+
+set_target_properties(
+    ${PROJECT_NAME}
+    PROPERTIES
+    OUTPUT_NAME ${PROJECT_OUTPUT_NAME}
 )
 
 target_include_directories(

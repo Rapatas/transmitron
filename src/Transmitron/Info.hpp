@@ -3,6 +3,5 @@
 
 const char *getProjectName();
 const char *getProjectDescription();
-const char *getProjectVersion();
 
 #endif // TRANSMITRON_INFO_H
