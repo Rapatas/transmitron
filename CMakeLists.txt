@@ -15,6 +15,7 @@ add_executable(
   ${INFO_POST_CONF}
   ${VERSION_POST_CONF}
   src/Helpers/Helpers.cpp
+  src/Helpers/Url.cpp
   src/MQTT/BrokerOptions.cpp
   src/MQTT/Client.cpp
   src/MQTT/Message.cpp
