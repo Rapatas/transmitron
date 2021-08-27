@@ -78,7 +78,7 @@ private:
   void setupProfileForm();
   void fillPropertyGrid(
     const MQTT::BrokerOptions &brokerOptions,
-    const std::string &name
+    const wxString &name
   );
   MQTT::BrokerOptions optionsFromPropertyGrid() const;
 };

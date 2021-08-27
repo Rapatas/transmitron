@@ -4,16 +4,18 @@
 #include <algorithm>
 #include <iterator>
 #include <optional>
+#include <stdexcept>
 #include <system_error>
 #include <wx/log.h>
 #include <nlohmann/json.hpp>
 #include <fmt/format.h>
-#include <cppcodec/base32_rfc4648.hpp>
+#include "Helpers/Url.hpp"
 
 #define wxLOG_COMPONENT "models/layouts" // NOLINT
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
+using namespace Helpers;
 
 Layouts::Layouts()
 {
@@ -100,14 +102,7 @@ bool Layouts::remove(wxDataViewItem item)
 wxDataViewItem Layouts::create(const Perspective_t &perspective)
 {
   const std::string name = getUniqueName();
-
-  std::string encoded;
-  try { encoded = cppcodec::base32_rfc4648::encode(name); }
-  catch (cppcodec::parse_error &e)
-  {
-    wxLogError("Could not encode '%s': %s", name, e.what());
-    return wxDataViewItem(0);
-  }
+  const std::string encoded = Url::encode(name);
 
   const std::string path = fmt::format(
     "{}/{}",
@@ -286,7 +281,9 @@ void Layouts::GetValue(
 
   switch ((Column)col) {
     case Column::Name: {
-      value = node->name;
+      const auto &name = node->name;
+      const auto wxs = wxString::FromUTF8(name.data(), name.length());
+      value = wxs;
     } break;
     default: {}
   }
@@ -300,9 +297,15 @@ bool Layouts::SetValue(
   const auto id = toId(item);
   if (col != (unsigned)Column::Name) { return false; }
   if (value.GetType() != "string") { return false; }
-  if (value.GetString().empty()) { return false; }
+  if (value.GetString().empty())
+  {
+    wxLogWarning("Empty name provided");
+    return false;
+  }
 
-  const std::string newName = value.GetString().ToStdString();
+  const auto wxs = value.GetString();
+  const auto utf8 = wxs.ToUTF8();
+  const std::string newName(utf8.data(), utf8.length());
 
   auto &node = mLayouts.at(id);
 
@@ -321,13 +324,7 @@ bool Layouts::SetValue(
 
   wxLogInfo("Renaming '%s' to '%s'", node->name, newName);
 
-  std::string encoded;
-  try { encoded = cppcodec::base32_rfc4648::encode(newName); }
-  catch (cppcodec::parse_error &e)
-  {
-    wxLogError("Could not encode '%s': %s", newName, e.what());
-    return false;
-  }
+  const std::string encoded = Url::encode(newName);
 
   const std::string newPath = fmt::format(
     "{}/{}",
@@ -367,14 +364,12 @@ wxDataViewItem Layouts::loadLayoutFile(const std::filesystem::path &filepath)
     wxLogMessage("Checking %s", filepath.u8string());
 
     // Get name.
-    std::vector<uint8_t> decoded;
+    std::string decoded;
     try
     {
-      decoded = cppcodec::base32_rfc4648::decode(
-        filepath.stem().u8string()
-      );
+      decoded = Url::decode(filepath.stem().u8string());
     }
-    catch (cppcodec::parse_error &e)
+    catch (std::runtime_error &e)
     {
       wxLogError(
         "Could not decode '%s': %s",
@@ -383,7 +378,6 @@ wxDataViewItem Layouts::loadLayoutFile(const std::filesystem::path &filepath)
       );
       return wxDataViewItem(nullptr);
     }
-    const std::string name{decoded.begin(), decoded.end()};
 
     std::ifstream input(filepath);
     if (!input.is_open())
@@ -412,7 +406,7 @@ wxDataViewItem Layouts::loadLayoutFile(const std::filesystem::path &filepath)
 
     const auto id = mAvailableId++;
     auto layout = std::make_unique<Node>();
-    layout->name        = name;
+    layout->name        = decoded;
     layout->perspective = perspectiveIt->get<std::string>();
     layout->path        = filepath;
     layout->saved       = false;

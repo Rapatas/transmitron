@@ -38,7 +38,7 @@ public:
   std::string getUniqueName() const;
 
   const MQTT::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
-  std::string getName(wxDataViewItem item) const;
+  wxString getName(wxDataViewItem item) const;
 
   wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
 
