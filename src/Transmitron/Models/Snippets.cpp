@@ -1,4 +1,6 @@
 #include "Snippets.hpp"
+#include "Helpers/Helpers.hpp"
+#include "Helpers/Url.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -9,12 +11,12 @@
 #include <wx/log.h>
 #include <wx/artprov.h>
 #include <fmt/format.h>
-#include <cppcodec/base32_rfc4648.hpp>
 
 #define wxLOG_COMPONENT "Models/Snippets" // NOLINT
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
+using namespace Helpers;
 
 Snippets::Snippets()
 {
@@ -111,13 +113,7 @@ wxDataViewItem Snippets::createFolder(
     parentNode.name
   );
 
-  std::string encoded;
-  try { encoded = cppcodec::base32_rfc4648::encode(uniqueName); }
-  catch (cppcodec::parse_error &e)
-  {
-    wxLogError("Could not encode '%s': %s", uniqueName, e.what());
-    return wxDataViewItem(nullptr);
-  }
+  const std::string encoded = Url::encode(uniqueName);
 
   const std::string path = fmt::format(
     "{}/{}",
@@ -175,13 +171,7 @@ wxDataViewItem Snippets::createSnippet(
     parentNode.name
   );
 
-  std::string encoded;
-  try { encoded = cppcodec::base32_rfc4648::encode(uniqueName); }
-  catch (cppcodec::parse_error &e)
-  {
-    wxLogError("Could not encode '%s': %s", uniqueName, e.what());
-    return wxDataViewItem(nullptr);
-  }
+  const std::string encoded = Url::encode(uniqueName);
 
   const auto parentPath = getNodePath(parentId);
   const std::string path = fmt::format(
@@ -237,13 +227,7 @@ wxDataViewItem Snippets::insert(
     parentNode.name
   );
 
-  std::string encoded;
-  try { encoded = cppcodec::base32_rfc4648::encode(name); }
-  catch (cppcodec::parse_error &e)
-  {
-    wxLogError("Could not encode '%s': %s", name, e.what());
-    return wxDataViewItem(nullptr);
-  }
+  const std::string encoded = Url::encode(name);
 
   const auto parentPath = getNodePath(parentId);
   const std::string path = fmt::format(
@@ -571,7 +555,8 @@ void Snippets::GetValue(
   auto id = toId(item);
   const auto &node = mNodes.at(id);
   wxDataViewIconText value;
-  value.SetText(node.name);
+  const auto wxs = wxString::FromUTF8(node.name.data(), node.name.length());
+  value.SetText(wxs);
   switch (node.type)
   {
     case Node::Type::Folder: {
@@ -599,7 +584,9 @@ bool Snippets::SetValue(
   }
   wxDataViewIconText iconText;
   iconText << value;
-  const std::string newName = iconText.GetText().ToStdString();
+
+  const auto utf8 = iconText.GetText().ToUTF8();
+  const std::string newName(utf8.data(), utf8.length());
 
   auto parentItem = GetParent(item);
   if (hasChildNamed(parentItem, newName))
@@ -612,15 +599,7 @@ bool Snippets::SetValue(
   if (node.name == newName) { return true; }
   if (newName.empty()) { return false; }
 
-  wxLogInfo("Renaming '%zu' to '%s'", id, newName);
-
-  std::string encoded;
-  try { encoded = cppcodec::base32_rfc4648::encode(newName); }
-  catch (cppcodec::parse_error &e)
-  {
-    wxLogError("Could not encode '%s': %s", newName, e.what());
-    return false;
-  }
+  const std::string encoded = Url::encode(newName);
 
   const auto parentPath = getNodePath(node.parent);
   const std::string pathOld = fmt::format(
@@ -989,17 +968,5 @@ void Snippets::moveUnderSameParent(
 
 std::string Snippets::decode(const std::string &encoded)
 {
-  std::vector<uint8_t> decoded;
-
-  try
-  {
-    decoded = cppcodec::base32_rfc4648::decode(encoded);
-  }
-  catch (cppcodec::parse_error &e)
-  {
-    wxLogError("Could not decode '%s': %s", encoded, e.what());
-    return encoded;
-  }
-
-  return {decoded.begin(), decoded.end()};
+  return Url::decode(encoded);
 }

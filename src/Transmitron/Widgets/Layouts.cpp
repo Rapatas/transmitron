@@ -120,9 +120,9 @@ void Layouts::onLayoutSaveClicked(wxCommandEvent &/* event */)
 
 void Layouts::onLayoutEditEnter(wxCommandEvent &/* event */)
 {
-  const auto newName = mLayoutsEdit->GetValue().ToStdString();
+  const auto wxs = mLayoutsEdit->GetValue();
+  const wxVariant value = wxs;
 
-  wxVariant value = newName;
   const auto saved = mLayoutsModel->SetValue(
     value,
     mCurrentSelection,

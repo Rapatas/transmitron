@@ -1,16 +1,18 @@
 #include <fstream>
 #include <iterator>
+#include <stdexcept>
 #include <wx/log.h>
 #include <fmt/core.h>
-#include <cppcodec/base32_rfc4648.hpp>
 #include "Transmitron/Info.hpp"
 #include "Profiles.hpp"
+#include "Helpers/Url.hpp"
 
 #define wxLOG_COMPONENT "models/profiles" // NOLINT
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 using namespace Transmitron;
+using namespace Helpers;
 
 Profiles::Profiles() {}
 
@@ -109,13 +111,7 @@ bool Profiles::rename(
     return false;
   }
 
-  std::string encoded;
-  try { encoded = cppcodec::base32_rfc4648::encode(name); }
-  catch (cppcodec::parse_error &e)
-  {
-    wxLogError("Could not rename '%s': %s", profile->name, e.what());
-    return false;
-  }
+  const std::string encoded = Url::encode(name);
 
   const std::string pathNew = fmt::format(
     "{}/{}",
@@ -190,14 +186,7 @@ std::string Profiles::getUniqueName() const
 wxDataViewItem Profiles::createProfile()
 {
   const std::string uniqueName = getUniqueName();
-
-  std::string encoded;
-  try { encoded = cppcodec::base32_rfc4648::encode(uniqueName); }
-  catch (cppcodec::parse_error &e)
-  {
-    wxLogError("Could not encode '%s': %s", uniqueName, e.what());
-    return wxDataViewItem(0);
-  }
+  const std::string encoded = Url::encode(uniqueName);
 
   const std::string path = fmt::format(
     "{}/{}",
@@ -236,9 +225,11 @@ const MQTT::BrokerOptions &Profiles::getBrokerOptions(wxDataViewItem item) const
   return mProfiles.at(toId(item))->brokerOptions;
 }
 
-std::string Profiles::getName(wxDataViewItem item) const
+wxString Profiles::getName(wxDataViewItem item) const
 {
-  return mProfiles.at(toId(item))->name;
+  const auto name = mProfiles.at(toId(item))->name;
+  const auto wxs = wxString::FromUTF8(name.data(), name.length());
+  return wxs;
 }
 
 wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
@@ -265,7 +256,9 @@ void Profiles::GetValue(
 
   switch ((Column)col) {
     case Column::Name: {
-      variant = profile->name;
+      const auto &name = profile->name;
+      const auto wxs = wxString::FromUTF8(name.data(), name.length());
+      variant = wxs;
     } break;
     case Column::URL: {
       variant =
@@ -385,14 +378,12 @@ bool Profiles::save(size_t id)
 
 wxDataViewItem Profiles::loadProfileFile(const std::filesystem::path &filepath)
 {
-  std::vector<uint8_t> decoded;
+  std::string decoded;
   try
   {
-    decoded = cppcodec::base32_rfc4648::decode(
-      filepath.stem().u8string()
-    );
+    decoded = Url::decode(filepath.stem().u8string());
   }
-  catch (cppcodec::parse_error &e)
+  catch (std::runtime_error &e)
   {
     wxLogError(
       "Could not decode '%s': %s",

@@ -216,7 +216,9 @@ void Homepage::onSaveClicked(wxCommandEvent &/* event */)
     return;
   }
 
-  const auto name = mProfileFormProperties.at(Properties::Name)->GetValue();
+  const auto wxs = mProfileFormProperties.at(Properties::Name)->GetValue().GetString();
+  const auto utf8 = wxs.ToUTF8();
+  const std::string name(utf8.data(), utf8.length());
   mProfilesModel->rename(item, name);
 
   const auto options = optionsFromPropertyGrid();
@@ -273,7 +275,7 @@ void Homepage::onProfileDelete(wxCommandEvent & /* event */)
 
 void Homepage::fillPropertyGrid(
   const MQTT::BrokerOptions &brokerOptions,
-  const std::string &name
+  const wxString &name
 ) {
   auto &pfp = mProfileFormProperties;
   pfp.at(Properties::AutoReconnect)->SetValue(brokerOptions.getAutoReconnect());

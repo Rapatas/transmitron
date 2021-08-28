@@ -15,6 +15,7 @@ add_executable(
   ${INFO_POST_CONF}
   ${VERSION_POST_CONF}
   src/Helpers/Helpers.cpp
+  src/Helpers/Url.cpp
   src/MQTT/BrokerOptions.cpp
   src/MQTT/Client.cpp
   src/MQTT/Message.cpp
@@ -122,7 +123,6 @@ find_package(nlohmann_json REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
 find_package(wxwidgets REQUIRED)
 find_package(tinyxml2 REQUIRED)
-find_package(cppcodec REQUIRED)
 find_package(fmt REQUIRED)
 
 target_link_libraries(
@@ -133,7 +133,6 @@ target_link_libraries(
     wxwidgets::wxwidgets
     nlohmann_json::nlohmann_json
     tinyxml2::tinyxml2
-    cppcodec::cppcodec
     fmt::fmt
     stdc++fs
 )

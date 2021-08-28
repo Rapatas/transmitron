@@ -1507,7 +1507,6 @@ void Client::onHistorySearchButton(wxCommandEvent &/* event */)
 
 // History }
 
-
 // Preview {
 
 void Client::onPreviewSaveSnippet(Events::Edit &/* event */)
