@@ -213,7 +213,9 @@ void Subscriptions::GetValueByRow(
       variant << b;
     } break;
     case Column::Topic: {
-      variant = sub->getFilter();
+      const auto utf8 = sub->getFilter();
+      const auto wxs = wxString::FromUTF8(utf8.data(), utf8.length());
+      variant = wxs;
     } break;
     case Column::Qos: {
       const wxBitmap *result = nullptr;

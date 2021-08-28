@@ -277,7 +277,8 @@ void History::GetValueByRow(
     } break;
     case Column::Topic: {
       wxDataViewIconText result;
-      result.SetText(m.topic);
+      const auto wxs = wxString::FromUTF8(m.topic.data(), m.topic.length());
+      result.SetText(wxs);
       if (m.retained)
       {
         wxIcon icon;

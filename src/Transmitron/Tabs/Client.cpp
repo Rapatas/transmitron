@@ -1321,11 +1321,12 @@ void Client::onMessage(wxDataViewItem item)
 
 void Client::onSubscribeClicked(wxCommandEvent &/* event */)
 {
-  auto text = mFilter->GetValue();
-  mFilter->SetValue("");
-  auto topic = text.empty()
-    ? "#"
-    : text.ToStdString();
+  const auto value = mFilter->GetValue();
+  mFilter->SetValue({});
+  const auto line = value.empty() ? "#" : value;
+  const auto utf8 = line.ToUTF8();
+  const std::string topic(utf8.data(), utf8.length());
+
   mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
 }
 
@@ -1337,11 +1338,12 @@ void Client::onSubscribeEnter(wxKeyEvent &event)
     return;
   }
 
-  auto text = mFilter->GetValue();
-  mFilter->SetValue("");
-  auto topic = text.empty()
-    ? "#"
-    : text.ToStdString();
+  const auto value = mFilter->GetValue();
+  mFilter->SetValue({});
+  const auto line = value.empty() ? "#" : value;
+  const auto utf8 = line.ToUTF8();
+  const std::string topic(utf8.data(), utf8.length());
+
   mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
   event.Skip();
 }
@@ -1350,8 +1352,9 @@ void Client::onSubscriptionSelected(wxDataViewEvent &/* event */)
 {
   const auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
-  const auto f = mSubscriptionsModel->getFilter(item);
-  mFilter->SetValue(f);
+  const auto utf8 = mSubscriptionsModel->getFilter(item);
+  const auto wxs = wxString::FromUTF8(utf8.data(), utf8.length());
+  mFilter->SetValue(wxs);
 }
 
 // Subscriptions }
