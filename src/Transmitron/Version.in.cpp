@@ -1,7 +1,7 @@
 #include "Transmitron/Version.hpp"
 
 #ifndef PROJECT_VERSION
-#define PROJECT_VERSION "@PROJECT_VERSION@"
+#define PROJECT_VERSION "@GIT_DESCRIBE@"
 #endif // PROJECT_VERSION
 
 const char *getProjectVersion()
