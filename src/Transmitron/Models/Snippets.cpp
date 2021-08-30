@@ -585,7 +585,8 @@ bool Snippets::SetValue(
   wxDataViewIconText iconText;
   iconText << value;
 
-  const auto utf8 = iconText.GetText().ToUTF8();
+  const auto wxs = iconText.GetText();
+  const auto utf8 = wxs.ToUTF8();
   const std::string newName(utf8.data(), utf8.length());
 
   auto parentItem = GetParent(item);

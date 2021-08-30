@@ -1323,8 +1323,8 @@ void Client::onSubscribeClicked(wxCommandEvent &/* event */)
 {
   const auto value = mFilter->GetValue();
   mFilter->SetValue({});
-  const auto line = value.empty() ? "#" : value;
-  const auto utf8 = line.ToUTF8();
+  const auto wxs = value.empty() ? "#" : value;
+  const auto utf8 = wxs.ToUTF8();
   const std::string topic(utf8.data(), utf8.length());
 
   mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
@@ -1340,8 +1340,8 @@ void Client::onSubscribeEnter(wxKeyEvent &event)
 
   const auto value = mFilter->GetValue();
   mFilter->SetValue({});
-  const auto line = value.empty() ? "#" : value;
-  const auto utf8 = line.ToUTF8();
+  const auto wxs = value.empty() ? "#" : value;
+  const auto utf8 = wxs.ToUTF8();
   const std::string topic(utf8.data(), utf8.length());
 
   mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);

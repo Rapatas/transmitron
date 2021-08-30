@@ -314,10 +314,9 @@ MQTT::Message Edit::getMessage() const
 
 std::string Edit::getPayload() const
 {
-  return {
-    mText->GetValue().ToUTF8().data(),
-    mText->GetValue().ToUTF8().length()
-  };
+  const auto wxs = mText->GetValue();
+  const auto utf8 = wxs.ToUTF8();
+  return {utf8.data(), utf8.length()};
 }
 
 bool Edit::getReadOnly() const
@@ -436,10 +435,9 @@ void Edit::onTopicKeyDown(wxKeyEvent &e)
 
 std::string Edit::getTopic() const
 {
-  return {
-    mTopic->GetValue().ToUTF8().data(),
-    mTopic->GetValue().ToUTF8().length()
-  };
+  const auto wxs = mTopic->GetValue();
+  const auto utf8 = wxs.ToUTF8();
+  return {utf8.data(), utf8.length()};
 }
 
 MQTT::QoS Edit::getQos() const
