@@ -21,6 +21,7 @@ public:
 private:
 
   size_t mCount = 0;
+  wxFrame *mFrame = nullptr;
   wxAuiNotebook *mNote = nullptr;
   bool mDarkMode = false;
 

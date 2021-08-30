@@ -53,14 +53,14 @@ bool App::OnInit()
   log->SetFormatter(new LogFormat());
   wxLog::SetActiveTarget(log);
 
-  auto *frame = new wxFrame(
+  mFrame = new wxFrame(
     nullptr,
     -1,
-    getProjectName(),
+    "Homepage - Transmitron",
     wxDefaultPosition,
     wxSize(DefaultWindowWidth, DefaultWindowHeight)
   );
-  frame->SetMinSize(wxSize(MinWindowWidth, MinWindowHeight));
+  mFrame->SetMinSize(wxSize(MinWindowWidth, MinWindowHeight));
 
   const int noteStyle = wxAUI_NB_DEFAULT_STYLE & ~(0
     | wxAUI_NB_TAB_MOVE
@@ -69,7 +69,7 @@ bool App::OnInit()
   );
 
   mNote = new wxAuiNotebook(
-    frame,
+    mFrame,
     -1,
     wxDefaultPosition,
     wxDefaultSize,
@@ -96,7 +96,7 @@ bool App::OnInit()
   mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGING, &App::onPageSelected, this);
   mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CLOSE, &App::onPageClosing, this);
 
-  frame->Show();
+  mFrame->Show();
 
   return true;
 }
@@ -135,6 +135,12 @@ void App::onPageSelected(wxBookCtrlEvent& event)
       mNote->SetWindowStyle(style | Closable);
     }
   }
+
+  const auto windowName = fmt::format(
+    "{} - Transmitron",
+    mNote->GetPage((size_t)event.GetSelection())->GetName()
+  );
+  mFrame->SetTitle(windowName);
 
   event.Skip();
 }
@@ -187,6 +193,7 @@ void App::createProfilesTab(size_t index)
       mProfilesModel->getBrokerOptions(profileItem),
       mProfilesModel->getSnippetsModel(profileItem),
       mLayoutsModel,
+      mProfilesModel->getName(profileItem),
       mDarkMode
     );
     mNote->RemovePage(selected);

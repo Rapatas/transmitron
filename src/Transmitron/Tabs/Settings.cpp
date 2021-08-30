@@ -15,7 +15,14 @@ Settings::Settings(
   wxFontInfo labelFont,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel
 ) :
-  wxPanel(parent),
+  wxPanel(
+    parent,
+    -1,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxTAB_TRAVERSAL,
+    "Settings"
+  ),
   mLabelFont(std::move(labelFont)),
   mLayoutsModel(layoutsModel)
 {

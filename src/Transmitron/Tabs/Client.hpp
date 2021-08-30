@@ -34,6 +34,7 @@ public:
     const MQTT::BrokerOptions &brokerOptions,
     const wxObjectDataPtr<Models::Snippets> &snippetsModel,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
+    const wxString &name,
     bool darkMode
   );
   Client(const Client &other) = delete;
@@ -93,6 +94,7 @@ private:
 
   static constexpr size_t OptionsHeight = 26;
 
+  const wxString mName;
   const MQTT::BrokerOptions mBrokerOptions;
   const wxFont mFont;
   const bool mDarkMode;

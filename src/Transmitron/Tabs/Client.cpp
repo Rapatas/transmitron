@@ -39,9 +39,18 @@ Client::Client(
   const MQTT::BrokerOptions &brokerOptions,
   const wxObjectDataPtr<Models::Snippets> &snippetsModel,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
+  const wxString &name,
   bool darkMode
 ) :
-  wxPanel(parent),
+  wxPanel(
+    parent,
+    -1,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxTAB_TRAVERSAL,
+    name
+  ),
+  mName(name),
   mBrokerOptions(brokerOptions),
   mFont(wxFontInfo(FontSize).FaceName("Consolas")),
   mDarkMode(darkMode),

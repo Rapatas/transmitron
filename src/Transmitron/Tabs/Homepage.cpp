@@ -17,7 +17,14 @@ Homepage::Homepage(
   wxFontInfo labelFont,
   const wxObjectDataPtr<Models::Profiles> &profilesModel
 ) :
-  wxPanel(parent),
+  wxPanel(
+    parent,
+    -1,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxTAB_TRAVERSAL,
+    "Homepage"
+  ),
   mLabelFont(std::move(labelFont)),
   mProfilesModel(profilesModel)
 {
