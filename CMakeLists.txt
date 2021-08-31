@@ -113,6 +113,12 @@ set(gcc_warnings
   -Wpedantic
 )
 
+target_link_options(
+  ${CMAKE_PROJECT_NAME}
+  PRIVATE
+    $<$<AND:$<BOOL:${WIN32}>,$<CONFIG:Release>>:-mwindows>
+)
+
 target_compile_options(
   ${CMAKE_PROJECT_NAME}
   PRIVATE
