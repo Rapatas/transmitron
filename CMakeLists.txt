@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.5)
 
 project(
   transmitron
+  DESCRIPTION "Flexible, native, and cross-platform MQTT desktop client"
 )
 
 set(INFO_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/src/Transmitron/Info.in.cpp")
