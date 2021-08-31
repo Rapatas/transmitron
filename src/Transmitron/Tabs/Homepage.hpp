@@ -29,6 +29,8 @@ public:
 
 private:
 
+  static constexpr size_t OptionsHeight = 26;
+
   enum class ContextIDs : unsigned
   {
     ProfilesDelete,

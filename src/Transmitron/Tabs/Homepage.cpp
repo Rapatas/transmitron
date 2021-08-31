@@ -64,7 +64,13 @@ void Homepage::setupProfiles()
   auto *label = new wxStaticText(mProfiles, -1, "Profiles");
   label->SetFont(mLabelFont);
 
-  auto *newProfile = new wxButton(mProfiles, -1, "New Profile");
+  auto *newProfile = new wxButton(
+    mProfiles,
+    -1,
+    "New Profile",
+    wxDefaultPosition,
+    wxSize(-1, OptionsHeight)
+  );
   newProfile->Bind(wxEVT_BUTTON, &Homepage::onNewProfileClicked, this);
   newProfile->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
 
@@ -88,12 +94,19 @@ void Homepage::setupProfiles()
     this
   );
 
-  mConnect = new wxButton(mProfiles, -1, "Connect");
+  mConnect = new wxButton(
+    mProfiles,
+    -1,
+    "Connect",
+    wxDefaultPosition,
+    wxSize(-1, OptionsHeight)
+  );
   mConnect->Enable(false);
   mConnect->Bind(wxEVT_BUTTON, &Homepage::onConnectClicked, this);
   mConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
 
   auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
+  hsizer->SetMinSize(0, OptionsHeight);
   hsizer->Add(newProfile, 0, wxEXPAND);
   hsizer->AddStretchSpacer(1);
   hsizer->Add(mConnect, 0, wxEXPAND);
@@ -154,13 +167,22 @@ void Homepage::setupProfileForm()
   pfp.at(Properties::MaxReconnectRetries) =
     pfg->Append(new wxUIntProperty("Max Reconnect Retries", "", {}));
 
-  mSave = new wxButton(mProfileForm, -1, "Save");
+  mSave = new wxButton(
+    mProfileForm,
+    -1,
+    "Save",
+    wxDefaultPosition,
+    wxSize(-1, OptionsHeight)
+  );
   mSave->Enable(false);
 
+  auto *bottomSizer = new wxBoxSizer(wxHORIZONTAL);
+  bottomSizer->Add(mSave, 1, wxEXPAND);
+  bottomSizer->SetMinSize(0, OptionsHeight);
   auto *sizer = new wxBoxSizer(wxVERTICAL);
   sizer->Add(label,            0, wxEXPAND);
   sizer->Add(mProfileFormGrid, 1, wxEXPAND);
-  sizer->Add(mSave,            0, wxEXPAND);
+  sizer->Add(bottomSizer,      0, wxEXPAND);
   mProfileForm->SetSizer(sizer);
 
   mSave->Bind(wxEVT_BUTTON, &Homepage::onSaveClicked, this);

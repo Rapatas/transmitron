@@ -254,7 +254,13 @@ void Client::setupPanelHistory(wxWindow *parent)
   mAutoScroll = new wxCheckBox(panel, -1, "auto-scroll");
   mAutoScroll->SetValue(true);
 
-  mHistoryClear = new wxButton(panel, -1, "Clear");
+  mHistoryClear = new wxButton(
+    panel,
+    -1,
+    "Clear",
+    wxDefaultPosition,
+    wxSize(-1, OptionsHeight)
+  );
   mHistoryClear->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
 
   auto *topSizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
@@ -299,9 +305,27 @@ void Client::setupPanelConnect(
 ) {
   mProfileBar = new wxPanel(parent, -1);
 
-  mConnect    = new wxButton(mProfileBar, -1, "Connect");
-  mDisconnect = new wxButton(mProfileBar, -1, "Disconnect");
-  mCancel     = new wxButton(mProfileBar, -1, "Cancel");
+  mConnect    = new wxButton(
+    mProfileBar,
+    -1,
+    "Connect",
+    wxDefaultPosition,
+    wxSize(-1, OptionsHeight)
+  );
+  mDisconnect = new wxButton(
+    mProfileBar,
+    -1,
+    "Disconnect",
+    wxDefaultPosition,
+    wxSize(-1, OptionsHeight)
+  );
+  mCancel     = new wxButton(
+    mProfileBar,
+    -1,
+    "Cancel",
+    wxDefaultPosition,
+    wxSize(-1, OptionsHeight)
+  );
 
   mLayouts = new Widgets::Layouts(mProfileBar, -1, layoutsModel, mAuiMan, OptionsHeight);
   mLayouts->Bind(Events::LAYOUT_SELECTED, &Client::onLayoutSelected, this);
