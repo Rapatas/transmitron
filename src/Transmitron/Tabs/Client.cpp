@@ -493,7 +493,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
     this
   );
   mFilter->Bind(
-    wxEVT_KEY_DOWN,
+    wxEVT_KEY_UP,
     &Client::onSubscribeEnter,
     this
   );
