@@ -2,6 +2,8 @@
 #define TRANSMITRON_MODELS_SUBSCRIPTIONS_HPP
 
 #include <memory>
+
+#include <spdlog/spdlog.h>
 #include <wx/dataview.h>
 
 #include "MQTT/Client.hpp"
@@ -59,6 +61,7 @@ public:
 
 private:
 
+  std::shared_ptr<spdlog::logger> mLogger;
   std::shared_ptr<MQTT::Client> mClient;
   std::map<MQTT::Subscription::Id_t, std::unique_ptr<Types::Subscription>> mSubscriptions;
   std::vector<MQTT::Subscription::Id_t> mRemap;

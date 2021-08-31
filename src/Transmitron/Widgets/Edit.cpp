@@ -5,7 +5,6 @@
 #include <tinyxml2.h>
 #include <wx/clipbrd.h>
 #include <wx/artprov.h>
-#include <wx/log.h>
 #include "Edit.hpp"
 #include "Transmitron/Events/Edit.hpp"
 #include "Transmitron/Resources/send/send-18x18.hpp"
@@ -14,8 +13,6 @@
 #include "Transmitron/Resources/qos/qos-0.hpp"
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
-
-#define wxLOG_COMPONENT "Widgets/Edit" // NOLINT
 
 using namespace nlohmann;
 using namespace Transmitron;
@@ -280,7 +277,6 @@ void Edit::setTimestamp(const std::chrono::system_clock::time_point &timestamp)
   const auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(fraction).count();
   ss << "." << millis;
 
-  wxLogInfo("Setting timestamp to: %s", ss.str());
   mTimestamp->SetLabel(ss.str());
 }
 

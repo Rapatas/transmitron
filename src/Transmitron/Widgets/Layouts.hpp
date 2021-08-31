@@ -1,6 +1,7 @@
 #ifndef TRANSMITRON_WIDGETS_LAYOUTS_HPP
 #define TRANSMITRON_WIDGETS_LAYOUTS_HPP
 
+#include <spdlog/spdlog.h>
 #include <wx/wx.h>
 #include <wx/aui/aui.h>
 
@@ -28,6 +29,7 @@ private:
 
   const size_t mOptionsHeight;
 
+  std::shared_ptr<spdlog::logger> mLogger;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
   wxDataViewItem mCurrentSelection;
   wxAuiManager &mAuiMan;

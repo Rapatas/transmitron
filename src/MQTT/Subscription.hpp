@@ -9,7 +9,6 @@
 
 #include "Client.hpp"
 
-
 namespace MQTT
 {
 

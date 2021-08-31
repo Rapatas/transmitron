@@ -3,8 +3,6 @@
 #include <chrono>
 #include <cstdlib>
 
-#define wxLOG_COMPONENT "mqtt/subscription" // NOLINT
-
 using namespace MQTT;
 
 Subscription::Subscription(

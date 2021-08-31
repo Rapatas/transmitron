@@ -1,9 +1,12 @@
 #ifndef TRANSMITRON_MODELS_LAYOUTS_HPP
 #define TRANSMITRON_MODELS_LAYOUTS_HPP
 
-#include <string>
-#include <map>
 #include <filesystem>
+#include <map>
+#include <memory>
+#include <string>
+
+#include <spdlog/spdlog.h>
 #include <wx/arrstr.h>
 #include <wx/dataview.h>
 
@@ -75,6 +78,7 @@ private:
     bool saved = false;
   };
 
+  std::shared_ptr<spdlog::logger> mLogger;
   Node::Id_t mAvailableId = 1;
   std::map<Node::Id_t, std::unique_ptr<Node>> mLayouts;
   std::string mLayoutsDir;

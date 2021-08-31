@@ -1,6 +1,7 @@
 #ifndef TRANSMITRON_TABS_HOMEPAGE_HPP
 #define TRANSMITRON_TABS_HOMEPAGE_HPP
 
+#include <spdlog/spdlog.h>
 #include <wx/propgrid/property.h>
 #include <wx/propgrid/props.h>
 #include <wx/panel.h>
@@ -52,6 +53,7 @@ private:
 
   const wxFontInfo mLabelFont;
 
+  std::shared_ptr<spdlog::logger> mLogger;
   wxButton *mConnect = nullptr;
   wxButton *mSave = nullptr;
 

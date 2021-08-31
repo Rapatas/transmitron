@@ -1,6 +1,7 @@
 #ifndef TRANSMITRON_TABS_CLIENT_HPP
 #define TRANSMITRON_TABS_CLIENT_HPP
 
+#include <spdlog/spdlog.h>
 #include <wx/event.h>
 #include <wx/listctrl.h>
 #include <wx/splitter.h>
@@ -89,11 +90,10 @@ private:
   static constexpr size_t PaneMinWidth = 200;
   static constexpr size_t PaneMinHeight = 100;
   static constexpr size_t EditorMinHeight = 200;
-
-  std::map<Panes, Pane> mPanes;
-
   static constexpr size_t OptionsHeight = 26;
 
+  std::shared_ptr<spdlog::logger> mLogger;
+  std::map<Panes, Pane> mPanes;
   const wxString mName;
   const MQTT::BrokerOptions mBrokerOptions;
   const wxFont mFont;

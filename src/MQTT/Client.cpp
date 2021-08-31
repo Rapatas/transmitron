@@ -1,12 +1,13 @@
-#include "Client.hpp"
 #include <chrono>
-#include <fmt/core.h>
 #include <iterator>
-#include <wx/log.h>
 #include <thread>
-#include "Subscription.hpp"
 
-#define wxLOG_COMPONENT "mqtt/client" // NOLINT
+#include <fmt/core.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+#include "Subscription.hpp"
+#include "Client.hpp"
+#include "Helpers/Log.hpp"
 
 using namespace MQTT;
 
@@ -16,6 +17,11 @@ constexpr size_t ReconnectAfterMs = 2500;
 // Public {
 
 // Management {
+
+Client::Client()
+{
+  mLogger = Helpers::Log::create("MQTT::Client");
+}
 
 size_t Client::attachObserver(Observer *o)
 {
@@ -46,7 +52,7 @@ void Client::connect()
     mBrokerOptions.getHostname(),
     mBrokerOptions.getPort()
   );
-  wxLogMessage("Connecting to %s", address);
+  mLogger->info("Connecting to {}", address);
   try
   {
     mClient = std::make_shared<mqtt::async_client>(
@@ -58,7 +64,7 @@ void Client::connect()
   }
   catch (const mqtt::exception& e)
   {
-    wxLogError("Connection failed: %s", e.what());
+    mLogger->error("Connection failed: {}", e.what());
     exit(1);
   }
 }
@@ -69,7 +75,7 @@ void Client::disconnect()
   if (!mClient->is_connected()) { return; }
 
   mCanceled = false;
-  wxLogMessage("Disconnecting from %s", mBrokerOptions.getHostname());
+  mLogger->info("Disconnecting from {}", mBrokerOptions.getHostname());
   try
   {
     mClient->disconnect(
@@ -81,7 +87,7 @@ void Client::disconnect()
   }
   catch (const mqtt::exception& exc)
   {
-    wxLogError("Disconnection failed: %s", exc.what());
+    mLogger->error("Disconnection failed: {}", exc.what());
     exit(1);
   }
 }
@@ -104,11 +110,11 @@ std::shared_ptr<Subscription> Client::subscribe(const std::string &topic)
 
   if (it != std::end(mSubscriptions))
   {
-    wxLogMessage("Already subscribed!");
+    mLogger->info("Already subscribed!");
     return it->second;
   }
 
-  wxLogMessage("Creating subscription");
+  mLogger->info("Creating subscription");
   ++mSubscriptionIds;
   auto sub = std::make_shared<Subscription>(
     mSubscriptionIds,
@@ -119,7 +125,7 @@ std::shared_ptr<Subscription> Client::subscribe(const std::string &topic)
   sub->setState(Subscription::State::Unsubscribed);
   mSubscriptions.insert({mSubscriptionIds, sub});
 
-  wxLogMessage("Checking if connected");
+  mLogger->info("Checking if connected");
   if (connected())
   {
     doSubscribe(mSubscriptionIds);
@@ -133,7 +139,7 @@ void Client::unsubscribe(size_t id)
   const auto it = mSubscriptions.find(id);
   if (it == std::end(mSubscriptions)) { return; }
   it->second->setState(Subscription::State::PendingUnsubscription);
-  wxLogMessage("Unsubscribing from %s", it->second->getFilter());
+  mLogger->info("Unsubscribing from {}", it->second->getFilter());
   mClient->unsubscribe(it->second->getFilter(), nullptr, *this);
 }
 
@@ -268,11 +274,11 @@ void Client::onSuccessSubscribe(const mqtt::token& tok)
   it->second->setState(Subscription::State::Subscribed);
   it->second->onSubscribed();
 
-  wxLogMessage("Subscribed to topics:");
+  mLogger->info("Subscribed to topics:");
   auto size = tok.get_topics()->size();
   for (size_t i = 0; i != size; ++i)
   {
-    wxLogMessage("  - %s", tok.get_topics()->c_arr()[i]);
+    mLogger->info("  - {}", tok.get_topics()->c_arr()[i]);
   }
 }
 
@@ -293,8 +299,8 @@ void Client::onSuccessUnsubscribe(const mqtt::token& tok)
     exit(1);
   }
 
-  wxLogMessage(
-    "Client::onSuccessUnsubscribe: %s",
+  mLogger->info(
+    "Client::onSuccessUnsubscribe: {}",
     it->second->getFilter()
   );
 
@@ -305,8 +311,8 @@ void Client::onSuccessUnsubscribe(const mqtt::token& tok)
 
 void Client::onFailureConnect(const mqtt::token& tok)
 {
-  wxLogWarning(
-    "Connection attempt failed: %s",
+  mLogger->warn(
+    "Connection attempt failed: {}",
     mReturnCodes.at(tok.get_return_code())
   );
   reconnect();
@@ -314,32 +320,32 @@ void Client::onFailureConnect(const mqtt::token& tok)
 
 void Client::onFailureDisconnect(const mqtt::token& tok)
 {
-  wxLogWarning(
-    "Disconnection attempt failed: %s",
+  mLogger->warn(
+    "Disconnection attempt failed: {}",
     mReturnCodes.at(tok.get_return_code())
   );
 }
 
 void Client::onFailurePublish(const mqtt::token& tok)
 {
-  wxLogWarning(
-    "Publishing attempt failed: %s",
+  mLogger->warn(
+    "Publishing attempt failed: {}",
     mReturnCodes.at(tok.get_return_code())
   );
 }
 
 void Client::onFailureSubscribe(const mqtt::token& tok)
 {
-  wxLogWarning(
-    "Subscription attempt failed: %s",
+  mLogger->warn(
+    "Subscription attempt failed: {}",
     mReturnCodes.at(tok.get_return_code())
   );
 }
 
 void Client::onFailureUnsubscribe(const mqtt::token& tok)
 {
-  wxLogWarning(
-    "Unsubscription attempt failed: %s",
+  mLogger->warn(
+    "Unsubscription attempt failed: {}",
     mReturnCodes.at(tok.get_return_code())
   );
 }
@@ -350,7 +356,7 @@ void Client::onFailureUnsubscribe(const mqtt::token& tok)
 
 void Client::connected(const std::string& /* cause */)
 {
-  wxLogMessage("Connected!");
+  mLogger->info("Connected!");
   mRetries = 0;
   mShouldReconnect = true;
   for (const auto &o : mObservers)
@@ -358,7 +364,7 @@ void Client::connected(const std::string& /* cause */)
     o.second->onConnected();
   }
 
-  wxLogMessage("Subscribing to topics:");
+  mLogger->info("Subscribing to topics:");
 
   for (const auto &sub : mSubscriptions)
   {
@@ -368,7 +374,7 @@ void Client::connected(const std::string& /* cause */)
 
 void Client::connection_lost(const std::string& cause)
 {
-  wxLogMessage("Connection lost: %s", cause);
+  mLogger->info("Connection lost: {}", cause);
   for (const auto &o : mObservers)
   {
     o.second->onConnectionLost();
@@ -379,7 +385,7 @@ void Client::connection_lost(const std::string& cause)
 
 void Client::message_arrived(mqtt::const_message_ptr msg)
 {
-  wxLogMessage("Message received: %s", msg->get_topic());
+  mLogger->info("Message received: {}", msg->get_topic());
   for (const auto &sub : mSubscriptions)
   {
     if (Client::match(sub.second->getFilter(), msg->get_topic()))
@@ -391,7 +397,7 @@ void Client::message_arrived(mqtt::const_message_ptr msg)
 
 void Client::delivery_complete(mqtt::delivery_token_ptr token)
 {
-  wxLogMessage("Delivery completed for %s", token->get_message()->get_topic());
+  mLogger->info("Delivery completed for {}", token->get_message()->get_topic());
 }
 
 // mqtt::callback interface }
@@ -429,8 +435,8 @@ void Client::reconnect()
     return;
   }
 
-  wxLogMessage(
-    "Reconnecting attempt %zu/%zu in %zums...",
+  mLogger->info(
+    "Reconnecting attempt {}/{} in {}ms...",
     mRetries,
     mBrokerOptions.getMaxReconnectRetries(),
     ReconnectAfterMs
@@ -453,8 +459,8 @@ void Client::doSubscribe(size_t id)
   if (it == std::end(mSubscriptions)) { return; }
   if (it->second->getState() == Subscription::State::Unsubscribed)
   {
-    wxLogMessage(
-      "Actually subscribing: %s (%d)",
+    mLogger->info(
+      "Actually subscribing: {} ({})",
       it->second->getFilter(),
       (unsigned)it->second->getQos()
     );
@@ -530,12 +536,12 @@ bool Client::match(const std::string &filter, const std::string &topic)
       && topicLevels.at(i) == filterLevels.at(i);
 
     const auto &level = filterLevels.at(i);
-    if (level == '#')
+    if (level == "#")
     {
       return true;
     }
 
-    if (level != '+' && !levelMatches)
+    if (level != "+" && !levelMatches)
     {
       return false;
     }

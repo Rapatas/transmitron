@@ -1,11 +1,14 @@
 #ifndef MQTT_CLIENT_HPP
 #define MQTT_CLIENT_HPP
 
-#include <memory>
-#include <map>
 #include <list>
+#include <map>
+#include <memory>
+
 #include <mqtt/async_client.h>
 #include <mqtt/disconnect_options.h>
+#include <spdlog/spdlog.h>
+
 #include "QualityOfService.hpp"
 #include "BrokerOptions.hpp"
 
@@ -38,7 +41,7 @@ public:
     virtual void onConnectionLost() = 0;
   };
 
-  explicit Client() = default;
+  explicit Client();
   size_t attachObserver(Observer *o);
   void detachObserver(size_t id);
 
@@ -75,6 +78,7 @@ private:
     { -1, "Connection timeout" }
   };
 
+  std::shared_ptr<spdlog::logger> mLogger;
   BrokerOptions mBrokerOptions;
   SubscriptionId mSubscriptionIds = 0;
   bool mShouldReconnect = false;

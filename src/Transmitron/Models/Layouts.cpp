@@ -1,17 +1,19 @@
 #include "Layouts.hpp"
+
 #include <cstring>
-#include <fstream>
+
 #include <algorithm>
+#include <fstream>
 #include <iterator>
 #include <optional>
 #include <stdexcept>
 #include <system_error>
-#include <wx/log.h>
-#include <nlohmann/json.hpp>
-#include <fmt/format.h>
-#include "Helpers/Url.hpp"
 
-#define wxLOG_COMPONENT "models/layouts" // NOLINT
+#include <fmt/format.h>
+#include <nlohmann/json.hpp>
+
+#include "Helpers/Url.hpp"
+#include "Helpers/Log.hpp"
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
@@ -19,6 +21,8 @@ using namespace Helpers;
 
 Layouts::Layouts()
 {
+  mLogger = Helpers::Log::create("Models::Layouts");
+
   const auto id = mAvailableId++;
   auto layout = std::make_unique<Node>();
   layout->name = "Default";
@@ -38,7 +42,7 @@ bool Layouts::load(const std::string &configDir)
 {
   if (configDir.empty())
   {
-    wxLogWarning("No directory provided");
+    mLogger->error("No directory provided");
     return false;
   }
 
@@ -50,14 +54,14 @@ bool Layouts::load(const std::string &configDir)
   std::error_code ec;
   if (exists && !isDir && !fs::remove(mLayoutsDir, ec))
   {
-    wxLogWarning("Could not remove file %s: %s", mLayoutsDir, ec.message());
+    mLogger->warn("Could not remove file {}: {}", mLayoutsDir, ec.message());
     return false;
   }
 
   if (!exists && !fs::create_directory(mLayoutsDir))
   {
-    wxLogWarning(
-      "Could not create profiles directory: %s",
+    mLogger->warn(
+      "Could not create profiles directory: {}",
       mLayoutsDir
     );
     return false;
@@ -87,7 +91,7 @@ bool Layouts::remove(wxDataViewItem item)
   fs::remove_all(node->path, ec);
   if (ec)
   {
-    wxLogError("Could not delete '%s': %s", node->name, ec.message());
+    mLogger->error("Could not delete '{}': {}", node->name, ec.message());
     return false;
   }
 
@@ -299,7 +303,7 @@ bool Layouts::SetValue(
   if (value.GetType() != "string") { return false; }
   if (value.GetString().empty())
   {
-    wxLogWarning("Empty name provided");
+    mLogger->warn("Empty name provided");
     return false;
   }
 
@@ -322,7 +326,7 @@ bool Layouts::SetValue(
     }
   }
 
-  wxLogInfo("Renaming '%s' to '%s'", node->name, newName);
+  mLogger->info("Renaming '{}' to '{}'", node->name, newName);
 
   const std::string encoded = Url::encode(newName);
 
@@ -336,8 +340,8 @@ bool Layouts::SetValue(
   fs::rename(node->path, newPath, ec);
   if (ec)
   {
-    wxLogError(
-      "Could not rename '%s' to '%s': %s",
+    mLogger->error(
+      "Could not rename '{}' to '{}': {}",
       node->path.string(),
       newPath,
       ec.message()
@@ -361,7 +365,7 @@ bool Layouts::SetValue(
 
 wxDataViewItem Layouts::loadLayoutFile(const std::filesystem::path &filepath)
 {
-    wxLogMessage("Checking %s", filepath.u8string());
+    mLogger->info("Checking {}", filepath.u8string());
 
     // Get name.
     std::string decoded;
@@ -371,8 +375,8 @@ wxDataViewItem Layouts::loadLayoutFile(const std::filesystem::path &filepath)
     }
     catch (std::runtime_error &e)
     {
-      wxLogError(
-        "Could not decode '%s': %s",
+      mLogger->error(
+        "Could not decode '{}': {}",
         filepath.u8string(),
         e.what()
       );
@@ -382,7 +386,7 @@ wxDataViewItem Layouts::loadLayoutFile(const std::filesystem::path &filepath)
     std::ifstream input(filepath);
     if (!input.is_open())
     {
-      wxLogWarning("Could not open '%s'", filepath.u8string());
+      mLogger->warn("Could not open '{}'", filepath.u8string());
       return wxDataViewItem(nullptr);
     }
 
@@ -390,7 +394,7 @@ wxDataViewItem Layouts::loadLayoutFile(const std::filesystem::path &filepath)
     buffer << input.rdbuf();
     if (!nlohmann::json::accept(buffer.str()))
     {
-      wxLogWarning("Could not parse '%s'", filepath.u8string());
+      mLogger->warn("Could not parse '{}'", filepath.u8string());
       return wxDataViewItem(nullptr);
     }
 
@@ -400,7 +404,7 @@ wxDataViewItem Layouts::loadLayoutFile(const std::filesystem::path &filepath)
       perspectiveIt == std::end(j)
       || perspectiveIt->type() != nlohmann::json::value_t::string
     ) {
-      wxLogWarning("Could not parse '%s'", filepath.u8string());
+      mLogger->warn("Could not parse '{}'", filepath.u8string());
       return wxDataViewItem(nullptr);
     }
 
@@ -423,8 +427,8 @@ bool Layouts::save(size_t id)
   std::ofstream output(layout->path);
   if (!output.is_open())
   {
-    wxLogError(
-      "Could not save '%s':",
+    mLogger->error(
+      "Could not save '{}':",
       layout->path.string(),
       std::strerror(errno)
     );

@@ -2,9 +2,12 @@
 #define TRANSMITRON_MODELS_PROFILES_HPP
 
 #include <filesystem>
+
+#include <spdlog/spdlog.h>
 #include <wx/dataview.h>
-#include "Snippets.hpp"
+
 #include "MQTT/BrokerOptions.hpp"
+#include "Snippets.hpp"
 
 namespace Transmitron::Models
 {
@@ -57,6 +60,7 @@ private:
   static constexpr const char *BrokerOptionsFilename =
     "broker-options.json";
 
+  std::shared_ptr<spdlog::logger> mLogger;
   Node::Id_t mAvailableId = 1;
   std::map<Node::Id_t, std::unique_ptr<Node>> mProfiles;
   std::string mProfilesDir;

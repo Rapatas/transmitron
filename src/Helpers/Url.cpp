@@ -3,10 +3,7 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include <wx/log.h>
 #include <fmt/format.h>
-
-#define wxLOG_COMPONENT "Helpers/Url" // NOLINT
 
 constexpr uint8_t NibbleFirst = 0xF0;
 constexpr uint8_t NibbleSeccond = 0x0F;

@@ -1,26 +1,29 @@
 #include <fstream>
 #include <iterator>
 #include <stdexcept>
-#include <wx/log.h>
-#include <fmt/core.h>
-#include "Transmitron/Info.hpp"
-#include "Profiles.hpp"
-#include "Helpers/Url.hpp"
 
-#define wxLOG_COMPONENT "models/profiles" // NOLINT
+#include <fmt/core.h>
+
+#include "Helpers/Log.hpp"
+#include "Helpers/Url.hpp"
+#include "Profiles.hpp"
+#include "Transmitron/Info.hpp"
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 using namespace Transmitron;
 using namespace Helpers;
 
-Profiles::Profiles() {}
+Profiles::Profiles()
+{
+  mLogger = Helpers::Log::create("Models::Profiles");
+}
 
 bool Profiles::load(const std::string &configDir)
 {
   if (configDir.empty())
   {
-    wxLogWarning("No directory provided");
+    mLogger->warn("No directory provided");
     return false;
   }
 
@@ -31,14 +34,14 @@ bool Profiles::load(const std::string &configDir)
 
   if (exists && !isDir && !fs::remove(mProfilesDir))
   {
-    wxLogWarning("Could not remove file %s", mProfilesDir);
+    mLogger->warn("Could not remove file {}", mProfilesDir);
     return false;
   }
 
   if (!exists && !fs::create_directory(mProfilesDir))
   {
-    wxLogWarning(
-      "Could not create profiles directory: %s",
+    mLogger->warn(
+      "Could not create profiles directory: {}",
       mProfilesDir
     );
     return false;
@@ -46,7 +49,7 @@ bool Profiles::load(const std::string &configDir)
 
   for (const auto &entry : fs::directory_iterator(mProfilesDir))
   {
-    wxLogMessage("Checking %s", entry.path().u8string());
+    mLogger->info("Checking {}", entry.path().u8string());
     if (entry.status().type() != fs::file_type::directory) { continue; }
 
     const auto item = loadProfileFile(entry.path());
@@ -55,7 +58,7 @@ bool Profiles::load(const std::string &configDir)
       continue;
     }
 
-    wxLogMessage("Loaded %s", entry.path().u8string());
+    mLogger->info("Loaded {}", entry.path().u8string());
   }
 
   return true;
@@ -107,7 +110,7 @@ bool Profiles::rename(
   );
   if (nameExists)
   {
-    wxLogError("Could not rename '%s': file exists", profile->name);
+    mLogger->error("Could not rename '{}': file exists", profile->name);
     return false;
   }
 
@@ -123,8 +126,8 @@ bool Profiles::rename(
   fs::rename(profile->path, pathNew, ec);
   if (ec)
   {
-    wxLogError(
-      "Could not rename '%s' to '%s': %s",
+    mLogger->error(
+      "Could not rename '{}' to '{}': {}",
       profile->name,
       name,
       ec.message()
@@ -151,7 +154,7 @@ bool Profiles::remove(wxDataViewItem item)
   fs::remove_all(node->path, ec);
   if (ec)
   {
-    wxLogError("Could not delete '%s': %s", node->name, ec.message());
+    mLogger->error("Could not delete '{}': {}", node->name, ec.message());
     return false;
   }
 
@@ -196,7 +199,7 @@ wxDataViewItem Profiles::createProfile()
 
   if (!fs::exists(path) && !fs::create_directory(path))
   {
-    wxLogWarning("Could not create profile '%s' directory", path);
+    mLogger->warn("Could not create profile '{}' directory", path);
     return wxDataViewItem(0);
   }
 
@@ -363,8 +366,8 @@ bool Profiles::save(size_t id)
   std::ofstream output(brokerOptionsFilepath);
   if (!output.is_open())
   {
-    wxLogError(
-      "Could not save '%s':",
+    mLogger->error(
+      "Could not save '{}':",
       brokerOptionsFilepath,
       std::strerror(errno)
     );
@@ -385,8 +388,8 @@ wxDataViewItem Profiles::loadProfileFile(const std::filesystem::path &filepath)
   }
   catch (std::runtime_error &e)
   {
-    wxLogError(
-      "Could not decode '%s': %s",
+    mLogger->error(
+      "Could not decode '{}': {}",
       filepath.u8string(),
       e.what()
     );
@@ -403,7 +406,7 @@ wxDataViewItem Profiles::loadProfileFile(const std::filesystem::path &filepath)
   std::ifstream brokerOptionsFile(brokerOptionsFilepath);
   if (!brokerOptionsFile.is_open())
   {
-    wxLogWarning("Could not open '%s'", filepath.u8string());
+    mLogger->warn("Could not open '{}'", filepath.u8string());
     return wxDataViewItem(nullptr);
   }
 
@@ -411,7 +414,7 @@ wxDataViewItem Profiles::loadProfileFile(const std::filesystem::path &filepath)
   buffer << brokerOptionsFile.rdbuf();
   if (!nlohmann::json::accept(buffer.str()))
   {
-    wxLogWarning("Could not parse '%s'", filepath.u8string());
+    mLogger->warn("Could not parse '{}'", filepath.u8string());
     return wxDataViewItem(nullptr);
   }
 

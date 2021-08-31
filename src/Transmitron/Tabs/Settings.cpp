@@ -1,11 +1,10 @@
-#include "Settings.hpp"
-#include "Transmitron/Models/Layouts.hpp"
-
+#include <wx/artprov.h>
 #include <wx/button.h>
 #include <wx/wx.h>
-#include <wx/artprov.h>
 
-#define wxLOG_COMPONENT "Settings" // NOLINT
+#include "Helpers/Log.hpp"
+#include "Settings.hpp"
+#include "Transmitron/Models/Layouts.hpp"
 
 using namespace Transmitron::Tabs;
 using namespace Transmitron;
@@ -26,6 +25,8 @@ Settings::Settings(
   mLabelFont(std::move(labelFont)),
   mLayoutsModel(layoutsModel)
 {
+  mLogger = Helpers::Log::create("Transmitron::Settings");
+
   setupLayouts();
 
   auto *panel = new wxPanel(this, -1);
@@ -135,7 +136,7 @@ void Settings::onContextSelected(wxCommandEvent &event)
 
 void Settings::onLayoutsDelete(wxCommandEvent &/* event */)
 {
-  wxLogMessage("Requesting delete");
+  mLogger->info("Requesting delete");
   const auto item = mLayoutsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
   if (mLayoutsModel->getDefault() == item) { return; }
@@ -144,7 +145,7 @@ void Settings::onLayoutsDelete(wxCommandEvent &/* event */)
 
 void Settings::onLayoutsRename(wxCommandEvent &/* event */)
 {
-  wxLogMessage("Requesting rename");
+  mLogger->info("Requesting rename");
   const auto item = mLayoutsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
@@ -153,7 +154,7 @@ void Settings::onLayoutsRename(wxCommandEvent &/* event */)
 
 void Settings::onLayoutsEdit(wxDataViewEvent &event)
 {
-  wxLogMessage("Requesting edit");
+  mLogger->info("Requesting edit");
   const auto item = event.GetItem();
   if (mLayoutsModel->getDefault() == item)
   {

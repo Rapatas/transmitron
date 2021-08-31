@@ -1,10 +1,13 @@
 #ifndef TRANSMITRON_MODELS_SNIPPETS_HPP
 #define TRANSMITRON_MODELS_SNIPPETS_HPP
 
-#include <memory>
-#include <list>
 #include <filesystem>
+#include <list>
+#include <memory>
+
+#include <spdlog/spdlog.h>
 #include <wx/dataview.h>
+
 #include "MQTT/Message.hpp"
 
 namespace Transmitron::Models
@@ -103,6 +106,7 @@ private:
     bool saved;
   };
 
+  std::shared_ptr<spdlog::logger> mLogger;
   Node::Id_t mNextAvailableId = 0;
   std::map<Node::Id_t, Node> mNodes;
   std::string mSnippetsDir;

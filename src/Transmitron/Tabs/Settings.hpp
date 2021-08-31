@@ -1,6 +1,7 @@
 #ifndef TRANSMITRON_TABS_SETTINGS_HPP
 #define TRANSMITRON_TABS_SETTINGS_HPP
 
+#include <spdlog/spdlog.h>
 #include <wx/panel.h>
 #include <wx/sizer.h>
 #include <wx/dataview.h>
@@ -30,6 +31,8 @@ private:
   };
 
   const wxFontInfo mLabelFont;
+
+  std::shared_ptr<spdlog::logger> mLogger;
 
   // Layouts.
   wxPanel *mLayouts = nullptr;

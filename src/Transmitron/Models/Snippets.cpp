@@ -1,18 +1,17 @@
-#include "Snippets.hpp"
-#include "Helpers/Helpers.hpp"
-#include "Helpers/Url.hpp"
-
 #include <algorithm>
 #include <filesystem>
-#include <ios>
-#include <nlohmann/json.hpp>
 #include <fstream>
+#include <ios>
 #include <string_view>
-#include <wx/log.h>
-#include <wx/artprov.h>
-#include <fmt/format.h>
 
-#define wxLOG_COMPONENT "Models/Snippets" // NOLINT
+#include <fmt/format.h>
+#include <nlohmann/json.hpp>
+#include <wx/artprov.h>
+
+#include "Helpers/Helpers.hpp"
+#include "Helpers/Url.hpp"
+#include "Helpers/Log.hpp"
+#include "Snippets.hpp"
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
@@ -20,6 +19,8 @@ using namespace Helpers;
 
 Snippets::Snippets()
 {
+  mLogger = Helpers::Log::create("Models::Snippets");
+
   const auto id = getNextId();
   Node root {
     0,
@@ -55,7 +56,7 @@ bool Snippets::load(const std::string &connectionDir)
 {
   if (connectionDir.empty())
   {
-    wxLogWarning("No directory provided");
+    mLogger->warn("No directory provided");
     return false;
   }
 
@@ -66,14 +67,14 @@ bool Snippets::load(const std::string &connectionDir)
 
   if (exists && !isDir && !fs::remove(mSnippetsDir))
   {
-    wxLogWarning("Could not remove file %s", mSnippetsDir);
+    mLogger->warn("Could not remove file {}", mSnippetsDir);
     return false;
   }
 
   if (!exists && !fs::create_directory(mSnippetsDir))
   {
-    wxLogWarning(
-      "Could not create snippets directory: %s",
+    mLogger->warn(
+      "Could not create snippets directory: {}",
       mSnippetsDir
     );
     return false;
@@ -106,8 +107,8 @@ wxDataViewItem Snippets::createFolder(
     uniqueName = fmt::format("{} - {}", NewName, postfix);
   }
 
-  wxLogInfo(
-    "Creating folder '%s' under [%zu]'%s'",
+  mLogger->info(
+    "Creating folder '{}' under [{}]'{}'",
     uniqueName,
     parentId,
     parentNode.name
@@ -164,8 +165,8 @@ wxDataViewItem Snippets::createSnippet(
     uniqueName = fmt::format("{} - {}", NewName, postfix);
   }
 
-  wxLogInfo(
-    "Creating snippet '%s' under [%zu]'%s'",
+  mLogger->info(
+    "Creating snippet '{}' under [{}]'{}'",
     uniqueName,
     parentId,
     parentNode.name
@@ -220,8 +221,8 @@ wxDataViewItem Snippets::insert(
     return wxDataViewItem(nullptr);
   }
 
-  wxLogInfo(
-    "Creating snippet '%s' under [%zu]'%s'",
+  mLogger->info(
+    "Creating snippet '{}' under [{}]'{}'",
     name,
     parentId,
     parentNode.name
@@ -265,7 +266,7 @@ wxDataViewItem Snippets::replace(
   auto &node = mNodes.at(id);
   if (node.type != Node::Type::Snippet)
   {
-    wxLogWarning("Can only replace snippets");
+    mLogger->warn("Can only replace snippets");
     return wxDataViewItem(nullptr);
   }
 
@@ -273,7 +274,7 @@ wxDataViewItem Snippets::replace(
   std::ofstream output(path);
   if (!output.is_open())
   {
-    wxLogWarning("Could not open '%s'", path);
+    mLogger->warn("Could not open '{}'", path);
     return wxDataViewItem(nullptr);
   }
 
@@ -294,7 +295,7 @@ bool Snippets::remove(wxDataViewItem item)
   fs::remove_all(path, ec);
   if (ec)
   {
-    wxLogError("Could not delete '%s': %s", node.name, ec.message());
+    mLogger->error("Could not delete '{}': {}", node.name, ec.message());
     return false;
   }
 
@@ -341,8 +342,8 @@ wxDataViewItem Snippets::move(
   const auto newParentId = toId(parent);
   const auto oldParentId = node.parent;
 
-  wxLogInfo(
-    "Moving %zu in %zu before %zu",
+  mLogger->info(
+    "Moving {} in {} before {}",
     nodeId,
     newParentId,
     toId(sibling)
@@ -426,14 +427,14 @@ void Snippets::loadDirectoryRecursive(
   );
   if (!fs::exists(indexPath))
   {
-    wxLogError("Could not sort '%s': No index.json found", name);
+    mLogger->error("Could not sort '{}': No index.json found", name);
     return;
   }
 
   std::ifstream indexFile(indexPath, std::ios::in);
   if (!indexFile.is_open())
   {
-    wxLogError("Could not sort '%s': Failed to open index.json", name);
+    mLogger->error("Could not sort '{}': Failed to open index.json", name);
     return;
   }
 
@@ -442,7 +443,7 @@ void Snippets::loadDirectoryRecursive(
 
   if (indexes.type() != nlohmann::json::value_t::array)
   {
-    wxLogError("Could not sort '%s': index.json is not an array", name);
+    mLogger->error("Could not sort '{}': index.json is not an array", name);
     fs::remove(indexPath);
     return;
   }
@@ -479,7 +480,7 @@ void Snippets::loadSnippet(
   std::ifstream snippetFile(path);
   if (!snippetFile.is_open())
   {
-    wxLogWarning("Could not load '%s': failed to open", path.string());
+    mLogger->warn("Could not load '{}': failed to open", path.string());
     return;
   }
 
@@ -493,7 +494,7 @@ void Snippets::loadSnippet(
   {
     if (!nlohmann::json::accept(sbuffer))
     {
-      wxLogWarning("Could not load '%s': malformed json", path.string());
+      mLogger->warn("Could not load '{}': malformed json", path.string());
       return;
     }
 
@@ -618,8 +619,8 @@ bool Snippets::SetValue(
   fs::rename(pathOld, pathNew, ec);
   if (ec)
   {
-    wxLogError(
-      "Could not rename '%s' to '%s': %s",
+    mLogger->error(
+      "Could not rename '{}' to '{}': {}",
       pathOld,
       pathNew,
       ec.message()
@@ -766,7 +767,7 @@ bool Snippets::saveSnippet(Node::Id_t id)
   std::ofstream output(nodePath);
   if (!output.is_open())
   {
-    wxLogError("Could not save '%s'", node.name);
+    mLogger->error("Could not save '{}'", node.name);
     return false;
   }
 
@@ -787,14 +788,14 @@ bool Snippets::saveFolder(Node::Id_t id)
 
   if (exists && !isDir && !fs::remove(nodePath))
   {
-    wxLogWarning("Could not remove file %s", nodePath);
+    mLogger->warn("Could not remove file {}", nodePath);
     return false;
   }
 
   if (!exists && !fs::create_directory(nodePath))
   {
-    wxLogWarning(
-      "Could not create directory: %s",
+    mLogger->warn(
+      "Could not create directory: {}",
       nodePath
     );
     return false;
@@ -804,7 +805,7 @@ bool Snippets::saveFolder(Node::Id_t id)
   std::ofstream output(indexPath);
   if (!output.is_open())
   {
-    wxLogWarning("Could not save '%s'", indexPath);
+    mLogger->warn("Could not save '{}'", indexPath);
   }
   else
   {
@@ -838,7 +839,7 @@ bool Snippets::moveFile(Node::Id_t nodeId, Node::Id_t newParentId)
 
   if (fs::exists(pathNew))
   {
-    wxLogError("Could not move item: target exists");
+    mLogger->error("Could not move item: target exists");
     return false;
   }
 
@@ -847,8 +848,8 @@ bool Snippets::moveFile(Node::Id_t nodeId, Node::Id_t newParentId)
   fs::rename(pathOld, pathNew, ec);
   if (ec)
   {
-    wxLogError(
-      "Could not move item: failed to rename '%s' to '%s': %s",
+    mLogger->error(
+      "Could not move item: failed to rename '{}' to '{}': {}",
       pathOld,
       pathNew,
       ec.message()
@@ -866,31 +867,31 @@ bool Snippets::moveCheck(
 ) {
   if (!item.IsOk())
   {
-    wxLogInfo("Could not move item: Item is null");
+    mLogger->info("Could not move item: Item is null");
     return false;
   }
 
   if (!parent.IsOk() && !sibling.IsOk())
   {
-    wxLogInfo("Could not move item: Target it null");
+    mLogger->info("Could not move item: Target it null");
     return false;
   }
 
   if (item == parent)
   {
-    wxLogInfo("Could not move item: Item is Target");
+    mLogger->info("Could not move item: Item is Target");
     return false;
   }
 
   if (item == sibling)
   {
-    wxLogInfo("Could not move item: Item is Sibling");
+    mLogger->info("Could not move item: Item is Sibling");
     return false;
   }
 
   if (isRecursive(parent, item))
   {
-    wxLogInfo("Could not move item: Target is recursive");
+    mLogger->info("Could not move item: Target is recursive");
     return false;
   }
 
@@ -922,7 +923,7 @@ void Snippets::moveUnderNewParent(
 
   if (!sibling.IsOk())
   {
-    wxLogInfo("Sibling was null, assuming first position");
+    mLogger->info("Sibling was null, assuming first position");
     newParentNode.children.push_front(nodeId);
   }
   else
@@ -947,7 +948,7 @@ void Snippets::moveUnderSameParent(
   auto &siblings = newParentNode.children;
 
   const auto &siblingNode = mNodes.at(toId(sibling));
-  wxLogInfo("Moving under same parent, next to %s", siblingNode.name);
+  mLogger->info("Moving under same parent, next to {}", siblingNode.name);
 
   std::list<Node::Id_t> temp;
 

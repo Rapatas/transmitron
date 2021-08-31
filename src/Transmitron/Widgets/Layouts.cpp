@@ -1,15 +1,14 @@
+#include <iterator>
+
+#include <wx/artprov.h>
+#include <wx/button.h>
+#include <wx/event.h>
+
+#include "Helpers/Log.hpp"
 #include "Layouts.hpp"
 #include "Transmitron/Events/Layout.hpp"
 #include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Notifiers/Layouts.hpp"
-
-#include <iterator>
-#include <wx/artprov.h>
-#include <wx/button.h>
-#include <wx/event.h>
-#include <wx/log.h>
-
-#define wxLOG_COMPONENT "Widgets/Layout" // NOLINT
 
 using namespace Transmitron::Widgets;
 using namespace Transmitron;
@@ -29,6 +28,8 @@ Layouts::Layouts(
   mLayoutsModel(layoutsModel),
   mAuiMan(auiMan)
 {
+  mLogger = Helpers::Log::create("Widgets::Layouts");
+
   auto *notifier = new Notifiers::Layouts;
   mLayoutsModel->AddNotifier(notifier);
 
@@ -111,7 +112,7 @@ void Layouts::onLayoutSaveClicked(wxCommandEvent &/* event */)
 
   if (!item.IsOk())
   {
-    wxLogWarning("Could not store perspective");
+    mLogger->warn("Could not store perspective");
     return;
   }
 

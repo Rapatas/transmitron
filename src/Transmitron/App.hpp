@@ -1,8 +1,10 @@
 #ifndef TRANSMITRON_APP_HPP
 #define TRANSMITRON_APP_HPP
 
+#include <spdlog/spdlog.h>
 #include <wx/wx.h>
 #include <wx/aui/auibook.h>
+
 #include "Transmitron/Models/Profiles.hpp"
 #include "Transmitron/Models/Layouts.hpp"
 
@@ -20,6 +22,7 @@ public:
 
 private:
 
+  std::shared_ptr<spdlog::logger> mLogger;
   size_t mCount = 0;
   wxFrame *mFrame = nullptr;
   wxAuiNotebook *mNote = nullptr;

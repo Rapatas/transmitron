@@ -1,57 +1,53 @@
-#include "App.hpp"
-
+#include <fmt/core.h>
+#include <wx/artprov.h>
 #include <wx/aui/auibook.h>
 #include <wx/notebook.h>
 #include <wx/settings.h>
-#include <wx/artprov.h>
-#include <fmt/core.h>
 
+#include "App.hpp"
+#include "Events/Connection.hpp"
+#include "Helpers/Log.hpp"
 #include "Info.hpp"
-#include "LogFormat.hpp"
+#include "Resources/history/history-18x14.hpp"
+#include "Resources/history/history-18x18.hpp"
 #include "Resources/pin/not-pinned-18x18.hpp"
 #include "Resources/pin/pinned-18x18.hpp"
 #include "Resources/plus/plus-18x18.hpp"
+#include "Resources/preview/preview-18x14.hpp"
+#include "Resources/preview/preview-18x18.hpp"
 #include "Resources/qos/qos-0.hpp"
 #include "Resources/qos/qos-1.hpp"
 #include "Resources/qos/qos-2.hpp"
-#include "Resources/send/send-18x18.hpp"
-#include "Resources/history/history-18x18.hpp"
-#include "Resources/preview/preview-18x18.hpp"
-#include "Resources/snippets/snippets-18x18.hpp"
-#include "Resources/subscription/subscription-18x18.hpp"
 #include "Resources/send/send-18x14.hpp"
-#include "Resources/history/history-18x14.hpp"
-#include "Resources/preview/preview-18x14.hpp"
+#include "Resources/send/send-18x18.hpp"
 #include "Resources/snippets/snippets-18x14.hpp"
+#include "Resources/snippets/snippets-18x18.hpp"
 #include "Resources/subscription/subscription-18x14.hpp"
+#include "Resources/subscription/subscription-18x18.hpp"
 #include "Tabs/Client.hpp"
 #include "Tabs/Homepage.hpp"
 #include "Tabs/Settings.hpp"
-#include "Events/Connection.hpp"
 #include "Transmitron/Models/Layouts.hpp"
-
-#define wxLOG_COMPONENT "Transmitron" // NOLINT
 
 using namespace Transmitron;
 namespace fs = std::filesystem;
 
-constexpr size_t DefaultWindowWidth = 800;
-constexpr size_t DefaultWindowHeight = 600;
+constexpr size_t DefaultWindowWidth = 1280;
+constexpr size_t DefaultWindowHeight = 720;
 constexpr size_t MinWindowWidth = 550;
 constexpr size_t MinWindowHeight = 300;
 constexpr size_t LabelFontSize = 15;
 
 App::App() :
   LabelFontInfo(LabelFontSize)
-{}
+{
+  Helpers::Log::instance().initialize();
+  mLogger = Helpers::Log::create("Transmitron::App");
+}
 
 bool App::OnInit()
 {
   wxImage::AddHandler(new wxPNGHandler);
-
-  auto *log = new wxLogStderr();
-  log->SetFormatter(new LogFormat());
-  wxLog::SetActiveTarget(log);
 
   mFrame = new wxFrame(
     nullptr,

@@ -1,11 +1,10 @@
-#include "Homepage.hpp"
-
 #include <wx/button.h>
 #include <wx/wx.h>
 #include <wx/artprov.h>
 #include <wx/propgrid/propgrid.h>
 
-#define wxLOG_COMPONENT "Homepage" // NOLINT
+#include "Homepage.hpp"
+#include "Helpers/Log.hpp"
 
 using namespace Transmitron::Tabs;
 using namespace Transmitron;
@@ -28,6 +27,8 @@ Homepage::Homepage(
   mLabelFont(std::move(labelFont)),
   mProfilesModel(profilesModel)
 {
+  mLogger = Helpers::Log::create("Transmitron::Homepage");
+
   auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
   this->SetSizer(hsizer);
 
@@ -169,8 +170,8 @@ void Homepage::onProfileActivated(wxDataViewEvent &e)
 {
   const auto &profileItem = e.GetItem();
   const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
-  wxLogMessage(
-    "Queueing event for profile at %s:%zu",
+  mLogger->info(
+    "Queueing event for profile at {}:{}",
     brokerOptions.getHostname(),
     brokerOptions.getPort()
   );
@@ -203,8 +204,8 @@ void Homepage::onConnectClicked(wxCommandEvent &/* event */)
   const auto profileItem = mProfilesCtrl->GetSelection();
   const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
 
-  wxLogMessage(
-    "Queueing event for profile at %s:%zu",
+  mLogger->info(
+    "Queueing event for profile at {}:{}",
     brokerOptions.getHostname(),
     brokerOptions.getPort()
   );
@@ -275,7 +276,7 @@ void Homepage::onContextSelected(wxCommandEvent &e)
 
 void Homepage::onProfileDelete(wxCommandEvent & /* event */)
 {
-  wxLogMessage("Requesting delete");
+  mLogger->info("Requesting delete");
   const auto item = mProfilesCtrl->GetSelection();
   mProfilesModel->remove(item);
 }

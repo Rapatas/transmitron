@@ -1,13 +1,10 @@
 #include <wx/dcmemory.h>
-#include <wx/log.h>
 #include "History.hpp"
 #include "Transmitron/Resources/pin/pinned-18x18.hpp"
 #include "Transmitron/Resources/pin/not-pinned-18x18.hpp"
 #include "Transmitron/Resources/qos/qos-0.hpp"
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
-
-#define wxLOG_COMPONENT "Models/History" // NOLINT
 
 using namespace Transmitron::Models;
 using namespace Transmitron;

@@ -1,17 +1,15 @@
-#include "Client.hpp"
-
-#include <sstream>
-#include <wx/artprov.h>
 #include <nlohmann/json.hpp>
-#include <wx/log.h>
+#include <wx/artprov.h>
 #include <wx/clipbrd.h>
 
+#include "Client.hpp"
 #include "Helpers/Helpers.hpp"
+#include "Helpers/Log.hpp"
 #include "MQTT/Message.hpp"
 #include "Transmitron/Events/Layout.hpp"
-#include "Transmitron/Resources/plus/plus-18x18.hpp"
 #include "Transmitron/Resources/history/history-18x14.hpp"
 #include "Transmitron/Resources/history/history-18x18.hpp"
+#include "Transmitron/Resources/plus/plus-18x18.hpp"
 #include "Transmitron/Resources/preview/preview-18x14.hpp"
 #include "Transmitron/Resources/preview/preview-18x18.hpp"
 #include "Transmitron/Resources/send/send-18x14.hpp"
@@ -20,8 +18,6 @@
 #include "Transmitron/Resources/snippets/snippets-18x18.hpp"
 #include "Transmitron/Resources/subscription/subscription-18x14.hpp"
 #include "Transmitron/Resources/subscription/subscription-18x18.hpp"
-
-#define wxLOG_COMPONENT "Client" // NOLINT
 
 using namespace Transmitron::Tabs;
 using namespace Transmitron::Models;
@@ -56,6 +52,8 @@ Client::Client(
   mDarkMode(darkMode),
   mSnippetsModel(snippetsModel)
 {
+  mLogger = Helpers::Log::create("Transmitron::Client");
+
   mClient = std::make_shared<MQTT::Client>();
   Bind(Events::CONNECTED, &Client::onConnectedSync, this);
   Bind(Events::DISCONNECTED, &Client::onDisconnectedSync, this);
@@ -725,7 +723,7 @@ void Client::onConnectClicked(wxCommandEvent &/* event */)
 {
   if (mClient->connected())
   {
-    wxLogMessage("Was connected");
+    mLogger->info("Was connected");
     return;
   }
 
@@ -738,7 +736,7 @@ void Client::onDisconnectClicked(wxCommandEvent &/* event */)
 {
   if (!mClient->connected())
   {
-    wxLogMessage("Was not connected");
+    mLogger->info("Was not connected");
     return;
   }
 
@@ -1284,25 +1282,25 @@ void Client::onConnectionFailure()
 
 void Client::onConnectedSync(Events::Connection &/* event */)
 {
-  wxLogInfo("Connected");
+  mLogger->info("Connected");
   allowDisconnect();
 }
 
 void Client::onDisconnectedSync(Events::Connection &/* event */)
 {
-  wxLogInfo("Disconnected");
+  mLogger->info("Disconnected");
   allowConnect();
 }
 
 void Client::onConnectionLostSync(Events::Connection &/* event */)
 {
-  wxLogInfo("Connection lost, reconnecting...");
+  mLogger->info("Connection lost, reconnecting...");
   allowCancel();
 }
 
 void Client::onConnectionFailureSync(Events::Connection &/* event */)
 {
-  wxLogInfo("Unable to connect to server");
+  mLogger->info("Unable to connect to server");
   allowConnect();
 }
 
@@ -1424,11 +1422,11 @@ void Client::onPublishClicked(wxCommandEvent &/* event */)
 
 void Client::onPublishSaveSnippet(Events::Edit &/* event */)
 {
-  wxLogInfo("Saving current message");
+  mLogger->info("Saving current message");
   auto snippetItem = mSnippetsCtrl->GetSelection();
   if (!mSnippetsModel->IsContainer(snippetItem))
   {
-    wxLogInfo("Selecting parent");
+    mLogger->info("Selecting parent");
     snippetItem = mSnippetsModel->GetParent(snippetItem);
   }
 
@@ -1437,7 +1435,7 @@ void Client::onPublishSaveSnippet(Events::Edit &/* event */)
   );
 
   const auto &message = publish->getMessage();
-  wxLogInfo("Storing %s", message.topic);
+  mLogger->info("Storing {}", message.topic);
   auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
   if (inserted.IsOk())
   {
@@ -1523,11 +1521,11 @@ void Client::onHistorySearchButton(wxCommandEvent &/* event */)
 
 void Client::onPreviewSaveSnippet(Events::Edit &/* event */)
 {
-  wxLogInfo("Saving current message");
+  mLogger->info("Saving current message");
   auto snippetItem = mSnippetsCtrl->GetSelection();
   if (!mSnippetsModel->IsContainer(snippetItem))
   {
-    wxLogInfo("Selecting parent");
+    mLogger->info("Selecting parent");
     snippetItem = mSnippetsModel->GetParent(snippetItem);
   }
 
@@ -1536,7 +1534,7 @@ void Client::onPreviewSaveSnippet(Events::Edit &/* event */)
   );
 
   const auto &message = preview->getMessage();
-  wxLogInfo("Storing %s", message.topic);
+  mLogger->info("Storing {}", message.topic);
   auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
   if (inserted.IsOk())
   {

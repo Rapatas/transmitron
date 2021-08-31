@@ -16,6 +16,7 @@ add_executable(
   ${VERSION_POST_CONF}
   src/Helpers/Helpers.cpp
   src/Helpers/Url.cpp
+  src/Helpers/Log.cpp
   src/MQTT/BrokerOptions.cpp
   src/MQTT/Client.cpp
   src/MQTT/Message.cpp
@@ -124,6 +125,7 @@ find_package(PahoMqttCpp REQUIRED)
 find_package(wxwidgets REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(fmt REQUIRED)
+find_package(spdlog REQUIRED)
 
 target_link_libraries(
   ${CMAKE_PROJECT_NAME}
@@ -134,5 +136,6 @@ target_link_libraries(
     nlohmann_json::nlohmann_json
     tinyxml2::tinyxml2
     fmt::fmt
+    spdlog::spdlog
     stdc++fs
 )
