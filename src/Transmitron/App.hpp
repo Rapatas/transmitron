@@ -40,7 +40,7 @@ private:
   void createSettingsTab();
 
   /// Empty if it fails.
-  static std::string getConfigDir();
+  std::string getConfigDir();
 };
 
 }

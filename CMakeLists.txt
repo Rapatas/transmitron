@@ -15,9 +15,15 @@ add_executable(
   ${PROJECT_NAME}
   ${INFO_POST_CONF}
   ${VERSION_POST_CONF}
+  src/Common/Env.Linux.cpp
+  src/Common/Env.Windows.cpp
   src/Common/Helpers.cpp
   src/Common/Log.cpp
+  src/Common/String.cpp
   src/Common/Url.cpp
+  src/Common/XdgBaseDir.Linux.cpp
+  src/Common/XdgBaseDir.Windows.cpp
+  src/Common/XdgBaseDir.cpp
   src/MQTT/BrokerOptions.cpp
   src/MQTT/Client.cpp
   src/MQTT/Message.cpp

@@ -7,6 +7,7 @@
 #include "App.hpp"
 #include "Events/Connection.hpp"
 #include "Common/Log.hpp"
+#include "Common/XdgBaseDir.hpp"
 #include "Info.hpp"
 #include "Resources/history/history-18x14.hpp"
 #include "Resources/history/history-18x18.hpp"
@@ -208,38 +209,17 @@ void App::createSettingsTab()
 
 std::string App::getConfigDir()
 {
-  std::string result;
+  auto configHome = Common::XdgBaseDir::configHome();
+  auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
 
-  char *xdg_config_home = getenv("XDG_CONFIG_HOME"); // NOLINT
-  if (xdg_config_home == nullptr)
+  if (!fs::is_directory(config) || !fs::exists(config))
   {
-    char *user = getenv("USER"); // NOLINT
-    if (user != nullptr)
+    if (!fs::create_directory(config))
     {
-      result = fmt::format("/home/{}/.config/{}", user, getProjectName());
-    }
-  }
-  else
-  {
-    std::string xdgConfigHome(xdg_config_home);
-
-    if (xdgConfigHome.back() != '/')
-    {
-      xdgConfigHome += '/';
-    }
-
-    result = xdgConfigHome + getProjectName();
-  }
-
-  if (!fs::is_directory(result) || !fs::exists(result))
-  {
-    if (!fs::create_directory(result))
-    {
-      wxLogWarning("Could not create directory '%s'", result);
-      result = {};
+      mLogger->warn("Could not create directory '%s'", config);
+      return {};
     }
   }
 
-  return result;
+  return config;
 }
-
