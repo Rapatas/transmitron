@@ -4,7 +4,7 @@
 #include <wx/propgrid/propgrid.h>
 
 #include "Homepage.hpp"
-#include "Helpers/Log.hpp"
+#include "Common/Log.hpp"
 
 using namespace Transmitron::Tabs;
 using namespace Transmitron;
@@ -27,7 +27,7 @@ Homepage::Homepage(
   mLabelFont(std::move(labelFont)),
   mProfilesModel(profilesModel)
 {
-  mLogger = Helpers::Log::create("Transmitron::Homepage");
+  mLogger = Common::Log::create("Transmitron::Homepage");
 
   auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
   this->SetSizer(hsizer);

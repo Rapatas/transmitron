@@ -5,7 +5,7 @@
 #include <wx/dcmemory.h>
 
 #include "Subscriptions.hpp"
-#include "Helpers/Log.hpp"
+#include "Common/Log.hpp"
 #include "Transmitron/Resources/qos/qos-0.hpp"
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
@@ -15,7 +15,7 @@ using namespace Transmitron::Models;
 Subscriptions::Subscriptions(std::shared_ptr<MQTT::Client> client) :
   mClient(std::move(client))
 {
-  mLogger = Helpers::Log::create("Models::Subscriptions");
+  mLogger = Common::Log::create("Models::Subscriptions");
 }
 
 size_t Subscriptions::attachObserver(Observer *observer)

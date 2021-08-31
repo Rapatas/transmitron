@@ -1,9 +1,9 @@
-#ifndef HELPERS_URL_HPP
-#define HELPERS_URL_HPP
+#ifndef COMMON_URL_HPP
+#define COMMON_URL_HPP
 
 #include <string>
 
-namespace Helpers
+namespace Common
 {
 namespace Url
 {
@@ -17,4 +17,4 @@ inline bool isHexChar(char c);
 }
 }
 
-#endif // HELPERS_URL_HPP
+#endif // COMMON_URL_HPP

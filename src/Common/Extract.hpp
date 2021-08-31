@@ -1,9 +1,9 @@
-#ifndef HELPERS_EXTRACT_HPP
-#define HELPERS_EXTRACT_HPP
+#ifndef COMMON_EXTRACT_HPP
+#define COMMON_EXTRACT_HPP
 
 #include <nlohmann/json.hpp>
 
-namespace Helpers
+namespace Common
 {
 
 template<typename T>
@@ -59,4 +59,4 @@ std::optional<bool> extract<bool>(
 
 }
 
-#endif // HELPERS_EXTRACT_HPP
+#endif // COMMON_EXTRACT_HPP

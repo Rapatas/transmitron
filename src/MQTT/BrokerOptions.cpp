@@ -2,7 +2,7 @@
 #include <chrono>
 #include <fmt/format.h>
 #include <string_view>
-#include "Helpers/Extract.hpp"
+#include "Common/Extract.hpp"
 
 using namespace MQTT;
 
@@ -64,7 +64,7 @@ BrokerOptions::BrokerOptions(
 
 BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data)
 {
-  using namespace Helpers;
+  using namespace Common;
 
   bool autoReconnect = extract<bool>(data, "autoReconnect")
     .value_or(DefaultAutoReconnect);

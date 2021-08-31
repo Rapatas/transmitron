@@ -2,7 +2,7 @@
 #include <wx/button.h>
 #include <wx/wx.h>
 
-#include "Helpers/Log.hpp"
+#include "Common/Log.hpp"
 #include "Settings.hpp"
 #include "Transmitron/Models/Layouts.hpp"
 
@@ -25,7 +25,7 @@ Settings::Settings(
   mLabelFont(std::move(labelFont)),
   mLayoutsModel(layoutsModel)
 {
-  mLogger = Helpers::Log::create("Transmitron::Settings");
+  mLogger = Common::Log::create("Transmitron::Settings");
 
   setupLayouts();
 

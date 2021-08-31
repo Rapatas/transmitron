@@ -8,18 +8,17 @@
 #include <nlohmann/json.hpp>
 #include <wx/artprov.h>
 
-#include "Helpers/Helpers.hpp"
-#include "Helpers/Url.hpp"
-#include "Helpers/Log.hpp"
+#include "Common/Url.hpp"
+#include "Common/Log.hpp"
 #include "Snippets.hpp"
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
-using namespace Helpers;
+using namespace Common;
 
 Snippets::Snippets()
 {
-  mLogger = Helpers::Log::create("Models::Snippets");
+  mLogger = Common::Log::create("Models::Snippets");
 
   const auto id = getNextId();
   Node root {

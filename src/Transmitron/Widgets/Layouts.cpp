@@ -4,7 +4,7 @@
 #include <wx/button.h>
 #include <wx/event.h>
 
-#include "Helpers/Log.hpp"
+#include "Common/Log.hpp"
 #include "Layouts.hpp"
 #include "Transmitron/Events/Layout.hpp"
 #include "Transmitron/Models/Layouts.hpp"
@@ -28,7 +28,7 @@ Layouts::Layouts(
   mLayoutsModel(layoutsModel),
   mAuiMan(auiMan)
 {
-  mLogger = Helpers::Log::create("Widgets::Layouts");
+  mLogger = Common::Log::create("Widgets::Layouts");
 
   auto *notifier = new Notifiers::Layouts;
   mLayoutsModel->AddNotifier(notifier);

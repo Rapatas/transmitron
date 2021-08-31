@@ -3,8 +3,8 @@
 #include <wx/clipbrd.h>
 
 #include "Client.hpp"
-#include "Helpers/Helpers.hpp"
-#include "Helpers/Log.hpp"
+#include "Common/Helpers.hpp"
+#include "Common/Log.hpp"
 #include "MQTT/Message.hpp"
 #include "Transmitron/Events/Layout.hpp"
 #include "Transmitron/Resources/history/history-18x14.hpp"
@@ -52,7 +52,7 @@ Client::Client(
   mDarkMode(darkMode),
   mSnippetsModel(snippetsModel)
 {
-  mLogger = Helpers::Log::create("Transmitron::Client");
+  mLogger = Common::Log::create("Transmitron::Client");
 
   mClient = std::make_shared<MQTT::Client>();
   Bind(Events::CONNECTED, &Client::onConnectedSync, this);
@@ -1017,7 +1017,7 @@ void Client::onContextSelectedSubscriptionsChangeColor(wxCommandEvent &/* event 
   const auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
-  const auto color = Helpers::colorFromNumber((size_t)std::abs(rand()));
+  const auto color = Common::Helpers::colorFromNumber((size_t)std::abs(rand()));
   mSubscriptionsModel->setColor(item, color);
 
   mSubscriptionsCtrl->Refresh();

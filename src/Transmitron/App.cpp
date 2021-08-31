@@ -6,7 +6,7 @@
 
 #include "App.hpp"
 #include "Events/Connection.hpp"
-#include "Helpers/Log.hpp"
+#include "Common/Log.hpp"
 #include "Info.hpp"
 #include "Resources/history/history-18x14.hpp"
 #include "Resources/history/history-18x18.hpp"
@@ -32,8 +32,8 @@
 using namespace Transmitron;
 namespace fs = std::filesystem;
 
-constexpr size_t DefaultWindowWidth = 1280;
-constexpr size_t DefaultWindowHeight = 720;
+constexpr size_t DefaultWindowWidth = 800;
+constexpr size_t DefaultWindowHeight = 600;
 constexpr size_t MinWindowWidth = 550;
 constexpr size_t MinWindowHeight = 300;
 constexpr size_t LabelFontSize = 15;
@@ -41,8 +41,8 @@ constexpr size_t LabelFontSize = 15;
 App::App() :
   LabelFontInfo(LabelFontSize)
 {
-  Helpers::Log::instance().initialize();
-  mLogger = Helpers::Log::create("Transmitron::App");
+  Common::Log::instance().initialize();
+  mLogger = Common::Log::create("Transmitron::App");
 }
 
 bool App::OnInit()

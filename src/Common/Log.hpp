@@ -1,5 +1,5 @@
-#ifndef HELPERS_LOG_H
-#define HELPERS_LOG_H
+#ifndef COMMON_LOG_H
+#define COMMON_LOG_H
 
 #include <filesystem>
 #include <spdlog/common.h>
@@ -9,7 +9,7 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-namespace Helpers
+namespace Common
 {
 
 class Log
@@ -39,4 +39,4 @@ private:
 
 }
 
-#endif // HELPERS_LOG_H
+#endif // COMMON_LOG_H

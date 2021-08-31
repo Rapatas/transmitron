@@ -4,19 +4,19 @@
 
 #include <fmt/core.h>
 
-#include "Helpers/Log.hpp"
-#include "Helpers/Url.hpp"
+#include "Common/Log.hpp"
+#include "Common/Url.hpp"
 #include "Profiles.hpp"
 #include "Transmitron/Info.hpp"
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 using namespace Transmitron;
-using namespace Helpers;
+using namespace Common;
 
 Profiles::Profiles()
 {
-  mLogger = Helpers::Log::create("Models::Profiles");
+  mLogger = Common::Log::create("Models::Profiles");
 }
 
 bool Profiles::load(const std::string &configDir)

@@ -12,16 +12,16 @@
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
 
-#include "Helpers/Url.hpp"
-#include "Helpers/Log.hpp"
+#include "Common/Url.hpp"
+#include "Common/Log.hpp"
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
-using namespace Helpers;
+using namespace Common;
 
 Layouts::Layouts()
 {
-  mLogger = Helpers::Log::create("Models::Layouts");
+  mLogger = Common::Log::create("Models::Layouts");
 
   const auto id = mAvailableId++;
   auto layout = std::make_unique<Node>();

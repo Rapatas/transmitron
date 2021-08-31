@@ -1,6 +1,6 @@
 #include "Helpers.hpp"
 
-wxColor Helpers::colorFromNumber(size_t number)
+wxColor Common::Helpers::colorFromNumber(size_t number)
 {
   constexpr uint8_t MinColorChannel = 100;
   constexpr uint8_t ByteMask = 0xFF;

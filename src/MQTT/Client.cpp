@@ -7,7 +7,7 @@
 
 #include "Subscription.hpp"
 #include "Client.hpp"
-#include "Helpers/Log.hpp"
+#include "Common/Log.hpp"
 
 using namespace MQTT;
 
@@ -20,7 +20,7 @@ constexpr size_t ReconnectAfterMs = 2500;
 
 Client::Client()
 {
-  mLogger = Helpers::Log::create("MQTT::Client");
+  mLogger = Common::Log::create("MQTT::Client");
 }
 
 size_t Client::attachObserver(Observer *o)

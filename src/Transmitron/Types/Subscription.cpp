@@ -1,5 +1,5 @@
 #include "Subscription.hpp"
-#include "Helpers/Helpers.hpp"
+#include "Common/Helpers.hpp"
 #include "Transmitron/Events/Subscription.hpp"
 
 using namespace Transmitron::Types;
@@ -82,5 +82,5 @@ bool Subscription::getMuted() const
 wxColor Subscription::colorFromString(const std::string &data)
 {
   const size_t x = std::hash<std::string>{}(data);
-  return Helpers::colorFromNumber(x);
+  return Common::Helpers::colorFromNumber(x);
 }

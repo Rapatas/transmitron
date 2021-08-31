@@ -1,7 +1,7 @@
 #include "Log.hpp"
 #include <spdlog/spdlog.h>
 
-using namespace Helpers;
+using namespace Common;
 
 Log &Log::instance()
 {

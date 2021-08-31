@@ -14,9 +14,9 @@ add_executable(
   ${PROJECT_NAME}
   ${INFO_POST_CONF}
   ${VERSION_POST_CONF}
-  src/Helpers/Helpers.cpp
-  src/Helpers/Url.cpp
-  src/Helpers/Log.cpp
+  src/Common/Helpers.cpp
+  src/Common/Log.cpp
+  src/Common/Url.cpp
   src/MQTT/BrokerOptions.cpp
   src/MQTT/Client.cpp
   src/MQTT/Message.cpp
@@ -56,20 +56,20 @@ add_executable(
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/git-monitor/configure.cmake)
 SetupGitMonitor(
-    ${PROJECT_NAME}
-    ${VERSION_PRE_CONF}
-    ${VERSION_POST_CONF}
+  ${PROJECT_NAME}
+  ${VERSION_PRE_CONF}
+  ${VERSION_POST_CONF}
 )
 GetGitDescribe(PROJECT_VERSION)
 
 string(CONCAT PROJECT_OUTPUT_NAME
-    ${PROJECT_NAME}
-    "_"
-    ${PROJECT_VERSION}
-    "_"
-    ${CMAKE_SYSTEM_NAME}
-    "_"
-    ${CMAKE_SYSTEM_PROCESSOR}
+  ${PROJECT_NAME}
+  "_"
+  ${PROJECT_VERSION}
+  "_"
+  ${CMAKE_SYSTEM_NAME}
+  "_"
+  ${CMAKE_SYSTEM_PROCESSOR}
 )
 
 configure_file(
