@@ -695,16 +695,21 @@ void Client::onSnippetsDrop(wxDataViewEvent &e)
 
   wxDataViewItem moved;
 
-  if (
-    mSnippetsPossible.first
-    && (
+  if (mSnippetsPossible.first)
+  {
+    if (
       // Moving in an empty dir.
       mSnippetsPossible.second == wxDataViewItem(0)
       // Moving in a full dir.
       || mSnippetsModel->GetParent(mSnippetsPossible.second) == target
-    )
-  ) {
-    moved = mSnippetsModel->moveInside(item, target);
+    ) {
+      moved = mSnippetsModel->moveInside(item, target);
+    }
+    else
+    {
+      // It was hovering an item that was not a container.
+      moved = mSnippetsModel->moveAfter(item, target);
+    }
   }
   else
   {
