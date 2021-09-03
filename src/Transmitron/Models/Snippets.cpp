@@ -333,6 +333,15 @@ wxDataViewItem Snippets::moveBefore(
   return moveAtIndex(item, parent, index);
 }
 
+wxDataViewItem Snippets::moveLast(
+  wxDataViewItem item,
+  wxDataViewItem parent
+) {
+  wxDataViewItemArray children;
+  const auto count = GetChildren(parent, children);
+  return moveAtIndex(item, parent, count);
+}
+
 wxDataViewItem Snippets::moveAfter(
   wxDataViewItem item,
   wxDataViewItem sibling
@@ -377,13 +386,6 @@ wxDataViewItem Snippets::moveAtIndex(
   const auto newParentId = toId(parent);
   const auto oldParentId = node.parent;
 
-  mLogger->info(
-    "Moving {} in {} at index {}",
-    nodeId,
-    newParentId,
-    index
-  );
-
   if (!moveFile(nodeId, newParentId))
   {
     return wxDataViewItem(nullptr);
@@ -391,10 +393,22 @@ wxDataViewItem Snippets::moveAtIndex(
 
   if (oldParentId != newParentId)
   {
+    mLogger->info(
+      "Moving {} in {} at index {}",
+      nodeId,
+      newParentId,
+      index
+    );
     moveUnderNewParent(nodeId, newParentId, index);
   }
   else
   {
+    mLogger->info(
+      "Moving {} at index {}",
+      nodeId,
+      newParentId,
+      index
+    );
     moveUnderSameParent(nodeId, newParentId, index);
   }
 
@@ -906,12 +920,6 @@ bool Snippets::moveCheck(
     return false;
   }
 
-  if (!parent.IsOk() && index == 0)
-  {
-    mLogger->info("Could not move item: Target it null");
-    return false;
-  }
-
   if (item == parent)
   {
     mLogger->info("Could not move item: Item is Target");
@@ -936,7 +944,7 @@ bool Snippets::moveCheck(
 
     if (currentIndex == index)
     {
-      mLogger->info("Could not move item: no action required");
+      mLogger->info("Did not move item: no action required");
       return false;
     }
   }
@@ -991,8 +999,6 @@ void Snippets::moveUnderSameParent(
   Node::Id_t newParentId,
   size_t index
 ) {
-  mLogger->info("Moving under same parent, on index {}", index);
-
   auto &newParentNode = mNodes.at(newParentId);
   auto &siblings = newParentNode.children;
 

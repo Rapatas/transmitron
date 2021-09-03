@@ -51,6 +51,7 @@ public:
   wxDataViewItem moveBefore(wxDataViewItem item, wxDataViewItem sibling);
   wxDataViewItem moveAfter(wxDataViewItem item, wxDataViewItem sibling);
   wxDataViewItem moveInside(wxDataViewItem item, wxDataViewItem parent);
+  wxDataViewItem moveLast(wxDataViewItem item, wxDataViewItem parent);
   wxDataViewItem moveAtIndex(
     wxDataViewItem item,
     wxDataViewItem parent,

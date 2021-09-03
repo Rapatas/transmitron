@@ -555,8 +555,9 @@ void Client::setupPanelSnippets(wxWindow *parent)
   mSnippetsCtrl->AppendColumn(mSnippetColumns.at(Snippets::Column::Name));
   mSnippetsCtrl->AssociateModel(mSnippetsModel.get());
 
-  mSnippetsCtrl->EnableDropTarget(wxDataFormat(wxDF_TEXT));
-  mSnippetsCtrl->EnableDragSource(wxDataFormat(wxDF_TEXT));
+  // Windows only works with unicode.
+  mSnippetsCtrl->EnableDropTarget(wxDF_UNICODETEXT);
+  mSnippetsCtrl->EnableDragSource(wxDF_UNICODETEXT);
 
   mSnippetsCtrl->SetFont(mFont);
 
@@ -679,6 +680,9 @@ void Client::onSnippetsDrag(wxDataViewEvent &e)
   e.SetDataSize(o->GetDataSize());
   e.SetDataObject(o);
 
+  // Required for windows, ignored on all else.
+  e.SetDragFlags(wxDrag_AllowMove);
+
   e.Skip(false);
 }
 
@@ -695,26 +699,60 @@ void Client::onSnippetsDrop(wxDataViewEvent &e)
 
   wxDataViewItem moved;
 
+#ifdef WIN32
+
+  const auto pIndex = e.GetProposedDropIndex();
+
+  if (pIndex == -1)
+  {
+    if (!mSnippetsModel->IsContainer(target))
+    {
+      moved = mSnippetsModel->moveAfter(item, target);
+    }
+    else
+    {
+      if (target.IsOk())
+      {
+        moved = mSnippetsModel->moveInside(item, target);
+      }
+      else
+      {
+        moved = mSnippetsModel->moveLast(item, target);
+      }
+    }
+  }
+  else
+  {
+    const auto index = (size_t)pIndex;
+    moved = mSnippetsModel->moveAtIndex(item, target, index);
+  }
+
+#else
+
   if (mSnippetsPossible.first)
   {
-    if (
-      // Moving in an empty dir.
-      mSnippetsPossible.second == wxDataViewItem(0)
-      // Moving in a full dir.
-      || mSnippetsModel->GetParent(mSnippetsPossible.second) == target
-    ) {
+    if (mSnippetsModel->IsContainer(target))
+    {
       moved = mSnippetsModel->moveInside(item, target);
     }
     else
     {
-      // It was hovering an item that was not a container.
       moved = mSnippetsModel->moveAfter(item, target);
     }
   }
   else
   {
-    moved = mSnippetsModel->moveBefore(item, target);
+    if (target.IsOk())
+    {
+      moved = mSnippetsModel->moveBefore(item, target);
+    }
+    else
+    {
+      moved = mSnippetsModel->moveLast(item, target);
+    }
   }
+
+#endif // WIN32
 
   mSnippetsPossible = {false, wxDataViewItem(nullptr)};
 
@@ -734,14 +772,23 @@ void Client::onSnippetsDrop(wxDataViewEvent &e)
 
 void Client::onSnippetsDropPossible(wxDataViewEvent &e)
 {
-  // This event contains the first element of the target directory.
-  // If this skips, the drop event target is the hovered item.
-  // If this does not skip, the drop event target is this event's target.
+  const auto item = e.GetItem();
+  mSnippetsPossible = {true, item};
 
-  // If possible is parent of drop target, the target is a folder.
+#ifdef WIN32
 
-  mSnippetsPossible = {true, e.GetItem()};
+  e.Skip(false);
+
+#else
+
+  // On Linux:
+  // - This event contains the first element of the target directory.
+  // - If this skips, the drop event target is the hovered item.
+  // - If this does not skip, the drop event target is this event's target.
+
   e.Skip(true);
+
+#endif // WIN32
 }
 
 // Snippets }
