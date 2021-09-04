@@ -49,11 +49,13 @@ public:
   bool remove(wxDataViewItem item);
 
   wxDataViewItem moveBefore(wxDataViewItem item, wxDataViewItem sibling);
+  wxDataViewItem moveAfter(wxDataViewItem item, wxDataViewItem sibling);
   wxDataViewItem moveInside(wxDataViewItem item, wxDataViewItem parent);
-  wxDataViewItem move(
+  wxDataViewItem moveLast(wxDataViewItem item, wxDataViewItem parent);
+  wxDataViewItem moveAtIndex(
     wxDataViewItem item,
     wxDataViewItem parent,
-    wxDataViewItem sibling
+    size_t index
   );
 
   bool hasChildNamed(wxDataViewItem parent, const std::string &name) const;
@@ -126,17 +128,17 @@ private:
   bool moveCheck(
     wxDataViewItem item,
     wxDataViewItem parent,
-    wxDataViewItem sibling
+    size_t index
   );
   void moveUnderNewParent(
     Node::Id_t nodeId,
     Node::Id_t newParentId,
-    wxDataViewItem sibling
+    size_t index
   );
   void moveUnderSameParent(
     Node::Id_t nodeId,
     Node::Id_t newParentId,
-    wxDataViewItem sibling
+    size_t index
   );
   Node::Id_t getNextId();
   bool isRecursive(wxDataViewItem parent, wxDataViewItem item) const;

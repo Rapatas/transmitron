@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <ios>
+#include <iterator>
 #include <string_view>
 
 #include <fmt/format.h>
@@ -315,23 +316,67 @@ wxDataViewItem Snippets::moveBefore(
   wxDataViewItem item,
   wxDataViewItem sibling
 ) {
-  return move(item, GetParent(sibling), sibling);
+  const auto parent = GetParent(sibling);
+  wxDataViewItemArray children;
+  GetChildren(parent, children);
+
+  size_t index = 0;
+  for (size_t i = 0; i != children.size(); ++i)
+  {
+    if (children[i].GetID() == sibling.GetID())
+    {
+      index = i;
+      break;
+    }
+  }
+
+  return moveAtIndex(item, parent, index);
+}
+
+wxDataViewItem Snippets::moveLast(
+  wxDataViewItem item,
+  wxDataViewItem parent
+) {
+  wxDataViewItemArray children;
+  const auto count = GetChildren(parent, children);
+  return moveAtIndex(item, parent, count);
+}
+
+wxDataViewItem Snippets::moveAfter(
+  wxDataViewItem item,
+  wxDataViewItem sibling
+) {
+  const auto parent = GetParent(sibling);
+  wxDataViewItemArray children;
+  GetChildren(parent, children);
+
+  size_t index = 0;
+  for (size_t i = 0; i != children.size(); ++i)
+  {
+    if (children[i].GetID() == sibling.GetID())
+    {
+      index = i + 1;
+      break;
+    }
+  }
+
+  return moveAtIndex(item, parent, index);
 }
 
 wxDataViewItem Snippets::moveInside(
   wxDataViewItem item,
   wxDataViewItem parent
 ) {
-  return move(item, parent, wxDataViewItem(0));
+  return moveAtIndex(item, parent, 0);
 }
 
-wxDataViewItem Snippets::move(
+wxDataViewItem Snippets::moveAtIndex(
   wxDataViewItem item,
   wxDataViewItem parent,
-  wxDataViewItem sibling
+  size_t index
 ) {
 
-  if (!moveCheck(item, parent, sibling))
+  if (!moveCheck(item, parent, index))
   {
     return wxDataViewItem(nullptr);
   }
@@ -341,13 +386,6 @@ wxDataViewItem Snippets::move(
   const auto newParentId = toId(parent);
   const auto oldParentId = node.parent;
 
-  mLogger->info(
-    "Moving {} in {} before {}",
-    nodeId,
-    newParentId,
-    toId(sibling)
-  );
-
   if (!moveFile(nodeId, newParentId))
   {
     return wxDataViewItem(nullptr);
@@ -355,11 +393,23 @@ wxDataViewItem Snippets::move(
 
   if (oldParentId != newParentId)
   {
-    moveUnderNewParent(nodeId, newParentId, sibling);
+    mLogger->info(
+      "Moving {} in {} at index {}",
+      nodeId,
+      newParentId,
+      index
+    );
+    moveUnderNewParent(nodeId, newParentId, index);
   }
   else
   {
-    moveUnderSameParent(nodeId, newParentId, sibling);
+    mLogger->info(
+      "Moving {} at index {}",
+      nodeId,
+      newParentId,
+      index
+    );
+    moveUnderSameParent(nodeId, newParentId, index);
   }
 
   ItemDeleted(toItem(oldParentId), item);
@@ -862,17 +912,11 @@ bool Snippets::moveFile(Node::Id_t nodeId, Node::Id_t newParentId)
 bool Snippets::moveCheck(
   wxDataViewItem item,
   wxDataViewItem parent,
-  wxDataViewItem sibling
+  size_t index
 ) {
   if (!item.IsOk())
   {
     mLogger->info("Could not move item: Item is null");
-    return false;
-  }
-
-  if (!parent.IsOk() && !sibling.IsOk())
-  {
-    mLogger->info("Could not move item: Target it null");
     return false;
   }
 
@@ -882,10 +926,27 @@ bool Snippets::moveCheck(
     return false;
   }
 
-  if (item == sibling)
+  if (GetParent(item) == parent)
   {
-    mLogger->info("Could not move item: Item is Sibling");
-    return false;
+    const auto parent = GetParent(item);
+    wxDataViewItemArray children;
+    GetChildren(parent, children);
+
+    size_t currentIndex = 0;
+    for (size_t i = 0; i != children.size(); ++i)
+    {
+      if (children[i].GetID() == item.GetID())
+      {
+        currentIndex = i;
+        break;
+      }
+    }
+
+    if (currentIndex == index)
+    {
+      mLogger->info("Did not move item: no action required");
+      return false;
+    }
   }
 
   if (isRecursive(parent, item))
@@ -900,7 +961,7 @@ bool Snippets::moveCheck(
 void Snippets::moveUnderNewParent(
   Node::Id_t nodeId,
   Node::Id_t newParentId,
-  wxDataViewItem sibling
+  size_t index
 ) {
   auto &node = mNodes.at(nodeId);
   const auto oldParentId = node.parent;
@@ -920,19 +981,15 @@ void Snippets::moveUnderNewParent(
 
   node.parent = newParentId;
 
-  if (!sibling.IsOk())
+  if (index == 0)
   {
-    mLogger->info("Sibling was null, assuming first position");
     newParentNode.children.push_front(nodeId);
   }
   else
   {
     auto &children = newParentNode.children;
-    auto it = std::find(
-      std::begin(children),
-      std::end(children),
-      toId(sibling)
-    );
+    auto it = std::begin(children);
+    std::advance(it, index);
     children.insert(it, nodeId);
   }
 }
@@ -940,14 +997,10 @@ void Snippets::moveUnderNewParent(
 void Snippets::moveUnderSameParent(
   Node::Id_t nodeId,
   Node::Id_t newParentId,
-  wxDataViewItem sibling
+  size_t index
 ) {
-
   auto &newParentNode = mNodes.at(newParentId);
   auto &siblings = newParentNode.children;
-
-  const auto &siblingNode = mNodes.at(toId(sibling));
-  mLogger->info("Moving under same parent, next to {}", siblingNode.name);
 
   std::list<Node::Id_t> temp;
 
@@ -956,14 +1009,10 @@ void Snippets::moveUnderSameParent(
     std::end(siblings),
     nodeId
   );
-  const auto newIt = std::find(
-    std::begin(siblings),
-    std::end(siblings),
-    toId(sibling)
-  );
+  auto newIt = std::begin(siblings);
+  std::advance(newIt, index);
 
   temp.splice(std::end(temp), siblings, oldIt);
-
   siblings.splice(newIt, temp);
 }
 
