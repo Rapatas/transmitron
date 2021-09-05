@@ -144,7 +144,6 @@ private:
   bool isRecursive(wxDataViewItem parent, wxDataViewItem item) const;
   std::string getNodePath(Node::Id_t id) const;
 
-  static std::string decode(const std::string &encoded);
   static Node::Id_t toId(const wxDataViewItem &item);
   static wxDataViewItem toItem(Node::Id_t id);
 };

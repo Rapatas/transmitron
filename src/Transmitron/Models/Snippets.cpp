@@ -430,15 +430,28 @@ void Snippets::loadDirectoryRecursive(
   Node::Id_t parentId
 ) {
   const bool isRoot = parentId == std::numeric_limits<Node::Id_t>::max();
-
-  const auto currentId = isRoot ? 0   : getNextId();
-  const auto name      = isRoot ? "_" : decode(path.stem().string());
+  const auto currentId = isRoot ? 0 : getNextId();
+  std::string decoded = "_";
 
   if (!isRoot)
   {
+    try
+    {
+      decoded = Url::decode(path.stem().string());
+    }
+    catch (std::runtime_error &e)
+    {
+      mLogger->error(
+        "Could not decode '{}': {}",
+        path.string(),
+        e.what()
+      );
+      return;
+    }
+
     Node newNode {
       parentId,
-      name,
+      decoded,
       path.filename().string(),
       Node::Type::Folder,
       {},
@@ -476,14 +489,14 @@ void Snippets::loadDirectoryRecursive(
   );
   if (!fs::exists(indexPath))
   {
-    mLogger->error("Could not sort '{}': No index.json found", name);
+    mLogger->error("Could not sort '{}': No index.json found", decoded);
     return;
   }
 
   std::ifstream indexFile(indexPath, std::ios::in);
   if (!indexFile.is_open())
   {
-    mLogger->error("Could not sort '{}': Failed to open index.json", name);
+    mLogger->error("Could not sort '{}': Failed to open index.json", decoded);
     return;
   }
 
@@ -492,7 +505,7 @@ void Snippets::loadDirectoryRecursive(
 
   if (indexes.type() != nlohmann::json::value_t::array)
   {
-    mLogger->error("Could not sort '{}': index.json is not an array", name);
+    mLogger->error("Could not sort '{}': index.json is not an array", decoded);
     fs::remove(indexPath);
     return;
   }
@@ -523,8 +536,20 @@ void Snippets::loadSnippet(
   const std::filesystem::path &path,
   Node::Id_t parentId
 ) {
-  const auto stem = path.stem().u8string();
-  const std::string name = decode(stem);
+  std::string decoded;
+  try
+  {
+    decoded = Url::decode(path.stem().string());
+  }
+  catch (std::runtime_error &e)
+  {
+    mLogger->error(
+      "Could not decode '{}': {}",
+      path.string(),
+      e.what()
+    );
+    return;
+  }
 
   std::ifstream snippetFile(path);
   if (!snippetFile.is_open())
@@ -553,7 +578,7 @@ void Snippets::loadSnippet(
 
   Node newNode {
     parentId,
-    name,
+    decoded,
     path.filename().string(),
     Node::Type::Snippet,
     {},
@@ -1014,9 +1039,4 @@ void Snippets::moveUnderSameParent(
 
   temp.splice(std::end(temp), siblings, oldIt);
   siblings.splice(newIt, temp);
-}
-
-std::string Snippets::decode(const std::string &encoded)
-{
-  return Url::decode(encoded);
 }

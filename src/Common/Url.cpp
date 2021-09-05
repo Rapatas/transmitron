@@ -84,7 +84,10 @@ std::string Url::decode(const std::string &data)
   {
     if (!isHexChar(c))
     {
-      const auto msg = fmt::format("Unexpected Hex Char ({})", c);
+      const auto msg = fmt::format(
+        "Unexpected printable ASCII char '0x{:X}'",
+        (uint8_t)c
+      );
       throw std::runtime_error(msg.c_str());
     }
     return (c >= '0' && c <= '9')
