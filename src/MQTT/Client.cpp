@@ -407,7 +407,7 @@ void Client::reconnect()
   if (
     !mShouldReconnect
     || !mBrokerOptions.getAutoReconnect()
-    || ++mRetries >= mBrokerOptions.getMaxReconnectRetries()
+    || ++mRetries > mBrokerOptions.getMaxReconnectRetries()
   ) {
     for (const auto &o : mObservers)
     {
