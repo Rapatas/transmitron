@@ -657,12 +657,7 @@ void Client::onSnippetsActivated(wxDataViewEvent &e)
   else
   {
     const auto message = mSnippetsModel->getMessage(item);
-    mClient->publish(
-      message.topic,
-      message.payload,
-      message.qos,
-      message.retained
-    );
+    mClient->publish(message);
   }
 }
 
@@ -1135,19 +1130,17 @@ void Client::onContextSelectedHistoryRetainedClear(wxCommandEvent &/* event */)
 
   const auto topic = mHistoryModel->getTopic(item);
   const auto qos = mHistoryModel->getQos(item);
-  mClient->publish(topic, "", qos, true);
+  MQTT::Message message {topic, {}, qos, true, {}};
+  mClient->publish(message);
 }
 
 void Client::onContextSelectedHistoryResend(wxCommandEvent &/* event */)
 {
-  const auto item     = mHistoryCtrl->GetSelection();
+  const auto item = mHistoryCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
-  const auto topic    = mHistoryModel->getTopic(item);
-  const auto retained = mHistoryModel->getRetained(item);
-  const auto qos      = mHistoryModel->getQos(item);
-  const auto payload  = mHistoryModel->getPayload(item);
-  mClient->publish(topic, payload, qos, retained);
+  const auto &message = mHistoryModel->getMessage(item);
+  mClient->publish(message);
 }
 
 void Client::onContextSelectedHistoryEdit(wxCommandEvent &/* event */)
@@ -1243,12 +1236,7 @@ void Client::onContextSelectedSnippetPublish(wxCommandEvent &/* event */)
   const auto &message = mSnippetsModel->getMessage(item);
   publish->setMessage(message);
 
-  mClient->publish(
-    message.topic,
-    message.payload,
-    message.qos,
-    message.retained
-  );
+  mClient->publish(message);
 }
 
 void Client::onContextSelectedSnippetOverwrite(wxCommandEvent &/* event */)
@@ -1484,16 +1472,9 @@ void Client::onLayoutResized(Events::Layout &/* event */)
 void Client::onPublishClicked(wxCommandEvent &/* event */)
 {
   auto *publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
-
-  if (!mClient->connected()) { return; }
-  auto topic = publish->getTopic();
-  if (topic.empty()) { return; }
-
-  auto payload  = publish->getPayload();
-  auto qos      = publish->getQos();
-  bool retained = publish->getRetained();
-
-  mClient->publish(topic, payload, qos, retained);
+  const auto &message = publish->getMessage();
+  if (message.topic.empty()) { return; }
+  mClient->publish(message);
 }
 
 void Client::onPublishSaveSnippet(Events::Edit &/* event */)

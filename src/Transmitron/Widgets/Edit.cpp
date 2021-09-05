@@ -52,7 +52,7 @@ Edit::Edit(
     wxSize((int)optionsHeight, (int)optionsHeight)
   );
   mSaveSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
-  mSaveSnippet->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/*event*/){
+  mSaveSnippet->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
     auto *e = new Events::Edit(Events::EDIT_SAVE_SNIPPET);
     wxQueueEvent(this, e);
   });
@@ -110,7 +110,7 @@ Edit::Edit(
     wxDefaultPosition,
     wxSize((int)mOptionsHeight, (int)mOptionsHeight)
   );
-  mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/*event*/){
+  mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
     auto *e = new Events::Edit(Events::EDIT_PUBLISH);
     wxQueueEvent(this, e);
   });
@@ -303,7 +303,6 @@ MQTT::Message Edit::getMessage() const
     getPayload(),
     mQoS,
     mRetained,
-    0,
     {}
   };
 }

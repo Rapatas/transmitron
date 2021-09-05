@@ -26,7 +26,7 @@ public:
   Subscription(const Subscription& event) :
     wxCommandEvent(event)
   {
-    this->setId(event.getId());
+    this->setId(event.getSubscriptionId());
     this->setMessage(event.getMessage());
   }
 
@@ -35,7 +35,7 @@ public:
     return new Subscription(*this);
   }
 
-  MQTT::Subscription::Id_t getId() const
+  MQTT::Subscription::Id_t getSubscriptionId() const
   {
     return mId;
   }

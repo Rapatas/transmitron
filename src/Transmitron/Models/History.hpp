@@ -47,7 +47,13 @@ public:
 
 private:
 
-  std::vector<MQTT::Message> mMessages;
+  struct Node
+  {
+    MQTT::Message message;
+    MQTT::Subscription::Id_t subscriptionId {};
+  };
+
+  std::vector<Node> mMessages;
   std::vector<size_t> mRemap;
   wxObjectDataPtr<Subscriptions> mSubscriptions;
   std::map<size_t, Observer *> mObservers;
@@ -83,7 +89,7 @@ private:
   void onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor color) override;
   void onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) override;
   void onCleared(MQTT::Subscription::Id_t subscriptionId) override;
-  void onMessage(const MQTT::Message &message) override;
+  void onMessage(MQTT::Subscription::Id_t subscriptionId, const MQTT::Message &message) override;
 };
 
 }

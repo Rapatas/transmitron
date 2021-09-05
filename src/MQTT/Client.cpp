@@ -144,17 +144,20 @@ void Client::unsubscribe(size_t id)
 }
 
 void Client::publish(
-  const std::string &topic,
-  const std::string &payload,
-  QoS qos,
-  bool retained
+  const Message &message
 ) {
+  if (!connected())
+  {
+    mLogger->warn("Could not publish: not connected");
+    return;
+  }
+
   mClient->publish(
-    topic,
-    payload.data(),
-    payload.size(),
-    (int)qos,
-    retained,
+    message.topic,
+    message.payload.data(),
+    message.payload.size(),
+    (int)message.qos,
+    message.retained,
     nullptr,
     *this
   );

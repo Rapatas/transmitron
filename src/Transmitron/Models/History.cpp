@@ -43,10 +43,16 @@ void History::clear()
   remap();
 }
 
-void History::onMessage(const MQTT::Message &message)
-{
-  mMessages.push_back(message);
-  const bool isMuted = mSubscriptions->getMuted(message.subscriptionId);
+void History::onMessage(
+  MQTT::Subscription::Id_t subscriptionId,
+  const MQTT::Message &message
+) {
+  Node node {
+    message,
+    subscriptionId
+  };
+  mMessages.push_back(std::move(node));
+  const bool isMuted = mSubscriptions->getMuted(subscriptionId);
   const bool isFiltered = mFilter.empty()
     || message.topic.find(mFilter) != std::string::npos;
 
@@ -127,7 +133,7 @@ void History::remap()
   {
     const bool isMuted = mSubscriptions->getMuted(mMessages[i].subscriptionId);
     const bool isFiltered = mFilter.empty()
-      || mMessages[i].topic.find(mFilter) != std::string::npos;
+      || mMessages[i].message.topic.find(mFilter) != std::string::npos;
 
     if (!isMuted && isFiltered)
     {
@@ -177,27 +183,27 @@ void History::refresh(MQTT::Subscription::Id_t subscriptionId)
 
 std::string History::getPayload(const wxDataViewItem &item) const
 {
-  return mMessages.at(mRemap.at(GetRow(item))).payload;
+  return mMessages.at(mRemap.at(GetRow(item))).message.payload;
 }
 
 std::string History::getTopic(const wxDataViewItem &item) const
 {
-  return mMessages.at(mRemap.at(GetRow(item))).topic;
+  return mMessages.at(mRemap.at(GetRow(item))).message.topic;
 }
 
 MQTT::QoS History::getQos(const wxDataViewItem &item) const
 {
-  return (MQTT::QoS)mMessages.at(mRemap.at(GetRow(item))).qos;
+  return (MQTT::QoS)mMessages.at(mRemap.at(GetRow(item))).message.qos;
 }
 
 bool History::getRetained(const wxDataViewItem &item) const
 {
-  return mMessages.at(mRemap.at(GetRow(item))).retained;
+  return mMessages.at(mRemap.at(GetRow(item))).message.retained;
 }
 
 const MQTT::Message &History::getMessage(const wxDataViewItem &item) const
 {
-  return mMessages.at(mRemap.at(GetRow(item)));
+  return mMessages.at(mRemap.at(GetRow(item))).message;
 }
 
 void History::setFilter(const std::string &filter)
@@ -253,7 +259,7 @@ void History::GetValueByRow(
   unsigned int col
 ) const {
 
-  const auto &m = mMessages.at(mRemap.at(row));
+  const auto &node = mMessages.at(mRemap.at(row));
 
   constexpr size_t MessageIconWidth = 10;
   constexpr size_t MessageIconHeight = 20;
@@ -261,7 +267,7 @@ void History::GetValueByRow(
   switch ((Column)col) {
     case Column::Icon: {
 
-      auto color = mSubscriptions->getColor(m.subscriptionId);
+      auto color = mSubscriptions->getColor(node.subscriptionId);
 
       wxBitmap b(MessageIconWidth, MessageIconHeight);
       wxMemoryDC mem;
@@ -274,9 +280,10 @@ void History::GetValueByRow(
     } break;
     case Column::Topic: {
       wxDataViewIconText result;
-      const auto wxs = wxString::FromUTF8(m.topic.data(), m.topic.length());
+      const auto &topic = node.message.topic;
+      const auto wxs = wxString::FromUTF8(topic.data(), topic.length());
       result.SetText(wxs);
-      if (m.retained)
+      if (node.message.retained)
       {
         wxIcon icon;
         icon.CopyFromBitmap(*bin2cPinned18x18());
@@ -286,7 +293,7 @@ void History::GetValueByRow(
     } break;
     case Column::Qos: {
       const wxBitmap *result = nullptr;
-      switch ((MQTT::QoS)m.qos) {
+      switch ((MQTT::QoS)node.message.qos) {
         case MQTT::QoS::AtLeastOnce: { result = bin2cQos0(); } break;
         case MQTT::QoS::AtMostOnce:  { result = bin2cQos1(); } break;
         case MQTT::QoS::ExactlyOnce: { result = bin2cQos2(); } break;

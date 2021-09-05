@@ -11,6 +11,7 @@
 
 #include "QualityOfService.hpp"
 #include "BrokerOptions.hpp"
+#include "Message.hpp"
 
 namespace MQTT
 {
@@ -49,12 +50,7 @@ public:
   void connect();
   void disconnect();
   void cancel();
-  void publish(
-    const std::string &topic,
-    const std::string &payload,
-    QoS qos,
-    bool retained = false
-  );
+  void publish(const Message &message);
   std::shared_ptr<Subscription> subscribe(const std::string &topic);
   void unsubscribe(size_t id);
 

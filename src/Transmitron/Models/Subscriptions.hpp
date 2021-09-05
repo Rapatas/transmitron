@@ -24,12 +24,15 @@ public:
       MQTT::Subscription::Id_t subscriptionId,
       wxColor color
     ) = 0;
-    virtual void onMessage(const MQTT::Message &message) = 0;
     virtual void onMuted(MQTT::Subscription::Id_t subscriptionId) = 0;
     virtual void onSolo(MQTT::Subscription::Id_t subscriptionId) = 0;
     virtual void onUnmuted(MQTT::Subscription::Id_t subscriptionId) = 0;
     virtual void onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) = 0;
     virtual void onCleared(MQTT::Subscription::Id_t subscriptionId) = 0;
+    virtual void onMessage(
+      MQTT::Subscription::Id_t subscriptionId,
+      const MQTT::Message &message
+    ) = 0;
   };
 
   enum class Column : unsigned

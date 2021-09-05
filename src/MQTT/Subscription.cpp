@@ -77,14 +77,15 @@ void Subscription::onMessage(
       case 2: qos = MQTT::QoS::ExactlyOnce; break;
     }
 
-    o.second->onMessage({
+    Message message {
       msg->get_topic(),
       payload,
       qos,
       msg->is_retained(),
-      mId,
       std::chrono::system_clock::now()
-    });
+    };
+
+    o.second->onMessage(message);
   }
 }
 

@@ -252,7 +252,7 @@ void Subscriptions::onSubscribed(Events::Subscription &/* e */) {}
 
 void Subscriptions::onUnsubscribed(Events::Subscription &e)
 {
-  const auto id = e.getId();
+  const auto id = e.getSubscriptionId();
   const auto it = std::find(
     std::begin(mRemap),
     std::end(mRemap),
@@ -277,6 +277,6 @@ void Subscriptions::onMessage(Events::Subscription &e)
 {
   for (const auto &o : mObservers)
   {
-    o.second->onMessage(e.getMessage());
+    o.second->onMessage(e.getSubscriptionId(), e.getMessage());
   }
 }

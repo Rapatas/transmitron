@@ -5,7 +5,6 @@
 #include <string>
 #include <nlohmann/json.hpp>
 #include "QualityOfService.hpp"
-#include "Subscription.hpp"
 
 namespace MQTT
 {
@@ -16,7 +15,6 @@ struct Message
   std::string payload;
   MQTT::QoS qos = MQTT::QoS::AtLeastOnce;
   bool retained = false;
-  Subscription::Id_t subscriptionId = 0;
   std::chrono::system_clock::time_point timestamp;
 
   static Message fromJson(const nlohmann::json &data);
