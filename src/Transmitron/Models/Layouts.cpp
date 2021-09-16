@@ -109,7 +109,7 @@ wxDataViewItem Layouts::create(const Perspective_t &perspective)
   const std::string encoded = Url::encode(name);
 
   const std::string path = fmt::format(
-    "{}/{}",
+    "{}/{}.json",
     mLayoutsDir,
     encoded
   );
@@ -331,7 +331,7 @@ bool Layouts::SetValue(
   const std::string encoded = Url::encode(newName);
 
   const std::string newPath = fmt::format(
-    "{}/{}",
+    "{}/{}.json",
     mLayoutsDir,
     encoded
   );

@@ -174,13 +174,6 @@ wxDataViewItem Snippets::createSnippet(
 
   const std::string encoded = Url::encode(uniqueName);
 
-  const auto parentPath = getNodePath(parentId);
-  const std::string path = fmt::format(
-    "{}/{}",
-    parentPath,
-    encoded
-  );
-
   Node newNode {
     parentId,
     uniqueName,
@@ -465,7 +458,7 @@ void Snippets::loadDirectoryRecursive(
 
   for (const auto &entry : fs::directory_iterator(path))
   {
-    if (entry.path().stem() == "index") { continue; }
+    if (entry.path().stem() == ".index") { continue; }
 
     if (entry.status().type() == fs::file_type::directory)
     {
@@ -482,54 +475,11 @@ void Snippets::loadDirectoryRecursive(
     return;
   }
 
-  const std::string indexPath = fmt::format(
-    "{}/{}",
-    path.string(),
-    "/index.json"
-  );
-  if (!fs::exists(indexPath))
+  const bool read = indexFileRead(path, currentId);
+  if (!read)
   {
-    mLogger->error("Could not sort '{}': No index.json found", decoded);
-    return;
+    indexFileWrite(currentId);
   }
-
-  std::ifstream indexFile(indexPath, std::ios::in);
-  if (!indexFile.is_open())
-  {
-    mLogger->error("Could not sort '{}': Failed to open index.json", decoded);
-    return;
-  }
-
-  nlohmann::json indexes;
-  indexFile >> indexes;
-
-  if (indexes.type() != nlohmann::json::value_t::array)
-  {
-    mLogger->error("Could not sort '{}': index.json is not an array", decoded);
-    fs::remove(indexPath);
-    return;
-  }
-
-  mNodes.at(currentId).children.sort(
-    [this, &indexes](const Node::Id_t &lhs, const Node::Id_t &rhs) -> bool
-    {
-      const auto &lhsEnc = mNodes.at(lhs).encoded;
-      const auto &rhsEnc = mNodes.at(rhs).encoded;
-
-      auto lhsIt = std::find(
-        std::begin(indexes),
-        std::end(indexes),
-        lhsEnc
-      );
-      auto rhsIt = std::find(
-        std::begin(indexes),
-        std::end(indexes),
-        rhsEnc
-      );
-
-      return lhsIt < rhsIt;
-    }
-  );
 }
 
 void Snippets::loadSnippet(
@@ -579,7 +529,7 @@ void Snippets::loadSnippet(
   Node newNode {
     parentId,
     decoded,
-    path.filename().string(),
+    path.stem().string(),
     Node::Type::Snippet,
     {},
     message,
@@ -588,6 +538,89 @@ void Snippets::loadSnippet(
   const auto newId = getNextId();
   mNodes.insert({newId, std::move(newNode)});
   mNodes.at(parentId).children.push_back(newId);
+}
+
+bool Snippets::indexFileRead(
+  const std::filesystem::path &path,
+  Node::Id_t id
+) {
+  const std::string indexPath = fmt::format(
+    "{}/.index.json",
+    path.string()
+  );
+
+  const auto &name = mNodes.at(id).name;
+
+  if (!fs::exists(indexPath))
+  {
+    mLogger->error("Could not sort '{}': No .index.json found", name);
+    return false;
+  }
+
+  std::ifstream indexFile(indexPath, std::ios::in);
+  if (!indexFile.is_open())
+  {
+    mLogger->error("Could not sort '{}': Failed to open .index.json", name);
+    return false;
+  }
+
+  nlohmann::json indexes;
+  indexFile >> indexes;
+
+  if (indexes.type() != nlohmann::json::value_t::array)
+  {
+    mLogger->error("Could not sort '{}': .index.json is not an array", name);
+    fs::remove(indexPath);
+    return false;
+  }
+
+  mNodes.at(id).children.sort(
+    [this, &indexes](const Node::Id_t &lhs, const Node::Id_t &rhs) -> bool
+    {
+      const auto &lhsEnc = mNodes.at(lhs).encoded;
+      const auto &rhsEnc = mNodes.at(rhs).encoded;
+
+      auto lhsIt = std::find(
+        std::begin(indexes),
+        std::end(indexes),
+        lhsEnc
+      );
+      auto rhsIt = std::find(
+        std::begin(indexes),
+        std::end(indexes),
+        rhsEnc
+      );
+
+      return lhsIt < rhsIt;
+    }
+  );
+
+  return true;
+}
+
+bool Snippets::indexFileWrite(Node::Id_t id)
+{
+  const auto nodePath = getNodePath(id);
+  const auto indexPath = nodePath + "/.index.json";
+  std::ofstream output(indexPath);
+  if (!output.is_open())
+  {
+    mLogger->warn("Could not save '{}'", indexPath);
+    return false;
+  }
+
+  auto &node = mNodes.at(id);
+
+  nlohmann::json data;
+  for (const auto &child : node.children)
+  {
+    data.push_back(mNodes.at(child).encoded);
+  }
+  output << data;
+
+  node.saved = true;
+
+  return true;
 }
 
 bool Snippets::hasChildNamed(
@@ -664,6 +697,12 @@ bool Snippets::SetValue(
   const auto utf8 = wxs.ToUTF8();
   const std::string newName(utf8.data(), utf8.length());
 
+  if (newName == ".index")
+  {
+    mLogger->warn("Could not rename '{}' to '.index': name is reserved");
+    return false;
+  }
+
   auto parentItem = GetParent(item);
   if (hasChildNamed(parentItem, newName))
   {
@@ -679,14 +718,16 @@ bool Snippets::SetValue(
 
   const auto parentPath = getNodePath(node.parent);
   const std::string pathOld = fmt::format(
-    "{}/{}",
+    "{}/{}{}",
     parentPath,
-    node.encoded
+    node.encoded,
+    (node.type == Node::Type::Snippet) ? ".json" : ""
   );
   const std::string pathNew = fmt::format(
-    "{}/{}",
+    "{}/{}{}",
     parentPath,
-    encoded
+    encoded,
+    (node.type == Node::Type::Snippet) ? ".json" : ""
   );
 
   std::error_code ec;
@@ -816,6 +857,11 @@ std::string Snippets::getNodePath(Node::Id_t id) const
 
   result.pop_back();
 
+  if (mNodes.at(id).type == Node::Type::Snippet)
+  {
+    result += ".json";
+  }
+
   return result;
 }
 
@@ -854,7 +900,6 @@ bool Snippets::saveSnippet(Node::Id_t id)
 
 bool Snippets::saveFolder(Node::Id_t id)
 {
-  auto &node = mNodes.at(id);
   const auto nodePath = getNodePath(id);
 
   const bool exists = fs::exists(nodePath);
@@ -875,23 +920,7 @@ bool Snippets::saveFolder(Node::Id_t id)
     return false;
   }
 
-  const auto indexPath = nodePath + "/index.json";
-  std::ofstream output(indexPath);
-  if (!output.is_open())
-  {
-    mLogger->warn("Could not save '{}'", indexPath);
-  }
-  else
-  {
-    nlohmann::json data;
-    for (const auto &child : node.children)
-    {
-      data.push_back(mNodes.at(child).encoded);
-    }
-    output << data;
-  }
-
-  node.saved = true;
+  indexFileWrite(id);
 
   return true;
 }
@@ -906,9 +935,10 @@ bool Snippets::moveFile(Node::Id_t nodeId, Node::Id_t newParentId)
   }
 
   const std::string pathNew = fmt::format(
-    "{}/{}",
+    "{}/{}{}",
     getNodePath(newParentId),
-    node.encoded
+    node.encoded,
+    (node.type == Node::Type::Snippet) ? ".json" : ""
   );
 
   if (fs::exists(pathNew))

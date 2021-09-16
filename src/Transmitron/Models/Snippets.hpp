@@ -117,10 +117,9 @@ private:
     const std::filesystem::path &path,
     Node::Id_t parentId
   );
-  void loadSnippet(
-    const std::filesystem::path &path,
-    Node::Id_t parentId
-  );
+  void loadSnippet(const std::filesystem::path &path, Node::Id_t parentId);
+  bool indexFileRead(const std::filesystem::path &path, Node::Id_t id);
+  bool indexFileWrite(Node::Id_t id);
   bool save(Node::Id_t id);
   bool saveSnippet(Node::Id_t id);
   bool saveFolder(Node::Id_t id);
