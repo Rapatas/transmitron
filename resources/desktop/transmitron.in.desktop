@@ -1,0 +1,10 @@
+[Desktop Entry]
+# Version=0.0.0
+Categories=Development;Internet;
+Comment=@PROGRAM_DESCRIPTION@
+GenericName=Transmitron MQTT Client
+Exec=@TRANSMITRON_BIN_NAME@
+Icon=@TRANSMITRON_BIN_NAME@
+Name=@TRANSMITRON_NAME@
+Terminal=false
+Type=Application

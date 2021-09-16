@@ -1,6 +1,6 @@
 
 set(
-  ${PROJECT_NAME}_SOURCE
+  ${TRANSMITRON_BIN_NAME}_SOURCE
   Common/Env.Linux.cpp
   Common/Env.Windows.cpp
   Common/Helpers.cpp
@@ -49,24 +49,24 @@ set(
 
 set(INFO_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/Transmitron/Info.in.cpp")
 set(INFO_POST_CONF "${CMAKE_BINARY_DIR}/Transmitron/Info.cpp")
-list(APPEND ${PROJECT_NAME}_SOURCE ${INFO_POST_CONF})
+list(APPEND ${TRANSMITRON_BIN_NAME}_SOURCE ${INFO_POST_CONF})
 
 set(VERSION_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/Transmitron/Version.in.cpp")
 set(VERSION_POST_CONF "${CMAKE_BINARY_DIR}/Transmitron/Version.cpp")
-list(APPEND ${PROJECT_NAME}_SOURCE ${VERSION_POST_CONF})
+list(APPEND ${TRANSMITRON_BIN_NAME}_SOURCE ${VERSION_POST_CONF})
 
 configure_file(${INFO_PRE_CONF} ${INFO_POST_CONF} @ONLY)
 configure_file(${VERSION_PRE_CONF} ${VERSION_POST_CONF} @ONLY)
 
-add_executable(${PROJECT_NAME} ${${PROJECT_NAME}_SOURCE})
+add_executable(${TRANSMITRON_BIN_NAME} ${${TRANSMITRON_BIN_NAME}_SOURCE})
 
 target_compile_features(
-  ${PROJECT_NAME}
+  ${TRANSMITRON_BIN_NAME}
   PRIVATE
     cxx_std_17
 )
 
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE . )
+target_include_directories(${TRANSMITRON_BIN_NAME} PRIVATE . )
 
 set(gcc_warnings
   -Werror
@@ -79,26 +79,26 @@ set(gcc_warnings
 )
 
 target_compile_options(
-  ${CMAKE_PROJECT_NAME}
+  ${TRANSMITRON_BIN_NAME}
   PRIVATE
     $<$<CXX_COMPILER_ID:GNU>: ${gcc_warnings}>
     $<$<CXX_COMPILER_ID:Clang>: ${gcc_warnings}>
 )
 
 target_compile_definitions(
-  ${CMAKE_PROJECT_NAME}
+  ${TRANSMITRON_BIN_NAME}
   PRIVATE
     wxUSE_THREADS=1
 )
 
 target_link_options(
-  ${CMAKE_PROJECT_NAME}
+  ${TRANSMITRON_BIN_NAME}
   PRIVATE
     $<$<AND:$<BOOL:${WIN32}>,$<CONFIG:Release>>:-mwindows>
 )
 
 target_link_libraries(
-  ${CMAKE_PROJECT_NAME}
+  ${TRANSMITRON_BIN_NAME}
   PRIVATE
     Threads::Threads
     PahoMqttCpp::PahoMqttCpp

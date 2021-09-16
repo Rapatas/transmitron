@@ -19,6 +19,9 @@ string(CONCAT TRANSMITRON_VERSION
 )
 set(PROJECT_VERSION ${TRANSMITRON_VERSION})
 
+set(TRANSMITRON_NAME "Transmitron")
+set(TRANSMITRON_BIN_NAME "transmitron")
+
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
   set(TRANSMITRON_ARCH "amd64")
 elseif (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86")
@@ -36,3 +39,5 @@ find_package(fmt REQUIRED)
 find_package(spdlog REQUIRED)
 
 add_subdirectory(src)
+
+include(${CMAKE_SOURCE_DIR}/cmake/install.cmake)
