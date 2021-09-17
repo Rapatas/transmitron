@@ -58,6 +58,20 @@ list(APPEND ${TRANSMITRON_BIN_NAME}_SOURCE ${VERSION_POST_CONF})
 configure_file(${INFO_PRE_CONF} ${INFO_POST_CONF} @ONLY)
 configure_file(${VERSION_PRE_CONF} ${VERSION_POST_CONF} @ONLY)
 
+if (WIN32)
+
+  set(RESOURCE_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/transmitron.in.rc")
+  set(RESOURCE_POST_CONF "${CMAKE_BINARY_DIR}/transmitron.rc")
+  list(APPEND ${PROJECT_NAME}_SOURCE ${RESOURCE_POST_CONF})
+
+  configure_file(
+    ${RESOURCE_PRE_CONF}
+    ${RESOURCE_POST_CONF}
+    @ONLY
+  )
+
+endif()
+
 add_executable(${TRANSMITRON_BIN_NAME} ${${TRANSMITRON_BIN_NAME}_SOURCE})
 
 target_compile_features(
