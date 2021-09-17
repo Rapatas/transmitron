@@ -9,9 +9,9 @@ install(
 
 
 install(
-  TARGETS 
+  TARGETS
     ${PROJECT_NAME}
-  RUNTIME 
+  RUNTIME
   DESTINATION bin
 )
 

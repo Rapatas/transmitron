@@ -41,3 +41,4 @@ find_package(spdlog REQUIRED)
 add_subdirectory(src)
 
 include(${CMAKE_SOURCE_DIR}/cmake/install.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/cpack.cmake)
