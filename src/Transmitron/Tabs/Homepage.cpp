@@ -223,8 +223,13 @@ void Homepage::onProfileSelected(wxDataViewEvent &e)
 
 void Homepage::onConnectClicked(wxCommandEvent &/* event */)
 {
-  const auto profileItem = mProfilesCtrl->GetSelection();
-  const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
+  const auto item = mProfilesCtrl->GetSelection();
+  if (!item.IsOk())
+  {
+    return;
+  }
+
+  const auto &brokerOptions = mProfilesModel->getBrokerOptions(item);
 
   mLogger->info(
     "Queueing event for profile at {}:{}",
@@ -233,7 +238,7 @@ void Homepage::onConnectClicked(wxCommandEvent &/* event */)
   );
 
   auto *connectionEvent = new Events::Connection();
-  connectionEvent->setProfile(profileItem);
+  connectionEvent->setProfile(item);
   wxQueueEvent(this, connectionEvent);
 }
 
