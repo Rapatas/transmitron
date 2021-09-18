@@ -89,6 +89,30 @@ steps:
     when:
       event: tag
 
+  - name: Package Linux
+    image: transmitron_windows_amd64
+    pull: if-not-exists
+    user: 0
+    environment:
+      CONAN_USER_HOME: /drone/src/conan_data/amd64
+    commands:
+      - cd build-release-linux-amd64
+      - make package
+    when:
+      event: tag
+
+  - name: Package Windows
+    image: transmitron_windows_amd64
+    pull: if-not-exists
+    user: 0
+    environment:
+      CONAN_USER_HOME: /drone/src/conan_data/amd64
+    commands:
+      - cd build-release-windows-amd64
+      - make package
+    when:
+      event: tag
+
   - name: Release
     image: plugins/github-release
     settings:
@@ -97,7 +121,8 @@ steps:
       api_key:
         from_secret: drone.io-release
       files:
-        - build-release-*-*/transmitron_*_*_*
+        - build-release-*-*/transmitron_*_*.deb
+        - build-release-*-*/transmitron_*_*.exe
     checksum:
       - md5
       - sha1
