@@ -46,6 +46,7 @@ steps:
       - cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_BUILD_TYPE=Release ..
       - echo "Building with $(nproc) threads."
       - make -j $(nproc)
+      - make package
 
   - name: Build Windows
     image: transmitron_windows_amd64
@@ -64,6 +65,7 @@ steps:
       - cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_TOOLCHAIN_FILE=/opt/cmake-toolchains/linux-x86_64-to-windows-x86_64.cmake -DCMAKE_BUILD_TYPE=Release ..
       - echo "Building with $(nproc) threads."
       - make -j $(nproc)
+      - make package
 
   - name: Rebuild Cache
     image: meltwater/drone-cache
@@ -86,30 +88,6 @@ steps:
     commands:
       - echo "$(awk -v section=[${DRONE_TAG}] '$2==section{ f=1; next }; /^## /{ f=0; next }; f==1{ print $0 };' ./CHANGELOG.md)" > release_notes_${DRONE_TAG}.md
       - cat release_notes_${DRONE_TAG}.md
-    when:
-      event: tag
-
-  - name: Package Linux
-    image: transmitron_windows_amd64
-    pull: if-not-exists
-    user: 0
-    environment:
-      CONAN_USER_HOME: /drone/src/conan_data/amd64
-    commands:
-      - cd build-release-linux-amd64
-      - make package
-    when:
-      event: tag
-
-  - name: Package Windows
-    image: transmitron_windows_amd64
-    pull: if-not-exists
-    user: 0
-    environment:
-      CONAN_USER_HOME: /drone/src/conan_data/amd64
-    commands:
-      - cd build-release-windows-amd64
-      - make package
     when:
       event: tag
 
