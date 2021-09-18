@@ -5,6 +5,7 @@
 #include <tinyxml2.h>
 #include <wx/clipbrd.h>
 #include <wx/artprov.h>
+#include <wx/stc/stc.h>
 #include "Edit.hpp"
 #include "Transmitron/Events/Edit.hpp"
 #include "Transmitron/Resources/send/send-18x18.hpp"
@@ -191,6 +192,7 @@ void Edit::setStyle(Format format)
     {
       mText->SetLexer(wxSTC_LEX_JSON);
       mText->SetKeyWords(0, "true false null");
+      mText->StyleSetForeground(wxSTC_JSON_OPERATOR,     style.at(Style::Normal).first);
       mText->StyleSetBackground(wxSTC_JSON_ERROR,        style.at(Style::Error).first);
       mText->StyleSetForeground(wxSTC_JSON_KEYWORD,      style.at(Style::Keyword).first);
       mText->StyleSetForeground(wxSTC_JSON_NUMBER,       style.at(Style::Number).first);
