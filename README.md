@@ -46,4 +46,4 @@ make -j $(nproc)
 
 ## Acknowledgements
 
-- Icons made by [Google](https://www.flaticon.com/authors/google), [Freepik](https://www.freepik.com), [Kiranshastry](https://www.flaticon.com/authors/kiranshastry) from [Flaticon](https://www.flaticon.com/).
+- Icons made by [DinosoftLabs](https://www.flaticon.com/authors/DinosoftLabs), [Google](https://www.flaticon.com/authors/google), [Freepik](https://www.freepik.com), [Kiranshastry](https://www.flaticon.com/authors/kiranshastry) from [Flaticon](https://www.flaticon.com/).

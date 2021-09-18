@@ -2,7 +2,6 @@
 #include <stdexcept>
 
 #include <fmt/core.h>
-#include <wx/artprov.h>
 #include <wx/aui/auibook.h>
 #include <wx/image.h>
 #include <wx/notebook.h>
@@ -13,6 +12,7 @@
 #include "Common/Log.hpp"
 #include "Common/XdgBaseDir.hpp"
 #include "Info.hpp"
+#include "Resources/gear/gear-18x18.hpp"
 #include "Resources/history/history-18x14.hpp"
 #include "Resources/history/history-18x18.hpp"
 #include "Resources/pin/not-pinned-18x18.hpp"
@@ -210,7 +210,7 @@ void App::createProfilesTab(size_t index)
 void App::createSettingsTab()
 {
   auto *settingsTab = new Tabs::Settings(mNote, LabelFontInfo, mLayoutsModel);
-  mNote->AddPage(settingsTab, "", false, wxArtProvider::GetBitmap(wxART_EDIT));
+  mNote->AddPage(settingsTab, "", false, *bin2cGear18x18());
   ++mCount;
 }
 

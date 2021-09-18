@@ -21,6 +21,7 @@ set(
   Transmitron/Models/Snippets.cpp
   Transmitron/Models/Subscriptions.cpp
   Transmitron/Notifiers/Layouts.cpp
+  Transmitron/Resources/gear/gear-18x18.cpp
   Transmitron/Resources/history/history-18x14.cpp
   Transmitron/Resources/history/history-18x18.cpp
   Transmitron/Resources/pin/not-pinned-18x18.cpp
