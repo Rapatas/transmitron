@@ -57,7 +57,7 @@
 - **Native UI.** Using `wxWidgets` to integrate seamlessly with your desktop theme.
 - **Mute / Solo.** Hide or isolate messages for each subscription.
 - **History Filter.** Limit history using search terms.
-- **Cross-Platform.** Built for Windows, Linux and MacOS.
+- **Cross-Platform.** Built for Windows and Linux.
 
 ## Acknowledgements
 
