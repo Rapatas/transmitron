@@ -1,6 +1,10 @@
+#include <filesystem>
+#include <stdexcept>
+
 #include <fmt/core.h>
 #include <wx/artprov.h>
 #include <wx/aui/auibook.h>
+#include <wx/image.h>
 #include <wx/notebook.h>
 #include <wx/settings.h>
 
@@ -49,6 +53,7 @@ App::App() :
 bool App::OnInit()
 {
   wxImage::AddHandler(new wxPNGHandler);
+  wxImage::AddHandler(new wxICOHandler);
 
   mFrame = new wxFrame(
     nullptr,
@@ -58,6 +63,8 @@ bool App::OnInit()
     wxSize(DefaultWindowWidth, DefaultWindowHeight)
   );
   mFrame->SetMinSize(wxSize(MinWindowWidth, MinWindowHeight));
+
+  setupIcon();
 
   const int noteStyle = wxAUI_NB_DEFAULT_STYLE & ~(0
     | wxAUI_NB_TAB_MOVE
@@ -74,10 +81,10 @@ bool App::OnInit()
   );
 
   mProfilesModel = new Models::Profiles();
-  mProfilesModel->load(getConfigDir());
+  mProfilesModel->load(getConfigDir().string());
 
   mLayoutsModel = new Models::Layouts();
-  mLayoutsModel->load(getConfigDir());
+  mLayoutsModel->load(getConfigDir().string());
 
   const auto appearance = wxSystemSettings::GetAppearance();
   mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();
@@ -207,9 +214,9 @@ void App::createSettingsTab()
   ++mCount;
 }
 
-std::string App::getConfigDir()
+std::filesystem::path App::getConfigDir()
 {
-  auto configHome = Common::XdgBaseDir::configHome();
+  const auto configHome = Common::XdgBaseDir::configHome();
   auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
 
   if (!fs::is_directory(config) || !fs::exists(config))
@@ -221,5 +228,50 @@ std::string App::getConfigDir()
     }
   }
 
+  mLogger->info("Config dir: {}", config);
+
   return config;
+}
+
+void App::setupIcon()
+{
+  std::filesystem::path p = fmt::format(
+    "{}/share/transmitron/transmitron.ico",
+    getInstallPrefix().string()
+  );
+  p.make_preferred();
+  mLogger->debug("Loading icon from {}", p.string());
+  mFrame->SetIcons(wxIconBundle(p.string()));
+}
+
+std::filesystem::path App::getExecutablePath()
+{
+  auto pathfinder = []()
+  {
+#if defined WIN32
+    std::array<wchar_t, MAX_PATH> moduleFileName {};
+    const auto r = GetModuleFileNameW(nullptr, moduleFileName.data(), MAX_PATH);
+    if (r == 0)
+    {
+      throw std::runtime_error("Could not determine installation prefix");
+    }
+
+    return std::wstring(moduleFileName.data(), moduleFileName.size());
+#else
+    return std::filesystem::read_symlink("/proc/self/exe");
+#endif
+  };
+
+  static const std::filesystem::path p = pathfinder();
+  mLogger->info("Executable path: {}", p.string());
+  return p;
+}
+
+std::filesystem::path App::getInstallPrefix()
+{
+  const std::filesystem::path executable = getExecutablePath();
+  const auto executableDir = executable.parent_path();
+  auto prefix = executableDir.parent_path();
+  prefix.make_preferred();
+  return prefix;
 }

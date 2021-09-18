@@ -38,9 +38,11 @@ private:
 
   void createProfilesTab(size_t index);
   void createSettingsTab();
+  void setupIcon();
 
-  /// Empty if it fails.
-  std::string getConfigDir();
+  std::filesystem::path getConfigDir();
+  std::filesystem::path getExecutablePath();
+  std::filesystem::path getInstallPrefix();
 };
 
 }
