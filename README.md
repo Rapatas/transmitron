@@ -1,48 +1,63 @@
-# Transmitron
+<p align="center">
+    <img
+        width="20%"
+		alt="Transmitron Name"
+		src="./resources/desktop/transmitron.svg">
+    <br>
+    <img
+        width="60%"
+		alt="Transmitron Name"
+		src="https://i.imgur.com/ur5ftjH.png">
+</p>
+<hr>
+<h3 align="center">
+    Open source MQTT Client for desktop. Flexible, native, and cross-platform.
+</h3>
+<p align="center">
+	<strong>
+		<a href="#features">Features</a>
+		•
+		<a href="https://github.com/Rapatas/transmitron/releases/latest">Install</a>
+		•
+		<a href="./docs/build.md">Build</a>
+	</strong>
+</p>
+<p align="center">
+	<a
+        href="https://github.com/Rapatas/transmitron/releases"><img
+            alt="Release version"
+            src="https://img.shields.io/github/v/release/Rapatas/transmitron?logo=github&style=for-the-badge&color=419898"
+        ></a>
+	<a
+        href="https://drone.rapatas.com/Rapatas/transmitron/"><img
+            alt="Build status at drone.rapatas.com"
+            src="https://img.shields.io/drone/build/Rapatas/transmitron/develop?logo=drone&server=https%3A%2F%2Fdrone.rapatas.com&style=for-the-badge"
+        ></a>
+	<a
+        href="https://github.com/Rapatas/transmitron/blob/develop/LICENSE.txt"><img
+		    alt="License: GPL-3"
+            src="https://img.shields.io/github/license/Rapatas/transmitron?style=for-the-badge&color=419898"
+        ></a>
+</p>
+<hr>
+<p align="center">
+	<img src="https://i.imgur.com/JUEBvBS.png">
+</p>
 
-![Preview](https://i.imgur.com/1whe3Pf.png "2 connections, 4 subscriptions, homepage")
+## Features
 
-## Build
-
-### Requirements
-
-- [conan](https://conan.io/) package manager
-- C++ 17
-- libgtk2.0-dev (on Ubuntu 18.04)
-
-### Ubuntu 18.04
-
-**C++ 17**
-
-```bash
-sudo apt-get install -y gcc-8
-```
-
-**conan**
-
-```bash
-pip3 install conan --upgrade
-conan config set general.revisions_enabled=1
-conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
-```
-
-**libgtk2.0-dev**
-
-```bash
-sudo apt install -y libgtk2.0-dev
-```
-
-**transmitron**
-
-```bash
-git clone git@github.com:rapatas/transmitron.git
-cd transmitron/
-
-mkdir build && cd build
-conan install ../conan/ --build=missing
-cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_BUILD_TYPE=Release ..
-make -j $(nproc)
-```
+- **Profiles.** Store connections to brokers.
+- **Multiple Connections.** Connect to multiple `Profiles` at the same time using tabs.
+- **Snippets.** Store messages in a nested folder structure, ready to publish.
+- **Folding.** For messages with nested data.
+- **Syntax highlight, detection & formatting.** Supports JSON and XML.
+- **Flexible.** Resize, drag, detach or hide each sidebar separately.
+- **Layouts.** Store sidebar locations and sizes.
+- **XDG BaseDir.** Respects the [XDG Base Directory](https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html) specification.
+- **Native UI.** Using `wxWidgets` to integrate seamlessly with your desktop theme.
+- **Mute / Solo.** Hide or isolate messages for each subscription.
+- **History Filter.** Limit history using search terms.
+- **Cross-Platform.** Built for Windows, Linux and MacOS.
 
 ## Acknowledgements
 
