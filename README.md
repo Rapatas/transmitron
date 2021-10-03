@@ -26,7 +26,7 @@
 	<a
         href="https://github.com/Rapatas/transmitron/releases"><img
             alt="Release version"
-            src="https://img.shields.io/github/v/release/Rapatas/transmitron?logo=github&style=for-the-badge&color=419898"
+            src="https://img.shields.io/github/v/release/Rapatas/transmitron?logo=github&style=for-the-badge"
         ></a>
 	<a
         href="https://drone.rapatas.com/Rapatas/transmitron/"><img
@@ -36,13 +36,14 @@
 	<a
         href="https://github.com/Rapatas/transmitron/blob/develop/LICENSE.txt"><img
 		    alt="License: GPL-3"
-            src="https://img.shields.io/github/license/Rapatas/transmitron?style=for-the-badge&color=419898"
+            src="https://img.shields.io/github/license/Rapatas/transmitron?style=for-the-badge"
         ></a>
 </p>
 <hr>
 <p align="center">
 	<img src="https://i.imgur.com/JUEBvBS.png">
 </p>
+
 
 ## Features
 
