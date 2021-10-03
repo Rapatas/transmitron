@@ -65,13 +65,30 @@ private:
 
   const std::map<int, std::string> mReturnCodes
   {
-    { 0,  "Connection accepted" },
-    { 1,  "Unacceptable protocol version" },
-    { 2,  "Identifier rejected" },
-    { 3,  "Service unavailable" },
-    { 4,  "Bad user name or password" },
-    { 5,  "Not authorized" },
-    { -1, "Connection timeout" }
+    { 0,   "Connection accepted" },
+    { 1,   "Unacceptable protocol version" },
+    { 2,   "Identifier rejected" },
+    { 3,   "Service unavailable" },
+    { 4,   "Bad user name or password" },
+    { 5,   "Not authorized" },
+    { -1,  "Connection timeout" },
+    { -2,  "Persistence error" },
+    { -3,  "Disconnected" },
+    { -4,  "Max messages inflight" },
+    { -5,  "Bad utf8 string" },
+    { -6,  "Null parameter" },
+    { -7,  "Topicname truncated" },
+    { -8,  "Bad structure" },
+    { -9,  "Bad QOS" },
+    { -10, "No more MsgIds" },
+    { -11, "Operation incomplete" },
+    { -12, "Max buffered messages" },
+    { -13, "Ssl not supported" },
+    { -14, "Bad protocol" },
+    { -15, "Bad MQTT option" },
+    { -16, "Wrong MQTT version" },
+    { -17, "Zero length will topic" },
+    { -18, "Command ignored" },
   };
 
   std::shared_ptr<spdlog::logger> mLogger;

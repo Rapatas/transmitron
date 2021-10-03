@@ -314,43 +314,97 @@ void Client::onSuccessUnsubscribe(const mqtt::token& tok)
 
 void Client::onFailureConnect(const mqtt::token& tok)
 {
-  mLogger->warn(
-    "Connection attempt failed: {}",
-    mReturnCodes.at(tok.get_return_code())
-  );
+  const auto code = tok.get_return_code();
+  const auto codeIt = mReturnCodes.find(code);
+  if (codeIt != std::end(mReturnCodes))
+  {
+    mLogger->warn("Connection attempt failed: {}", codeIt->second);
+  }
+  else
+  {
+    mLogger->warn("Connection attempt failed: {}", code);
+  }
   reconnect();
 }
 
 void Client::onFailureDisconnect(const mqtt::token& tok)
 {
-  mLogger->warn(
-    "Disconnection attempt failed: {}",
-    mReturnCodes.at(tok.get_return_code())
-  );
+  const auto code = tok.get_return_code();
+  const auto codeIt = mReturnCodes.find(code);
+  if (codeIt != std::end(mReturnCodes))
+  {
+    mLogger->warn("Disconnection attempt failed: {}", codeIt->second);
+  }
+  else
+  {
+    mLogger->warn("Disconnection attempt failed: {}", code);
+  }
 }
 
 void Client::onFailurePublish(const mqtt::token& tok)
 {
-  mLogger->warn(
-    "Publishing attempt failed: {}",
-    mReturnCodes.at(tok.get_return_code())
-  );
+  const auto code = tok.get_return_code();
+  const auto codeIt = mReturnCodes.find(code);
+  if (codeIt != std::end(mReturnCodes))
+  {
+    mLogger->warn("Publishing attempt failed: {}", codeIt->second);
+  }
+  else
+  {
+    mLogger->warn("Publishing attempt failed: {}", code);
+  }
 }
 
 void Client::onFailureSubscribe(const mqtt::token& tok)
 {
-  mLogger->warn(
-    "Subscription attempt failed: {}",
-    mReturnCodes.at(tok.get_return_code())
-  );
+  const auto size = tok.get_topics()->size();
+
+  if (size == 0)
+  {
+    mLogger->warn("Subscription attempt failed: Response empty");
+    return;
+  }
+
+  const auto topic = (*tok.get_topics())[size - 1];
+
+  for (
+    auto subIt = std::begin(mSubscriptions);
+    subIt != std::end(mSubscriptions);
+    ++subIt
+  ) {
+    if (Client::match(subIt->second->getFilter(), topic))
+    {
+      subIt->second->onUnsubscribed();
+      mSubscriptions.erase(subIt);
+      break;
+    }
+  }
+
+  const auto code = tok.get_return_code();
+  const auto codeIt = mReturnCodes.find(code);
+
+  if (codeIt != std::end(mReturnCodes))
+  {
+    mLogger->warn("Subscription attempt failed: {}", codeIt->second);
+  }
+  else
+  {
+    mLogger->warn("Subscription attempt failed: {}", code);
+  }
 }
 
 void Client::onFailureUnsubscribe(const mqtt::token& tok)
 {
-  mLogger->warn(
-    "Unsubscription attempt failed: {}",
-    mReturnCodes.at(tok.get_return_code())
-  );
+  const auto code = tok.get_return_code();
+  const auto codeIt = mReturnCodes.find(code);
+  if (codeIt != std::end(mReturnCodes))
+  {
+    mLogger->warn("Unsubscription attempt failed: {}", codeIt->second);
+  }
+  else
+  {
+    mLogger->warn("Unsubscription attempt failed: {}", code);
+  }
 }
 
 // mqtt::iaction_listener interface }
