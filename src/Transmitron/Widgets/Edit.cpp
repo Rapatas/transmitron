@@ -151,15 +151,20 @@ void Edit::setupScintilla()
   mText->SetScrollWidthTracking(true);
 
   // Folding margins.
-  constexpr int MarginScriptFoldIndex = 1;
-  constexpr int FoldMarginWidth = 20;
-  mText->SetMarginWidth(MarginScriptFoldIndex, 0);
-  mText->SetMarginType(MarginScriptFoldIndex, wxSTC_MARGIN_SYMBOL);
-  mText->SetMarginMask(MarginScriptFoldIndex, (int)wxSTC_MASK_FOLDERS);
-  mText->SetMarginWidth(MarginScriptFoldIndex, FoldMarginWidth);
-  mText->SetMarginSensitive(MarginScriptFoldIndex, true);
+  constexpr int MarginFoldIndex = 1;
+  constexpr int MarginFoldWidth = 20;
+  mText->SetMarginType(MarginFoldIndex, wxSTC_MARGIN_SYMBOL);
+  mText->SetMarginMask(MarginFoldIndex, (int)wxSTC_MASK_FOLDERS);
+  mText->SetMarginWidth(MarginFoldIndex, MarginFoldWidth);
+  mText->SetMarginSensitive(MarginFoldIndex, true);
   mText->SetAutomaticFold(wxSTC_AUTOMATICFOLD_CLICK);
   mText->SetFoldFlags(wxSTC_FOLDFLAG_LINEAFTER_CONTRACTED);
+
+  // Line number margins.
+  constexpr int MarginLineNumberIndex = 0;
+  constexpr int MarginLineNumberWidth = 30;
+  mText->SetMarginType(MarginLineNumberIndex, wxSTC_MARGIN_NUMBER);
+  mText->SetMarginWidth(MarginLineNumberIndex, MarginLineNumberWidth);
 
   // Folding markers.
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDER,        wxSTC_MARK_PLUS);
@@ -170,11 +175,10 @@ void Edit::setupScintilla()
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDERSUB,     wxSTC_MARK_EMPTY);
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDERTAIL,    wxSTC_MARK_EMPTY);
 
+  // Constant styles.
   mText->StyleSetForeground(wxSTC_STYLE_DEFAULT, mStyles.at(mTheme).at(Style::Normal).first);
   mText->StyleSetBackground(wxSTC_STYLE_DEFAULT, mStyles.at(mTheme).at(Style::Normal).second);
   mText->StyleClearAll();
-  mText->StyleSetForeground(wxSTC_STYLE_LINENUMBER, mStyles.at(mTheme).at(Style::Normal).second);
-  mText->StyleSetBackground(wxSTC_STYLE_LINENUMBER, mStyles.at(mTheme).at(Style::Normal).first);
 }
 
 void Edit::setStyle(Format format)
