@@ -953,13 +953,16 @@ void Client::onSnippetsContext(wxDataViewEvent& e)
       menu.Append(publish);
     }
 
-    auto *overwrite = new wxMenuItem(
-      nullptr,
-      (unsigned)ContextIDs::SnippetOverwrite,
-      "Overwrite"
-    );
-    overwrite->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE_AS));
-    menu.Append(overwrite);
+    if (!mSnippetsModel->IsContainer(item))
+    {
+      auto *overwrite = new wxMenuItem(
+        nullptr,
+        (unsigned)ContextIDs::SnippetOverwrite,
+        "Overwrite"
+      );
+      overwrite->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE_AS));
+      menu.Append(overwrite);
+    }
 
     auto *rename = new wxMenuItem(
       nullptr,
