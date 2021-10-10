@@ -65,6 +65,8 @@ set(
 
 # NSIS (Windows .exe installer)
 set(CPACK_NSIS_MUI_ICON "${CMAKE_SOURCE_DIR}/resources/images/transmitron.ico")
+set(CPACK_NSIS_MUI_HEADERIMAGE "${CMAKE_SOURCE_DIR}/resources/images/nsis/header.bmp")
+set(CPACK_NSIS_MUI_WELCOMEFINISHPAGE_BITMAP "${CMAKE_SOURCE_DIR}/resources/images/nsis/welcomefinish.bmp")
 set(CPACK_NSIS_INSTALLED_ICON_NAME "bin/transmitron.exe")
 set(CPACK_NSIS_COMPRESSOR "/SOLID lzma")
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL "ON")
