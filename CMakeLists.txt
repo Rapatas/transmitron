@@ -1,12 +1,12 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.17)
 
 project(transmitron)
 
-set(PROGRAM_DESCRIPTION "Open source MQTT Client for desktop. Flexible, native, and cross-platform")
+set(PROGRAM_DESCRIPTION "Open source MQTT Client for desktop. Flexible, native, and cross-platform.")
 
 set(TRANSMITRON_VERSION_MAJOR 0)
 set(TRANSMITRON_VERSION_MINOR 0)
-set(TRANSMITRON_VERSION_PATCH 0)
+set(TRANSMITRON_VERSION_PATCH 1)
 set(TRANSMITRON_VERSION_POSTFIX "")
 
 string(CONCAT TRANSMITRON_VERSION

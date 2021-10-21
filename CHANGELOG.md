@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.0.1] - 2021-10-21
+
+### Added
+
+- Line numbers in editors.
+- Header and banner in NSIS installer.
+- Save icon in profile save button.
+- Label on format drop-down of editors.
+
+### Fixed
+
+- Crash when subscribing to an invalid topic.
+- Package description for `.deb` installer
+- Overwrite snippet context option appearing for folders.
+
 ## [0.0.0] - 2021-09-18
 
 ### Added
