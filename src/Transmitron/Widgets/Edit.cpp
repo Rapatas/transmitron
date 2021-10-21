@@ -5,6 +5,7 @@
 #include <tinyxml2.h>
 #include <wx/clipbrd.h>
 #include <wx/artprov.h>
+#include <wx/sizer.h>
 #include <wx/stc/stc.h>
 #include "Edit.hpp"
 #include "Transmitron/Events/Edit.hpp"
@@ -57,6 +58,13 @@ Edit::Edit(
     auto *e = new Events::Edit(Events::EDIT_SAVE_SNIPPET);
     wxQueueEvent(this, e);
   });
+
+  auto *formatLabel = new wxStaticText(
+    this,
+    -1,
+    "Format: ",
+    wxDefaultPosition
+  );
 
   constexpr size_t FormatButtonWidth = 100;
 
@@ -130,6 +138,7 @@ Edit::Edit(
   mTop->Add(mPublish, 0, wxEXPAND);
   mBottom->Add(mSaveSnippet, 0, wxEXPAND);
   mBottom->AddStretchSpacer(1);
+  mBottom->Add(formatLabel, 0, wxALIGN_CENTER_VERTICAL);
   mBottom->Add(mFormatSelect, 0, wxEXPAND);
   mVsizer->Add(mTop, 0, wxEXPAND);
   mVsizer->Add(mTimestamp, 0, (int)wxEXPAND | (int)wxLEFT, timestampBorderPx);
