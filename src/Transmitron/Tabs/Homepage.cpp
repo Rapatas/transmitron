@@ -174,6 +174,7 @@ void Homepage::setupProfileForm()
     wxDefaultPosition,
     wxSize(-1, OptionsHeight)
   );
+  mSave->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
   mSave->Enable(false);
 
   auto *bottomSizer = new wxBoxSizer(wxHORIZONTAL);
