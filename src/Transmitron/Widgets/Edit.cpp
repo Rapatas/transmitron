@@ -206,13 +206,14 @@ void Edit::setStyle(Format format)
       mText->SetLexer(wxSTC_LEX_JSON);
       mText->SetKeyWords(0, "true false null");
       mText->StyleSetForeground(wxSTC_JSON_OPERATOR,     style.at(Style::Normal).first);
-      mText->StyleSetBackground(wxSTC_JSON_ERROR,        style.at(Style::Error).first);
+      mText->StyleSetForeground(wxSTC_JSON_ERROR,        style.at(Style::Error).first);
       mText->StyleSetForeground(wxSTC_JSON_KEYWORD,      style.at(Style::Keyword).first);
       mText->StyleSetForeground(wxSTC_JSON_NUMBER,       style.at(Style::Number).first);
       mText->StyleSetForeground(wxSTC_JSON_PROPERTYNAME, style.at(Style::Key).first);
       mText->StyleSetForeground(wxSTC_JSON_STRING,       style.at(Style::String).first);
       mText->StyleSetForeground(wxSTC_JSON_URI,          style.at(Style::Uri).first);
 
+      mText->StyleSetBackground(wxSTC_JSON_ERROR,        style.at(Style::Error).second);
     }
     break;
 
@@ -231,6 +232,9 @@ void Edit::setStyle(Format format)
       mText->StyleSetForeground(wxSTC_H_TAGUNKNOWN,       style.at(Style::Error).first);
       mText->StyleSetForeground(wxSTC_H_XMLEND,           style.at(Style::Special).first);
       mText->StyleSetForeground(wxSTC_H_XMLSTART,         style.at(Style::Special).first);
+
+      mText->StyleSetBackground(wxSTC_H_ATTRIBUTEUNKNOWN, style.at(Style::Error).second);
+      mText->StyleSetBackground(wxSTC_H_TAGUNKNOWN,       style.at(Style::Error).second);
     }
     break;
 
