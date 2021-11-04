@@ -185,6 +185,7 @@ void Edit::setupScintilla()
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDERTAIL,    wxSTC_MARK_EMPTY);
 
   // Constant styles.
+  mText->SetCaretForeground(mStyles.at(mTheme).at(Style::Normal).first);
   mText->StyleSetForeground(wxSTC_STYLE_DEFAULT, mStyles.at(mTheme).at(Style::Normal).first);
   mText->StyleSetBackground(wxSTC_STYLE_DEFAULT, mStyles.at(mTheme).at(Style::Normal).second);
   mText->StyleClearAll();
