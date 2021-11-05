@@ -39,9 +39,8 @@ Edit::Edit(
   setupScintilla();
 
   const int timestampBorderPx = 5;
-  mTimestamp = new wxStaticText(this, -1, "0000-00-00 00:00:00.000");
-  mTimestamp->SetFont(mFont);
-  mTimestamp->Hide();
+  mInfoLine = new wxStaticText(this, -1, "0000-00-00 00:00:00.000");
+  mInfoLine->SetFont(mFont);
 
   mTopic = new TopicCtrl(this, -1);
   mTopic->Bind(wxEVT_KEY_UP, &Edit::onTopicKeyDown, this);
@@ -141,7 +140,7 @@ Edit::Edit(
   mBottom->Add(formatLabel, 0, wxALIGN_CENTER_VERTICAL);
   mBottom->Add(mFormatSelect, 0, wxEXPAND);
   mVsizer->Add(mTop, 0, wxEXPAND);
-  mVsizer->Add(mTimestamp, 0, (int)wxEXPAND | (int)wxLEFT, timestampBorderPx);
+  mVsizer->Add(mInfoLine, 0, (int)wxEXPAND | (int)wxLEFT, timestampBorderPx);
   mVsizer->Add(mText, 1, wxEXPAND);
   mVsizer->Add(mBottom, 0, wxEXPAND);
 
@@ -315,7 +314,17 @@ void Edit::setTimestamp(const std::chrono::system_clock::time_point &timestamp)
   const auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(fraction).count();
   ss << "." << millis;
 
-  mTimestamp->SetLabel(ss.str());
+  mInfoLine->SetLabel(ss.str());
+}
+
+void Edit::setInfoLine(const std::string &info)
+{
+  mInfoLine->SetLabel(
+    wxString::FromUTF8(
+      info.data(),
+      info.length()
+    )
+  );
 }
 
 void Edit::setReadOnly(bool readonly)
@@ -324,11 +333,6 @@ void Edit::setReadOnly(bool readonly)
 
   mText->SetReadOnly(readonly);
   mTopic->setReadOnly(readonly);
-  if (readonly)
-  {
-    mTimestamp->Show(readonly);
-    mVsizer->Layout();
-  }
 
   mPublish->Show(!readonly);
   mTop->Layout();

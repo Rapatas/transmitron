@@ -44,6 +44,7 @@ public:
   void setTopic(const std::string &topic);
   void setQos(MQTT::QoS qos);
   void setTimestamp(const std::chrono::system_clock::time_point &timestamp);
+  void setInfoLine(const std::string &info);
 
 private:
 
@@ -130,7 +131,7 @@ private:
 
   wxStyledTextCtrl *mText = nullptr;
 
-  wxStaticText *mTimestamp = nullptr;
+  wxStaticText *mInfoLine = nullptr;
 
   wxButton *mSaveSnippet = nullptr;
   wxComboBox *mFormatSelect = nullptr;

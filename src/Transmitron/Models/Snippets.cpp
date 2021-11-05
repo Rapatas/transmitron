@@ -47,6 +47,18 @@ MQTT::Message Snippets::getMessage(wxDataViewItem item) const
   return node.message;
 }
 
+std::string Snippets::getName(wxDataViewItem item) const
+{
+  if (!item.IsOk())
+  {
+    return {};
+  }
+
+  const auto id = toId(item);
+  const auto &node = mNodes.at(id);
+  return node.name;
+}
+
 wxDataViewItem Snippets::getRootItem()
 {
   return toItem(0);

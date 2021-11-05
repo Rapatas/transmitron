@@ -200,6 +200,7 @@ private:
   void onSnippetsDrop(wxDataViewEvent &e);
   void onSnippetsDropPossible(wxDataViewEvent &e);
   void onSnippetsEdit(wxDataViewEvent &e);
+  void onSnippetsChanged(wxDataViewEvent &e);
   void onSnippetsSelected(wxDataViewEvent &e);
 
   // Subscriptions.

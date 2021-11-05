@@ -575,6 +575,11 @@ void Client::setupPanelSnippets(wxWindow *parent)
     this
   );
   mSnippetsCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_VALUE_CHANGED,
+    &Client::onSnippetsChanged,
+    this
+  );
+  mSnippetsCtrl->Bind(
     wxEVT_DATAVIEW_SELECTION_CHANGED,
     &Client::onSnippetsSelected,
     this
@@ -621,7 +626,9 @@ void Client::onSnippetsSelected(wxDataViewEvent &e)
   if (!mSnippetsModel->IsContainer(item))
   {
     const auto &message = mSnippetsModel->getMessage(item);
+    const auto &name = mSnippetsModel->getName(item);
     publish->setMessage(message);
+    publish->setInfoLine(name);
   }
 }
 
@@ -636,6 +643,23 @@ void Client::onSnippetsEdit(wxDataViewEvent &e)
   {
     e.Veto();
   }
+}
+
+void Client::onSnippetsChanged(wxDataViewEvent &e)
+{
+  const auto item = e.GetItem();
+  if (!item.IsOk())
+  {
+    e.Skip();
+    return;
+  }
+
+  const auto name = mSnippetsModel->getName(item);
+
+  auto *publish = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Publish).panel
+  );
+  publish->setInfoLine(name);
 }
 
 void Client::onSnippetsActivated(wxDataViewEvent &e)
@@ -1237,7 +1261,9 @@ void Client::onContextSelectedSnippetPublish(wxCommandEvent &/* event */)
   );
 
   const auto &message = mSnippetsModel->getMessage(item);
+  const auto &name = mSnippetsModel->getName(item);
   publish->setMessage(message);
+  publish->setInfoLine(name);
 
   mClient->publish(message);
 }
@@ -1268,6 +1294,11 @@ void Client::onContextSelectedSnippetDelete(wxCommandEvent &/* event */)
 
   const auto root = mSnippetsModel->getRootItem();
   mSnippetsCtrl->Select(root);
+
+  auto *publish = dynamic_cast<Widgets::Edit*>(
+    mPanes.at(Panes::Publish).panel
+  );
+  publish->setInfoLine({});
 }
 
 void Client::onContextSelectedSnippetNewSnippet(wxCommandEvent &/* event */)
@@ -1287,7 +1318,10 @@ void Client::onContextSelectedSnippetNewSnippet(wxCommandEvent &/* event */)
   auto *publish = dynamic_cast<Widgets::Edit*>(
     mPanes.at(Panes::Publish).panel
   );
-  publish->setMessage(mSnippetsModel->getMessage(inserted));
+  const auto &message = mSnippetsModel->getMessage(item);
+  const auto &name = mSnippetsModel->getName(item);
+  publish->setMessage(message);
+  publish->setInfoLine(name);
 
   mSnippetsCtrl->Select(inserted);
   mSnippetsCtrl->EnsureVisible(inserted);
@@ -1502,7 +1536,10 @@ void Client::onPublishSaveSnippet(Events::Edit &/* event */)
     auto *publish = dynamic_cast<Widgets::Edit*>(
       mPanes.at(Panes::Publish).panel
     );
-    publish->setMessage(mSnippetsModel->getMessage(inserted));
+    const auto &message = mSnippetsModel->getMessage(inserted);
+    const auto &name = mSnippetsModel->getName(inserted);
+    publish->setMessage(message);
+    publish->setInfoLine(name);
 
     mSnippetsCtrl->Select(inserted);
     mSnippetsCtrl->EnsureVisible(inserted);
