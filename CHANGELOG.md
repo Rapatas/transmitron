@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.2] - 2021-11-05
+
+### Added
+
+- Show selected snippet name on publish editor.
+
+### Fixed
+
+- Black caret when using dark background.
+- Snippet remained highlighted when selecting a message from history.
+- Missing background color for lexical error in editors.
+
 ## [0.0.1] - 2021-10-21
 
 ### Added
