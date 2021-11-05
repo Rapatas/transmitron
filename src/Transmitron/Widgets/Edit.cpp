@@ -39,9 +39,8 @@ Edit::Edit(
   setupScintilla();
 
   const int timestampBorderPx = 5;
-  mTimestamp = new wxStaticText(this, -1, "0000-00-00 00:00:00.000");
-  mTimestamp->SetFont(mFont);
-  mTimestamp->Hide();
+  mInfoLine = new wxStaticText(this, -1, "0000-00-00 00:00:00.000");
+  mInfoLine->SetFont(mFont);
 
   mTopic = new TopicCtrl(this, -1);
   mTopic->Bind(wxEVT_KEY_UP, &Edit::onTopicKeyDown, this);
@@ -141,7 +140,7 @@ Edit::Edit(
   mBottom->Add(formatLabel, 0, wxALIGN_CENTER_VERTICAL);
   mBottom->Add(mFormatSelect, 0, wxEXPAND);
   mVsizer->Add(mTop, 0, wxEXPAND);
-  mVsizer->Add(mTimestamp, 0, (int)wxEXPAND | (int)wxLEFT, timestampBorderPx);
+  mVsizer->Add(mInfoLine, 0, (int)wxEXPAND | (int)wxLEFT, timestampBorderPx);
   mVsizer->Add(mText, 1, wxEXPAND);
   mVsizer->Add(mBottom, 0, wxEXPAND);
 
@@ -185,8 +184,9 @@ void Edit::setupScintilla()
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDERTAIL,    wxSTC_MARK_EMPTY);
 
   // Constant styles.
+  mText->SetCaretForeground(mStyles.at(mTheme).at(Style::Normal).first);
   mText->StyleSetForeground(wxSTC_STYLE_DEFAULT, mStyles.at(mTheme).at(Style::Normal).first);
-  mText->StyleSetBackground(wxSTC_STYLE_DEFAULT, mStyles.at(mTheme).at(Style::Normal).second);
+  mText->StyleSetBackground(wxSTC_STYLE_DEFAULT, mStyles.at(mTheme).at(Style::Editor).second);
   mText->StyleClearAll();
 }
 
@@ -205,20 +205,29 @@ void Edit::setStyle(Format format)
     {
       mText->SetLexer(wxSTC_LEX_JSON);
       mText->SetKeyWords(0, "true false null");
+
       mText->StyleSetForeground(wxSTC_JSON_OPERATOR,     style.at(Style::Normal).first);
-      mText->StyleSetBackground(wxSTC_JSON_ERROR,        style.at(Style::Error).first);
+      mText->StyleSetForeground(wxSTC_JSON_ERROR,        style.at(Style::Error).first);
       mText->StyleSetForeground(wxSTC_JSON_KEYWORD,      style.at(Style::Keyword).first);
       mText->StyleSetForeground(wxSTC_JSON_NUMBER,       style.at(Style::Number).first);
       mText->StyleSetForeground(wxSTC_JSON_PROPERTYNAME, style.at(Style::Key).first);
       mText->StyleSetForeground(wxSTC_JSON_STRING,       style.at(Style::String).first);
       mText->StyleSetForeground(wxSTC_JSON_URI,          style.at(Style::Uri).first);
 
+      mText->StyleSetBackground(wxSTC_JSON_OPERATOR,     style.at(Style::Normal).second);
+      mText->StyleSetBackground(wxSTC_JSON_ERROR,        style.at(Style::Error).second);
+      mText->StyleSetBackground(wxSTC_JSON_KEYWORD,      style.at(Style::Keyword).second);
+      mText->StyleSetBackground(wxSTC_JSON_NUMBER,       style.at(Style::Number).second);
+      mText->StyleSetBackground(wxSTC_JSON_PROPERTYNAME, style.at(Style::Key).second);
+      mText->StyleSetBackground(wxSTC_JSON_STRING,       style.at(Style::String).second);
+      mText->StyleSetBackground(wxSTC_JSON_URI,          style.at(Style::Uri).second);
     }
     break;
 
     case Format::Xml:
     {
       mText->SetLexer(wxSTC_LEX_XML);
+
       mText->StyleSetForeground(wxSTC_H_ATTRIBUTE,        style.at(Style::Key).first);
       mText->StyleSetForeground(wxSTC_H_ATTRIBUTEUNKNOWN, style.at(Style::Error).first);
       mText->StyleSetForeground(wxSTC_H_COMMENT,          style.at(Style::Comment).first);
@@ -231,6 +240,19 @@ void Edit::setStyle(Format format)
       mText->StyleSetForeground(wxSTC_H_TAGUNKNOWN,       style.at(Style::Error).first);
       mText->StyleSetForeground(wxSTC_H_XMLEND,           style.at(Style::Special).first);
       mText->StyleSetForeground(wxSTC_H_XMLSTART,         style.at(Style::Special).first);
+
+      mText->StyleSetBackground(wxSTC_H_ATTRIBUTE,        style.at(Style::Key).second);
+      mText->StyleSetBackground(wxSTC_H_ATTRIBUTEUNKNOWN, style.at(Style::Error).second);
+      mText->StyleSetBackground(wxSTC_H_COMMENT,          style.at(Style::Comment).second);
+      mText->StyleSetBackground(wxSTC_H_DOUBLESTRING,     style.at(Style::String).second);
+      mText->StyleSetBackground(wxSTC_H_NUMBER,           style.at(Style::Number).second);
+      mText->StyleSetBackground(wxSTC_H_OTHER,            style.at(Style::Key).second);
+      mText->StyleSetBackground(wxSTC_H_SINGLESTRING,     style.at(Style::String).second);
+      mText->StyleSetBackground(wxSTC_H_TAG,              style.at(Style::Keyword).second);
+      mText->StyleSetBackground(wxSTC_H_TAGEND,           style.at(Style::Keyword).second);
+      mText->StyleSetBackground(wxSTC_H_TAGUNKNOWN,       style.at(Style::Error).second);
+      mText->StyleSetBackground(wxSTC_H_XMLEND,           style.at(Style::Special).second);
+      mText->StyleSetBackground(wxSTC_H_XMLSTART,         style.at(Style::Special).second);
     }
     break;
 
@@ -292,7 +314,17 @@ void Edit::setTimestamp(const std::chrono::system_clock::time_point &timestamp)
   const auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(fraction).count();
   ss << "." << millis;
 
-  mTimestamp->SetLabel(ss.str());
+  mInfoLine->SetLabel(ss.str());
+}
+
+void Edit::setInfoLine(const std::string &info)
+{
+  mInfoLine->SetLabel(
+    wxString::FromUTF8(
+      info.data(),
+      info.length()
+    )
+  );
 }
 
 void Edit::setReadOnly(bool readonly)
@@ -301,11 +333,6 @@ void Edit::setReadOnly(bool readonly)
 
   mText->SetReadOnly(readonly);
   mTopic->setReadOnly(readonly);
-  if (readonly)
-  {
-    mTimestamp->Show(readonly);
-    mVsizer->Layout();
-  }
 
   mPublish->Show(!readonly);
   mTop->Layout();

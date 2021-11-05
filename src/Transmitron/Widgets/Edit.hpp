@@ -44,6 +44,7 @@ public:
   void setTopic(const std::string &topic);
   void setQos(MQTT::QoS qos);
   void setTimestamp(const std::chrono::system_clock::time_point &timestamp);
+  void setInfoLine(const std::string &info);
 
 private:
 
@@ -56,6 +57,7 @@ private:
   enum class Style : uint8_t
   {
     Comment,
+    Editor,
     Error,
     Key,
     Keyword,
@@ -67,6 +69,8 @@ private:
   };
 
   static constexpr uint32_t NoColor = 0x10000000;
+  static constexpr uint32_t BrightnessBump = (80 << 0) | (80 << 8) | (80 << 16); // NOLINT
+
   static constexpr uint32_t Black  = (30  << 0) | (30  << 8) | (30  << 16); // NOLINT
   static constexpr uint32_t White  = (250 << 0) | (250 << 8) | (250 << 16); // NOLINT
   static constexpr uint32_t Red    = (180 << 0) | (0   << 8) | (0   << 16); // NOLINT
@@ -77,26 +81,28 @@ private:
 
   const std::map<Theme, std::map<Style, std::pair<uint32_t, uint32_t>>> mStyles {
     {Theme::Light, {
-      {Style::Comment, {Black,   NoColor}},
-      {Style::Error,   {NoColor, Red}},
-      {Style::Normal,  {Black,   White}},
-      {Style::Key,     {Green,   NoColor}},
-      {Style::Keyword, {Cyan,    NoColor}},
-      {Style::Number,  {Orange,  NoColor}},
-      {Style::String,  {Orange,  NoColor}},
-      {Style::Uri,     {Cyan,    NoColor}},
-      {Style::Special, {Pink,    NoColor}},
+      {Style::Comment, {Black,  Black}},
+      {Style::Editor,  {Black,  White}},
+      {Style::Error,   {Black,  Red}},
+      {Style::Normal,  {Black,  White}},
+      {Style::Key,     {Green,  White}},
+      {Style::Keyword, {Cyan,   White}},
+      {Style::Number,  {Orange, White}},
+      {Style::String,  {Orange, White}},
+      {Style::Uri,     {Cyan,   White}},
+      {Style::Special, {Pink,   White}},
     }},
     {Theme::Dark, {
-      {Style::Comment, {White,   NoColor}},
-      {Style::Error,   {NoColor, Red}},
-      {Style::Normal,  {White,   Black}},
-      {Style::Key,     {Green  | (80 << 0) | (80 << 8) | (80 << 16), NoColor}},
-      {Style::Keyword, {Cyan   | (80 << 0) | (80 << 8) | (80 << 16), NoColor}},
-      {Style::Number,  {Orange | (80 << 0) | (80 << 8) | (80 << 16), NoColor}},
-      {Style::String,  {Orange | (80 << 0) | (80 << 8) | (80 << 16), NoColor}},
-      {Style::Uri,     {Cyan   | (80 << 0) | (80 << 8) | (80 << 16), NoColor}},
-      {Style::Special, {Pink   | (80 << 0) | (80 << 8) | (80 << 16), NoColor}},
+      {Style::Comment, {White, Black}},
+      {Style::Editor,  {White, Black}},
+      {Style::Error,   {Black, Red}},
+      {Style::Normal,  {White, Black}},
+      {Style::Key,     {Green  | BrightnessBump, Black}},
+      {Style::Keyword, {Cyan   | BrightnessBump, Black}},
+      {Style::Number,  {Orange | BrightnessBump, Black}},
+      {Style::String,  {Orange | BrightnessBump, Black}},
+      {Style::Uri,     {Cyan   | BrightnessBump, Black}},
+      {Style::Special, {Pink   | BrightnessBump, Black}},
     }}
   };
 
@@ -125,7 +131,7 @@ private:
 
   wxStyledTextCtrl *mText = nullptr;
 
-  wxStaticText *mTimestamp = nullptr;
+  wxStaticText *mInfoLine = nullptr;
 
   wxButton *mSaveSnippet = nullptr;
   wxComboBox *mFormatSelect = nullptr;

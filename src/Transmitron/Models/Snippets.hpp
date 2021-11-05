@@ -29,6 +29,7 @@ public:
   bool load(const std::string &connectionDir);
 
   MQTT::Message getMessage(wxDataViewItem item) const;
+  std::string getName(wxDataViewItem item) const;
   static wxDataViewItem getRootItem() ;
   wxDataViewItem createFolder(
     wxDataViewItem parent
