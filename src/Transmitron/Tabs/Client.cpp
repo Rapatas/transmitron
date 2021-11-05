@@ -1538,10 +1538,16 @@ void Client::onHistoryClearClicked(wxCommandEvent &/* event */)
 void Client::onHistoryDoubleClicked(wxDataViewEvent &event)
 {
   if (!event.GetItem().IsOk()) { return; }
-  const auto item = event.GetItem();
 
+  const auto snippetItem = mSnippetsCtrl->GetSelection();
+  if (snippetItem.IsOk())
+  {
+    mSnippetsCtrl->Unselect(snippetItem);
+  }
+
+  const auto historyItem = event.GetItem();
   auto *publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
-  publish->setMessage(mHistoryModel->getMessage(item));
+  publish->setMessage(mHistoryModel->getMessage(historyItem));
 }
 
 void Client::onHistorySearchKey(wxKeyEvent &event)
