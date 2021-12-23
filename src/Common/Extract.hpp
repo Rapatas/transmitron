@@ -2,6 +2,7 @@
 #define COMMON_EXTRACT_HPP
 
 #include <nlohmann/json.hpp>
+#include <optional>
 
 namespace Common
 {
