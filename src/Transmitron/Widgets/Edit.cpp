@@ -36,14 +36,26 @@ Edit::Edit(
   constexpr size_t FontSize = 9;
   mFont = wxFont(wxFontInfo(FontSize).FaceName("Consolas"));
 
-  setupScintilla();
-
   const int timestampBorderPx = 5;
   mInfoLine = new wxStaticText(this, -1, "0000-00-00 00:00:00.000");
   mInfoLine->SetFont(mFont);
 
   mTopic = new TopicCtrl(this, -1);
   mTopic->Bind(wxEVT_KEY_UP, &Edit::onTopicKeyDown, this);
+
+  mPublish = new wxBitmapButton(
+    this,
+    -1,
+    *bin2cSend18x18(),
+    wxDefaultPosition,
+    wxSize((int)mOptionsHeight, (int)mOptionsHeight)
+  );
+  mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
+    auto *e = new Events::Edit(Events::EDIT_PUBLISH);
+    wxQueueEvent(this, e);
+  });
+
+  setupScintilla();
 
   mSaveSnippet = new wxButton(
     this,
@@ -110,18 +122,6 @@ Edit::Edit(
   mQos1->Hide();
   mQos2->Hide();
   mQoS = MQTT::QoS::AtLeastOnce;
-
-  mPublish = new wxBitmapButton(
-    this,
-    -1,
-    *bin2cSend18x18(),
-    wxDefaultPosition,
-    wxSize((int)mOptionsHeight, (int)mOptionsHeight)
-  );
-  mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
-    auto *e = new Events::Edit(Events::EDIT_PUBLISH);
-    wxQueueEvent(this, e);
-  });
 
   mFormatSelect->Bind(wxEVT_COMBOBOX, &Edit::onFormatSelected, this);
 
