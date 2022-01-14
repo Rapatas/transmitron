@@ -732,18 +732,18 @@ void Client::onSnippetsDrop(wxDataViewEvent &e)
     {
       if (target.IsOk())
       {
-        moved = mSnippetsModel->moveInside(item, target);
+        moved = mSnippetsModel->moveInsideFirst(item, target);
       }
       else
       {
-        moved = mSnippetsModel->moveLast(item, target);
+        moved = mSnippetsModel->moveInsideLast(item, target);
       }
     }
   }
   else
   {
     const auto index = (size_t)pIndex;
-    moved = mSnippetsModel->moveAtIndex(item, target, index);
+    moved = mSnippetsModel->moveInsideAtIndex(item, target, index);
   }
 
 #else
@@ -752,7 +752,7 @@ void Client::onSnippetsDrop(wxDataViewEvent &e)
   {
     if (mSnippetsModel->IsContainer(target))
     {
-      moved = mSnippetsModel->moveInside(item, target);
+      moved = mSnippetsModel->moveInsideFirst(item, target);
     }
     else
     {
@@ -767,7 +767,7 @@ void Client::onSnippetsDrop(wxDataViewEvent &e)
     }
     else
     {
-      moved = mSnippetsModel->moveLast(item, target);
+      moved = mSnippetsModel->moveInsideLast(item, target);
     }
   }
 

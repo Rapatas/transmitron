@@ -335,16 +335,16 @@ wxDataViewItem Snippets::moveBefore(
     }
   }
 
-  return moveAtIndex(item, parent, index);
+  return moveInsideAtIndex(item, parent, index);
 }
 
-wxDataViewItem Snippets::moveLast(
+wxDataViewItem Snippets::moveInsideLast(
   wxDataViewItem item,
   wxDataViewItem parent
 ) {
   wxDataViewItemArray children;
   const auto count = GetChildren(parent, children);
-  return moveAtIndex(item, parent, count);
+  return moveInsideAtIndex(item, parent, count);
 }
 
 wxDataViewItem Snippets::moveAfter(
@@ -365,17 +365,17 @@ wxDataViewItem Snippets::moveAfter(
     }
   }
 
-  return moveAtIndex(item, parent, index);
+  return moveInsideAtIndex(item, parent, index);
 }
 
-wxDataViewItem Snippets::moveInside(
+wxDataViewItem Snippets::moveInsideFirst(
   wxDataViewItem item,
   wxDataViewItem parent
 ) {
-  return moveAtIndex(item, parent, 0);
+  return moveInsideAtIndex(item, parent, 0);
 }
 
-wxDataViewItem Snippets::moveAtIndex(
+wxDataViewItem Snippets::moveInsideAtIndex(
   wxDataViewItem item,
   wxDataViewItem parent,
   size_t index
