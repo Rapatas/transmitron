@@ -81,6 +81,13 @@ target_compile_features(
     cxx_std_17
 )
 
+set_target_properties(
+  ${TRANSMITRON_BIN_NAME}
+  PROPERTIES
+    CXX_STANDARD 17
+    CXX_EXTENSIONS OFF
+)
+
 target_include_directories(${TRANSMITRON_BIN_NAME} PRIVATE . )
 
 set(gcc_warnings
