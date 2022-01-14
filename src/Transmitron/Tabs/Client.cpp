@@ -418,6 +418,20 @@ void Client::setupPanelConnect(
 
 void Client::setupPanelSubscriptions(wxWindow *parent)
 {
+  auto *panel = new wxPanel(parent, -1, wxDefaultPosition);
+  mPanes.at(Panes::Subscriptions).panel = panel;
+
+  mFilter = new Widgets::TopicCtrl(panel, -1);
+  mFilter->SetFont(mFont);
+
+  mSubscribe = new wxBitmapButton(
+    panel,
+    -1,
+    *bin2cPlus18x18(),
+    wxDefaultPosition,
+    wxSize(OptionsHeight, OptionsHeight)
+  );
+
   wxDataViewColumn* const icon = new wxDataViewColumn(
     "icon",
     new wxDataViewBitmapRenderer(),
@@ -438,9 +452,6 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
     wxCOL_WIDTH_AUTOSIZE
   );
 
-  auto *panel = new wxPanel(parent, -1, wxDefaultPosition);
-  mPanes.at(Panes::Subscriptions).panel = panel;
-
   mSubscriptionsCtrl = new wxDataViewListCtrl(
     panel,
     -1,
@@ -456,17 +467,6 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mSubscriptionsCtrl->AssociateModel(mSubscriptionsModel.get());
 
   mSubscriptionsCtrl->SetFont(mFont);
-
-  mSubscribe = new wxBitmapButton(
-    panel,
-    -1,
-    *bin2cPlus18x18(),
-    wxDefaultPosition,
-    wxSize(OptionsHeight, OptionsHeight)
-  );
-
-  mFilter = new Widgets::TopicCtrl(panel, -1);
-  mFilter->SetFont(mFont);
 
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
