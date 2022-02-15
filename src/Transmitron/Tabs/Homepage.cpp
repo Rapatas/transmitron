@@ -1,3 +1,4 @@
+#include <chrono>
 #include <wx/button.h>
 #include <wx/wx.h>
 #include <wx/artprov.h>
@@ -335,17 +336,30 @@ void Homepage::fillPropertyGrid(
 MQTT::BrokerOptions Homepage::optionsFromPropertyGrid() const
 {
   const auto &pfp = mProfileFormProperties;
+
+  const bool autoReconnect       = pfp.at(Properties::AutoReconnect)->GetValue();
+  const auto maxInFlight         = (size_t)pfp.at(Properties::MaxInFlight)->GetValue().GetInteger();
+  const auto maxReconnectRetries = (size_t)pfp.at(Properties::MaxReconnectRetries)->GetValue().GetInteger();
+  const auto port                = (size_t)pfp.at(Properties::Port)->GetValue().GetInteger();
+  const auto connectTimeout      = (size_t)pfp.at(Properties::ConnectTimeout)->GetValue().GetInteger();
+  const auto disconnectTimeout   = (size_t)pfp.at(Properties::DisconnectTimeout)->GetValue().GetInteger();
+  const auto keepAliveInterval   = (size_t)pfp.at(Properties::KeepAlive)->GetValue().GetLong();
+  const auto clientId            = pfp.at(Properties::ClientId)->GetValue();
+  const auto hostname            = pfp.at(Properties::Hostname)->GetValue();
+  const auto password            = pfp.at(Properties::Password)->GetValue();
+  const auto username            = pfp.at(Properties::Username)->GetValue();
+
   return MQTT::BrokerOptions {
-    pfp.at(Properties::AutoReconnect)->GetValue(),
-    (unsigned)pfp.at(Properties::MaxInFlight)->GetValue().GetInteger(),
-    (unsigned)pfp.at(Properties::MaxReconnectRetries)->GetValue().GetInteger(),
-    (unsigned)pfp.at(Properties::Port)->GetValue().GetInteger(),
-    (unsigned)pfp.at(Properties::ConnectTimeout)->GetValue().GetInteger(),
-    (unsigned)pfp.at(Properties::DisconnectTimeout)->GetValue().GetInteger(),
-    (unsigned)pfp.at(Properties::KeepAlive)->GetValue().GetLong(),
-    pfp.at(Properties::ClientId)->GetValue(),
-    pfp.at(Properties::Hostname)->GetValue(),
-    pfp.at(Properties::Password)->GetValue(),
-    pfp.at(Properties::Username)->GetValue(),
+    autoReconnect,
+    maxInFlight,
+    maxReconnectRetries,
+    port,
+    std::chrono::seconds(connectTimeout),
+    std::chrono::seconds(disconnectTimeout),
+    std::chrono::seconds(keepAliveInterval),
+    clientId,
+    hostname,
+    password,
+    username,
   };
 }
