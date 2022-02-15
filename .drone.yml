@@ -15,75 +15,32 @@ steps:
       - git clone https://github.com/rapatas/transmitron.git .
       - git checkout ${DRONE_COMMIT}
 
-  - name: Restore Cache
-    image: meltwater/drone-cache
-    settings:
-      backend: "filesystem"
-      cache_key: '{{ .Repo.Name }}_{{ checksum "conan/conanfile.py" }}_{{ arch }}'
-      restore: true
-      archive_format: "gzip"
-      filesystem_cache_root: /cache_dir
-      mount:
-        - conan_data
-    volumes:
-      - name: cache_volume
-        path: /cache_dir
-
   - name: Build Linux
-    image: transmitron_linux_amd64
+    image: rapatas_transmitron_linux_compiler
     pull: if-not-exists
     user: 0
-    environment:
-      CONAN_USER_HOME: /drone/src/conan_data/amd64
     commands:
-      - conan profile new --force default --detect
-      - conan profile update settings.compiler.libcxx=libstdc++11 default
-      - conan config set general.revisions_enabled=1
-      - conan remote add -f bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
       - mkdir build-release-linux-amd64
       - cd    build-release-linux-amd64
       - conan install ../conan/ --build=missing
       - cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_BUILD_TYPE=Release ..
-      - echo "Building with $(nproc) threads."
       - make -j $(nproc)
       - make package
 
   - name: Build Windows
-    image: transmitron_windows_amd64
+    image: rapatas_transmitron_windows_compiler
     pull: if-not-exists
     user: 0
-    environment:
-      CONAN_USER_HOME: /drone/src/conan_data/amd64
     commands:
-      - conan profile new --force default --detect
-      - cp /workspace/windows $CONAN_USER_HOME/.conan/profiles/windows
-      - conan config set general.revisions_enabled=1
-      - conan remote add -f bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
       - mkdir build-release-windows-amd64
       - cd    build-release-windows-amd64
       - conan install ../conan/ --profile=windows --build=missing
       - cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_TOOLCHAIN_FILE=/opt/cmake-toolchains/linux-x86_64-to-windows-x86_64.cmake -DCMAKE_BUILD_TYPE=Release ..
-      - echo "Building with $(nproc) threads."
       - make -j $(nproc)
       - make package
 
-  - name: Rebuild Cache
-    image: meltwater/drone-cache
-    settings:
-      backend: "filesystem"
-      rebuild: true
-      archive_format: "gzip"
-      cache_key: '{{ .Repo.Name }}_{{ checksum "conan/conanfile.py" }}_{{ arch }}'
-      backend_operation_timeout: "15m0s"
-      filesystem_cache_root: /cache_dir/
-      mount:
-        - conan_data
-    volumes:
-      - name: cache_volume
-        path: /cache_dir
-
   - name: Release Notes
-    image: transmitron_linux_amd64
+    image: ubuntu:20.04
     pull: if-not-exists
     commands:
       - echo "$(awk -v section=[${DRONE_TAG}] '$2==section{ f=1; next }; /^## /{ f=0; next }; f==1{ print $0 };' ./CHANGELOG.md)" > release_notes_${DRONE_TAG}.md
@@ -110,8 +67,3 @@ steps:
       - crc32
     when:
       event: tag
-
-volumes:
-  - name: cache_volume
-    host:
-      path: /opt/drone/cache
