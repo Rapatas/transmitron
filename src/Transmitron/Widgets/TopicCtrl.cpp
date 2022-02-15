@@ -1,7 +1,11 @@
-#include "TopicCtrl.hpp"
 #include <wx/artprov.h>
 #include <wx/clipbrd.h>
+#include <wx/listctrl.h>
 #include <wx/menu.h>
+#include <fmt/format.h>
+
+#include "Common/Log.hpp"
+#include "TopicCtrl.hpp"
 
 using namespace Transmitron::Widgets;
 
@@ -16,11 +20,14 @@ TopicCtrl::TopicCtrl(
 {
   SetFont(mFont);
 
+  mLogger = Common::Log::create("Transmitron::TopicCtrl");
+
   Bind(wxEVT_LEFT_UP,     &TopicCtrl::onLeftUp,        this);
   Bind(wxEVT_LEFT_DOWN,   &TopicCtrl::onLeftDown,      this);
   Bind(wxEVT_LEFT_DCLICK, &TopicCtrl::onDoubleClicked, this);
   Bind(wxEVT_RIGHT_DOWN,  &TopicCtrl::onRightClicked,  this);
   Bind(wxEVT_KILL_FOCUS,  &TopicCtrl::onLostFocus,     this);
+  Bind(wxEVT_KEY_DOWN,    &TopicCtrl::onKeyDown,       this);
 
   Bind(wxEVT_COMMAND_MENU_SELECTED, &TopicCtrl::onContextSelected, this);
 }
@@ -33,12 +40,10 @@ void TopicCtrl::setReadOnly(bool readonly)
   {
     auto *dt = new NotAllowedDropTarget;
     SetDropTarget(dt);
-    Bind(wxEVT_KEY_DOWN,     &TopicCtrl::onKeyDown);
     Bind(wxEVT_CONTEXT_MENU, &TopicCtrl::onContext, this);
   }
   else
   {
-    Unbind(wxEVT_KEY_DOWN,     &TopicCtrl::onKeyDown);
     Unbind(wxEVT_CONTEXT_MENU, &TopicCtrl::onContext, this);
   }
 }
@@ -98,6 +103,7 @@ void TopicCtrl::onLeftDown(wxMouseEvent &e)
   {
     mFirstClick = false;
   }
+  popupShow();
   e.Skip();
 }
 
@@ -139,21 +145,28 @@ void TopicCtrl::onContext(wxContextMenuEvent &e)
 void TopicCtrl::onLostFocus(wxFocusEvent &e)
 {
   mFirstClick = true;
+  popupHide();
   e.Skip();
 }
 
 void TopicCtrl::onKeyDown(wxKeyEvent &e)
 {
-  if (
-    (e.ControlDown() && e.GetKeyCode() == 'C')
-    || (e.ControlDown() && e.GetKeyCode() == 'A')
-  ) {
-    e.Skip();
+  if (e.GetKeyCode() == WXK_ESCAPE)
+  {
+    popupHide();
   }
-  else
+
+  const bool allowedReadOnlyKeys =
+    e.ControlDown()
+    && (e.GetKeyCode() == 'C' || e.GetKeyCode() == 'A');
+
+  if (mReadOnly && !allowedReadOnlyKeys)
   {
     e.Skip(false);
+    return;
   }
+
+  e.Skip();
 }
 
 wxDragResult TopicCtrl::NotAllowedDropTarget::OnData(
@@ -162,4 +175,61 @@ wxDragResult TopicCtrl::NotAllowedDropTarget::OnData(
   wxDragResult /* defResult */
 ) {
   return wxDragResult::wxDragNone;
+}
+
+void TopicCtrl::popupShow()
+{
+  mLogger->info("Showing");
+
+  if (mAutoComplete)
+  {
+    mAutoComplete->Destroy();
+  }
+
+  const auto filterPoint = GetScreenPosition();
+  const auto filterSize = GetSize();
+
+  const wxPoint popupPoint(filterPoint.x, filterPoint.y + filterSize.y);
+  const wxSize popupSize(filterSize.x, 100);
+
+  mAutoComplete = new wxPopupWindow(this);
+
+  auto *placeholder = new wxListCtrl(
+    mAutoComplete,
+    -1,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxLC_REPORT
+  );
+
+  // Add first column
+  wxListItem col0;
+  col0.SetId(0);
+  col0.SetText( _("Foo")  );
+  col0.SetWidth(50);
+  placeholder->InsertColumn(0, col0);
+
+  for (size_t i = 0; i != 10; ++i)
+  {
+    wxListItem item;
+    item.SetId((long)i);
+    item.SetText(fmt::format("amco/{}/coinman/#", i));
+    placeholder->InsertItem(item);
+  }
+
+  mAutoComplete->Position(popupPoint - popupSize, popupSize);
+  mAutoComplete->Show();
+}
+
+void TopicCtrl::popupHide()
+{
+  mLogger->info("Hiding");
+
+  if (!mAutoComplete)
+  {
+    return;
+  }
+
+  mAutoComplete->Destroy();
+  mAutoComplete = nullptr;
 }
