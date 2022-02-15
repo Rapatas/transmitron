@@ -1,4 +1,4 @@
-#ifndef WIN32
+#ifndef _WIN32
 
 #include <pwd.h>
 #include <unistd.h>
@@ -107,4 +107,4 @@ std::vector<std::string> XdgBaseDir::readConfigDirs()
   return dirs;
 }
 
-#endif // WIN32
+#endif // _WIN32
