@@ -1559,7 +1559,8 @@ void Client::onHistorySelected(wxDataViewEvent &event)
   const auto item = event.GetItem();
 
   auto *preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
-  preview->setMessage(mHistoryModel->getMessage(item));
+  const auto message = mHistoryModel->getMessage(item);
+  preview->setMessage(message);
 }
 
 void Client::onHistoryClearClicked(wxCommandEvent &/* event */)
@@ -1584,7 +1585,9 @@ void Client::onHistoryDoubleClicked(wxDataViewEvent &event)
 
   const auto historyItem = event.GetItem();
   auto *publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
-  publish->setMessage(mHistoryModel->getMessage(historyItem));
+  auto message = mHistoryModel->getMessage(historyItem);
+  message.retained = false;
+  publish->setMessage(message);
 }
 
 void Client::onHistorySearchKey(wxKeyEvent &event)
