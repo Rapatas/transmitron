@@ -18,6 +18,8 @@ class Layouts :
 {
 public:
 
+  static constexpr std::string_view DefaultName = "Default";
+
   using Perspective_t = std::string;
 
   enum class Column : unsigned

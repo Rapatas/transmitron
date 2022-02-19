@@ -25,7 +25,7 @@ Layouts::Layouts()
 
   const auto id = mAvailableId++;
   auto layout = std::make_unique<Node>();
-  layout->name = "Default";
+  layout->name = DefaultName;
   layout->perspective = DefaultPerspective;
   layout->path = "";
   layout->saved = true;
