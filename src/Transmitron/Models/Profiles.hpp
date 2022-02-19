@@ -8,6 +8,8 @@
 
 #include "MQTT/BrokerOptions.hpp"
 #include "Snippets.hpp"
+#include "Layouts.hpp"
+#include "Transmitron/Types/ClientOptions.hpp"
 
 namespace Transmitron::Models
 {
@@ -32,6 +34,10 @@ public:
     wxDataViewItem item,
     const MQTT::BrokerOptions &brokerOptions
   );
+  bool updateClientOptions(
+    wxDataViewItem item,
+    const Types::ClientOptions &clientOptions
+  );
   bool rename(
     wxDataViewItem item,
     const std::string &name
@@ -41,6 +47,7 @@ public:
   std::string getUniqueName() const;
 
   const MQTT::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
+  const Types::ClientOptions &getClientOptions(wxDataViewItem item) const;
   wxString getName(wxDataViewItem item) const;
 
   wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
@@ -51,14 +58,15 @@ private:
   {
     using Id_t = size_t;
     std::string name;
+    Types::ClientOptions clientOptions;
     MQTT::BrokerOptions brokerOptions;
     std::filesystem::path path;
     wxObjectDataPtr<Models::Snippets> snippetsModel;
     bool saved = false;
   };
 
-  static constexpr const char *BrokerOptionsFilename =
-    "broker-options.json";
+  static constexpr const std::string_view BrokerOptionsFilename = "broker-options.json";
+  static constexpr const std::string_view ClientOptionsFilename = "client-options.json";
 
   std::shared_ptr<spdlog::logger> mLogger;
   Node::Id_t mAvailableId = 1;
@@ -94,7 +102,11 @@ private:
   ) const override;
 
   bool save(size_t id);
-  wxDataViewItem loadProfileFile(const std::filesystem::path &filepath);
+  bool saveOptionsBroker(size_t id);
+  bool saveOptionsClient(size_t id);
+  wxDataViewItem loadProfile(const std::filesystem::path &directory);
+  std::optional<MQTT::BrokerOptions> loadProfileOptionsBroker(const std::filesystem::path &directory);
+  std::optional<Types::ClientOptions> loadProfileOptionsClient(const std::filesystem::path &directory);
 
   static size_t toId(const wxDataViewItem &item);
   static wxDataViewItem toItem(size_t id);

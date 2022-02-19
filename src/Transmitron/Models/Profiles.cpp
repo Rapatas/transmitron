@@ -1,13 +1,16 @@
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <stdexcept>
 
 #include <fmt/core.h>
 
 #include "Common/Log.hpp"
 #include "Common/Url.hpp"
+#include "MQTT/BrokerOptions.hpp"
 #include "Profiles.hpp"
 #include "Transmitron/Info.hpp"
+#include "Transmitron/Types/ClientOptions.hpp"
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
@@ -52,7 +55,7 @@ bool Profiles::load(const std::string &configDir)
     mLogger->info("Checking {}", entry.path().u8string());
     if (entry.status().type() != fs::file_type::directory) { continue; }
 
-    const auto item = loadProfileFile(entry.path());
+    const auto item = loadProfile(entry.path());
     if (!item.IsOk())
     {
       continue;
@@ -81,6 +84,25 @@ bool Profiles::updateBrokerOptions(
   save(id);
   ItemChanged(item);
   return true;
+}
+
+bool Profiles::updateClientOptions(
+  wxDataViewItem item,
+  const Types::ClientOptions &clientOptions
+) {
+    if (!item.IsOk())
+    {
+      return false;
+    }
+
+    const auto id = toId(item);
+    auto &profile = mProfiles.at(id);
+    profile->clientOptions = clientOptions;
+    profile->saved = false;
+
+    save(id);
+    ItemChanged(item);
+    return true;
 }
 
 bool Profiles::rename(
@@ -228,6 +250,11 @@ const MQTT::BrokerOptions &Profiles::getBrokerOptions(wxDataViewItem item) const
   return mProfiles.at(toId(item))->brokerOptions;
 }
 
+const Types::ClientOptions &Profiles::getClientOptions(wxDataViewItem item) const
+{
+    return mProfiles.at(toId(item))->clientOptions;
+}
+
 wxString Profiles::getName(wxDataViewItem item) const
 {
   const auto name = mProfiles.at(toId(item))->name;
@@ -356,6 +383,15 @@ bool Profiles::save(size_t id)
 {
   auto &profile = mProfiles.at(id);
   if (profile->saved) { return true; }
+  const bool saved = saveOptionsBroker(id) && saveOptionsClient(id);
+  profile->saved = saved;
+  return saved;
+}
+
+bool Profiles::saveOptionsBroker(size_t id)
+{
+  auto &profile = mProfiles.at(id);
+  if (profile->saved) { return true; }
 
   const auto brokerOptionsFilepath = fmt::format(
     "{}/{}",
@@ -375,66 +411,141 @@ bool Profiles::save(size_t id)
   }
 
   output << profile->brokerOptions.toJson();
-  profile->saved = true;
   return true;
 }
 
-wxDataViewItem Profiles::loadProfileFile(const std::filesystem::path &filepath)
+bool Profiles::saveOptionsClient(size_t id)
+{
+  auto &profile = mProfiles.at(id);
+  if (profile->saved) { return true; }
+
+  const auto clientOptionsFilepath = fmt::format(
+    "{}/{}",
+    profile->path.string(),
+    ClientOptionsFilename
+  );
+
+  std::ofstream output(clientOptionsFilepath);
+  if (!output.is_open())
+  {
+    mLogger->error(
+      "Could not save '{}':",
+      clientOptionsFilepath,
+      std::strerror(errno)
+    );
+    return false;
+  }
+
+  output << profile->clientOptions.toJson();
+  return true;
+}
+
+wxDataViewItem Profiles::loadProfile(const std::filesystem::path &directory)
 {
   std::string decoded;
   try
   {
-    decoded = Url::decode(filepath.stem().u8string());
+    decoded = Url::decode(directory.stem().u8string());
   }
   catch (std::runtime_error &e)
   {
     mLogger->error(
       "Could not decode '{}': {}",
-      filepath.u8string(),
+      directory.u8string(),
       e.what()
     );
     return wxDataViewItem(nullptr);
   }
   const std::string name{decoded.begin(), decoded.end()};
 
-  const auto brokerOptionsFilepath = fmt::format(
-    "{}/{}",
-    filepath.string(),
-    BrokerOptionsFilename
-  );
-
-  std::ifstream brokerOptionsFile(brokerOptionsFilepath);
-  if (!brokerOptionsFile.is_open())
+  const auto brokerOptions = [this, directory]()
   {
-    mLogger->warn("Could not open '{}'", filepath.u8string());
-    return wxDataViewItem(nullptr);
-  }
+    const auto opt = loadProfileOptionsBroker(directory);
+    if (!opt) { return MQTT::BrokerOptions{}; }
+    return opt.value();
+  }();
 
-  std::stringstream buffer;
-  buffer << brokerOptionsFile.rdbuf();
-  if (!nlohmann::json::accept(buffer.str()))
+  const auto clientOptions = [this, directory]()
   {
-    mLogger->warn("Could not parse '{}'", filepath.u8string());
-    return wxDataViewItem(nullptr);
-  }
-
-  auto j = nlohmann::json::parse(buffer.str());
-  auto brokerOptions = MQTT::BrokerOptions::fromJson(j);
+    const auto opt = loadProfileOptionsClient(directory);
+    if (!opt) { return Types::ClientOptions{}; }
+    return opt.value();
+  }();
 
   wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
-  snippetsModel->load(filepath.string());
+  snippetsModel->load(directory.string());
 
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>(Node{
     name,
+    clientOptions,
     brokerOptions,
-    filepath,
+    directory,
     snippetsModel,
     true
   });
   mProfiles.insert({id, std::move(profile)});
 
   return toItem(id);
+}
+
+std::optional<MQTT::BrokerOptions> Profiles::loadProfileOptionsBroker(
+  const std::filesystem::path &directory
+) {
+  const auto brokerOptionsFilepath = fmt::format(
+    "{}/{}",
+    directory.string(),
+    BrokerOptionsFilename
+  );
+
+  std::ifstream brokerOptionsFile(brokerOptionsFilepath);
+  if (!brokerOptionsFile.is_open())
+  {
+    mLogger->warn("Could not open '{}'", brokerOptionsFilepath);
+    return std::nullopt;
+  }
+
+  std::stringstream buffer;
+  buffer << brokerOptionsFile.rdbuf();
+  if (!nlohmann::json::accept(buffer.str()))
+  {
+    mLogger->warn("Could not parse '{}'", brokerOptionsFilepath);
+    return std::nullopt;
+  }
+
+  const auto j = nlohmann::json::parse(buffer.str());
+  auto brokerOptions = MQTT::BrokerOptions::fromJson(j);
+  return brokerOptions;
+}
+
+std::optional<Types::ClientOptions> Profiles::loadProfileOptionsClient(
+  const std::filesystem::path &directory
+) {
+  const auto clientOptionsFilepath = fmt::format(
+    "{}/{}",
+    directory.string(),
+    ClientOptionsFilename
+  );
+
+  std::ifstream clientOptionsFile(clientOptionsFilepath);
+  if (!clientOptionsFile.is_open())
+  {
+    mLogger->warn("Could not open '{}'", clientOptionsFilepath);
+    return std::nullopt;
+  }
+
+  std::stringstream buffer;
+  buffer << clientOptionsFile.rdbuf();
+  if (!nlohmann::json::accept(buffer.str()))
+  {
+    mLogger->warn("Could not parse '{}'", clientOptionsFilepath);
+    return std::nullopt;
+  }
+
+  const auto j = nlohmann::json::parse(buffer.str());
+  auto clientOptions = Types::ClientOptions::fromJson(j);
+  return clientOptions;
+
 }
 
 size_t Profiles::toId(const wxDataViewItem &item)

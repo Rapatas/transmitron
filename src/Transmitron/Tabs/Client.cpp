@@ -33,6 +33,7 @@ wxDEFINE_EVENT(Events::FAILURE, Events::Connection); // NOLINT
 Client::Client(
   wxWindow* parent,
   const MQTT::BrokerOptions &brokerOptions,
+  const Types::ClientOptions &clientOptions,
   const wxObjectDataPtr<Models::Snippets> &snippetsModel,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
   const wxString &name,
@@ -48,6 +49,7 @@ Client::Client(
   ),
   mName(name),
   mBrokerOptions(brokerOptions),
+  mClientOptions(clientOptions),
   mFont(wxFontInfo(FontSize).FaceName("Consolas")),
   mDarkMode(darkMode),
   mSnippetsModel(snippetsModel)
@@ -168,7 +170,9 @@ Client::Client(
   {
     mAuiMan.AddPane(pane.second.panel, pane.second.info);
   }
-  mAuiMan.Update();
+
+  const auto layout = mClientOptions.getLayout();
+  mLayouts->setSelectedLayout(layout);
 }
 
 Client::~Client()

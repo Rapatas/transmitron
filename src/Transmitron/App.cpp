@@ -177,7 +177,12 @@ void App::onPageClosing(wxBookCtrlEvent& event)
 
 void App::createProfilesTab(size_t index)
 {
-  auto *homepage = new Tabs::Homepage(mNote, LabelFontInfo, mProfilesModel);
+  auto *homepage = new Tabs::Homepage(
+    mNote,
+    LabelFontInfo,
+    mProfilesModel,
+    mLayoutsModel
+  );
   mNote->InsertPage(index, homepage, "Homepage");
   ++mCount;
   mNote->SetSelection(index);
@@ -195,6 +200,7 @@ void App::createProfilesTab(size_t index)
     auto *client = new Tabs::Client(
       mNote,
       mProfilesModel->getBrokerOptions(profileItem),
+      mProfilesModel->getClientOptions(profileItem),
       mProfilesModel->getSnippetsModel(profileItem),
       mLayoutsModel,
       mProfilesModel->getName(profileItem),

@@ -152,6 +152,16 @@ const std::string &Layouts::getName(wxDataViewItem item) const
   return node->name;
 }
 
+wxArrayString Layouts::getLabelList() const
+{
+  wxArrayString result;
+  for (const auto &layout : mLayouts)
+  {
+    result.push_back(layout.second->name);
+  }
+  return result;
+}
+
 std::string Layouts::getUniqueName() const
 {
   const constexpr std::string_view NewLayoutName{"New Layout"};

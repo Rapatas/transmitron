@@ -11,7 +11,9 @@
 #include <wx/dataview.h>
 
 #include "Transmitron/Events/Connection.hpp"
+#include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Models/Profiles.hpp"
+#include "Transmitron/Types/ClientOptions.hpp"
 
 namespace Transmitron::Tabs
 {
@@ -24,7 +26,8 @@ public:
   explicit Homepage(
     wxWindow *parent,
     wxFontInfo labelFont,
-    const wxObjectDataPtr<Models::Profiles> &profilesModel
+    const wxObjectDataPtr<Models::Profiles> &profilesModel,
+    const wxObjectDataPtr<Models::Layouts> &layoutsModel
   );
 
 private:
@@ -50,7 +53,8 @@ private:
     Password,
     Port,
     Username,
-    Max
+    Layout,
+    Max,
   };
 
   const wxFontInfo mLabelFont;
@@ -63,6 +67,7 @@ private:
   wxPanel *mProfiles = nullptr;
   wxDataViewCtrl *mProfilesCtrl = nullptr;
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
+  wxObjectDataPtr<Models::Layouts> mLayoutsModel;
 
   // Profile Form.
   wxPanel *mProfileForm = nullptr;
@@ -81,10 +86,12 @@ private:
   void setupProfiles();
   void setupProfileForm();
   void fillPropertyGrid(
+    const wxString &name,
     const MQTT::BrokerOptions &brokerOptions,
-    const wxString &name
+    const Types::ClientOptions &clientOptions
   );
-  MQTT::BrokerOptions optionsFromPropertyGrid() const;
+  MQTT::BrokerOptions brokerOptionsFromPropertyGrid() const;
+  Types::ClientOptions clientOptionsFromPropertyGrid() const;
 };
 
 }

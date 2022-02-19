@@ -40,6 +40,7 @@ public:
   std::string getUniqueName() const;
   const Perspective_t &getPerspective(wxDataViewItem item) const;
   const std::string &getName(wxDataViewItem item) const;
+  wxArrayString getLabelList() const;
 
   // wxDataViewModel interface.
   unsigned GetColumnCount() const override;
