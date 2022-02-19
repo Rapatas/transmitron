@@ -5,6 +5,7 @@ set(
   Common/Env.Windows.cpp
   Common/Helpers.cpp
   Common/Log.cpp
+  Common/Extract.cpp
   Common/String.cpp
   Common/Url.cpp
   Common/XdgBaseDir.Linux.cpp
