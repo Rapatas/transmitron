@@ -1,4 +1,5 @@
 #include <wx/artprov.h>
+#include <wx/sizer.h>
 #include <wx/clipbrd.h>
 #include <wx/listctrl.h>
 #include <wx/menu.h>
@@ -206,7 +207,7 @@ void TopicCtrl::popupShow()
   wxListItem col0;
   col0.SetId(0);
   col0.SetText( _("Foo")  );
-  col0.SetWidth(50);
+  col0.SetWidth(filterSize.x - 10);
   placeholder->InsertColumn(0, col0);
 
   for (size_t i = 0; i != 10; ++i)
@@ -218,6 +219,12 @@ void TopicCtrl::popupShow()
   }
 
   mAutoComplete->Position(popupPoint - popupSize, popupSize);
+  mAutoComplete->SetSize(popupSize);
+
+  auto *sizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
+  sizer->Add(placeholder, 1, wxEXPAND);
+  mAutoComplete->SetSizer(sizer);
+
   mAutoComplete->Show();
 }
 
