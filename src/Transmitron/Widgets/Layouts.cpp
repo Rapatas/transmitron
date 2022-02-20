@@ -105,6 +105,24 @@ Layouts::Layouts(
   SetSizer(mSizer);
 }
 
+bool Layouts::setSelectedLayout(const std::string &layoutName)
+{
+  const auto item = mLayoutsModel->findItemByName(layoutName);
+
+  if (!item.IsOk())
+  {
+    mLogger->warn("Could not find perspective '{}'", layoutName);
+    return false;
+  }
+
+  mLayoutsEdit->SetValue(layoutName);
+  mLayoutsLocked->SetValue(layoutName);
+  resize();
+  onLayoutSelected(layoutName);
+
+  return true;
+}
+
 void Layouts::onLayoutSaveClicked(wxCommandEvent &/* event */)
 {
   const auto perspective = mAuiMan.SavePerspective().ToStdString();

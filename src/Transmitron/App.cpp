@@ -80,11 +80,11 @@ bool App::OnInit()
     noteStyle
   );
 
-  mProfilesModel = new Models::Profiles();
-  mProfilesModel->load(getConfigDir().string());
-
   mLayoutsModel = new Models::Layouts();
   mLayoutsModel->load(getConfigDir().string());
+
+  mProfilesModel = new Models::Profiles(mLayoutsModel);
+  mProfilesModel->load(getConfigDir().string());
 
   const auto appearance = wxSystemSettings::GetAppearance();
   mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();
@@ -177,7 +177,12 @@ void App::onPageClosing(wxBookCtrlEvent& event)
 
 void App::createProfilesTab(size_t index)
 {
-  auto *homepage = new Tabs::Homepage(mNote, LabelFontInfo, mProfilesModel);
+  auto *homepage = new Tabs::Homepage(
+    mNote,
+    LabelFontInfo,
+    mProfilesModel,
+    mLayoutsModel
+  );
   mNote->InsertPage(index, homepage, "Homepage");
   ++mCount;
   mNote->SetSelection(index);
@@ -195,6 +200,7 @@ void App::createProfilesTab(size_t index)
     auto *client = new Tabs::Client(
       mNote,
       mProfilesModel->getBrokerOptions(profileItem),
+      mProfilesModel->getClientOptions(profileItem),
       mProfilesModel->getSnippetsModel(profileItem),
       mLayoutsModel,
       mProfilesModel->getName(profileItem),

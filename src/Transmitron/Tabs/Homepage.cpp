@@ -6,6 +6,9 @@
 
 #include "Homepage.hpp"
 #include "Common/Log.hpp"
+#include "Transmitron/Models/Layouts.hpp"
+#include "Transmitron/Types/ClientOptions.hpp"
+#include "Transmitron/Notifiers/Layouts.hpp"
 
 using namespace Transmitron::Tabs;
 using namespace Transmitron;
@@ -15,7 +18,8 @@ wxDEFINE_EVENT(Events::CONNECTION, Events::Connection); // NOLINT
 Homepage::Homepage(
   wxWindow *parent,
   wxFontInfo labelFont,
-  const wxObjectDataPtr<Models::Profiles> &profilesModel
+  const wxObjectDataPtr<Models::Profiles> &profilesModel,
+  const wxObjectDataPtr<Models::Layouts> &layoutsModel
 ) :
   wxPanel(
     parent,
@@ -26,12 +30,20 @@ Homepage::Homepage(
     "Homepage"
   ),
   mLabelFont(std::move(labelFont)),
-  mProfilesModel(profilesModel)
+  mProfilesModel(profilesModel),
+  mLayoutsModel(layoutsModel)
 {
   mLogger = Common::Log::create("Transmitron::Homepage");
 
   auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
   this->SetSizer(hsizer);
+
+  auto *notifier = new Notifiers::Layouts;
+  mLayoutsModel->AddNotifier(notifier);
+
+  notifier->Bind(Events::LAYOUT_ADDED,   &Homepage::onLayoutAdded,   this);
+  notifier->Bind(Events::LAYOUT_REMOVED, &Homepage::onLayoutRemoved, this);
+  notifier->Bind(Events::LAYOUT_CHANGED, &Homepage::onLayoutChanged, this);
 
   setupProfiles();
   setupProfileForm();
@@ -145,28 +157,39 @@ void Homepage::setupProfileForm()
 
   pfp.at(Properties::Name) =
     pfg->Append(new wxStringProperty("Name", "", {}));
+
+  mGridCategoryBroker = new wxPropertyCategory("Broker");
+  mProfileFormGrid->Append(mGridCategoryBroker);
+
   pfp.at(Properties::Hostname) =
-    pfg->Append(new wxStringProperty("Hostname", "", {}));
+    pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Hostname", "", {}));
   pfp.at(Properties::Port) =
-    pfg->Append(new wxUIntProperty("Port", "", {}));
+    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Port", "", {}));
   pfp.at(Properties::Username) =
-    pfg->Append(new wxStringProperty("Username", "", {}));
+    pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Username", "", {}));
   pfp.at(Properties::Password) =
-    pfg->Append(new wxStringProperty("Password", "", {}));
+    pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Password", "", {}));
   pfp.at(Properties::ConnectTimeout) =
-    pfg->Append(new wxUIntProperty("Connect Timeout (s)", "", {}));
+    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Connect Timeout (s)", "", {}));
   pfp.at(Properties::DisconnectTimeout) =
-    pfg->Append(new wxUIntProperty("Disconnect Timeout (s)", "", {}));
+    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Disconnect Timeout (s)", "", {}));
   pfp.at(Properties::MaxInFlight) =
-    pfg->Append(new wxUIntProperty("Max in flight", "", {}));
+    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Max in flight", "", {}));
   pfp.at(Properties::KeepAlive) =
-    pfg->Append(new wxUIntProperty("Keep alive interval", "", {}));
+    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Keep alive interval", "", {}));
   pfp.at(Properties::ClientId) =
-    pfg->Append(new wxStringProperty("Client ID", "", {}));
+    pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Client ID", "", {}));
   pfp.at(Properties::AutoReconnect) =
-    pfg->Append(new wxBoolProperty("Auto Reconnect", "", {}));
+    pfg->AppendIn(mGridCategoryBroker, new wxBoolProperty("Auto Reconnect", "", {}));
   pfp.at(Properties::MaxReconnectRetries) =
-    pfg->Append(new wxUIntProperty("Max Reconnect Retries", "", {}));
+    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Max Reconnect Retries", "", {}));
+
+  mGridCategoryClient = new wxPropertyCategory("Client");
+  mProfileFormGrid->Append(mGridCategoryClient);
+
+  const auto layoutLabels = mLayoutsModel->getLabelArray();
+  auto *layoutPtr = new wxEnumProperty("Layout", "", layoutLabels);
+  pfp.at(Properties::Layout) = pfg->AppendIn(mGridCategoryClient, layoutPtr);
 
   mSave = new wxButton(
     mProfileForm,
@@ -217,8 +240,9 @@ void Homepage::onProfileSelected(wxDataViewEvent &e)
   }
 
   fillPropertyGrid(
+    mProfilesModel->getName(item),
     mProfilesModel->getBrokerOptions(item),
-    mProfilesModel->getName(item)
+    mProfilesModel->getClientOptions(item)
   );
   e.Skip();
 }
@@ -258,8 +282,11 @@ void Homepage::onSaveClicked(wxCommandEvent &/* event */)
   const std::string name(utf8.data(), utf8.length());
   mProfilesModel->rename(item, name);
 
-  const auto options = optionsFromPropertyGrid();
-  mProfilesModel->updateBrokerOptions(item, options);
+  const auto brokerOptions = brokerOptionsFromPropertyGrid();
+  mProfilesModel->updateBrokerOptions(item, brokerOptions);
+
+  const auto clientOptions = clientOptionsFromPropertyGrid();
+  mProfilesModel->updateClientOptions(item, clientOptions);
 }
 
 void Homepage::onNewProfileClicked(wxCommandEvent &/* event */)
@@ -268,8 +295,9 @@ void Homepage::onNewProfileClicked(wxCommandEvent &/* event */)
   mProfilesCtrl->Select(item);
   mProfilesCtrl->EnsureVisible(item);
   fillPropertyGrid(
+    mProfilesModel->getName(item),
     mProfilesModel->getBrokerOptions(item),
-    mProfilesModel->getName(item)
+    mProfilesModel->getClientOptions(item)
   );
 }
 
@@ -310,11 +338,74 @@ void Homepage::onProfileDelete(wxCommandEvent & /* event */)
   mProfilesModel->remove(item);
 }
 
+void Homepage::onLayoutAdded(Events::Layout &/* event */)
+{
+  refreshLayouts();
+}
+
+void Homepage::onLayoutRemoved(Events::Layout &/* event */)
+{
+  refreshLayouts();
+}
+
+void Homepage::onLayoutChanged(Events::Layout &/* event */)
+{
+  auto &pfp = mProfileFormProperties;
+  auto &pfg = mProfileFormGrid;
+
+  auto &pfpLayout = pfp.at(Properties::Layout);
+  wxVariant layoutValue = pfpLayout->GetValue();
+
+  pfg->RemoveProperty(pfpLayout);
+
+  const auto layoutLabels = mLayoutsModel->getLabelArray();
+  auto *layoutPtr = new wxEnumProperty("Layout", "", layoutLabels);
+  pfpLayout = pfg->AppendIn(mGridCategoryClient, layoutPtr);
+
+  pfpLayout->SetValue(layoutValue);
+}
+
+void Homepage::refreshLayouts()
+{
+  auto &pfp = mProfileFormProperties;
+  auto &pfg = mProfileFormGrid;
+
+  auto &pfpLayout = pfp.at(Properties::Layout);
+  wxVariant layoutValue = pfpLayout->GetValue();
+  const auto layoutName = pfpLayout->ValueToString(layoutValue);
+  mLogger->info("Previous layout was: {}", layoutName);
+
+  pfg->RemoveProperty(pfpLayout);
+
+  const auto layoutLabels = mLayoutsModel->getLabelArray();
+  auto *layoutPtr = new wxEnumProperty("Layout", "", layoutLabels);
+  pfpLayout = pfg->AppendIn(mGridCategoryClient, layoutPtr);
+
+  wxVariant newLayoutValue = pfpLayout->GetValue();
+  const bool hasValue = pfpLayout->StringToValue(newLayoutValue, layoutName);
+  if (!hasValue)
+  {
+    mLogger->info("Previous layout not found");
+    wxVariant layoutValue = pfpLayout->GetValue();
+    const wxString layoutName = std::string(Models::Layouts::DefaultName);
+    pfpLayout->StringToValue(layoutValue, layoutName);
+    pfpLayout->SetValue(layoutValue);
+    return;
+  }
+
+  mLogger->info("Previous layout was found ");
+  pfpLayout->SetValue(newLayoutValue);
+}
+
 void Homepage::fillPropertyGrid(
+  const wxString &name,
   const MQTT::BrokerOptions &brokerOptions,
-  const wxString &name
+  const Types::ClientOptions &clientOptions
 ) {
   auto &pfp = mProfileFormProperties;
+
+  pfp.at(Properties::Name)->SetValue(name);
+
   pfp.at(Properties::AutoReconnect)->SetValue(brokerOptions.getAutoReconnect());
   pfp.at(Properties::ClientId)->SetValue(brokerOptions.getClientId());
   pfp.at(Properties::ConnectTimeout)->SetValue((int)brokerOptions.getConnectTimeout().count());
@@ -323,17 +414,25 @@ void Homepage::fillPropertyGrid(
   pfp.at(Properties::KeepAlive)->SetValue((int)brokerOptions.getKeepAliveInterval().count());
   pfp.at(Properties::MaxInFlight)->SetValue((int)brokerOptions.getMaxInFlight());
   pfp.at(Properties::MaxReconnectRetries)->SetValue((int)brokerOptions.getMaxReconnectRetries());
-  pfp.at(Properties::Name)->SetValue(name);
   pfp.at(Properties::Password)->SetValue(brokerOptions.getPassword());
   pfp.at(Properties::Port)->SetValue((int)brokerOptions.getPort());
   pfp.at(Properties::Username)->SetValue(brokerOptions.getUsername());
+
+  (void)clientOptions;
+  auto &pfpLayout = pfp.at(Properties::Layout);
+  wxVariant layoutValue = pfpLayout->GetValue();
+  const bool hasValue = pfpLayout->StringToValue(layoutValue, clientOptions.getLayout());
+  if (hasValue)
+  {
+    pfpLayout->SetValue(layoutValue);
+  }
 
   mSave->Enable(true);
   mConnect->Enable(true);
   mProfileFormGrid->Enable(true);
 }
 
-MQTT::BrokerOptions Homepage::optionsFromPropertyGrid() const
+MQTT::BrokerOptions Homepage::brokerOptionsFromPropertyGrid() const
 {
   const auto &pfp = mProfileFormProperties;
 
@@ -361,5 +460,19 @@ MQTT::BrokerOptions Homepage::optionsFromPropertyGrid() const
     hostname,
     password,
     username,
+  };
+}
+
+Types::ClientOptions Homepage::clientOptionsFromPropertyGrid() const
+{
+  const auto &pfp = mProfileFormProperties;
+
+  auto &pfpLayout = pfp.at(Properties::Layout);
+  const auto layoutValue = pfpLayout->GetValue();
+  const auto layoutIndex = (size_t)layoutValue.GetInteger();
+  const auto layout = mLayoutsModel->getLabelArray()[layoutIndex];
+
+  return Types::ClientOptions {
+    layout.ToStdString(),
   };
 }

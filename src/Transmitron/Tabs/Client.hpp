@@ -13,6 +13,7 @@
 #include "MQTT/BrokerOptions.hpp"
 #include "Transmitron/Events/Connection.hpp"
 #include "Transmitron/Events/Layout.hpp"
+#include "Transmitron/Types/ClientOptions.hpp"
 #include "Transmitron/Widgets/TopicCtrl.hpp"
 #include "Transmitron/Widgets/Layouts.hpp"
 #include "Transmitron/Models/History.hpp"
@@ -33,6 +34,7 @@ public:
   Client(
     wxWindow* parent,
     const MQTT::BrokerOptions &brokerOptions,
+    const Types::ClientOptions &clientOptions,
     const wxObjectDataPtr<Models::Snippets> &snippetsModel,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
     const wxString &name,
@@ -96,6 +98,7 @@ private:
   std::map<Panes, Pane> mPanes;
   const wxString mName;
   const MQTT::BrokerOptions mBrokerOptions;
+  const Types::ClientOptions mClientOptions;
   const wxFont mFont;
   const bool mDarkMode;
 

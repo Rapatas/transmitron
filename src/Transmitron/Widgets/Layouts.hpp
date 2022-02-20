@@ -25,6 +25,8 @@ public:
     size_t optionsHeight
   );
 
+  bool setSelectedLayout(const std::string &layoutName);
+
 private:
 
   const size_t mOptionsHeight;

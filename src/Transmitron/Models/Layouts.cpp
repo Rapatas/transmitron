@@ -25,7 +25,7 @@ Layouts::Layouts()
 
   const auto id = mAvailableId++;
   auto layout = std::make_unique<Node>();
-  layout->name = "Default";
+  layout->name = DefaultName;
   layout->perspective = DefaultPerspective;
   layout->path = "";
   layout->saved = true;
@@ -150,6 +150,26 @@ const std::string &Layouts::getName(wxDataViewItem item) const
   const auto id = toId(item);
   const auto &node = mLayouts.at(id);
   return node->name;
+}
+
+wxArrayString Layouts::getLabelArray() const
+{
+  wxArrayString result;
+  for (const auto &layout : mLayouts)
+  {
+    result.push_back(layout.second->name);
+  }
+  return result;
+}
+
+std::vector<std::string> Layouts::getLabelVector() const
+{
+  std::vector<std::string> result;
+  for (const auto &layout : mLayouts)
+  {
+    result.push_back(layout.second->name);
+  }
+  return result;
 }
 
 std::string Layouts::getUniqueName() const
