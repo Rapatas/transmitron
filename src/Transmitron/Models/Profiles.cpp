@@ -11,15 +11,23 @@
 #include "Profiles.hpp"
 #include "Transmitron/Info.hpp"
 #include "Transmitron/Types/ClientOptions.hpp"
+#include "Transmitron/Notifiers/Layouts.hpp"
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 using namespace Transmitron;
 using namespace Common;
 
-Profiles::Profiles()
+Profiles::Profiles(const wxObjectDataPtr<Layouts> &layouts) :
+  mLayoutsModel(layouts)
 {
   mLogger = Common::Log::create("Models::Profiles");
+
+  auto *notifier = new Notifiers::Layouts;
+  mLayoutsModel->AddNotifier(notifier);
+
+  notifier->Bind(Events::LAYOUT_REMOVED, &Profiles::onLayoutRemoved, this);
+  notifier->Bind(Events::LAYOUT_CHANGED, &Profiles::onLayoutChanged, this);
 }
 
 bool Profiles::load(const std::string &configDir)
@@ -564,3 +572,41 @@ wxDataViewItem Profiles::toItem(size_t id)
   return wxDataViewItem(itemId);
 }
 
+void Profiles::onLayoutRemoved(Events::Layout &/* event */)
+{
+  const std::string newName{Layouts::DefaultName};
+  renameLayoutIfMissing(newName);
+}
+
+void Profiles::onLayoutChanged(Events::Layout &event)
+{
+  const auto item = event.getItem();
+  const std::string newName = mLayoutsModel->getName(item);
+  renameLayoutIfMissing(newName);
+}
+
+void Profiles::renameLayoutIfMissing(const std::string &newName)
+{
+  const auto &layouts = mLayoutsModel->getLabelVector();
+
+  for (auto &profile : mProfiles)
+  {
+    const auto it = std::find(
+      std::begin(layouts),
+      std::end(layouts),
+      profile.second->clientOptions.getLayout()
+    );
+
+    if (it != std::end(layouts))
+    {
+      continue;
+    }
+
+    auto &node = profile.second;
+    node->clientOptions = Types::ClientOptions{newName};
+    node->saved = false;
+
+    const auto id = profile.first;
+    save(id);
+  }
+}

@@ -11,6 +11,7 @@
 #include <wx/dataview.h>
 
 #include "Transmitron/Events/Connection.hpp"
+#include "Transmitron/Events/Layout.hpp"
 #include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Models/Profiles.hpp"
 #include "Transmitron/Types/ClientOptions.hpp"
@@ -72,6 +73,8 @@ private:
   // Profile Form.
   wxPanel *mProfileForm = nullptr;
   wxPropertyGrid *mProfileFormGrid = nullptr;
+  wxPropertyCategory *mGridCategoryBroker = nullptr;
+  wxPropertyCategory *mGridCategoryClient = nullptr;
   std::vector<wxPGProperty*> mProfileFormProperties;
 
   void onProfileActivated(wxDataViewEvent &event);
@@ -82,6 +85,9 @@ private:
   void onProfileContext(wxDataViewEvent &event);
   void onContextSelected(wxCommandEvent &event);
   void onProfileDelete(wxCommandEvent &event);
+  void onLayoutAdded(Events::Layout &event);
+  void onLayoutRemoved(Events::Layout &event);
+  void onLayoutChanged(Events::Layout &event);
 
   void setupProfiles();
   void setupProfileForm();
@@ -92,6 +98,7 @@ private:
   );
   MQTT::BrokerOptions brokerOptionsFromPropertyGrid() const;
   Types::ClientOptions clientOptionsFromPropertyGrid() const;
+  void refreshLayouts();
 };
 
 }

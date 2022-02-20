@@ -80,11 +80,11 @@ bool App::OnInit()
     noteStyle
   );
 
-  mProfilesModel = new Models::Profiles();
-  mProfilesModel->load(getConfigDir().string());
-
   mLayoutsModel = new Models::Layouts();
   mLayoutsModel->load(getConfigDir().string());
+
+  mProfilesModel = new Models::Profiles(mLayoutsModel);
+  mProfilesModel->load(getConfigDir().string());
 
   const auto appearance = wxSystemSettings::GetAppearance();
   mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();

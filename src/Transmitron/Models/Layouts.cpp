@@ -152,9 +152,19 @@ const std::string &Layouts::getName(wxDataViewItem item) const
   return node->name;
 }
 
-wxArrayString Layouts::getLabelList() const
+wxArrayString Layouts::getLabelArray() const
 {
   wxArrayString result;
+  for (const auto &layout : mLayouts)
+  {
+    result.push_back(layout.second->name);
+  }
+  return result;
+}
+
+std::vector<std::string> Layouts::getLabelVector() const
+{
+  std::vector<std::string> result;
   for (const auto &layout : mLayouts)
   {
     result.push_back(layout.second->name);

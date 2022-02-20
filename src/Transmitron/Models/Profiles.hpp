@@ -10,6 +10,7 @@
 #include "Snippets.hpp"
 #include "Layouts.hpp"
 #include "Transmitron/Types/ClientOptions.hpp"
+#include "Transmitron/Events/Layout.hpp"
 
 namespace Transmitron::Models
 {
@@ -26,7 +27,7 @@ public:
     Max
   };
 
-  explicit Profiles();
+  explicit Profiles(const wxObjectDataPtr<Layouts> &layouts);
 
   bool load(const std::string &configDir);
 
@@ -72,6 +73,7 @@ private:
   Node::Id_t mAvailableId = 1;
   std::map<Node::Id_t, std::unique_ptr<Node>> mProfiles;
   std::string mProfilesDir;
+  wxObjectDataPtr<Layouts> mLayoutsModel;
 
   // wxDataViewModel interface.
   unsigned GetColumnCount() const override;
@@ -107,6 +109,10 @@ private:
   wxDataViewItem loadProfile(const std::filesystem::path &directory);
   std::optional<MQTT::BrokerOptions> loadProfileOptionsBroker(const std::filesystem::path &directory);
   std::optional<Types::ClientOptions> loadProfileOptionsClient(const std::filesystem::path &directory);
+  void renameLayoutIfMissing(const std::string &newName);
+
+  void onLayoutRemoved(Events::Layout &event);
+  void onLayoutChanged(Events::Layout &event);
 
   static size_t toId(const wxDataViewItem &item);
   static wxDataViewItem toItem(size_t id);
