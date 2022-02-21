@@ -10,6 +10,7 @@
 #include "MQTT/BrokerOptions.hpp"
 #include "Profiles.hpp"
 #include "Transmitron/Info.hpp"
+#include "Transmitron/Models/KnownTopics.hpp"
 #include "Transmitron/Types/ClientOptions.hpp"
 #include "Transmitron/Notifiers/Layouts.hpp"
 
@@ -236,12 +237,15 @@ wxDataViewItem Profiles::createProfile()
   wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
   snippetsModel->load(path);
 
+  wxObjectDataPtr<Models::KnownTopics> knownTopicsModel{new Models::KnownTopics};
+
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>();
   profile->name = uniqueName;
   profile->path = path;
   profile->saved = false;
   profile->snippetsModel = snippetsModel;
+  profile->knownTopicsModel = knownTopicsModel;
   mProfiles.insert({id, std::move(profile)});
 
   save(id);
@@ -273,6 +277,11 @@ wxString Profiles::getName(wxDataViewItem item) const
 wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
 {
   return mProfiles.at(toId(item))->snippetsModel;
+}
+
+wxObjectDataPtr<KnownTopics> Profiles::getKnownTopicsModel(wxDataViewItem item)
+{
+  return mProfiles.at(toId(item))->knownTopicsModel;
 }
 
 unsigned Profiles::GetColumnCount() const
@@ -483,6 +492,8 @@ wxDataViewItem Profiles::loadProfile(const std::filesystem::path &directory)
   wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
   snippetsModel->load(directory.string());
 
+  wxObjectDataPtr<Models::KnownTopics> knownTopicsModel{new Models::KnownTopics};
+
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>(Node{
     name,
@@ -490,6 +501,7 @@ wxDataViewItem Profiles::loadProfile(const std::filesystem::path &directory)
     brokerOptions,
     directory,
     snippetsModel,
+    knownTopicsModel,
     true
   });
   mProfiles.insert({id, std::move(profile)});

@@ -35,6 +35,7 @@ Client::Client(
   const MQTT::BrokerOptions &brokerOptions,
   const Types::ClientOptions &clientOptions,
   const wxObjectDataPtr<Models::Snippets> &snippetsModel,
+  const wxObjectDataPtr<Models::KnownTopics> &knownTopicsModel,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
   const wxString &name,
   bool darkMode
@@ -52,6 +53,7 @@ Client::Client(
   mClientOptions(clientOptions),
   mFont(wxFontInfo(FontSize).FaceName("Consolas")),
   mDarkMode(darkMode),
+  mKnownTopicsModel(knownTopicsModel),
   mSnippetsModel(snippetsModel)
 {
   mLogger = Common::Log::create("Transmitron::Client");
@@ -240,6 +242,7 @@ void Client::setupPanelHistory(wxWindow *parent)
     &Client::onHistorySearchKey,
     this
   );
+  mHistorySearchFilter->addKnownTopics(mKnownTopicsModel);
 
   mHistorySearchButton = new wxButton(
     panel,
@@ -426,6 +429,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mPanes.at(Panes::Subscriptions).panel = panel;
 
   mFilter = new Widgets::TopicCtrl(panel, -1);
+  mFilter->addKnownTopics(mKnownTopicsModel);
   mFilter->SetFont(mFont);
 
   mSubscribe = new wxBitmapButton(

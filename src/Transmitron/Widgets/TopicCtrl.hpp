@@ -5,6 +5,7 @@
 #include <wx/dnd.h>
 #include <wx/popupwin.h>
 #include <wx/textctrl.h>
+#include "Transmitron/Models/KnownTopics.hpp"
 
 namespace Transmitron::Widgets
 {
@@ -25,6 +26,9 @@ public:
   };
 
   void setReadOnly(bool readonly);
+  void addKnownTopics(
+    const wxObjectDataPtr<Models::KnownTopics> &knownTopicsModel
+  );
 
 private:
 
@@ -40,7 +44,9 @@ private:
   bool mReadOnly = false;
   long mCursonPosition = 0;
   wxPopupWindow *mAutoComplete = nullptr;
+  wxDataViewCtrl *mAutoCompleteList = nullptr;
   std::shared_ptr<spdlog::logger> mLogger;
+  wxObjectDataPtr<Models::KnownTopics> mKnownTopicsModel;
 
   void onContextSelected(wxCommandEvent &e);
 
@@ -52,9 +58,14 @@ private:
   void onLostFocus(wxFocusEvent &e);
   void onRight(wxMouseEvent &e);
   void onRightClicked(wxMouseEvent &e);
+  void onValueChanged(wxCommandEvent &e);
 
   void popupHide();
   void popupShow();
+  void popupRefresh();
+  void autoCompleteUp();
+  void autoCompleteDown();
+  void autoCompleteSelect();
 
 };
 

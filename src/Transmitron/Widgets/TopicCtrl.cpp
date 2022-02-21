@@ -1,3 +1,4 @@
+#include <cctype>
 #include <wx/artprov.h>
 #include <wx/sizer.h>
 #include <wx/clipbrd.h>
@@ -7,6 +8,7 @@
 
 #include "Common/Log.hpp"
 #include "TopicCtrl.hpp"
+#include "Transmitron/Models/KnownTopics.hpp"
 
 using namespace Transmitron::Widgets;
 
@@ -29,6 +31,7 @@ TopicCtrl::TopicCtrl(
   Bind(wxEVT_RIGHT_DOWN,  &TopicCtrl::onRightClicked,  this);
   Bind(wxEVT_KILL_FOCUS,  &TopicCtrl::onLostFocus,     this);
   Bind(wxEVT_KEY_DOWN,    &TopicCtrl::onKeyDown,       this);
+  Bind(wxEVT_COMMAND_TEXT_UPDATED, &TopicCtrl::onValueChanged, this);
 
   Bind(wxEVT_COMMAND_MENU_SELECTED, &TopicCtrl::onContextSelected, this);
 }
@@ -47,6 +50,12 @@ void TopicCtrl::setReadOnly(bool readonly)
   {
     Unbind(wxEVT_CONTEXT_MENU, &TopicCtrl::onContext, this);
   }
+}
+
+void TopicCtrl::addKnownTopics(
+  const wxObjectDataPtr<Models::KnownTopics> &knownTopicsModel
+) {
+  mKnownTopicsModel = knownTopicsModel;
 }
 
 void TopicCtrl::onContextSelected(wxCommandEvent &e)
@@ -123,6 +132,11 @@ void TopicCtrl::onRightClicked(wxMouseEvent &e)
   e.Skip();
 }
 
+void TopicCtrl::onValueChanged(wxCommandEvent &/* e */)
+{
+  popupRefresh();
+}
+
 void TopicCtrl::onDoubleClicked(wxMouseEvent &e)
 {
   if (mFakeSelection)
@@ -155,6 +169,29 @@ void TopicCtrl::onKeyDown(wxKeyEvent &e)
   if (e.GetKeyCode() == WXK_ESCAPE)
   {
     popupHide();
+    e.Skip(true);
+    return;
+  }
+
+  if (e.GetKeyCode() == WXK_UP)
+  {
+    autoCompleteUp();
+    e.Skip(false);
+    return;
+  }
+
+  if (e.GetKeyCode() == WXK_DOWN)
+  {
+    autoCompleteDown();
+    e.Skip(false);
+    return;
+  }
+
+  if (e.GetKeyCode() == WXK_TAB)
+  {
+    autoCompleteSelect();
+    e.Skip(false);
+    return;
   }
 
   const bool allowedReadOnlyKeys =
@@ -180,9 +217,12 @@ wxDragResult TopicCtrl::NotAllowedDropTarget::OnData(
 
 void TopicCtrl::popupShow()
 {
-  mLogger->info("Showing");
+  if (mKnownTopicsModel == nullptr)
+  {
+    return;
+  }
 
-  if (mAutoComplete)
+  if (mAutoComplete != nullptr)
   {
     mAutoComplete->Destroy();
   }
@@ -194,35 +234,36 @@ void TopicCtrl::popupShow()
   const wxSize popupSize(filterSize.x, 100);
 
   mAutoComplete = new wxPopupWindow(this);
+  mAutoComplete->Position(popupPoint - popupSize, popupSize);
+  mAutoComplete->SetSize(popupSize);
 
-  auto *placeholder = new wxListCtrl(
+  wxDataViewColumn* const topic = new wxDataViewColumn(
+    L"topic",
+    new wxDataViewTextRenderer(),
+    (unsigned)Models::KnownTopics::Column::Topic,
+    wxCOL_WIDTH_AUTOSIZE,
+    wxALIGN_LEFT
+  );
+
+  mAutoCompleteList = new wxDataViewCtrl(
     mAutoComplete,
     -1,
     wxDefaultPosition,
     wxDefaultSize,
-    wxLC_REPORT
+    wxDV_NO_HEADER | wxDV_ROW_LINES
   );
 
-  // Add first column
-  wxListItem col0;
-  col0.SetId(0);
-  col0.SetText( _("Foo")  );
-  col0.SetWidth(filterSize.x - 10);
-  placeholder->InsertColumn(0, col0);
+  mAutoCompleteList->AssociateModel(mKnownTopicsModel.get());
+  mAutoCompleteList->AppendColumn(topic);
 
-  for (size_t i = 0; i != 10; ++i)
+  if (mKnownTopicsModel->GetCount() != 0)
   {
-    wxListItem item;
-    item.SetId((long)i);
-    item.SetText(fmt::format("foo/{}/bar/#", i));
-    placeholder->InsertItem(item);
+    const auto firstItem = mKnownTopicsModel->GetItem(0);
+    mAutoCompleteList->Select(firstItem);
   }
 
-  mAutoComplete->Position(popupPoint - popupSize, popupSize);
-  mAutoComplete->SetSize(popupSize);
-
   auto *sizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
-  sizer->Add(placeholder, 1, wxEXPAND);
+  sizer->Add(mAutoCompleteList, 1, wxEXPAND);
   mAutoComplete->SetSizer(sizer);
 
   mAutoComplete->Show();
@@ -230,13 +271,75 @@ void TopicCtrl::popupShow()
 
 void TopicCtrl::popupHide()
 {
-  mLogger->info("Hiding");
-
-  if (!mAutoComplete)
+  if (mAutoComplete == nullptr)
   {
     return;
   }
 
   mAutoComplete->Destroy();
   mAutoComplete = nullptr;
+}
+
+void TopicCtrl::popupRefresh()
+{
+  if (mKnownTopicsModel == nullptr)
+  {
+    return;
+  }
+
+  auto filter = GetValue().ToStdString();
+
+  mLogger->info("Refreshing with '{}'", filter);
+  mKnownTopicsModel->setFilter(filter);
+  if (mKnownTopicsModel->GetCount() == 0)
+  {
+    popupHide();
+  }
+}
+
+void TopicCtrl::autoCompleteUp()
+{
+  if (mAutoCompleteList == nullptr)
+  {
+    return;
+  }
+
+  const auto selected = mAutoCompleteList->GetSelection();
+  const auto row = mKnownTopicsModel->GetRow(selected);
+  if (row != 0)
+  {
+    const auto newSelection = mKnownTopicsModel->GetItem(row - 1);
+    mAutoCompleteList->Select(newSelection);
+    mAutoCompleteList->EnsureVisible(newSelection);
+  }
+}
+
+void TopicCtrl::autoCompleteDown()
+{
+  if (mAutoCompleteList == nullptr)
+  {
+    return;
+  }
+
+  const auto selected = mAutoCompleteList->GetSelection();
+  const auto row = mKnownTopicsModel->GetRow(selected);
+  if (row + 1 != mKnownTopicsModel->GetCount())
+  {
+    const auto newSelection = mKnownTopicsModel->GetItem(row + 1);
+    mAutoCompleteList->Select(newSelection);
+    mAutoCompleteList->EnsureVisible(newSelection);
+  }
+}
+
+void TopicCtrl::autoCompleteSelect()
+{
+  if (mAutoCompleteList == nullptr)
+  {
+    return;
+  }
+
+  const auto selected = mAutoCompleteList->GetSelection();
+  const auto topic = mKnownTopicsModel->getTopic(selected);
+  SetValue(topic);
+  popupHide();
 }

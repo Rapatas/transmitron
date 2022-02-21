@@ -202,6 +202,7 @@ void App::createProfilesTab(size_t index)
       mProfilesModel->getBrokerOptions(profileItem),
       mProfilesModel->getClientOptions(profileItem),
       mProfilesModel->getSnippetsModel(profileItem),
+      mProfilesModel->getKnownTopicsModel(profileItem),
       mLayoutsModel,
       mProfilesModel->getName(profileItem),
       mDarkMode
