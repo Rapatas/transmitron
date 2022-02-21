@@ -26,7 +26,7 @@ public:
 
   explicit Snippets();
 
-  bool load(const std::string &connectionDir);
+  bool load(const std::string &profileDir);
 
   MQTT::Message getMessage(wxDataViewItem item) const;
   std::string getName(wxDataViewItem item) const;

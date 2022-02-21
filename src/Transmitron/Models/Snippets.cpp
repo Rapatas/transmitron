@@ -64,15 +64,15 @@ wxDataViewItem Snippets::getRootItem()
   return toItem(0);
 }
 
-bool Snippets::load(const std::string &connectionDir)
+bool Snippets::load(const std::string &profileDir)
 {
-  if (connectionDir.empty())
+  if (profileDir.empty())
   {
     mLogger->warn("No directory provided");
     return false;
   }
 
-  mSnippetsDir = connectionDir + "/snippets";
+  mSnippetsDir = profileDir + "/snippets";
 
   bool exists = fs::exists(mSnippetsDir);
   bool isDir = fs::is_directory(mSnippetsDir);
