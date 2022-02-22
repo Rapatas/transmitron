@@ -36,8 +36,9 @@ public:
     wxWindow* parent,
     const MQTT::BrokerOptions &brokerOptions,
     const Types::ClientOptions &clientOptions,
-    const wxObjectDataPtr<Models::Snippets> &snippetsModel,
-    const wxObjectDataPtr<Models::KnownTopics> &knownTopicsModel,
+    const wxObjectDataPtr<Models::Snippets> &snippets,
+    const wxObjectDataPtr<Models::KnownTopics> &topicsSubscribed,
+    const wxObjectDataPtr<Models::KnownTopics> &topicsPublished,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
     const wxString &name,
     bool darkMode
@@ -103,7 +104,8 @@ private:
   const Types::ClientOptions mClientOptions;
   const wxFont mFont;
   const bool mDarkMode;
-  wxObjectDataPtr<Models::KnownTopics> mKnownTopicsModel;
+  wxObjectDataPtr<Models::KnownTopics> mTopicsSubscribed;
+  wxObjectDataPtr<Models::KnownTopics> mTopicsPublished;
 
   wxBoxSizer *mMasterSizer = nullptr;
 

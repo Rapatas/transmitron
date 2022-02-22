@@ -53,7 +53,8 @@ public:
   wxString getName(wxDataViewItem item) const;
 
   wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
-  wxObjectDataPtr<KnownTopics> getKnownTopicsModel(wxDataViewItem item);
+  wxObjectDataPtr<KnownTopics> getTopicsSubscribed(wxDataViewItem item);
+  wxObjectDataPtr<KnownTopics> getTopicsPublished(wxDataViewItem item);
 
 private:
 
@@ -64,8 +65,9 @@ private:
     Types::ClientOptions clientOptions;
     MQTT::BrokerOptions brokerOptions;
     std::filesystem::path path;
-    wxObjectDataPtr<Snippets> snippetsModel;
-    wxObjectDataPtr<KnownTopics> knownTopicsModel;
+    wxObjectDataPtr<Snippets> snippets;
+    wxObjectDataPtr<KnownTopics> topicsSubscribed;
+    wxObjectDataPtr<KnownTopics> topicsPublished;
     bool saved = false;
   };
 
