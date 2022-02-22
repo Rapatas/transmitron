@@ -28,6 +28,16 @@ void KnownTopics::append(std::string topic)
     return;
   }
 
+  const auto it = std::find(
+    std::begin(mTopics),
+    std::end(mTopics),
+    topic
+  );
+  if (it != std::end(mTopics))
+  {
+    return;
+  }
+
   mTopics.push_back(std::move(topic));
   remap();
 }
