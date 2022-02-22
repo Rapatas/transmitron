@@ -6,11 +6,6 @@ using namespace Transmitron::Models;
 KnownTopics::KnownTopics()
 {
   mLogger = Common::Log::create("Models::KnownTopics");
-  for (size_t i = 0; i != 20; ++i)
-  {
-    auto topic = fmt::format("foo/{}/bar{}/{}", i, (i % 2 ? "/fiz" : ""), i * i);
-    mTopics.push_back(topic);
-  }
   remap();
 }
 
@@ -28,7 +23,13 @@ void KnownTopics::setFilter(std::string filter)
 
 void KnownTopics::append(std::string topic)
 {
+  if (topic == "#")
+  {
+    return;
+  }
+
   mTopics.push_back(std::move(topic));
+  remap();
 }
 
 const std::string &KnownTopics::getTopic(const wxDataViewItem &item) const

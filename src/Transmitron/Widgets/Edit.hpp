@@ -45,6 +45,9 @@ public:
   void setQos(MQTT::QoS qos);
   void setTimestamp(const std::chrono::system_clock::time_point &timestamp);
   void setInfoLine(const std::string &info);
+  void addKnownTopics(
+    const wxObjectDataPtr<Models::KnownTopics> &knownTopicsModel
+  );
 
 private:
 

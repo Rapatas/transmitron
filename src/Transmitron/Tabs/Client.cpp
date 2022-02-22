@@ -242,7 +242,6 @@ void Client::setupPanelHistory(wxWindow *parent)
     &Client::onHistorySearchKey,
     this
   );
-  mHistorySearchFilter->addKnownTopics(mKnownTopicsModel);
 
   mHistorySearchButton = new wxButton(
     panel,
@@ -521,7 +520,13 @@ void Client::setupPanelPreview(wxWindow *parent)
 
 void Client::setupPanelPublish(wxWindow *parent)
 {
-  auto *panel = new Widgets::Edit(parent, -1, OptionsHeight, mDarkMode);
+  auto *panel = new Widgets::Edit(
+    parent,
+    -1,
+    OptionsHeight,
+    mDarkMode
+  );
+  panel->addKnownTopics(mKnownTopicsModel);
   mPanes.at(Panes::Publish).panel = panel;
   panel->Bind(
     Events::EDIT_PUBLISH,
@@ -1443,6 +1448,7 @@ void Client::onSubscribeClicked(wxCommandEvent &/* event */)
   const auto utf8 = wxs.ToUTF8();
   const std::string topic(utf8.data(), utf8.length());
 
+  mKnownTopicsModel->append(topic);
   mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
 }
 
@@ -1460,6 +1466,7 @@ void Client::onSubscribeEnter(wxKeyEvent &event)
   const auto utf8 = wxs.ToUTF8();
   const std::string topic(utf8.data(), utf8.length());
 
+  mKnownTopicsModel->append(topic);
   mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
   event.Skip();
 }
@@ -1519,6 +1526,7 @@ void Client::onPublishClicked(wxCommandEvent &/* event */)
   auto *publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
   const auto &message = publish->getMessage();
   if (message.topic.empty()) { return; }
+  mKnownTopicsModel->append(message.topic);
   mClient->publish(message);
 }
 

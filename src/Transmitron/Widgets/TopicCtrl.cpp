@@ -1,5 +1,6 @@
 #include <cctype>
 #include <wx/artprov.h>
+#include <wx/dataview.h>
 #include <wx/sizer.h>
 #include <wx/clipbrd.h>
 #include <wx/listctrl.h>
@@ -137,6 +138,12 @@ void TopicCtrl::onValueChanged(wxCommandEvent &/* e */)
   popupRefresh();
 }
 
+void TopicCtrl::onCompletionDoubleClicked(wxDataViewEvent &e)
+{
+  if (!e.GetItem().IsOk()) { return; }
+  autoCompleteSelect();
+}
+
 void TopicCtrl::onDoubleClicked(wxMouseEvent &e)
 {
   if (mFakeSelection)
@@ -222,6 +229,11 @@ void TopicCtrl::popupShow()
     return;
   }
 
+  if (mKnownTopicsModel->GetCount() == 0)
+  {
+    return;
+  }
+
   if (mAutoComplete != nullptr)
   {
     mAutoComplete->Destroy();
@@ -261,6 +273,12 @@ void TopicCtrl::popupShow()
     const auto firstItem = mKnownTopicsModel->GetItem(0);
     mAutoCompleteList->Select(firstItem);
   }
+
+  mAutoCompleteList->Bind(
+    wxEVT_DATAVIEW_ITEM_ACTIVATED,
+    &TopicCtrl::onCompletionDoubleClicked,
+    this
+  );
 
   auto *sizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   sizer->Add(mAutoCompleteList, 1, wxEXPAND);
@@ -306,12 +324,14 @@ void TopicCtrl::autoCompleteUp()
 
   const auto selected = mAutoCompleteList->GetSelection();
   const auto row = mKnownTopicsModel->GetRow(selected);
-  if (row != 0)
+  if (row == 0)
   {
-    const auto newSelection = mKnownTopicsModel->GetItem(row - 1);
-    mAutoCompleteList->Select(newSelection);
-    mAutoCompleteList->EnsureVisible(newSelection);
+    return;
   }
+
+  const auto newSelection = mKnownTopicsModel->GetItem(row - 1);
+  mAutoCompleteList->Select(newSelection);
+  mAutoCompleteList->EnsureVisible(newSelection);
 }
 
 void TopicCtrl::autoCompleteDown()
@@ -323,12 +343,14 @@ void TopicCtrl::autoCompleteDown()
 
   const auto selected = mAutoCompleteList->GetSelection();
   const auto row = mKnownTopicsModel->GetRow(selected);
-  if (row + 1 != mKnownTopicsModel->GetCount())
+  if (row + 1 == mKnownTopicsModel->GetCount())
   {
-    const auto newSelection = mKnownTopicsModel->GetItem(row + 1);
-    mAutoCompleteList->Select(newSelection);
-    mAutoCompleteList->EnsureVisible(newSelection);
+    return;
   }
+
+  const auto newSelection = mKnownTopicsModel->GetItem(row + 1);
+  mAutoCompleteList->Select(newSelection);
+  mAutoCompleteList->EnsureVisible(newSelection);
 }
 
 void TopicCtrl::autoCompleteSelect()
@@ -341,5 +363,7 @@ void TopicCtrl::autoCompleteSelect()
   const auto selected = mAutoCompleteList->GetSelection();
   const auto topic = mKnownTopicsModel->getTopic(selected);
   SetValue(topic);
+  const auto position = static_cast<long>(topic.size());
+  SetSelection(position, position);
   popupHide();
 }

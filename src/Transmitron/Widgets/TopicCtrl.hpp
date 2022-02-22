@@ -59,6 +59,7 @@ private:
   void onRight(wxMouseEvent &e);
   void onRightClicked(wxMouseEvent &e);
   void onValueChanged(wxCommandEvent &e);
+  void onCompletionDoubleClicked(wxDataViewEvent &e);
 
   void popupHide();
   void popupShow();
