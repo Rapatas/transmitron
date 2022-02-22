@@ -47,6 +47,7 @@ private:
   wxDataViewCtrl *mAutoCompleteList = nullptr;
   std::shared_ptr<spdlog::logger> mLogger;
   wxObjectDataPtr<Models::KnownTopics> mKnownTopicsModel;
+  bool mPopupShow = false;
 
   void onContextSelected(wxCommandEvent &e);
 

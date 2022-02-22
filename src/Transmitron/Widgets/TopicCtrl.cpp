@@ -114,6 +114,7 @@ void TopicCtrl::onLeftDown(wxMouseEvent &e)
   {
     mFirstClick = false;
   }
+  mPopupShow = true;
   popupShow();
   e.Skip();
 }
@@ -199,6 +200,12 @@ void TopicCtrl::onKeyDown(wxKeyEvent &e)
     autoCompleteSelect();
     e.Skip(false);
     return;
+  }
+
+  if (e.GetKeyCode() == WXK_RETURN)
+  {
+    popupHide();
+    e.Skip(false);
   }
 
   const bool allowedReadOnlyKeys =
@@ -313,6 +320,10 @@ void TopicCtrl::popupRefresh()
   {
     popupHide();
   }
+  else if (mPopupShow && mAutoComplete == nullptr)
+  {
+    popupShow();
+  }
 }
 
 void TopicCtrl::autoCompleteUp()
@@ -360,6 +371,7 @@ void TopicCtrl::autoCompleteSelect()
     return;
   }
 
+  mPopupShow = false;
   const auto selected = mAutoCompleteList->GetSelection();
   const auto topic = mKnownTopicsModel->getTopic(selected);
   SetValue(topic);
