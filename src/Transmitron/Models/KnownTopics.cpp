@@ -1,12 +1,53 @@
 #include "Common/Log.hpp"
 #include "KnownTopics.hpp"
+#include <cstring>
+#include <fstream>
 
+namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 
 KnownTopics::KnownTopics()
 {
   mLogger = Common::Log::create("Models::KnownTopics");
   remap();
+}
+
+KnownTopics::~KnownTopics()
+{
+  save();
+}
+
+bool KnownTopics::load(std::filesystem::path filepath)
+{
+  mLogger->info("Loading {}", filepath.string());
+  mFilepath = std::move(filepath);
+  const bool exists = fs::exists(mFilepath);
+  if (!exists)
+  {
+    mLogger->warn("Could not load file '{}': Not found", mFilepath.string());
+    return false;
+  }
+
+  std::ifstream file(mFilepath);
+  if (!file.is_open())
+  {
+    mLogger->warn(
+      "Could not load file '{}': {}",
+      mFilepath.string(),
+      std::strerror(errno)
+    );
+    return false;
+  }
+
+  std::string line;
+  while (std::getline(file, line))
+  {
+    mTopics.push_back(line);
+  }
+
+  remap();
+
+  return true;
 }
 
 void KnownTopics::clear()
@@ -94,6 +135,26 @@ void KnownTopics::remap()
       rows.Add((int)(after + i));
     }
     RowsDeleted(rows);
+  }
+}
+
+void KnownTopics::save()
+{
+  mLogger->info("Saving to {}", mFilepath.string());
+  std::ofstream file(mFilepath);
+  if (!file.is_open())
+  {
+    mLogger->warn(
+      "Could not save file '{}': {}",
+      mFilepath.string(),
+      std::strerror(errno)
+    );
+    return;
+  }
+
+  for (const auto &topic : mTopics)
+  {
+    file << topic << "\n";
   }
 }
 

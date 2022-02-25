@@ -1,6 +1,7 @@
 #ifndef TRANSMITRON_MODELS_KNOWNTOPICS_HPP
 #define TRANSMITRON_MODELS_KNOWNTOPICS_HPP
 
+#include <filesystem>
 #include <vector>
 #include <wx/dataview.h>
 #include "Transmitron/Models/Subscriptions.hpp"
@@ -20,6 +21,14 @@ public:
   };
 
   explicit KnownTopics();
+  ~KnownTopics() override;
+
+  KnownTopics(const KnownTopics &other) = delete;
+  KnownTopics(KnownTopics &&other) = delete;
+  KnownTopics &operator=(const KnownTopics &other) = delete;
+  KnownTopics &operator=(KnownTopics &&other) = delete;
+
+  bool load(std::filesystem::path filepath);
 
   void clear();
   void setFilter(std::string filter);
@@ -51,11 +60,13 @@ public:
 private:
 
   std::shared_ptr<spdlog::logger> mLogger;
+  std::filesystem::path mFilepath;
   std::vector<std::string> mTopics;
   std::vector<size_t> mRemap;
   std::string mFilter;
 
   void remap();
+  void save();
 
 };
 

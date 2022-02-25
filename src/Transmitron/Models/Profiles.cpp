@@ -498,7 +498,9 @@ wxDataViewItem Profiles::loadProfile(const std::filesystem::path &directory)
   snippets->load(directory.string());
 
   wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
+  topicsSubscribed->load(directory.string() + "/topics-subscribed.txt");
   wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
+  topicsPublished->load(directory.string() + "/topics-published.txt");
 
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>(Node{
