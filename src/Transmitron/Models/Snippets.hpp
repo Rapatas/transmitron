@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <list>
+#include <set>
 #include <memory>
 
 #include <spdlog/spdlog.h>
@@ -30,6 +31,7 @@ public:
 
   MQTT::Message getMessage(wxDataViewItem item) const;
   std::string getName(wxDataViewItem item) const;
+  std::set<std::string> getKnownTopics() const;
   static wxDataViewItem getRootItem() ;
   wxDataViewItem createFolder(
     wxDataViewItem parent

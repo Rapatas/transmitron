@@ -34,6 +34,7 @@ public:
   void clear();
   void setFilter(std::string filter);
   void append(std::string topic);
+  void append(std::set<std::string> topics);
 
   const std::string &getTopic(const wxDataViewItem &item) const;
   const std::string &getFilter() const;

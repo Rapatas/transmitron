@@ -59,6 +59,16 @@ std::string Snippets::getName(wxDataViewItem item) const
   return node.name;
 }
 
+std::set<std::string> Snippets::getKnownTopics() const
+{
+  std::set<std::string> result;
+  for (const auto &node : mNodes)
+  {
+    result.insert(node.second.message.topic);
+  }
+  return result;
+}
+
 wxDataViewItem Snippets::getRootItem()
 {
   return toItem(0);

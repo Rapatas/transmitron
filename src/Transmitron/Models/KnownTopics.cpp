@@ -83,6 +83,11 @@ void KnownTopics::append(std::string topic)
   remap();
 }
 
+void KnownTopics::append(std::set<std::string> topics)
+{
+  mTopics.merge(topics);
+}
+
 const std::string &KnownTopics::getTopic(const wxDataViewItem &item) const
 {
   return *(mRemap.at(GetRow(item)));
