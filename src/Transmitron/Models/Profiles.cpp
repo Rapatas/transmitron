@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <optional>
@@ -497,10 +498,21 @@ wxDataViewItem Profiles::loadProfile(const std::filesystem::path &directory)
   wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
   snippets->load(directory.string());
 
+  const std::filesystem::path topics = directory.string() + "/topics";
+
   wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
-  topicsSubscribed->load(directory.string() + "/topics-subscribed.txt");
   wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
-  topicsPublished->load(directory.string() + "/topics-published.txt");
+
+  if (!fs::is_directory(topics) && !fs::create_directory(topics))
+  {
+      mLogger->warn("Could not create topics directory '{}'");
+  }
+  else
+  {
+    topicsSubscribed->load(topics.string() + "/subscribed.txt");
+    topicsPublished->load(topics.string() + "/published.txt");
+  }
+
   topicsPublished->append(snippets->getKnownTopics());
 
   const auto id = mAvailableId++;
