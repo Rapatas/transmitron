@@ -99,6 +99,7 @@ bool App::OnInit()
 
   mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGING, &App::onPageSelected, this);
   mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CLOSE, &App::onPageClosing, this);
+  mNote->Bind(wxEVT_CHAR_HOOK, &App::onKeyDown, this);
 
   mFrame->Show();
 
@@ -198,6 +199,50 @@ void App::onPageClosing(wxBookCtrlEvent& event)
   }
 
   if ((size_t)event.GetOldSelection() == mCount - 1)
+  {
+    mNote->ChangeSelection(mCount - 2);
+  }
+
+  event.Skip();
+}
+
+void App::onKeyDown(wxKeyEvent &event)
+{
+  if (event.GetKeyCode() == WXK_TAB)
+  {
+    // wxWANTS_CHARS requires that we manually call `Navigate` when the
+    // tab is pressed.
+    const auto flags = (event.ShiftDown())
+      ? wxNavigationKeyEvent::IsBackward
+      : wxNavigationKeyEvent::IsForward;
+    mNote->Navigate(flags);
+    event.Skip();
+    return;
+  }
+
+  if (event.GetKeyCode() != 'W' || !event.ControlDown())
+  {
+    return;
+  }
+
+  const auto closingIndex = (size_t)mNote->GetSelection();
+
+  // Settings and Plus.
+  if (closingIndex == 0 || closingIndex == mCount - 1)
+  {
+    return;
+  }
+
+  mNote->DeletePage(closingIndex);
+
+  --mCount;
+
+  if (mCount == 2)
+  {
+    createProfilesTab(mCount - 1);
+  }
+
+  if (closingIndex == mCount - 1)
   {
     mNote->ChangeSelection(mCount - 2);
   }

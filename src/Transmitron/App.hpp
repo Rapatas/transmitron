@@ -35,8 +35,9 @@ private:
 
   const wxFontInfo LabelFontInfo;
 
-  void onPageClosing(wxBookCtrlEvent& event);
-  void onPageSelected(wxBookCtrlEvent& event);
+  void onPageClosing(wxBookCtrlEvent &event);
+  void onPageSelected(wxBookCtrlEvent &event);
+  void onKeyDown(wxKeyEvent &event);
 
   void createProfilesTab(size_t index);
   void createSettingsTab();
