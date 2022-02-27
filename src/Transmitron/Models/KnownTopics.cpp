@@ -42,7 +42,7 @@ bool KnownTopics::load(std::filesystem::path filepath)
   std::string line;
   while (std::getline(file, line))
   {
-    mTopics.push_back(line);
+    mTopics.insert(line);
   }
 
   remap();
@@ -79,13 +79,13 @@ void KnownTopics::append(std::string topic)
     return;
   }
 
-  mTopics.push_back(std::move(topic));
+  mTopics.insert(std::move(topic));
   remap();
 }
 
 const std::string &KnownTopics::getTopic(const wxDataViewItem &item) const
 {
-  return mTopics.at(mRemap.at(GetRow(item)));
+  return *(mRemap.at(GetRow(item)));
 }
 
 const std::string &KnownTopics::getFilter() const
@@ -99,13 +99,13 @@ void KnownTopics::remap()
   mRemap.clear();
   mRemap.reserve(mTopics.size());
 
-  for (size_t i = 0; i < mTopics.size(); ++i)
+  for (auto it = std::begin(mTopics); it != std::end(mTopics); ++it)
   {
-    const auto &topic = mTopics[i];
+    const auto &topic = *it;
     const auto pos = topic.find(mFilter);
     if (mFilter.empty() || pos != std::string::npos)
     {
-      mRemap.push_back(i);
+      mRemap.push_back(it);
     }
   }
 
@@ -191,7 +191,7 @@ void KnownTopics::GetValueByRow(
     return;
   }
 
-  const auto &topic = mTopics.at(mRemap.at(row));
+  const auto &topic = *(mRemap.at(row));
   const auto wxs = wxString::FromUTF8(topic.data(), topic.length());
   variant = wxs;
 }

@@ -2,6 +2,7 @@
 #define TRANSMITRON_MODELS_KNOWNTOPICS_HPP
 
 #include <filesystem>
+#include <set>
 #include <vector>
 #include <wx/dataview.h>
 #include "Transmitron/Models/Subscriptions.hpp"
@@ -59,10 +60,12 @@ public:
 
 private:
 
+  using Topics = std::set<std::string>;
+
   std::shared_ptr<spdlog::logger> mLogger;
   std::filesystem::path mFilepath;
-  std::vector<std::string> mTopics;
-  std::vector<size_t> mRemap;
+  Topics mTopics;
+  std::vector<Topics::const_iterator> mRemap;
   std::string mFilter;
 
   void remap();
