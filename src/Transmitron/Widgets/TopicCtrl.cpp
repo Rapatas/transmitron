@@ -114,7 +114,6 @@ void TopicCtrl::onLeftDown(wxMouseEvent &e)
   {
     mFirstClick = false;
   }
-  mPopupShow = true;
   popupShow();
   e.Skip();
 }
@@ -208,6 +207,12 @@ void TopicCtrl::onKeyDown(wxKeyEvent &e)
     e.Skip(false);
   }
 
+  if (e.GetKeyCode() == WXK_SPACE && e.ControlDown())
+  {
+    popupShow();
+    e.Skip(true);
+  }
+
   const bool allowedReadOnlyKeys =
     e.ControlDown()
     && (e.GetKeyCode() == 'C' || e.GetKeyCode() == 'A');
@@ -245,6 +250,8 @@ void TopicCtrl::popupShow()
   {
     mAutoComplete->Destroy();
   }
+
+  mPopupShow = true;
 
   const auto filterPoint = GetScreenPosition();
   const auto filterSize = GetSize();
@@ -301,6 +308,7 @@ void TopicCtrl::popupHide()
     return;
   }
 
+  mPopupShow = false;
   mAutoComplete->Destroy();
   mAutoComplete = nullptr;
 }
@@ -312,9 +320,8 @@ void TopicCtrl::popupRefresh()
     return;
   }
 
-  auto filter = GetValue().ToStdString();
+  const auto filter = GetValue().ToStdString();
 
-  mLogger->info("Refreshing with '{}'", filter);
   mKnownTopicsModel->setFilter(filter);
   if (mKnownTopicsModel->GetCount() == 0)
   {
@@ -366,13 +373,12 @@ void TopicCtrl::autoCompleteDown()
 
 void TopicCtrl::autoCompleteSelect()
 {
-  if (mAutoCompleteList == nullptr)
-  {
-    return;
-  }
+  if (!mPopupShow) { return; }
+  if (mAutoCompleteList == nullptr) { return; }
 
-  mPopupShow = false;
   const auto selected = mAutoCompleteList->GetSelection();
+  if (!selected.IsOk()) { return; }
+
   const auto topic = mKnownTopicsModel->getTopic(selected);
   SetValue(topic);
   const auto position = static_cast<long>(topic.size());
