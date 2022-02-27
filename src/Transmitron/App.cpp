@@ -115,24 +115,7 @@ bool App::openProfile(const std::string &profileName)
     return false;
   }
 
-  auto *client = new Tabs::Client(
-    mNote,
-    mProfilesModel->getBrokerOptions(profileItem),
-    mProfilesModel->getClientOptions(profileItem),
-    mProfilesModel->getSnippetsModel(profileItem),
-    mProfilesModel->getTopicsSubscribed(profileItem),
-    mProfilesModel->getTopicsPublished(profileItem),
-    mLayoutsModel,
-    mProfilesModel->getName(profileItem),
-    mDarkMode
-  );
-
-  const size_t selected = (size_t)mNote->GetSelection();
-  mNote->RemovePage(selected);
-  mNote->InsertPage(selected, client, "");
-  mNote->SetSelection(selected);
-  mNote->SetPageText(selected, mProfilesModel->getName(profileItem));
-
+  openProfile(profileItem);
   return true;
 }
 
@@ -220,11 +203,23 @@ void App::onKeyDown(wxKeyEvent &event)
     return;
   }
 
-  if (event.GetKeyCode() != 'W' || !event.ControlDown())
+  if (event.GetKeyCode() == 'W' && event.ControlDown())
   {
+    onKeyDownControlW();
+    event.Skip();
     return;
   }
 
+  if (event.GetKeyCode() == 'T' && event.ControlDown())
+  {
+    onKeyDownControlT();
+    event.Skip();
+    return;
+  }
+}
+
+void App::onKeyDownControlW()
+{
   const auto closingIndex = (size_t)mNote->GetSelection();
 
   // Settings and Plus.
@@ -233,7 +228,7 @@ void App::onKeyDown(wxKeyEvent &event)
     return;
   }
 
-  mNote->DeletePage(closingIndex);
+  mNote->RemovePage(closingIndex);
 
   --mCount;
 
@@ -246,8 +241,11 @@ void App::onKeyDown(wxKeyEvent &event)
   {
     mNote->ChangeSelection(mCount - 2);
   }
+}
 
-  event.Skip();
+void App::onKeyDownControlT()
+{
+  createProfilesTab(mCount - 1);
 }
 
 void App::createProfilesTab(size_t index)
@@ -270,23 +268,7 @@ void App::createProfilesTab(size_t index)
     }
 
     const auto profileItem = e.getProfile();
-    const size_t selected = (size_t)mNote->GetSelection();
-
-    auto *client = new Tabs::Client(
-      mNote,
-      mProfilesModel->getBrokerOptions(profileItem),
-      mProfilesModel->getClientOptions(profileItem),
-      mProfilesModel->getSnippetsModel(profileItem),
-      mProfilesModel->getTopicsSubscribed(profileItem),
-      mProfilesModel->getTopicsPublished(profileItem),
-      mLayoutsModel,
-      mProfilesModel->getName(profileItem),
-      mDarkMode
-    );
-    mNote->RemovePage(selected);
-    mNote->InsertPage(selected, client, "");
-    mNote->SetSelection(selected);
-    mNote->SetPageText(selected, mProfilesModel->getName(profileItem));
+    openProfile(profileItem);
   });
 }
 
@@ -357,4 +339,25 @@ std::filesystem::path App::getInstallPrefix()
   auto prefix = executableDir.parent_path();
   prefix.make_preferred();
   return prefix;
+}
+
+void App::openProfile(wxDataViewItem profileItem)
+{
+  auto *client = new Tabs::Client(
+    mNote,
+    mProfilesModel->getBrokerOptions(profileItem),
+    mProfilesModel->getClientOptions(profileItem),
+    mProfilesModel->getSnippetsModel(profileItem),
+    mProfilesModel->getTopicsSubscribed(profileItem),
+    mProfilesModel->getTopicsPublished(profileItem),
+    mLayoutsModel,
+    mProfilesModel->getName(profileItem),
+    mDarkMode
+  );
+
+  const size_t selected = (size_t)mNote->GetSelection();
+  mNote->RemovePage(selected);
+  mNote->InsertPage(selected, client, "");
+  mNote->SetSelection(selected);
+  mNote->SetPageText(selected, mProfilesModel->getName(profileItem));
 }

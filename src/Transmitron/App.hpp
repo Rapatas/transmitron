@@ -38,6 +38,8 @@ private:
   void onPageClosing(wxBookCtrlEvent &event);
   void onPageSelected(wxBookCtrlEvent &event);
   void onKeyDown(wxKeyEvent &event);
+  void onKeyDownControlW();
+  void onKeyDownControlT();
 
   void createProfilesTab(size_t index);
   void createSettingsTab();
@@ -46,6 +48,8 @@ private:
   std::filesystem::path getConfigDir();
   std::filesystem::path getExecutablePath();
   std::filesystem::path getInstallPrefix();
+
+  void openProfile(wxDataViewItem profileItem);
 };
 
 }
