@@ -61,6 +61,7 @@ Client::Client(
   mLogger = Common::Log::create("Transmitron::Client");
 
   mClient = std::make_shared<MQTT::Client>();
+  mClient->setBrokerOptions(mBrokerOptions);
   Bind(Events::CONNECTED, &Client::onConnectedSync, this);
   Bind(Events::DISCONNECTED, &Client::onDisconnectedSync, this);
   Bind(Events::LOST, &Client::onConnectionLostSync, this);
@@ -177,6 +178,8 @@ Client::Client(
 
   const auto layout = mClientOptions.getLayout();
   mLayouts->setSelectedLayout(layout);
+
+  mClient->connect();
 }
 
 Client::~Client()
@@ -374,7 +377,7 @@ void Client::setupPanelConnect(
   mProfileSizer->Add(mConnect, 0, wxEXPAND);
   mProfileSizer->Add(mDisconnect, 0, wxEXPAND);
   mProfileSizer->Add(mCancel, 0, wxEXPAND);
-  allowConnect();
+  allowCancel();
 
   for (auto &pane : mPanes)
   {
@@ -838,7 +841,6 @@ void Client::onConnectClicked(wxCommandEvent &/* event */)
   }
 
   allowCancel();
-  mClient->setBrokerOptions(mBrokerOptions);
   mClient->connect();
 }
 
