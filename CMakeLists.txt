@@ -36,6 +36,7 @@ find_package(PahoMqttCpp REQUIRED)
 find_package(wxwidgets REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(fmt REQUIRED)
+find_package(CLI11 REQUIRED)
 find_package(spdlog REQUIRED)
 
 add_subdirectory(src)

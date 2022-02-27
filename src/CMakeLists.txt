@@ -132,5 +132,6 @@ target_link_libraries(
     tinyxml2::tinyxml2
     fmt::fmt
     spdlog::spdlog
+    CLI11::CLI11
     stdc++fs
 )

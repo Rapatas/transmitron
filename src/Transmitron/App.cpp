@@ -105,6 +105,36 @@ bool App::OnInit()
   return true;
 }
 
+bool App::openProfile(const std::string &profileName)
+{
+  const auto profileItem = mProfilesModel->getItemFromName(profileName);
+  if (!profileItem.IsOk())
+  {
+    mLogger->warn("Profile '{}' not found", profileName);
+    return false;
+  }
+
+  auto *client = new Tabs::Client(
+    mNote,
+    mProfilesModel->getBrokerOptions(profileItem),
+    mProfilesModel->getClientOptions(profileItem),
+    mProfilesModel->getSnippetsModel(profileItem),
+    mProfilesModel->getTopicsSubscribed(profileItem),
+    mProfilesModel->getTopicsPublished(profileItem),
+    mLayoutsModel,
+    mProfilesModel->getName(profileItem),
+    mDarkMode
+  );
+
+  const size_t selected = (size_t)mNote->GetSelection();
+  mNote->RemovePage(selected);
+  mNote->InsertPage(selected, client, "");
+  mNote->SetSelection(selected);
+  mNote->SetPageText(selected, mProfilesModel->getName(profileItem));
+
+  return true;
+}
+
 void App::onPageSelected(wxBookCtrlEvent& event)
 {
   if (event.GetSelection() == wxNOT_FOUND)

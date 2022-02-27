@@ -18,6 +18,8 @@ public:
 
   explicit App();
 
+  bool openProfile(const std::string &profileName);
+
   bool OnInit() override;
 
 private:

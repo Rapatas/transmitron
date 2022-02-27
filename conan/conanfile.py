@@ -12,6 +12,7 @@ class TransmitronConan(ConanFile):
         "tinyxml2/8.0.0",
         "fmt/8.0.1",
         "spdlog/1.9.2",
+        "cli11/2.1.2",
     ]
     default_options = {
         "wxwidgets:webview": False,

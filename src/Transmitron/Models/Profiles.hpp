@@ -51,6 +51,7 @@ public:
   const MQTT::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
   const Types::ClientOptions &getClientOptions(wxDataViewItem item) const;
   wxString getName(wxDataViewItem item) const;
+  wxDataViewItem getItemFromName(const std::string &profileName) const;
 
   wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
   wxObjectDataPtr<KnownTopics> getTopicsSubscribed(wxDataViewItem item);

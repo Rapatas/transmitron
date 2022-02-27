@@ -275,6 +275,26 @@ wxString Profiles::getName(wxDataViewItem item) const
   return wxs;
 }
 
+wxDataViewItem Profiles::getItemFromName(const std::string &profileName) const
+{
+  const auto it = std::find_if(
+    std::begin(mProfiles),
+    std::end(mProfiles),
+    [=](const auto &profile)
+    {
+      const auto &node = profile.second;
+      return node->name == profileName;
+    }
+  );
+
+  if (it == std::end(mProfiles))
+  {
+    return wxDataViewItem(nullptr);
+  }
+
+  return toItem(it->first);
+}
+
 wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
 {
   return mProfiles.at(toId(item))->snippets;
