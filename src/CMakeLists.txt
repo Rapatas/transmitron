@@ -3,9 +3,9 @@ set(
   ${TRANSMITRON_BIN_NAME}_SOURCE
   Common/Env.Linux.cpp
   Common/Env.Windows.cpp
+  Common/Extract.cpp
   Common/Helpers.cpp
   Common/Log.cpp
-  Common/Extract.cpp
   Common/String.cpp
   Common/Url.cpp
   Common/XdgBaseDir.Linux.cpp
@@ -17,6 +17,7 @@ set(
   MQTT/Subscription.cpp
   Transmitron/App.cpp
   Transmitron/Models/History.cpp
+  Transmitron/Models/KnownTopics.cpp
   Transmitron/Models/Layouts.cpp
   Transmitron/Models/Profiles.cpp
   Transmitron/Models/Snippets.cpp
@@ -42,8 +43,8 @@ set(
   Transmitron/Tabs/Client.cpp
   Transmitron/Tabs/Homepage.cpp
   Transmitron/Tabs/Settings.cpp
-  Transmitron/Types/Subscription.cpp
   Transmitron/Types/ClientOptions.cpp
+  Transmitron/Types/Subscription.cpp
   Transmitron/Widgets/Edit.cpp
   Transmitron/Widgets/Layouts.cpp
   Transmitron/Widgets/TopicCtrl.cpp

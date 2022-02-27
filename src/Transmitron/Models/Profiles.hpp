@@ -9,6 +9,7 @@
 #include "MQTT/BrokerOptions.hpp"
 #include "Snippets.hpp"
 #include "Layouts.hpp"
+#include "Transmitron/Models/KnownTopics.hpp"
 #include "Transmitron/Types/ClientOptions.hpp"
 #include "Transmitron/Events/Layout.hpp"
 
@@ -52,6 +53,8 @@ public:
   wxString getName(wxDataViewItem item) const;
 
   wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
+  wxObjectDataPtr<KnownTopics> getTopicsSubscribed(wxDataViewItem item);
+  wxObjectDataPtr<KnownTopics> getTopicsPublished(wxDataViewItem item);
 
 private:
 
@@ -62,7 +65,9 @@ private:
     Types::ClientOptions clientOptions;
     MQTT::BrokerOptions brokerOptions;
     std::filesystem::path path;
-    wxObjectDataPtr<Models::Snippets> snippetsModel;
+    wxObjectDataPtr<Snippets> snippets;
+    wxObjectDataPtr<KnownTopics> topicsSubscribed;
+    wxObjectDataPtr<KnownTopics> topicsPublished;
     bool saved = false;
   };
 

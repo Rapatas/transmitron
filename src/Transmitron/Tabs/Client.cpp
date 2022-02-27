@@ -34,7 +34,9 @@ Client::Client(
   wxWindow* parent,
   const MQTT::BrokerOptions &brokerOptions,
   const Types::ClientOptions &clientOptions,
-  const wxObjectDataPtr<Models::Snippets> &snippetsModel,
+  const wxObjectDataPtr<Models::Snippets> &snippets,
+  const wxObjectDataPtr<Models::KnownTopics> &topicsSubscribed,
+  const wxObjectDataPtr<Models::KnownTopics> &topicsPublished,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
   const wxString &name,
   bool darkMode
@@ -52,7 +54,9 @@ Client::Client(
   mClientOptions(clientOptions),
   mFont(wxFontInfo(FontSize).FaceName("Consolas")),
   mDarkMode(darkMode),
-  mSnippetsModel(snippetsModel)
+  mTopicsSubscribed(topicsSubscribed),
+  mTopicsPublished(topicsPublished),
+  mSnippetsModel(snippets)
 {
   mLogger = Common::Log::create("Transmitron::Client");
 
@@ -426,6 +430,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mPanes.at(Panes::Subscriptions).panel = panel;
 
   mFilter = new Widgets::TopicCtrl(panel, -1);
+  mFilter->addKnownTopics(mTopicsSubscribed);
   mFilter->SetFont(mFont);
 
   mSubscribe = new wxBitmapButton(
@@ -517,7 +522,13 @@ void Client::setupPanelPreview(wxWindow *parent)
 
 void Client::setupPanelPublish(wxWindow *parent)
 {
-  auto *panel = new Widgets::Edit(parent, -1, OptionsHeight, mDarkMode);
+  auto *panel = new Widgets::Edit(
+    parent,
+    -1,
+    OptionsHeight,
+    mDarkMode
+  );
+  panel->addKnownTopics(mTopicsPublished);
   mPanes.at(Panes::Publish).panel = panel;
   panel->Bind(
     Events::EDIT_PUBLISH,
@@ -1439,6 +1450,7 @@ void Client::onSubscribeClicked(wxCommandEvent &/* event */)
   const auto utf8 = wxs.ToUTF8();
   const std::string topic(utf8.data(), utf8.length());
 
+  mTopicsSubscribed->append(topic);
   mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
 }
 
@@ -1456,6 +1468,7 @@ void Client::onSubscribeEnter(wxKeyEvent &event)
   const auto utf8 = wxs.ToUTF8();
   const std::string topic(utf8.data(), utf8.length());
 
+  mTopicsSubscribed->append(topic);
   mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
   event.Skip();
 }
@@ -1515,6 +1528,7 @@ void Client::onPublishClicked(wxCommandEvent &/* event */)
   auto *publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
   const auto &message = publish->getMessage();
   if (message.topic.empty()) { return; }
+  mTopicsPublished->append(message.topic);
   mClient->publish(message);
 }
 

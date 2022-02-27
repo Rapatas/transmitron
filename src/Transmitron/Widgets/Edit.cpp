@@ -338,6 +338,12 @@ void Edit::setReadOnly(bool readonly)
   mTop->Layout();
 }
 
+void Edit::addKnownTopics(
+  const wxObjectDataPtr<Models::KnownTopics> &knownTopicsModel
+) {
+  mTopic->addKnownTopics(knownTopicsModel);
+}
+
 MQTT::Message Edit::getMessage() const
 {
   return {

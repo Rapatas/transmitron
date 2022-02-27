@@ -59,20 +59,30 @@ std::string Snippets::getName(wxDataViewItem item) const
   return node.name;
 }
 
+std::set<std::string> Snippets::getKnownTopics() const
+{
+  std::set<std::string> result;
+  for (const auto &node : mNodes)
+  {
+    result.insert(node.second.message.topic);
+  }
+  return result;
+}
+
 wxDataViewItem Snippets::getRootItem()
 {
   return toItem(0);
 }
 
-bool Snippets::load(const std::string &connectionDir)
+bool Snippets::load(const std::string &profileDir)
 {
-  if (connectionDir.empty())
+  if (profileDir.empty())
   {
     mLogger->warn("No directory provided");
     return false;
   }
 
-  mSnippetsDir = connectionDir + "/snippets";
+  mSnippetsDir = profileDir + "/snippets";
 
   bool exists = fs::exists(mSnippetsDir);
   bool isDir = fs::is_directory(mSnippetsDir);

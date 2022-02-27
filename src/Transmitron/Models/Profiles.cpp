@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <optional>
@@ -10,6 +11,7 @@
 #include "MQTT/BrokerOptions.hpp"
 #include "Profiles.hpp"
 #include "Transmitron/Info.hpp"
+#include "Transmitron/Models/KnownTopics.hpp"
 #include "Transmitron/Types/ClientOptions.hpp"
 #include "Transmitron/Notifiers/Layouts.hpp"
 
@@ -233,15 +235,18 @@ wxDataViewItem Profiles::createProfile()
     return wxDataViewItem(0);
   }
 
-  wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
-  snippetsModel->load(path);
+  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
+  snippets->load(path);
+
+  wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
 
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>();
   profile->name = uniqueName;
   profile->path = path;
   profile->saved = false;
-  profile->snippetsModel = snippetsModel;
+  profile->snippets = snippets;
+  profile->topicsSubscribed = topicsSubscribed;
   mProfiles.insert({id, std::move(profile)});
 
   save(id);
@@ -272,7 +277,17 @@ wxString Profiles::getName(wxDataViewItem item) const
 
 wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
 {
-  return mProfiles.at(toId(item))->snippetsModel;
+  return mProfiles.at(toId(item))->snippets;
+}
+
+wxObjectDataPtr<KnownTopics> Profiles::getTopicsSubscribed(wxDataViewItem item)
+{
+  return mProfiles.at(toId(item))->topicsSubscribed;
+}
+
+wxObjectDataPtr<KnownTopics> Profiles::getTopicsPublished(wxDataViewItem item)
+{
+  return mProfiles.at(toId(item))->topicsPublished;
 }
 
 unsigned Profiles::GetColumnCount() const
@@ -480,8 +495,25 @@ wxDataViewItem Profiles::loadProfile(const std::filesystem::path &directory)
     return opt.value();
   }();
 
-  wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
-  snippetsModel->load(directory.string());
+  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
+  snippets->load(directory.string());
+
+  const std::filesystem::path topics = directory.string() + "/topics";
+
+  wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
+  wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
+
+  if (!fs::is_directory(topics) && !fs::create_directory(topics))
+  {
+      mLogger->warn("Could not create topics directory '{}'");
+  }
+  else
+  {
+    topicsSubscribed->load(topics.string() + "/subscribed.txt");
+    topicsPublished->load(topics.string() + "/published.txt");
+  }
+
+  topicsPublished->append(snippets->getKnownTopics());
 
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>(Node{
@@ -489,7 +521,9 @@ wxDataViewItem Profiles::loadProfile(const std::filesystem::path &directory)
     clientOptions,
     brokerOptions,
     directory,
-    snippetsModel,
+    snippets,
+    topicsSubscribed,
+    topicsPublished,
     true
   });
   mProfiles.insert({id, std::move(profile)});
