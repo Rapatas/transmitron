@@ -49,6 +49,8 @@ public:
   Client &operator=(Client &&other) = delete;
   ~Client();
 
+  void focus();
+
 private:
 
   enum class ContextIDs : unsigned

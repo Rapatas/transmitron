@@ -356,4 +356,6 @@ void App::openProfile(wxDataViewItem profileItem)
   mNote->InsertPage(selected, client, "");
   mNote->SetSelection(selected);
   mNote->SetPageText(selected, mProfilesModel->getName(profileItem));
+
+  client->focus();
 }

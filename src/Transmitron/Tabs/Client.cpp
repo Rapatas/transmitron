@@ -192,6 +192,11 @@ Client::~Client()
   mAuiMan.UnInit();
 }
 
+void Client::focus()
+{
+  mFilter->SetFocus();
+}
+
 // Private {
 
 // Setup {
