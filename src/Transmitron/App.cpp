@@ -107,28 +107,25 @@ bool App::OnInit()
 
 int App::FilterEvent(wxEvent &event)
 {
-  constexpr int Continue= -1;
-  constexpr int Stop = 1;
-
   if (event.GetEventType() != wxEVT_KEY_DOWN)
   {
-    return Continue;
+    return wxEventFilter::Event_Skip;
   }
 
   const auto keyEvent = dynamic_cast<wxKeyEvent&>(event);
   if (keyEvent.GetKeyCode() == 'W' && keyEvent.ControlDown())
   {
     onKeyDownControlW();
-    return Stop;
+    return wxEventFilter::Event_Processed;
   }
 
   if (keyEvent.GetKeyCode() == 'T' && keyEvent.ControlDown())
   {
     onKeyDownControlT();
-    return Stop;
+    return wxEventFilter::Event_Processed;
   }
 
-  return Continue;
+  return wxEventFilter::Event_Skip;
 }
 
 bool App::openProfile(const std::string &profileName)
