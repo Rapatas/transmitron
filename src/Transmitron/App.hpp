@@ -21,6 +21,7 @@ public:
   bool openProfile(const std::string &profileName);
 
   bool OnInit() override;
+  int FilterEvent(wxEvent &event) override;
 
 private:
 
@@ -37,7 +38,6 @@ private:
 
   void onPageClosing(wxBookCtrlEvent &event);
   void onPageSelected(wxBookCtrlEvent &event);
-  void onKeyDown(wxKeyEvent &event);
   void onKeyDownControlW();
   void onKeyDownControlT();
 
