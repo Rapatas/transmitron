@@ -257,7 +257,7 @@ void TopicCtrl::popupShow()
   const auto filterSize = GetSize();
 
   const wxPoint popupPoint(filterPoint.x, filterPoint.y + filterSize.y);
-  const wxSize popupSize(filterSize.x, 100);
+  const wxSize popupSize(filterSize.x, 150);
 
   mAutoComplete = new wxPopupWindow(this);
   mAutoComplete->Position(popupPoint - popupSize, popupSize);

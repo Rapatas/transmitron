@@ -42,6 +42,7 @@ bool KnownTopics::load(std::filesystem::path filepath)
   std::string line;
   while (std::getline(file, line))
   {
+    if (line.empty()) { continue; }
     mTopics.insert(line);
   }
 
@@ -64,10 +65,8 @@ void KnownTopics::setFilter(std::string filter)
 
 void KnownTopics::append(std::string topic)
 {
-  if (topic == "#")
-  {
-    return;
-  }
+  if (topic == "#") { return; }
+  if (topic.empty()) { return; }
 
   const auto it = std::find(
     std::begin(mTopics),
@@ -85,6 +84,7 @@ void KnownTopics::append(std::string topic)
 
 void KnownTopics::append(std::set<std::string> topics)
 {
+  topics.erase("");
   mTopics.merge(topics);
 }
 
