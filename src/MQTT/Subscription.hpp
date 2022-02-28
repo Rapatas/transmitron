@@ -6,6 +6,7 @@
 #include <map>
 
 #include <mqtt/async_client.h>
+#include <spdlog/spdlog.h>
 
 #include "Client.hpp"
 
@@ -23,6 +24,7 @@ public:
 
   enum class State
   {
+    ToSubscribe,
     PendingSubscription,
     Subscribed,
     PendingUnsubscription,
@@ -68,9 +70,9 @@ private:
   std::string mFilter;
   QoS mQos;
   State mState;
-
   std::shared_ptr<Client> mClient;
   std::map<size_t, MQTT::Subscription::Observer*> mObservers;
+  std::shared_ptr<spdlog::logger> mLogger;
 
   friend class Client; // Can set the state.
   void setState(State newState);

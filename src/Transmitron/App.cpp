@@ -216,6 +216,7 @@ void App::onKeyDown(wxKeyEvent &event)
     event.Skip();
     return;
   }
+  event.Skip();
 }
 
 void App::onKeyDownControlW()
@@ -282,7 +283,7 @@ void App::createSettingsTab()
 std::filesystem::path App::getConfigDir()
 {
   const auto configHome = Common::XdgBaseDir::configHome();
-  auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
+  const auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
 
   if (!fs::is_directory(config) || !fs::exists(config))
   {
@@ -311,7 +312,7 @@ void App::setupIcon()
 
 std::filesystem::path App::getExecutablePath()
 {
-  auto pathfinder = []()
+  const auto pathfinder = []()
   {
 #if defined WIN32
     std::array<wchar_t, MAX_PATH> moduleFileName {};

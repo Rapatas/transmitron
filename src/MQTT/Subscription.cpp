@@ -1,7 +1,9 @@
-#include "Subscription.hpp"
-#include "Message.hpp"
 #include <chrono>
 #include <cstdlib>
+
+#include "Subscription.hpp"
+#include "Message.hpp"
+#include "Common/Log.hpp"
 
 using namespace MQTT;
 
@@ -15,7 +17,8 @@ Subscription::Subscription(
   mFilter(filter),
   mQos(qos),
   mState(State::Unsubscribed),
-  mClient(std::move(client))
+  mClient(std::move(client)),
+  mLogger(Common::Log::create("MQTT::Subscription"))
 {}
 
 size_t Subscription::attachObserver(Observer *o)
@@ -35,11 +38,15 @@ size_t Subscription::attachObserver(Observer *o)
 
 void Subscription::unsubscribe()
 {
-  if (
-    mState == State::Subscribed
-    || mState == State::PendingSubscription
-  ) {
-    mClient->unsubscribe(mId);
+  switch (mState)
+  {
+    case State::ToSubscribe:
+    case State::PendingSubscription:
+    case State::Subscribed:
+    {
+      mClient->unsubscribe(mId);
+    } break;
+    default: {}
   }
 }
 
