@@ -55,6 +55,17 @@ Homepage::Homepage(
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Homepage::onContextSelected, this);
 }
 
+void Homepage::focus() const
+{
+  wxDataViewItemArray children;
+  mProfilesModel->GetChildren(wxDataViewItem(nullptr), children);
+  if (children.empty()) { return; }
+
+  const auto first = children.front();
+  mProfilesCtrl->Select(first);
+  mProfilesCtrl->SetFocus();
+}
+
 void Homepage::setupProfiles()
 {
   wxDataViewColumn* const name = new wxDataViewColumn(

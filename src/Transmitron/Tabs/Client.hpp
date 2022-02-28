@@ -49,7 +49,7 @@ public:
   Client &operator=(Client &&other) = delete;
   ~Client();
 
-  void focus();
+  void focus() const;
 
 private:
 

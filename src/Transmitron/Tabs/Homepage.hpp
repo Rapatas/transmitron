@@ -31,6 +31,8 @@ public:
     const wxObjectDataPtr<Models::Layouts> &layoutsModel
   );
 
+  void focus() const;
+
 private:
 
   static constexpr size_t OptionsHeight = 26;

@@ -57,30 +57,6 @@ public:
   wxObjectDataPtr<KnownTopics> getTopicsSubscribed(wxDataViewItem item);
   wxObjectDataPtr<KnownTopics> getTopicsPublished(wxDataViewItem item);
 
-private:
-
-  struct Node
-  {
-    using Id_t = size_t;
-    std::string name;
-    Types::ClientOptions clientOptions;
-    MQTT::BrokerOptions brokerOptions;
-    std::filesystem::path path;
-    wxObjectDataPtr<Snippets> snippets;
-    wxObjectDataPtr<KnownTopics> topicsSubscribed;
-    wxObjectDataPtr<KnownTopics> topicsPublished;
-    bool saved = false;
-  };
-
-  static constexpr const std::string_view BrokerOptionsFilename = "broker-options.json";
-  static constexpr const std::string_view ClientOptionsFilename = "client-options.json";
-
-  std::shared_ptr<spdlog::logger> mLogger;
-  Node::Id_t mAvailableId = 1;
-  std::map<Node::Id_t, std::unique_ptr<Node>> mProfiles;
-  std::string mProfilesDir;
-  wxObjectDataPtr<Layouts> mLayoutsModel;
-
   // wxDataViewModel interface.
   unsigned GetColumnCount() const override;
   wxString GetColumnType(unsigned int col) const override;
@@ -108,6 +84,30 @@ private:
     const wxDataViewItem &parent,
     wxDataViewItemArray &children
   ) const override;
+
+private:
+
+  struct Node
+  {
+    using Id_t = size_t;
+    std::string name;
+    Types::ClientOptions clientOptions;
+    MQTT::BrokerOptions brokerOptions;
+    std::filesystem::path path;
+    wxObjectDataPtr<Snippets> snippets;
+    wxObjectDataPtr<KnownTopics> topicsSubscribed;
+    wxObjectDataPtr<KnownTopics> topicsPublished;
+    bool saved = false;
+  };
+
+  static constexpr const std::string_view BrokerOptionsFilename = "broker-options.json";
+  static constexpr const std::string_view ClientOptionsFilename = "client-options.json";
+
+  std::shared_ptr<spdlog::logger> mLogger;
+  Node::Id_t mAvailableId = 1;
+  std::map<Node::Id_t, std::unique_ptr<Node>> mProfiles;
+  std::string mProfilesDir;
+  wxObjectDataPtr<Layouts> mLayoutsModel;
 
   bool save(size_t id);
   bool saveOptionsBroker(size_t id);

@@ -101,7 +101,6 @@ bool App::OnInit()
   mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CLOSE, &App::onPageClosing, this);
 
   mFrame->Show();
-
   return true;
 }
 
@@ -252,6 +251,7 @@ void App::createProfilesTab(size_t index)
   mNote->InsertPage(index, homepage, "Homepage");
   ++mCount;
   mNote->SetSelection(index);
+  homepage->focus();
 
   homepage->Bind(Events::CONNECTION, [this](Events::Connection e){
     if (e.GetSelection() == wxNOT_FOUND)

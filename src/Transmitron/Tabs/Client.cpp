@@ -192,7 +192,7 @@ Client::~Client()
   mAuiMan.UnInit();
 }
 
-void Client::focus()
+void Client::focus() const
 {
   mFilter->SetFocus();
 }
