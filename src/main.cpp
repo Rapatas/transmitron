@@ -18,7 +18,7 @@ int main(int argc, char **argv)
 
   std::string profileName;
   auto *profileNameOpt = args.add_option(
-    "-p,--profile",
+    "--profile",
     profileName,
     "Profile to launch"
   );
