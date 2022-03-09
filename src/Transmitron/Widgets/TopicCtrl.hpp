@@ -45,6 +45,7 @@ private:
   long mCursonPosition = 0;
   wxPopupWindow *mAutoComplete = nullptr;
   wxDataViewCtrl *mAutoCompleteList = nullptr;
+  wxDataViewColumn *mAutoCompleteTopic = nullptr;
   std::shared_ptr<spdlog::logger> mLogger;
   wxObjectDataPtr<Models::KnownTopics> mKnownTopicsModel;
   bool mPopupShow = false;
@@ -61,6 +62,7 @@ private:
   void onRightClicked(wxMouseEvent &e);
   void onValueChanged(wxCommandEvent &e);
   void onCompletionDoubleClicked(wxDataViewEvent &e);
+  void onCompletionLeftUp(wxMouseEvent &e);
 
   void popupHide();
   void popupShow();

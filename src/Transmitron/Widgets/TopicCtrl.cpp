@@ -144,6 +144,19 @@ void TopicCtrl::onCompletionDoubleClicked(wxDataViewEvent &e)
   autoCompleteSelect();
 }
 
+void TopicCtrl::onCompletionLeftUp(wxMouseEvent &e)
+{
+  const auto selected = mAutoCompleteList->GetSelection();
+  if (!selected.IsOk()) { return; }
+
+  const auto point = e.GetPosition();
+  wxDataViewItem item;
+  mAutoCompleteList->HitTest(point, item, mAutoCompleteTopic);
+  if (item != selected) { return; }
+
+  autoCompleteSelect();
+}
+
 void TopicCtrl::onDoubleClicked(wxMouseEvent &e)
 {
   if (mFakeSelection)
@@ -263,7 +276,7 @@ void TopicCtrl::popupShow()
   mAutoComplete->Position(popupPoint - popupSize, popupSize);
   mAutoComplete->SetSize(popupSize);
 
-  wxDataViewColumn* const topic = new wxDataViewColumn(
+  mAutoCompleteTopic = new wxDataViewColumn(
     L"topic",
     new wxDataViewTextRenderer(),
     (unsigned)Models::KnownTopics::Column::Topic,
@@ -280,7 +293,7 @@ void TopicCtrl::popupShow()
   );
 
   mAutoCompleteList->AssociateModel(mKnownTopicsModel.get());
-  mAutoCompleteList->AppendColumn(topic);
+  mAutoCompleteList->AppendColumn(mAutoCompleteTopic);
 
   if (mKnownTopicsModel->GetCount() != 0)
   {
@@ -291,6 +304,12 @@ void TopicCtrl::popupShow()
   mAutoCompleteList->Bind(
     wxEVT_DATAVIEW_ITEM_ACTIVATED,
     &TopicCtrl::onCompletionDoubleClicked,
+    this
+  );
+
+  mAutoCompleteList->Bind(
+    wxEVT_LEFT_UP,
+    &TopicCtrl::onCompletionLeftUp,
     this
   );
 
