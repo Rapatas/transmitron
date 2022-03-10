@@ -31,7 +31,13 @@ Edit::Edit(
 ) :
   wxPanel(parent, id),
   mTheme(darkMode ? Theme::Dark : Theme::Light),
-  mOptionsHeight(optionsHeight)
+  mOptionsHeight(optionsHeight),
+  mTop(new wxBoxSizer(wxOrientation::wxHORIZONTAL)),
+  mVsizer(new wxBoxSizer(wxOrientation::wxVERTICAL)),
+  mBottom(new wxBoxSizer(wxOrientation::wxHORIZONTAL)),
+  mTopic(new TopicCtrl(this, -1)),
+  mRetained(false),
+  mQoS(MQTT::QoS::AtLeastOnce)
 {
   constexpr size_t FontSize = 9;
   mFont = wxFont(wxFontInfo(FontSize).FaceName("Consolas"));
@@ -40,7 +46,6 @@ Edit::Edit(
   mInfoLine = new wxStaticText(this, -1, "0000-00-00 00:00:00.000");
   mInfoLine->SetFont(mFont);
 
-  mTopic = new TopicCtrl(this, -1);
   mTopic->Bind(wxEVT_KEY_UP, &Edit::onTopicKeyDown, this);
 
   mPublish = new wxBitmapButton(
@@ -91,9 +96,6 @@ Edit::Edit(
     mFormatSelect->Insert(format.first, 0);
   }
 
-  mTop = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
-  mVsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
-  mBottom = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   mTop->SetMinSize(0, (int)mOptionsHeight);
   mBottom->SetMinSize(0, (int)mOptionsHeight);
 
@@ -105,7 +107,6 @@ Edit::Edit(
   mRetainedTrue->Bind(wxEVT_LEFT_UP, &Edit::onRetainedClicked, this);
 
   mRetainedTrue->Hide();
-  mRetained = false;
 
   mQos0 = new wxStaticBitmap(this, -1, *bin2cQos0());
   mQos0->SetToolTip("QoS: 0");
@@ -121,7 +122,6 @@ Edit::Edit(
 
   mQos1->Hide();
   mQos2->Hide();
-  mQoS = MQTT::QoS::AtLeastOnce;
 
   mFormatSelect->Bind(wxEVT_COMBOBOX, &Edit::onFormatSelected, this);
 

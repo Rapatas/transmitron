@@ -478,7 +478,7 @@ Types::ClientOptions Homepage::clientOptionsFromPropertyGrid() const
 {
   const auto &pfp = mProfileFormProperties;
 
-  auto &pfpLayout = pfp.at(Properties::Layout);
+  const auto &pfpLayout = pfp.at(Properties::Layout);
   const auto layoutValue = pfpLayout->GetValue();
   const auto layoutIndex = (size_t)layoutValue.GetInteger();
   const auto layout = mLayoutsModel->getLabelArray()[layoutIndex];

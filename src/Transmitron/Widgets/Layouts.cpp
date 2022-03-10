@@ -26,7 +26,8 @@ Layouts::Layouts(
   wxPanel(parent, id),
   mOptionsHeight(optionsHeight),
   mLayoutsModel(layoutsModel),
-  mAuiMan(auiMan)
+  mAuiMan(auiMan),
+  mSizer(new wxBoxSizer(wxHORIZONTAL))
 {
   mLogger = Common::Log::create("Widgets::Layouts");
 
@@ -71,7 +72,6 @@ Layouts::Layouts(
   );
   mSave->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
 
-  mSizer = new wxBoxSizer(wxHORIZONTAL);
   mSizer->Add(mSave, 0, wxEXPAND);
   mSizer->Add(mLayoutsLocked, 0, wxEXPAND);
   mSizer->Add(mLayoutsEdit, 0, wxEXPAND);

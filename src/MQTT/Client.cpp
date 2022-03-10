@@ -116,7 +116,7 @@ std::shared_ptr<Subscription> Client::subscribe(const std::string &topic)
 
   mLogger->info("Creating subscription");
   ++mSubscriptionIds;
-  const auto sub = std::make_shared<Subscription>(
+  auto sub = std::make_shared<Subscription>(
     mSubscriptionIds,
     topic,
     QoS::ExactlyOnce,

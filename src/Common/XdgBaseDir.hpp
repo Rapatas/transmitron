@@ -36,8 +36,8 @@ private:
   std::string readDataHome();
   std::string readCacheHome();
   std::string readStateHome();
-  std::vector<std::string> readDataDirs();
-  std::vector<std::string> readConfigDirs();
+  static std::vector<std::string> readDataDirs();
+  static std::vector<std::string> readConfigDirs();
 };
 
 }

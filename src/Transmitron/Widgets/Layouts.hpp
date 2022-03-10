@@ -35,7 +35,6 @@ private:
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
   wxDataViewItem mCurrentSelection;
   wxAuiManager &mAuiMan;
-  bool mReadOnly = false;
   wxFont mFont;
 
   wxBoxSizer *mSizer = nullptr;

@@ -56,17 +56,18 @@ Client::Client(
   mDarkMode(darkMode),
   mTopicsSubscribed(topicsSubscribed),
   mTopicsPublished(topicsPublished),
-  mSnippetsModel(snippets)
+  mMasterSizer(new wxBoxSizer(wxVERTICAL)),
+  mSnippetsModel(snippets),
+  mClient(std::make_shared<MQTT::Client>()),
+  mMqttObserverId(mClient->attachObserver(this))
 {
   mLogger = Common::Log::create("Transmitron::Client");
 
-  mClient = std::make_shared<MQTT::Client>();
   mClient->setBrokerOptions(mBrokerOptions);
   Bind(Events::CONNECTED, &Client::onConnectedSync, this);
   Bind(Events::DISCONNECTED, &Client::onDisconnectedSync, this);
   Bind(Events::LOST, &Client::onConnectionLostSync, this);
   Bind(Events::FAILURE, &Client::onConnectionFailureSync, this);
-  mMqttObserverId = mClient->attachObserver(this);
   Bind(wxEVT_CLOSE_WINDOW, &Client::onClose, this);
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Client::onContextSelected, this);
 
@@ -165,7 +166,6 @@ Client::Client(
   setupPanelHistory(wrapper);
   setupPanelConnect(this, layoutsModel);
 
-  mMasterSizer = new wxBoxSizer(wxVERTICAL);
   mMasterSizer->Add(mProfileBar, 0, wxEXPAND);
   mMasterSizer->Add(wrapper, 1, wxEXPAND);
   SetSizer(mMasterSizer);
