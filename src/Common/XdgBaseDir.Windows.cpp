@@ -48,7 +48,7 @@ std::string XdgBaseDir::readStateHome()
   return readCacheHome();
 }
 
-std::vector<std::string> XdgBaseDir::readDataDirs()
+std::vector<std::string> XdgBaseDir::readDataDirs() const
 {
   auto var = Env::get("APPDATA");
   if (var.empty())
@@ -66,7 +66,7 @@ std::vector<std::string> XdgBaseDir::readDataDirs()
   return dirs;
 }
 
-std::vector<std::string> XdgBaseDir::readConfigDirs()
+std::vector<std::string> XdgBaseDir::readConfigDirs() const
 {
   return readDataDirs();
 }
