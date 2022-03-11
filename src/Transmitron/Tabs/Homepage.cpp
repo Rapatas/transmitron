@@ -55,7 +55,7 @@ Homepage::Homepage(
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Homepage::onContextSelected, this);
 }
 
-void Homepage::focus() const
+void Homepage::focus()
 {
   wxDataViewItemArray children;
   mProfilesModel->GetChildren(wxDataViewItem(nullptr), children);
@@ -63,6 +63,11 @@ void Homepage::focus() const
 
   const auto first = children.front();
   mProfilesCtrl->Select(first);
+  propertyGridFill(
+    mProfilesModel->getName(first),
+    mProfilesModel->getBrokerOptions(first),
+    mProfilesModel->getClientOptions(first)
+  );
   mProfilesCtrl->SetFocus();
 }
 
@@ -222,6 +227,8 @@ void Homepage::setupProfileForm()
   mProfileForm->SetSizer(sizer);
 
   mSave->Bind(wxEVT_BUTTON, &Homepage::onSaveClicked, this);
+
+  propertyGridClear();
 }
 
 void Homepage::onProfileActivated(wxDataViewEvent &e)
@@ -250,7 +257,7 @@ void Homepage::onProfileSelected(wxDataViewEvent &e)
     return;
   }
 
-  fillPropertyGrid(
+  propertyGridFill(
     mProfilesModel->getName(item),
     mProfilesModel->getBrokerOptions(item),
     mProfilesModel->getClientOptions(item)
@@ -305,7 +312,7 @@ void Homepage::onNewProfileClicked(wxCommandEvent &/* event */)
   const auto item = mProfilesModel->createProfile();
   mProfilesCtrl->Select(item);
   mProfilesCtrl->EnsureVisible(item);
-  fillPropertyGrid(
+  propertyGridFill(
     mProfilesModel->getName(item),
     mProfilesModel->getBrokerOptions(item),
     mProfilesModel->getClientOptions(item)
@@ -347,6 +354,14 @@ void Homepage::onProfileDelete(wxCommandEvent & /* event */)
   mLogger->info("Requesting delete");
   const auto item = mProfilesCtrl->GetSelection();
   mProfilesModel->remove(item);
+
+  const wxDataViewItem parent(nullptr);
+  wxDataViewItemArray children;
+  mProfilesModel->GetChildren(parent, children);
+  if (children.empty())
+  {
+    propertyGridClear();
+  }
 }
 
 void Homepage::onLayoutAdded(Events::Layout &/* event */)
@@ -408,7 +423,7 @@ void Homepage::refreshLayouts()
   pfpLayout->SetValue(newLayoutValue);
 }
 
-void Homepage::fillPropertyGrid(
+void Homepage::propertyGridFill(
   const wxString &name,
   const MQTT::BrokerOptions &brokerOptions,
   const Types::ClientOptions &clientOptions
@@ -441,6 +456,29 @@ void Homepage::fillPropertyGrid(
   mSave->Enable(true);
   mConnect->Enable(true);
   mProfileFormGrid->Enable(true);
+}
+
+void Homepage::propertyGridClear()
+{
+  mSave->Enable(false);
+  mConnect->Enable(false);
+  mProfileFormGrid->Enable(false);
+
+  auto &pfp = mProfileFormProperties;
+
+  pfp.at(Properties::Name)->SetValue({});
+  pfp.at(Properties::AutoReconnect)->SetValue({});
+  pfp.at(Properties::ClientId)->SetValue({});
+  pfp.at(Properties::ConnectTimeout)->SetValue({});
+  pfp.at(Properties::DisconnectTimeout)->SetValue({});
+  pfp.at(Properties::Hostname)->SetValue({});
+  pfp.at(Properties::KeepAlive)->SetValue({});
+  pfp.at(Properties::MaxInFlight)->SetValue({});
+  pfp.at(Properties::MaxReconnectRetries)->SetValue({});
+  pfp.at(Properties::Password)->SetValue({});
+  pfp.at(Properties::Port)->SetValue({});
+  pfp.at(Properties::Username)->SetValue({});
+  pfp.at(Properties::Layout)->SetValue({});
 }
 
 MQTT::BrokerOptions Homepage::brokerOptionsFromPropertyGrid() const

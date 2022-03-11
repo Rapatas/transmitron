@@ -31,7 +31,7 @@ public:
     const wxObjectDataPtr<Models::Layouts> &layoutsModel
   );
 
-  void focus() const;
+  void focus();
 
 private:
 
@@ -93,11 +93,12 @@ private:
 
   void setupProfiles();
   void setupProfileForm();
-  void fillPropertyGrid(
+  void propertyGridFill(
     const wxString &name,
     const MQTT::BrokerOptions &brokerOptions,
     const Types::ClientOptions &clientOptions
   );
+  void propertyGridClear();
   MQTT::BrokerOptions brokerOptionsFromPropertyGrid() const;
   Types::ClientOptions clientOptionsFromPropertyGrid() const;
   void refreshLayouts();

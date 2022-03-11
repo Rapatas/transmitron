@@ -6,17 +6,6 @@
 
 using namespace MQTT;
 
-constexpr bool DefaultAutoReconnect = false;
-constexpr const std::string_view DefaultClientId{};
-constexpr const std::string_view DefaultHostname = "127.0.0.1";
-constexpr const std::string_view DefaultPassword{};
-constexpr const std::string_view DefaultUsername{};
-constexpr std::chrono::seconds DefaultTimeout(15);
-constexpr std::chrono::seconds DefaultKeepAliveInterval(60);
-constexpr size_t DefaultMaxReconnectRetries = 10;
-constexpr size_t DefaultMaxInFlight = 10;
-constexpr size_t DefaultPort = 1883;
-
 BrokerOptions::BrokerOptions() :
   mAutoReconnect(DefaultAutoReconnect),
   mMaxInFlight(DefaultMaxInFlight),
