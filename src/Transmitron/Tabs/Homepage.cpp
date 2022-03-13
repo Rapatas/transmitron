@@ -18,6 +18,7 @@ wxDEFINE_EVENT(Events::CONNECTION, Events::Connection); // NOLINT
 Homepage::Homepage(
   wxWindow *parent,
   wxFontInfo labelFont,
+  int optionsHeight,
   const wxObjectDataPtr<Models::Profiles> &profilesModel,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel
 ) :
@@ -30,6 +31,7 @@ Homepage::Homepage(
     "Homepage"
   ),
   mLabelFont(std::move(labelFont)),
+  mOptionsHeight(optionsHeight),
   mProfilesModel(profilesModel),
   mLayoutsModel(layoutsModel)
 {
@@ -98,7 +100,7 @@ void Homepage::setupProfiles()
     -1,
     "New Profile",
     wxDefaultPosition,
-    wxSize(-1, OptionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
   newProfile->Bind(wxEVT_BUTTON, &Homepage::onNewProfileClicked, this);
   newProfile->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
@@ -128,14 +130,14 @@ void Homepage::setupProfiles()
     -1,
     "Connect",
     wxDefaultPosition,
-    wxSize(-1, OptionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
   mConnect->Enable(false);
   mConnect->Bind(wxEVT_BUTTON, &Homepage::onConnectClicked, this);
   mConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
 
   auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
-  hsizer->SetMinSize(0, OptionsHeight);
+  hsizer->SetMinSize(0, mOptionsHeight);
   hsizer->Add(newProfile, 0, wxEXPAND);
   hsizer->AddStretchSpacer(1);
   hsizer->Add(mConnect, 0, wxEXPAND);
@@ -212,14 +214,14 @@ void Homepage::setupProfileForm()
     -1,
     "Save",
     wxDefaultPosition,
-    wxSize(-1, OptionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
   mSave->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
   mSave->Enable(false);
 
   auto *bottomSizer = new wxBoxSizer(wxHORIZONTAL);
   bottomSizer->Add(mSave, 1, wxEXPAND);
-  bottomSizer->SetMinSize(0, OptionsHeight);
+  bottomSizer->SetMinSize(0, mOptionsHeight);
   auto *sizer = new wxBoxSizer(wxVERTICAL);
   sizer->Add(label,            0, wxEXPAND);
   sizer->Add(mProfileFormGrid, 1, wxEXPAND);

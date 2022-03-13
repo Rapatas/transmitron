@@ -22,7 +22,7 @@ public:
   explicit Edit(
     wxWindow* parent,
     wxWindowID id,
-    size_t optionsHeight,
+    int optionsHeight,
     bool darkMode
   );
 
@@ -113,7 +113,7 @@ private:
   wxFont mFont;
 
   bool mReadOnly = false;
-  size_t mOptionsHeight;
+  const int mOptionsHeight;
 
   wxBoxSizer *mTop = nullptr;
   wxBoxSizer *mVsizer = nullptr;

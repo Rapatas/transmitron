@@ -21,7 +21,7 @@ Layouts::Layouts(
   wxWindowID id,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
   wxAuiManager &auiMan,
-  size_t optionsHeight
+  int optionsHeight
 ) :
   wxPanel(parent, id),
   mOptionsHeight(optionsHeight),
@@ -68,7 +68,7 @@ Layouts::Layouts(
     -1,
     "",
     wxDefaultPosition,
-    wxSize((int)mOptionsHeight, (int)mOptionsHeight)
+    wxSize(mOptionsHeight, mOptionsHeight)
   );
   mSave->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
 

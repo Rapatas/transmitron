@@ -26,7 +26,7 @@ wxDEFINE_EVENT(Events::EDIT_SAVE_SNIPPET, Events::Edit); // NOLINT
 Edit::Edit(
   wxWindow* parent,
   wxWindowID id,
-  size_t optionsHeight,
+  int optionsHeight,
   bool darkMode
 ) :
   wxPanel(parent, id),
@@ -53,7 +53,7 @@ Edit::Edit(
     -1,
     *bin2cSend18x18(),
     wxDefaultPosition,
-    wxSize((int)mOptionsHeight, (int)mOptionsHeight)
+    wxSize(mOptionsHeight, mOptionsHeight)
   );
   mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
     auto *e = new Events::Edit(Events::EDIT_PUBLISH);
@@ -67,7 +67,7 @@ Edit::Edit(
     -1,
     "",
     wxDefaultPosition,
-    wxSize((int)optionsHeight, (int)optionsHeight)
+    wxSize(mOptionsHeight, mOptionsHeight)
   );
   mSaveSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
   mSaveSnippet->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
@@ -89,15 +89,15 @@ Edit::Edit(
     -1,
     mFormats.begin()->first,
     wxDefaultPosition,
-    wxSize(FormatButtonWidth, (int)optionsHeight)
+    wxSize(FormatButtonWidth, mOptionsHeight)
   );
   for (const auto &format : mFormats)
   {
     mFormatSelect->Insert(format.first, 0);
   }
 
-  mTop->SetMinSize(0, (int)mOptionsHeight);
-  mBottom->SetMinSize(0, (int)mOptionsHeight);
+  mTop->SetMinSize(0, mOptionsHeight);
+  mBottom->SetMinSize(0, mOptionsHeight);
 
   mRetainedFalse = new wxStaticBitmap(this, -1, *bin2cNotPinned18x18());
   mRetainedFalse->SetToolTip("Not retained");

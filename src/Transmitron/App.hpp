@@ -30,6 +30,7 @@ private:
   wxFrame *mFrame = nullptr;
   wxAuiNotebook *mNote = nullptr;
   bool mDarkMode = false;
+  int mOptionsHeight = 0;
 
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
@@ -50,6 +51,8 @@ private:
   std::filesystem::path getInstallPrefix();
 
   void openProfile(wxDataViewItem profileItem);
+
+  int calculateOptionHeight();
 };
 
 }

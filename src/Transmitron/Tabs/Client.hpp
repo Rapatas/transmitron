@@ -41,7 +41,8 @@ public:
     const wxObjectDataPtr<Models::KnownTopics> &topicsPublished,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
     const wxString &name,
-    bool darkMode
+    bool darkMode,
+    int optionsHeight
   );
   Client(const Client &other) = delete;
   Client(Client &&other) = delete;
@@ -97,7 +98,6 @@ private:
   static constexpr size_t PaneMinWidth = 200;
   static constexpr size_t PaneMinHeight = 100;
   static constexpr size_t EditorMinHeight = 200;
-  static constexpr size_t OptionsHeight = 26;
 
   std::shared_ptr<spdlog::logger> mLogger;
   std::map<Panes, Pane> mPanes;
@@ -106,6 +106,7 @@ private:
   const Types::ClientOptions mClientOptions;
   const wxFont mFont;
   const bool mDarkMode;
+  const int mOptionsHeight;
   wxObjectDataPtr<Models::KnownTopics> mTopicsSubscribed;
   wxObjectDataPtr<Models::KnownTopics> mTopicsPublished;
 

@@ -27,6 +27,7 @@ public:
   explicit Homepage(
     wxWindow *parent,
     wxFontInfo labelFont,
+    int optionsHeight,
     const wxObjectDataPtr<Models::Profiles> &profilesModel,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel
   );
@@ -35,7 +36,6 @@ public:
 
 private:
 
-  static constexpr size_t OptionsHeight = 26;
 
   enum class ContextIDs : unsigned
   {
@@ -61,6 +61,7 @@ private:
   };
 
   const wxFontInfo mLabelFont;
+  const int mOptionsHeight;
 
   std::shared_ptr<spdlog::logger> mLogger;
   wxButton *mConnect = nullptr;

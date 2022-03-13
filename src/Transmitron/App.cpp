@@ -63,6 +63,7 @@ bool App::OnInit()
     wxSize(DefaultWindowWidth, DefaultWindowHeight)
   );
   mFrame->SetMinSize(wxSize(MinWindowWidth, MinWindowHeight));
+  mOptionsHeight = calculateOptionHeight();
 
   setupIcon();
 
@@ -245,6 +246,7 @@ void App::createProfilesTab(size_t index)
   auto *homepage = new Tabs::Homepage(
     mNote,
     LabelFontInfo,
+    mOptionsHeight,
     mProfilesModel,
     mLayoutsModel
   );
@@ -345,7 +347,8 @@ void App::openProfile(wxDataViewItem profileItem)
     mProfilesModel->getTopicsPublished(profileItem),
     mLayoutsModel,
     mProfilesModel->getName(profileItem),
-    mDarkMode
+    mDarkMode,
+    mOptionsHeight
   );
 
   const size_t selected = (size_t)mNote->GetSelection();
@@ -355,4 +358,12 @@ void App::openProfile(wxDataViewItem profileItem)
   mNote->SetPageText(selected, mProfilesModel->getName(profileItem));
 
   client->focus();
+}
+
+int App::calculateOptionHeight()
+{
+  auto *button = new wxBitmapButton(mFrame, -1, *bin2cPlus18x18());
+  const auto bestSize = button->GetBestSize();
+  mFrame->RemoveChild(button);
+  return (size_t)bestSize.y;
 }

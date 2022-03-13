@@ -39,7 +39,8 @@ Client::Client(
   const wxObjectDataPtr<Models::KnownTopics> &topicsPublished,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
   const wxString &name,
-  bool darkMode
+  bool darkMode,
+  int optionsHeight
 ) :
   wxPanel(
     parent,
@@ -54,6 +55,7 @@ Client::Client(
   mClientOptions(clientOptions),
   mFont(wxFontInfo(FontSize).FaceName("Consolas")),
   mDarkMode(darkMode),
+  mOptionsHeight(optionsHeight),
   mTopicsSubscribed(topicsSubscribed),
   mTopicsPublished(topicsPublished),
   mMasterSizer(new wxBoxSizer(wxVERTICAL)),
@@ -258,7 +260,7 @@ void Client::setupPanelHistory(wxWindow *parent)
     -1,
     "",
     wxDefaultPosition,
-    wxSize(OptionsHeight, OptionsHeight)
+    wxSize(mOptionsHeight, mOptionsHeight)
   );
   mHistorySearchButton->SetBitmap(wxArtProvider::GetBitmap(wxART_FIND));
   mHistorySearchButton->Bind(
@@ -275,7 +277,7 @@ void Client::setupPanelHistory(wxWindow *parent)
     -1,
     "Clear",
     wxDefaultPosition,
-    wxSize(-1, OptionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
   mHistoryClear->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
 
@@ -283,7 +285,7 @@ void Client::setupPanelHistory(wxWindow *parent)
   topSizer->Add(mHistorySearchFilter, 1, wxEXPAND);
   topSizer->Add(mHistorySearchButton, 0, wxEXPAND);
   auto *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
-  hsizer->SetMinSize(0, OptionsHeight);
+  hsizer->SetMinSize(0, mOptionsHeight);
   hsizer->Add(mAutoScroll, 0, wxEXPAND);
   hsizer->AddStretchSpacer(1);
   hsizer->Add(mHistoryClear, 0, wxEXPAND);
@@ -326,24 +328,24 @@ void Client::setupPanelConnect(
     -1,
     "Connect",
     wxDefaultPosition,
-    wxSize(-1, OptionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
   mDisconnect = new wxButton(
     mProfileBar,
     -1,
     "Disconnect",
     wxDefaultPosition,
-    wxSize(-1, OptionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
   mCancel     = new wxButton(
     mProfileBar,
     -1,
     "Cancel",
     wxDefaultPosition,
-    wxSize(-1, OptionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
 
-  mLayouts = new Widgets::Layouts(mProfileBar, -1, layoutsModel, mAuiMan, OptionsHeight);
+  mLayouts = new Widgets::Layouts(mProfileBar, -1, layoutsModel, mAuiMan, mOptionsHeight);
   mLayouts->Bind(Events::LAYOUT_SELECTED, &Client::onLayoutSelected, this);
   mLayouts->Bind(Events::LAYOUT_RESIZED,  &Client::onLayoutResized,  this);
 
@@ -378,7 +380,7 @@ void Client::setupPanelConnect(
   };
 
   mProfileSizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
-  mProfileSizer->SetMinSize(0, OptionsHeight);
+  mProfileSizer->SetMinSize(0, mOptionsHeight);
   mProfileSizer->Add(mConnect, 0, wxEXPAND);
   mProfileSizer->Add(mDisconnect, 0, wxEXPAND);
   mProfileSizer->Add(mCancel, 0, wxEXPAND);
@@ -397,7 +399,7 @@ void Client::setupPanelConnect(
       -1,
       "",
       wxDefaultPosition,
-      wxSize(OptionsHeight, OptionsHeight)
+      wxSize(mOptionsHeight, mOptionsHeight)
     );
     button->SetToolTip(pane.second.name);
     button->SetBitmap(*bitmap);
@@ -446,7 +448,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
     -1,
     *bin2cPlus18x18(),
     wxDefaultPosition,
-    wxSize(OptionsHeight, OptionsHeight)
+    wxSize(mOptionsHeight, mOptionsHeight)
   );
 
   wxDataViewColumn* const icon = new wxDataViewColumn(
@@ -487,7 +489,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
-  hsizer->SetMinSize(0, OptionsHeight);
+  hsizer->SetMinSize(0, mOptionsHeight);
   hsizer->Add(mFilter, 1, wxEXPAND);
   hsizer->Add(mSubscribe, 0, wxEXPAND);
   vsizer->Add(hsizer, 0, wxEXPAND);
@@ -518,7 +520,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
 void Client::setupPanelPreview(wxWindow *parent)
 {
-  auto *panel = new Widgets::Edit(parent, -1, OptionsHeight, mDarkMode);
+  auto *panel = new Widgets::Edit(parent, -1, mOptionsHeight, mDarkMode);
   mPanes.at(Panes::Preview).panel = panel;
   panel->setReadOnly(true);
   panel->Bind(
@@ -533,7 +535,7 @@ void Client::setupPanelPublish(wxWindow *parent)
   auto *panel = new Widgets::Edit(
     parent,
     -1,
-    OptionsHeight,
+    mOptionsHeight,
     mDarkMode
   );
   panel->addKnownTopics(mTopicsPublished);
