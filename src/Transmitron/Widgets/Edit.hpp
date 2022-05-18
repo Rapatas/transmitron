@@ -6,10 +6,11 @@
 #include <wx/stc/stc.h>
 #include <wx/wx.h>
 
-#include "TopicCtrl.hpp"
 #include "MQTT/Client.hpp"
 #include "MQTT/Message.hpp"
+#include "TopicCtrl.hpp"
 #include "Transmitron/Events/Edit.hpp"
+#include "Transmitron/Events/TopicCtrl.hpp"
 
 namespace Transmitron::Widgets
 {
@@ -160,8 +161,8 @@ private:
 
   void setupScintilla();
   void setStyle(Format format);
-  void onFormatSelected(wxCommandEvent &e);
-  void onTopicKeyDown(wxKeyEvent &e);
+  void onFormatSelected(wxCommandEvent &event);
+  void onTopicCtrlReturn(Events::TopicCtrl &event);
 
   std::string formatTry(
     const std::string &text,

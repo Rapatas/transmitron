@@ -1,6 +1,8 @@
+#include <wx/frame.h>
 #include <cctype>
 #include <wx/artprov.h>
 #include <wx/dataview.h>
+#include <wx/gdicmn.h>
 #include <wx/sizer.h>
 #include <wx/clipbrd.h>
 #include <wx/listctrl.h>
@@ -9,9 +11,14 @@
 
 #include "Common/Log.hpp"
 #include "TopicCtrl.hpp"
+#include "Transmitron/Events/TopicCtrl.hpp"
+#include "Transmitron/Events/TopicCtrl.hpp"
 #include "Transmitron/Models/KnownTopics.hpp"
 
+using namespace Transmitron;
 using namespace Transmitron::Widgets;
+
+wxDEFINE_EVENT(Events::TOPICCTRL_RETURN, Events::TopicCtrl); // NOLINT
 
 constexpr size_t FontSize = 9;
 
@@ -23,6 +30,7 @@ TopicCtrl::TopicCtrl(
   mFont(wxFontInfo(FontSize).FaceName("Consolas"))
 {
   SetFont(mFont);
+  SetWindowStyle(wxWANTS_CHARS);
 
   mLogger = Common::Log::create("Transmitron::TopicCtrl");
 
@@ -32,8 +40,10 @@ TopicCtrl::TopicCtrl(
   Bind(wxEVT_RIGHT_DOWN,  &TopicCtrl::onRightClicked,  this);
   Bind(wxEVT_KILL_FOCUS,  &TopicCtrl::onLostFocus,     this);
   Bind(wxEVT_KEY_DOWN,    &TopicCtrl::onKeyDown,       this);
-  Bind(wxEVT_COMMAND_TEXT_UPDATED, &TopicCtrl::onValueChanged, this);
+  Bind(wxEVT_KEY_UP,   &TopicCtrl::onKeyUp, this);
 
+
+  Bind(wxEVT_COMMAND_TEXT_UPDATED,  &TopicCtrl::onValueChanged,    this);
   Bind(wxEVT_COMMAND_MENU_SELECTED, &TopicCtrl::onContextSelected, this);
 }
 
@@ -180,8 +190,32 @@ void TopicCtrl::onContext(wxContextMenuEvent &e)
 void TopicCtrl::onLostFocus(wxFocusEvent &e)
 {
   mFirstClick = true;
+  SetSelection(0, 0);
   popupHide();
   e.Skip();
+}
+
+void TopicCtrl::onKeyUp(wxKeyEvent &event)
+{
+  if (event.GetKeyCode() == WXK_RETURN && !GetValue().empty())
+  {
+    auto *e = new Events::TopicCtrl(Events::TOPICCTRL_RETURN);
+    wxQueueEvent(this, e);
+    return;
+  }
+
+#ifdef WIN32
+
+  if (event.ControlDown() && event.GetKeyCode() == 'A')
+  {
+    SetSelection(-1, -1);
+    event.Skip(false);
+    return;
+  }
+
+#endif
+
+  event.Skip();
 }
 
 void TopicCtrl::onKeyDown(wxKeyEvent &e)
@@ -189,54 +223,60 @@ void TopicCtrl::onKeyDown(wxKeyEvent &e)
   if (e.GetKeyCode() == WXK_ESCAPE)
   {
     popupHide();
-    e.Skip(true);
     return;
   }
 
   if (e.GetKeyCode() == WXK_UP)
   {
     autoCompleteUp();
-    e.Skip(false);
     return;
   }
 
   if (e.GetKeyCode() == WXK_DOWN)
   {
     autoCompleteDown();
-    e.Skip(false);
     return;
   }
 
   if (e.GetKeyCode() == WXK_TAB)
   {
+    if (mAutoComplete == nullptr)
+    {
+      HandleAsNavigationKey(e);
+      return;
+    }
+
     autoCompleteSelect();
-    e.Skip(false);
     return;
   }
 
   if (e.GetKeyCode() == WXK_RETURN)
   {
     popupHide();
-    e.Skip(false);
+    return;
   }
 
   if (e.GetKeyCode() == WXK_SPACE && e.ControlDown())
   {
     popupShow();
-    e.Skip(true);
-  }
-
-  const bool allowedReadOnlyKeys =
-    e.ControlDown()
-    && (e.GetKeyCode() == 'C' || e.GetKeyCode() == 'A');
-
-  if (mReadOnly && !allowedReadOnlyKeys)
-  {
-    e.Skip(false);
     return;
   }
 
-  e.Skip();
+  const bool allowedReadOnlyKeys = true // NOLINT
+    && e.ControlDown()
+    && (e.GetKeyCode() == 'C' || e.GetKeyCode() == 'A');
+  if (mReadOnly && !allowedReadOnlyKeys)
+  {
+    return;
+  }
+
+#ifndef WIN32
+
+  // Do not skip this event on windows. A windows bug plays the error sound when
+  // we skip it. https://wiki.wxwidgets.org/WxBell
+  e.Skip(true);
+
+#endif
 }
 
 wxDragResult TopicCtrl::NotAllowedDropTarget::OnData(
@@ -249,15 +289,8 @@ wxDragResult TopicCtrl::NotAllowedDropTarget::OnData(
 
 void TopicCtrl::popupShow()
 {
-  if (mKnownTopicsModel == nullptr)
-  {
-    return;
-  }
-
-  if (mKnownTopicsModel->GetCount() == 0)
-  {
-    return;
-  }
+  if (mKnownTopicsModel == nullptr) { return; }
+  if (mKnownTopicsModel->GetCount() == 0) { return; }
 
   if (mAutoComplete != nullptr)
   {
@@ -276,6 +309,13 @@ void TopicCtrl::popupShow()
   mAutoComplete->Position(popupPoint - popupSize, popupSize);
   mAutoComplete->SetSize(popupSize);
 
+  auto *wrapper = new wxPanel(
+    mAutoComplete,
+    wxID_ANY,
+    wxDefaultPosition,
+    wxDefaultSize
+  );
+
   mAutoCompleteTopic = new wxDataViewColumn(
     L"topic",
     new wxDataViewTextRenderer(),
@@ -285,12 +325,13 @@ void TopicCtrl::popupShow()
   );
 
   mAutoCompleteList = new wxDataViewCtrl(
-    mAutoComplete,
+    wrapper,
     -1,
     wxDefaultPosition,
     wxDefaultSize,
     wxDV_NO_HEADER | wxDV_ROW_LINES
   );
+  mAutoCompleteList->SetSize(popupSize);
 
   mAutoCompleteList->AssociateModel(mKnownTopicsModel.get());
   mAutoCompleteList->AppendColumn(mAutoCompleteTopic);
@@ -313,9 +354,15 @@ void TopicCtrl::popupShow()
     this
   );
 
-  auto *sizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
-  sizer->Add(mAutoCompleteList, 1, wxEXPAND);
-  mAutoComplete->SetSizer(sizer);
+  auto *windowSizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
+  windowSizer->Add(wrapper, 1, wxEXPAND);
+  mAutoComplete->SetSizer(windowSizer);
+
+  auto *wrapperSizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
+  wrapperSizer->Add(mAutoCompleteList, 1, wxEXPAND);
+  wrapper->SetSizer(wrapperSizer);
+
+  wrapper->SetSize(popupSize);
 
   mAutoComplete->Show();
 }

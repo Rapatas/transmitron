@@ -46,7 +46,7 @@ Edit::Edit(
   mInfoLine = new wxStaticText(this, -1, "0000-00-00 00:00:00.000");
   mInfoLine->SetFont(mFont);
 
-  mTopic->Bind(wxEVT_KEY_UP, &Edit::onTopicKeyDown, this);
+  mTopic->Bind(Events::TOPICCTRL_RETURN, &Edit::onTopicCtrlReturn, this);
 
   mPublish = new wxBitmapButton(
     this,
@@ -465,15 +465,10 @@ void Edit::onFormatSelected(wxCommandEvent &/* event */)
   format();
 }
 
-void Edit::onTopicKeyDown(wxKeyEvent &e)
+void Edit::onTopicCtrlReturn(Events::TopicCtrl &/* event */)
 {
-  if (
-    e.GetKeyCode() == WXK_RETURN
-    && !mTopic->IsEmpty()
-  ) {
-    auto *e = new Events::Edit(Events::EDIT_PUBLISH);
-    wxQueueEvent(this, e);
-  }
+  auto *e = new Events::Edit(Events::EDIT_PUBLISH);
+  wxQueueEvent(this, e);
 }
 
 std::string Edit::getTopic() const
