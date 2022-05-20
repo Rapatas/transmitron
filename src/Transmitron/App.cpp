@@ -365,5 +365,5 @@ int App::calculateOptionHeight()
   auto *button = new wxBitmapButton(mFrame, -1, *bin2cPlus18x18());
   const auto bestSize = button->GetBestSize();
   mFrame->RemoveChild(button);
-  return (size_t)bestSize.y;
+  return bestSize.y;
 }
