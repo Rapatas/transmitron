@@ -81,8 +81,8 @@ bool App::OnInit()
     noteStyle
   );
 
-  const auto configDir = createConfigDir();
-  const auto cacheDir  = createCacheDir();
+  const auto configDir = createConfigDir().string();
+  const auto cacheDir  = createCacheDir().string();
 
   mLayoutsModel = new Models::Layouts();
   mLayoutsModel->load(configDir);
