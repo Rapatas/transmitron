@@ -23,6 +23,8 @@ using namespace Transmitron::Widgets;
 wxDEFINE_EVENT(Events::EDIT_PUBLISH, Events::Edit); // NOLINT
 wxDEFINE_EVENT(Events::EDIT_SAVE_SNIPPET, Events::Edit); // NOLINT
 
+constexpr uint8_t ByteSize = std::numeric_limits<uint8_t>::digits;
+
 Edit::Edit(
   wxWindow* parent,
   wxWindowID id,
@@ -30,6 +32,7 @@ Edit::Edit(
   bool darkMode
 ) :
   wxPanel(parent, id),
+  mStyles(initThemes()),
   mTheme(darkMode ? Theme::Dark : Theme::Light),
   mOptionsHeight(optionsHeight),
   mTop(new wxBoxSizer(wxOrientation::wxHORIZONTAL)),
@@ -555,3 +558,50 @@ void Edit::onRetainedClicked(wxMouseEvent &e)
   setRetained(!mRetained);
 }
 
+std::map<Edit::Theme, Edit::ThemeStyles> Edit::initThemes()
+{
+  auto color = [](uint8_t red, uint8_t green, uint8_t blue)
+  {
+    return 0
+      | (uint32_t)(red   << (ByteSize * 0))
+      | (uint32_t)(green << (ByteSize * 1))
+      | (uint32_t)(blue  << (ByteSize * 2))
+    ;
+  };
+
+  constexpr uint32_t BrightnessBump = color(80, 80, 80); // NOLINT
+  constexpr uint32_t Black  = color(30,  30,  30);  // NOLINT
+  constexpr uint32_t White  = color(250, 250, 250); // NOLINT
+  constexpr uint32_t Red    = color(180, 0,   0);   // NOLINT
+  constexpr uint32_t Orange = color(150, 120, 0);   // NOLINT
+  constexpr uint32_t Green  = color(0,   150, 0);   // NOLINT
+  constexpr uint32_t Pink   = color(200, 0,   150); // NOLINT
+  constexpr uint32_t Cyan   = color(0,   120, 150); // NOLINT
+
+  return {
+    {Theme::Light, {
+      {Style::Comment, {Black,  Black}},
+      {Style::Editor,  {Black,  White}},
+      {Style::Error,   {Black,  Red}},
+      {Style::Normal,  {Black,  White}},
+      {Style::Key,     {Green,  White}},
+      {Style::Keyword, {Cyan,   White}},
+      {Style::Number,  {Orange, White}},
+      {Style::String,  {Orange, White}},
+      {Style::Uri,     {Cyan,   White}},
+      {Style::Special, {Pink,   White}},
+    }},
+    {Theme::Dark, {
+      {Style::Comment, {White, Black}},
+      {Style::Editor,  {White, Black}},
+      {Style::Error,   {Black, Red}},
+      {Style::Normal,  {White, Black}},
+      {Style::Key,     {Green  | BrightnessBump, Black}},
+      {Style::Keyword, {Cyan   | BrightnessBump, Black}},
+      {Style::Number,  {Orange | BrightnessBump, Black}},
+      {Style::String,  {Orange | BrightnessBump, Black}},
+      {Style::Uri,     {Cyan   | BrightnessBump, Black}},
+      {Style::Special, {Pink   | BrightnessBump, Black}},
+    }}
+  };
+}
