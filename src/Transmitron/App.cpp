@@ -81,11 +81,14 @@ bool App::OnInit()
     noteStyle
   );
 
+  const auto configDir = createConfigDir();
+  const auto cacheDir  = createCacheDir();
+
   mLayoutsModel = new Models::Layouts();
-  mLayoutsModel->load(getConfigDir().string());
+  mLayoutsModel->load(configDir);
 
   mProfilesModel = new Models::Profiles(mLayoutsModel);
-  mProfilesModel->load(getConfigDir().string());
+  mProfilesModel->load(configDir, cacheDir);
 
   const auto appearance = wxSystemSettings::GetAppearance();
   mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();
@@ -274,7 +277,7 @@ void App::createSettingsTab()
   ++mCount;
 }
 
-std::filesystem::path App::getConfigDir()
+std::filesystem::path App::createConfigDir()
 {
   const auto configHome = Common::XdgBaseDir::configHome();
   const auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
@@ -289,6 +292,25 @@ std::filesystem::path App::getConfigDir()
   }
 
   mLogger->info("Config dir: {}", config);
+
+  return config;
+}
+
+std::filesystem::path App::createCacheDir()
+{
+  const auto configHome = Common::XdgBaseDir::cacheHome();
+  const auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
+
+  if (!fs::is_directory(config) || !fs::exists(config))
+  {
+    if (!fs::create_directory(config))
+    {
+      mLogger->warn("Could not create directory '%s'", config);
+      return {};
+    }
+  }
+
+  mLogger->info("Cache dir:  {}", config);
 
   return config;
 }

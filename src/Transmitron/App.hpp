@@ -46,7 +46,8 @@ private:
   void createSettingsTab();
   void setupIcon();
 
-  std::filesystem::path getConfigDir();
+  std::filesystem::path createConfigDir();
+  std::filesystem::path createCacheDir();
   std::filesystem::path getExecutablePath();
   std::filesystem::path getInstallPrefix();
 

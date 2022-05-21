@@ -145,6 +145,8 @@ void KnownTopics::remap()
 
 void KnownTopics::save()
 {
+  if (mFilepath.empty()) { return; }
+
   mLogger->info("Saving to {}", mFilepath.string());
   std::ofstream file(mFilepath);
   if (!file.is_open())

@@ -30,7 +30,10 @@ public:
 
   explicit Profiles(const wxObjectDataPtr<Layouts> &layouts);
 
-  bool load(const std::string &configDir);
+  bool load(
+    const std::string &configDir,
+    const std::string &cacheDir
+  );
 
   bool updateBrokerOptions(
     wxDataViewItem item,
@@ -100,21 +103,27 @@ private:
     bool saved = false;
   };
 
-  static constexpr const std::string_view BrokerOptionsFilename = "broker-options.json";
-  static constexpr const std::string_view ClientOptionsFilename = "client-options.json";
+  static constexpr std::string_view BrokerOptionsFilename = "broker-options.json";
+  static constexpr std::string_view ClientOptionsFilename = "client-options.json";
 
   std::shared_ptr<spdlog::logger> mLogger;
   Node::Id_t mAvailableId = 1;
   std::map<Node::Id_t, std::unique_ptr<Node>> mProfiles;
-  std::string mProfilesDir;
+  std::string mConfigProfilesDir;
+  std::string mCacheProfilesDir;
   wxObjectDataPtr<Layouts> mLayoutsModel;
 
   bool save(size_t id);
   bool saveOptionsBroker(size_t id);
   bool saveOptionsClient(size_t id);
+  bool ensureDirectoryExists(const std::string &dir) const;
   wxDataViewItem loadProfile(const std::filesystem::path &directory);
-  std::optional<MQTT::BrokerOptions> loadProfileOptionsBroker(const std::filesystem::path &directory);
-  std::optional<Types::ClientOptions> loadProfileOptionsClient(const std::filesystem::path &directory);
+  std::optional<MQTT::BrokerOptions> loadProfileOptionsBroker(
+    const std::filesystem::path &directory
+  );
+  std::optional<Types::ClientOptions> loadProfileOptionsClient(
+    const std::filesystem::path &directory
+  );
   void renameLayoutIfMissing(const std::string &newName);
 
   void onLayoutRemoved(Events::Layout &event);

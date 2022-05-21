@@ -32,35 +32,29 @@ Profiles::Profiles(const wxObjectDataPtr<Layouts> &layouts) :
   notifier->Bind(Events::LAYOUT_CHANGED, &Profiles::onLayoutChanged, this);
 }
 
-bool Profiles::load(const std::string &configDir)
-{
+bool Profiles::load(
+  const std::string &configDir,
+  const std::string &cacheDir
+) {
   if (configDir.empty())
   {
-    mLogger->warn("No directory provided");
+    mLogger->warn("No config directory provided");
     return false;
   }
 
-  mProfilesDir = configDir + "/profiles";
-
-  const bool exists = fs::exists(mProfilesDir);
-  const bool isDir = fs::is_directory(mProfilesDir);
-
-  if (exists && !isDir && !fs::remove(mProfilesDir))
+  if (cacheDir.empty())
   {
-    mLogger->warn("Could not remove file {}", mProfilesDir);
+    mLogger->warn("No cache directory provided");
     return false;
   }
 
-  if (!exists && !fs::create_directory(mProfilesDir))
-  {
-    mLogger->warn(
-      "Could not create profiles directory: {}",
-      mProfilesDir
-    );
-    return false;
-  }
+  mCacheProfilesDir = cacheDir + "/profiles";
+  mConfigProfilesDir = configDir + "/profiles";
 
-  for (const auto &entry : fs::directory_iterator(mProfilesDir))
+  if (!ensureDirectoryExists(mConfigProfilesDir)) { return false; }
+  if (!ensureDirectoryExists(mCacheProfilesDir))  { return false; }
+
+  for (const auto &entry : fs::directory_iterator(mConfigProfilesDir))
   {
     mLogger->info("Checking {}", entry.path().u8string());
     if (entry.status().type() != fs::file_type::directory) { continue; }
@@ -150,7 +144,7 @@ bool Profiles::rename(
 
   const std::string pathNew = fmt::format(
     "{}/{}",
-    mProfilesDir,
+    mConfigProfilesDir,
     encoded
   );
 
@@ -225,7 +219,7 @@ wxDataViewItem Profiles::createProfile()
 
   const std::string path = fmt::format(
     "{}/{}",
-    mProfilesDir,
+    mConfigProfilesDir,
     encoded
   );
 
@@ -485,18 +479,15 @@ bool Profiles::saveOptionsClient(size_t id)
 
 wxDataViewItem Profiles::loadProfile(const std::filesystem::path &directory)
 {
+  const std::string encoded = directory.stem().u8string();
   std::string decoded;
   try
   {
-    decoded = Url::decode(directory.stem().u8string());
+    decoded = Url::decode(encoded);
   }
   catch (std::runtime_error &e)
   {
-    mLogger->error(
-      "Could not decode '{}': {}",
-      directory.u8string(),
-      e.what()
-    );
+    mLogger->error("Could not decode '{}': {}", encoded, e.what());
     return wxDataViewItem(nullptr);
   }
   const std::string name{decoded.begin(), decoded.end()};
@@ -518,19 +509,17 @@ wxDataViewItem Profiles::loadProfile(const std::filesystem::path &directory)
   wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
   snippets->load(directory.string());
 
-  const std::filesystem::path topics = directory.string() + "/topics";
-
   wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
   wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
 
-  if (!fs::is_directory(topics) && !fs::create_directory(topics))
-  {
-      mLogger->warn("Could not create topics directory '{}'");
-  }
-  else
-  {
-    topicsSubscribed->load(topics.string() + "/subscribed.txt");
-    topicsPublished->load(topics.string() + "/published.txt");
+  const auto cacheProfile = fmt::format("{}/{}", mCacheProfilesDir, encoded);
+  const auto topics = cacheProfile + "/topics";
+  if (true // NOLINT
+    && ensureDirectoryExists(cacheProfile)
+    && ensureDirectoryExists(topics)
+  ) {
+    topicsSubscribed->load(topics + "/subscribed.txt");
+    topicsPublished->load(topics + "/published.txt");
   }
 
   topicsPublished->append(snippets->getKnownTopics());
@@ -637,6 +626,29 @@ void Profiles::onLayoutChanged(Events::Layout &event)
   const auto item = event.getItem();
   const std::string newName = mLayoutsModel->getName(item);
   renameLayoutIfMissing(newName);
+}
+
+bool Profiles::ensureDirectoryExists(const std::string &dir) const
+{
+  const bool exists = fs::exists(dir);
+  const bool isDir = fs::is_directory(dir);
+
+  if (exists && !isDir && !fs::remove(dir))
+  {
+    mLogger->warn("Could not remove file {}", dir);
+    return false;
+  }
+
+  if (!exists && !fs::create_directory(dir))
+  {
+    mLogger->warn(
+      "Could not create cache directory: {}",
+      dir
+    );
+    return false;
+  }
+
+  return true;
 }
 
 void Profiles::renameLayoutIfMissing(const std::string &newName)
