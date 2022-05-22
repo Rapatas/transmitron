@@ -68,9 +68,9 @@ Edit::Edit(
   mSaveSnippet = new wxButton(
     this,
     -1,
-    "",
+    "Store",
     wxDefaultPosition,
-    wxSize(mOptionsHeight, mOptionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
   mSaveSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
   mSaveSnippet->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
