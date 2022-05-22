@@ -63,6 +63,8 @@ Layouts::Layouts(
   );
   mLayoutsEdit->Hide();
 
+  auto *label = new wxStaticText(this, wxID_ANY, "Layout:");
+
   mSave = new wxButton(
     this,
     -1,
@@ -72,9 +74,10 @@ Layouts::Layouts(
   );
   mSave->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
 
-  mSizer->Add(mSave, 0, wxEXPAND);
+  mSizer->Add(label, 0, wxALIGN_CENTER_VERTICAL);
   mSizer->Add(mLayoutsLocked, 0, wxEXPAND);
   mSizer->Add(mLayoutsEdit, 0, wxEXPAND);
+  mSizer->Add(mSave, 0, wxEXPAND);
 
   mLayoutsEdit->Bind(
     wxEVT_COMBOBOX,
@@ -212,6 +215,8 @@ void Layouts::onLayoutAdded(Events::Layout &event)
     mLayoutsLocked->Hide();
     mLayoutsEdit->Show();
     mSizer->Layout();
+    auto *e = new Events::Layout(Events::LAYOUT_RESIZED);
+    wxQueueEvent(this, e);
 
     mLayoutsEdit->SelectAll();
     mLayoutsEdit->SetFocus();

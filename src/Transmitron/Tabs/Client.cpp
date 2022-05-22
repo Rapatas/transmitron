@@ -1523,8 +1523,6 @@ void Client::onLayoutSelected(Events::Layout &event)
 
 void Client::onLayoutResized(Events::Layout &/* event */)
 {
-  mLayouts->Hide();
-  mLayouts->Show();
   mProfileSizer->Layout();
 }
 
