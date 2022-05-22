@@ -18,7 +18,7 @@ public:
   static constexpr const std::string_view DefaultHostname = "127.0.0.1";
   static constexpr const std::string_view DefaultPassword {};
   static constexpr const std::string_view DefaultUsername {};
-  static constexpr std::chrono::seconds DefaultTimeout { 15 };
+  static constexpr std::chrono::seconds DefaultTimeout { 5 };
   static constexpr std::chrono::seconds DefaultKeepAliveInterval { 60 };
   static constexpr size_t DefaultMaxReconnectRetries = 10;
   static constexpr size_t DefaultMaxInFlight = 10;
