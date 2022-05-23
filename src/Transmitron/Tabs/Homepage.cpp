@@ -220,8 +220,9 @@ void Homepage::setupProfileForm()
   mSave->Enable(false);
 
   auto *bottomSizer = new wxBoxSizer(wxHORIZONTAL);
-  bottomSizer->Add(mSave, 1, wxEXPAND);
   bottomSizer->SetMinSize(0, mOptionsHeight);
+  bottomSizer->AddStretchSpacer();
+  bottomSizer->Add(mSave, 0, wxEXPAND);
   auto *sizer = new wxBoxSizer(wxVERTICAL);
   sizer->Add(label,            0, wxEXPAND);
   sizer->Add(mProfileFormGrid, 1, wxEXPAND);
