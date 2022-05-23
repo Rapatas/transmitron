@@ -319,6 +319,10 @@ void Homepage::onNewProfileClicked(wxCommandEvent &/* event */)
     mProfilesModel->getBrokerOptions(item),
     mProfilesModel->getClientOptions(item)
   );
+
+  const auto *namePtr = mProfileFormProperties.at(Properties::Name);
+  const bool focus = true;
+  mProfileFormGrid->SelectProperty(namePtr, focus);
 }
 
 void Homepage::onProfileContext(wxDataViewEvent &e)
