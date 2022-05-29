@@ -1,4 +1,5 @@
 #include "BrokerOptions.hpp"
+#include <wx/utils.h>
 #include <chrono>
 #include <fmt/format.h>
 #include <string_view>
@@ -47,7 +48,7 @@ BrokerOptions::BrokerOptions(
 {
   if (mClientId.empty())
   {
-    mClientId = fmt::format("{}-client", rand());
+    mClientId = fmt::format("{}_{}", wxGetHostName(), rand());
   }
 }
 
