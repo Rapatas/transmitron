@@ -1,4 +1,4 @@
-#ifndef WIN32
+#ifndef _WIN32
 
 #include <pwd.h>
 #include <unistd.h>
@@ -71,7 +71,8 @@ std::string XdgBaseDir::readStateHome()
   return fmt::format("{}/.local/state", mHome.string());
 }
 
-std::vector<std::string> XdgBaseDir::readDataDirs()
+// NOLINTNEXTLINE
+std::vector<std::string> XdgBaseDir::readDataDirs() const
 {
   auto var = Env::get("XDG_DATA_DIRS");
   if (var.empty())
@@ -89,7 +90,8 @@ std::vector<std::string> XdgBaseDir::readDataDirs()
   return dirs;
 }
 
-std::vector<std::string> XdgBaseDir::readConfigDirs()
+// NOLINTNEXTLINE
+std::vector<std::string> XdgBaseDir::readConfigDirs() const
 {
   auto var = Env::get("XDG_CONFIG_DIRS");
   if (var.empty())
@@ -107,4 +109,4 @@ std::vector<std::string> XdgBaseDir::readConfigDirs()
   return dirs;
 }
 
-#endif // WIN32
+#endif // _WIN32

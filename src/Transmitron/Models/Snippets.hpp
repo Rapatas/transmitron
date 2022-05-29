@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <list>
+#include <set>
 #include <memory>
 
 #include <spdlog/spdlog.h>
@@ -26,10 +27,11 @@ public:
 
   explicit Snippets();
 
-  bool load(const std::string &connectionDir);
+  bool load(const std::string &profileDir);
 
   MQTT::Message getMessage(wxDataViewItem item) const;
   std::string getName(wxDataViewItem item) const;
+  std::set<std::string> getKnownTopics() const;
   static wxDataViewItem getRootItem() ;
   wxDataViewItem createFolder(
     wxDataViewItem parent
@@ -51,9 +53,9 @@ public:
 
   wxDataViewItem moveBefore(wxDataViewItem item, wxDataViewItem sibling);
   wxDataViewItem moveAfter(wxDataViewItem item, wxDataViewItem sibling);
-  wxDataViewItem moveInside(wxDataViewItem item, wxDataViewItem parent);
-  wxDataViewItem moveLast(wxDataViewItem item, wxDataViewItem parent);
-  wxDataViewItem moveAtIndex(
+  wxDataViewItem moveInsideFirst(wxDataViewItem item, wxDataViewItem parent);
+  wxDataViewItem moveInsideLast(wxDataViewItem item, wxDataViewItem parent);
+  wxDataViewItem moveInsideAtIndex(
     wxDataViewItem item,
     wxDataViewItem parent,
     size_t index

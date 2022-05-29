@@ -1,58 +1,65 @@
+#include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <stdexcept>
 
 #include <fmt/core.h>
 
 #include "Common/Log.hpp"
 #include "Common/Url.hpp"
+#include "MQTT/BrokerOptions.hpp"
 #include "Profiles.hpp"
 #include "Transmitron/Info.hpp"
+#include "Transmitron/Models/KnownTopics.hpp"
+#include "Transmitron/Types/ClientOptions.hpp"
+#include "Transmitron/Notifiers/Layouts.hpp"
 
 namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 using namespace Transmitron;
 using namespace Common;
 
-Profiles::Profiles()
+Profiles::Profiles(const wxObjectDataPtr<Layouts> &layouts) :
+  mLayoutsModel(layouts)
 {
   mLogger = Common::Log::create("Models::Profiles");
+
+  auto *notifier = new Notifiers::Layouts;
+  mLayoutsModel->AddNotifier(notifier);
+
+  notifier->Bind(Events::LAYOUT_REMOVED, &Profiles::onLayoutRemoved, this);
+  notifier->Bind(Events::LAYOUT_CHANGED, &Profiles::onLayoutChanged, this);
 }
 
-bool Profiles::load(const std::string &configDir)
-{
+bool Profiles::load(
+  const std::string &configDir,
+  const std::string &cacheDir
+) {
   if (configDir.empty())
   {
-    mLogger->warn("No directory provided");
+    mLogger->warn("No config directory provided");
     return false;
   }
 
-  mProfilesDir = configDir + "/profiles";
-
-  const bool exists = fs::exists(mProfilesDir);
-  const bool isDir = fs::is_directory(mProfilesDir);
-
-  if (exists && !isDir && !fs::remove(mProfilesDir))
+  if (cacheDir.empty())
   {
-    mLogger->warn("Could not remove file {}", mProfilesDir);
+    mLogger->warn("No cache directory provided");
     return false;
   }
 
-  if (!exists && !fs::create_directory(mProfilesDir))
-  {
-    mLogger->warn(
-      "Could not create profiles directory: {}",
-      mProfilesDir
-    );
-    return false;
-  }
+  mCacheProfilesDir = cacheDir + "/profiles";
+  mConfigProfilesDir = configDir + "/profiles";
 
-  for (const auto &entry : fs::directory_iterator(mProfilesDir))
+  if (!ensureDirectoryExists(mConfigProfilesDir)) { return false; }
+  if (!ensureDirectoryExists(mCacheProfilesDir))  { return false; }
+
+  for (const auto &entry : fs::directory_iterator(mConfigProfilesDir))
   {
     mLogger->info("Checking {}", entry.path().u8string());
     if (entry.status().type() != fs::file_type::directory) { continue; }
 
-    const auto item = loadProfileFile(entry.path());
+    const auto item = loadProfile(entry.path());
     if (!item.IsOk())
     {
       continue;
@@ -81,6 +88,25 @@ bool Profiles::updateBrokerOptions(
   save(id);
   ItemChanged(item);
   return true;
+}
+
+bool Profiles::updateClientOptions(
+  wxDataViewItem item,
+  const Types::ClientOptions &clientOptions
+) {
+    if (!item.IsOk())
+    {
+      return false;
+    }
+
+    const auto id = toId(item);
+    auto &profile = mProfiles.at(id);
+    profile->clientOptions = clientOptions;
+    profile->saved = false;
+
+    save(id);
+    ItemChanged(item);
+    return true;
 }
 
 bool Profiles::rename(
@@ -118,7 +144,7 @@ bool Profiles::rename(
 
   const std::string pathNew = fmt::format(
     "{}/{}",
-    mProfilesDir,
+    mConfigProfilesDir,
     encoded
   );
 
@@ -193,7 +219,7 @@ wxDataViewItem Profiles::createProfile()
 
   const std::string path = fmt::format(
     "{}/{}",
-    mProfilesDir,
+    mConfigProfilesDir,
     encoded
   );
 
@@ -203,15 +229,18 @@ wxDataViewItem Profiles::createProfile()
     return wxDataViewItem(0);
   }
 
-  wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
-  snippetsModel->load(path);
+  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
+  snippets->load(path);
+
+  wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
 
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>();
   profile->name = uniqueName;
   profile->path = path;
   profile->saved = false;
-  profile->snippetsModel = snippetsModel;
+  profile->snippets = snippets;
+  profile->topicsSubscribed = topicsSubscribed;
   mProfiles.insert({id, std::move(profile)});
 
   save(id);
@@ -228,6 +257,11 @@ const MQTT::BrokerOptions &Profiles::getBrokerOptions(wxDataViewItem item) const
   return mProfiles.at(toId(item))->brokerOptions;
 }
 
+const Types::ClientOptions &Profiles::getClientOptions(wxDataViewItem item) const
+{
+    return mProfiles.at(toId(item))->clientOptions;
+}
+
 wxString Profiles::getName(wxDataViewItem item) const
 {
   const auto name = mProfiles.at(toId(item))->name;
@@ -235,9 +269,39 @@ wxString Profiles::getName(wxDataViewItem item) const
   return wxs;
 }
 
+wxDataViewItem Profiles::getItemFromName(const std::string &profileName) const
+{
+  const auto it = std::find_if(
+    std::begin(mProfiles),
+    std::end(mProfiles),
+    [=](const auto &profile)
+    {
+      const auto &node = profile.second;
+      return node->name == profileName;
+    }
+  );
+
+  if (it == std::end(mProfiles))
+  {
+    return wxDataViewItem(nullptr);
+  }
+
+  return toItem(it->first);
+}
+
 wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
 {
-  return mProfiles.at(toId(item))->snippetsModel;
+  return mProfiles.at(toId(item))->snippets;
+}
+
+wxObjectDataPtr<KnownTopics> Profiles::getTopicsSubscribed(wxDataViewItem item)
+{
+  return mProfiles.at(toId(item))->topicsSubscribed;
+}
+
+wxObjectDataPtr<KnownTopics> Profiles::getTopicsPublished(wxDataViewItem item)
+{
+  return mProfiles.at(toId(item))->topicsPublished;
 }
 
 unsigned Profiles::GetColumnCount() const
@@ -356,6 +420,15 @@ bool Profiles::save(size_t id)
 {
   auto &profile = mProfiles.at(id);
   if (profile->saved) { return true; }
+  const bool saved = saveOptionsBroker(id) && saveOptionsClient(id);
+  profile->saved = saved;
+  return saved;
+}
+
+bool Profiles::saveOptionsBroker(size_t id)
+{
+  auto &profile = mProfiles.at(id);
+  if (profile->saved) { return true; }
 
   const auto brokerOptionsFilepath = fmt::format(
     "{}/{}",
@@ -375,66 +448,155 @@ bool Profiles::save(size_t id)
   }
 
   output << profile->brokerOptions.toJson();
-  profile->saved = true;
   return true;
 }
 
-wxDataViewItem Profiles::loadProfileFile(const std::filesystem::path &filepath)
+bool Profiles::saveOptionsClient(size_t id)
 {
+  auto &profile = mProfiles.at(id);
+  if (profile->saved) { return true; }
+
+  const auto clientOptionsFilepath = fmt::format(
+    "{}/{}",
+    profile->path.string(),
+    ClientOptionsFilename
+  );
+
+  std::ofstream output(clientOptionsFilepath);
+  if (!output.is_open())
+  {
+    mLogger->error(
+      "Could not save '{}':",
+      clientOptionsFilepath,
+      std::strerror(errno)
+    );
+    return false;
+  }
+
+  output << profile->clientOptions.toJson();
+  return true;
+}
+
+wxDataViewItem Profiles::loadProfile(const std::filesystem::path &directory)
+{
+  const std::string encoded = directory.stem().u8string();
   std::string decoded;
   try
   {
-    decoded = Url::decode(filepath.stem().u8string());
+    decoded = Url::decode(encoded);
   }
   catch (std::runtime_error &e)
   {
-    mLogger->error(
-      "Could not decode '{}': {}",
-      filepath.u8string(),
-      e.what()
-    );
+    mLogger->error("Could not decode '{}': {}", encoded, e.what());
     return wxDataViewItem(nullptr);
   }
   const std::string name{decoded.begin(), decoded.end()};
 
+  const auto brokerOptions = [this, directory]()
+  {
+    const auto opt = loadProfileOptionsBroker(directory);
+    if (!opt) { return MQTT::BrokerOptions{}; }
+    return opt.value();
+  }();
+
+  const auto clientOptions = [this, directory]()
+  {
+    const auto opt = loadProfileOptionsClient(directory);
+    if (!opt) { return Types::ClientOptions{}; }
+    return opt.value();
+  }();
+
+  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
+  snippets->load(directory.string());
+
+  wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
+  wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
+
+  const auto cacheProfile = fmt::format("{}/{}", mCacheProfilesDir, encoded);
+  const auto topics = cacheProfile + "/topics";
+  if (true // NOLINT
+    && ensureDirectoryExists(cacheProfile)
+    && ensureDirectoryExists(topics)
+  ) {
+    topicsSubscribed->load(topics + "/subscribed.txt");
+    topicsPublished->load(topics + "/published.txt");
+  }
+
+  topicsPublished->append(snippets->getKnownTopics());
+
+  const auto id = mAvailableId++;
+  auto profile = std::make_unique<Node>(Node{
+    name,
+    clientOptions,
+    brokerOptions,
+    directory,
+    snippets,
+    topicsSubscribed,
+    topicsPublished,
+    true
+  });
+  mProfiles.insert({id, std::move(profile)});
+
+  return toItem(id);
+}
+
+std::optional<MQTT::BrokerOptions> Profiles::loadProfileOptionsBroker(
+  const std::filesystem::path &directory
+) {
   const auto brokerOptionsFilepath = fmt::format(
     "{}/{}",
-    filepath.string(),
+    directory.string(),
     BrokerOptionsFilename
   );
 
   std::ifstream brokerOptionsFile(brokerOptionsFilepath);
   if (!brokerOptionsFile.is_open())
   {
-    mLogger->warn("Could not open '{}'", filepath.u8string());
-    return wxDataViewItem(nullptr);
+    mLogger->warn("Could not open '{}'", brokerOptionsFilepath);
+    return std::nullopt;
   }
 
   std::stringstream buffer;
   buffer << brokerOptionsFile.rdbuf();
   if (!nlohmann::json::accept(buffer.str()))
   {
-    mLogger->warn("Could not parse '{}'", filepath.u8string());
-    return wxDataViewItem(nullptr);
+    mLogger->warn("Could not parse '{}'", brokerOptionsFilepath);
+    return std::nullopt;
   }
 
-  auto j = nlohmann::json::parse(buffer.str());
+  const auto j = nlohmann::json::parse(buffer.str());
   auto brokerOptions = MQTT::BrokerOptions::fromJson(j);
+  return brokerOptions;
+}
 
-  wxObjectDataPtr<Models::Snippets> snippetsModel{new Models::Snippets};
-  snippetsModel->load(filepath.string());
+std::optional<Types::ClientOptions> Profiles::loadProfileOptionsClient(
+  const std::filesystem::path &directory
+) {
+  const auto clientOptionsFilepath = fmt::format(
+    "{}/{}",
+    directory.string(),
+    ClientOptionsFilename
+  );
 
-  const auto id = mAvailableId++;
-  auto profile = std::make_unique<Node>(Node{
-    name,
-    brokerOptions,
-    filepath,
-    snippetsModel,
-    true
-  });
-  mProfiles.insert({id, std::move(profile)});
+  std::ifstream clientOptionsFile(clientOptionsFilepath);
+  if (!clientOptionsFile.is_open())
+  {
+    mLogger->warn("Could not open '{}'", clientOptionsFilepath);
+    return std::nullopt;
+  }
 
-  return toItem(id);
+  std::stringstream buffer;
+  buffer << clientOptionsFile.rdbuf();
+  if (!nlohmann::json::accept(buffer.str()))
+  {
+    mLogger->warn("Could not parse '{}'", clientOptionsFilepath);
+    return std::nullopt;
+  }
+
+  const auto j = nlohmann::json::parse(buffer.str());
+  auto clientOptions = Types::ClientOptions::fromJson(j);
+  return clientOptions;
+
 }
 
 size_t Profiles::toId(const wxDataViewItem &item)
@@ -453,3 +615,64 @@ wxDataViewItem Profiles::toItem(size_t id)
   return wxDataViewItem(itemId);
 }
 
+void Profiles::onLayoutRemoved(Events::Layout &/* event */)
+{
+  const std::string newName{Layouts::DefaultName};
+  renameLayoutIfMissing(newName);
+}
+
+void Profiles::onLayoutChanged(Events::Layout &event)
+{
+  const auto item = event.getItem();
+  const std::string newName = mLayoutsModel->getName(item);
+  renameLayoutIfMissing(newName);
+}
+
+bool Profiles::ensureDirectoryExists(const std::string &dir) const
+{
+  const bool exists = fs::exists(dir);
+  const bool isDir = fs::is_directory(dir);
+
+  if (exists && !isDir && !fs::remove(dir))
+  {
+    mLogger->warn("Could not remove file {}", dir);
+    return false;
+  }
+
+  if (!exists && !fs::create_directory(dir))
+  {
+    mLogger->warn(
+      "Could not create cache directory: {}",
+      dir
+    );
+    return false;
+  }
+
+  return true;
+}
+
+void Profiles::renameLayoutIfMissing(const std::string &newName)
+{
+  const auto &layouts = mLayoutsModel->getLabelVector();
+
+  for (auto &profile : mProfiles)
+  {
+    const auto it = std::find(
+      std::begin(layouts),
+      std::end(layouts),
+      profile.second->clientOptions.getLayout()
+    );
+
+    if (it != std::end(layouts))
+    {
+      continue;
+    }
+
+    auto &node = profile.second;
+    node->clientOptions = Types::ClientOptions{newName};
+    node->saved = false;
+
+    const auto id = profile.first;
+    save(id);
+  }
+}

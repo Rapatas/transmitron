@@ -13,15 +13,26 @@ class BrokerOptions
 {
 public:
 
+  static constexpr bool DefaultAutoReconnect = false;
+  static constexpr const std::string_view DefaultClientId {};
+  static constexpr const std::string_view DefaultHostname = "127.0.0.1";
+  static constexpr const std::string_view DefaultPassword {};
+  static constexpr const std::string_view DefaultUsername {};
+  static constexpr std::chrono::seconds DefaultTimeout { 5 };
+  static constexpr std::chrono::seconds DefaultKeepAliveInterval { 60 };
+  static constexpr size_t DefaultMaxReconnectRetries = 10;
+  static constexpr size_t DefaultMaxInFlight = 10;
+  static constexpr size_t DefaultPort = 1883;
+
   explicit BrokerOptions();
   explicit BrokerOptions(
     bool autoReconnect,
     size_t maxInFlight,
     size_t maxReconnectRetries,
     size_t port,
-    size_t connectTimeout,
-    size_t disconnectTimeout,
-    size_t keepAliveInterval,
+    std::chrono::seconds connectTimeout,
+    std::chrono::seconds disconnectTimeout,
+    std::chrono::seconds keepAliveInterval,
     std::string clientId,
     std::string hostname,
     std::string password,
@@ -32,9 +43,9 @@ public:
   nlohmann::json toJson() const;
 
   bool getAutoReconnect() const;
-  std::chrono::milliseconds getConnectTimeout() const;
-  std::chrono::milliseconds getDisconnectTimeout() const;
-  std::chrono::milliseconds getKeepAliveInterval() const;
+  std::chrono::seconds getConnectTimeout() const;
+  std::chrono::seconds getDisconnectTimeout() const;
+  std::chrono::seconds getKeepAliveInterval() const;
   std::string getClientId() const;
   std::string getHostname() const;
   std::string getPassword() const;
@@ -49,9 +60,9 @@ private:
   size_t mMaxInFlight;
   size_t mMaxReconnectRetries;
   size_t mPort;
-  std::chrono::milliseconds mConnectTimeout;
-  std::chrono::milliseconds mDisconnectTimeout;
-  std::chrono::milliseconds mKeepAliveInterval;
+  std::chrono::seconds mConnectTimeout;
+  std::chrono::seconds mDisconnectTimeout;
+  std::chrono::seconds mKeepAliveInterval;
   std::string mClientId;
   std::string mHostname;
   std::string mPassword;

@@ -1,4 +1,4 @@
-#ifdef WIN32
+#ifdef _WIN32
 
 #include "Env.hpp"
 
@@ -25,4 +25,4 @@ std::string Env::get(const std::string &name)
 }
 
 
-#endif // WIN32
+#endif // _WIN32

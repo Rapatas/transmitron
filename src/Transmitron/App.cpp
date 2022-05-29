@@ -63,6 +63,7 @@ bool App::OnInit()
     wxSize(DefaultWindowWidth, DefaultWindowHeight)
   );
   mFrame->SetMinSize(wxSize(MinWindowWidth, MinWindowHeight));
+  mOptionsHeight = calculateOptionHeight();
 
   setupIcon();
 
@@ -80,11 +81,14 @@ bool App::OnInit()
     noteStyle
   );
 
-  mProfilesModel = new Models::Profiles();
-  mProfilesModel->load(getConfigDir().string());
+  const auto configDir = createConfigDir().string();
+  const auto cacheDir  = createCacheDir().string();
 
   mLayoutsModel = new Models::Layouts();
-  mLayoutsModel->load(getConfigDir().string());
+  mLayoutsModel->load(configDir);
+
+  mProfilesModel = new Models::Profiles(mLayoutsModel);
+  mProfilesModel->load(configDir, cacheDir);
 
   const auto appearance = wxSystemSettings::GetAppearance();
   mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();
@@ -101,7 +105,42 @@ bool App::OnInit()
   mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CLOSE, &App::onPageClosing, this);
 
   mFrame->Show();
+  return true;
+}
 
+int App::FilterEvent(wxEvent &event)
+{
+  if (event.GetEventType() != wxEVT_KEY_DOWN)
+  {
+    return wxEventFilter::Event_Skip;
+  }
+
+  const auto keyEvent = dynamic_cast<wxKeyEvent&>(event);
+  if (keyEvent.GetKeyCode() == 'W' && keyEvent.ControlDown())
+  {
+    onKeyDownControlW();
+    return wxEventFilter::Event_Processed;
+  }
+
+  if (keyEvent.GetKeyCode() == 'T' && keyEvent.ControlDown())
+  {
+    onKeyDownControlT();
+    return wxEventFilter::Event_Processed;
+  }
+
+  return wxEventFilter::Event_Skip;
+}
+
+bool App::openProfile(const std::string &profileName)
+{
+  const auto profileItem = mProfilesModel->getItemFromName(profileName);
+  if (!profileItem.IsOk())
+  {
+    mLogger->warn("Profile '{}' not found", profileName);
+    return false;
+  }
+
+  openProfile(profileItem);
   return true;
 }
 
@@ -175,12 +214,49 @@ void App::onPageClosing(wxBookCtrlEvent& event)
   event.Skip();
 }
 
+void App::onKeyDownControlW()
+{
+  const auto closingIndex = (size_t)mNote->GetSelection();
+
+  // Settings and Plus.
+  if (closingIndex == 0 || closingIndex == mCount - 1)
+  {
+    return;
+  }
+
+  mNote->RemovePage(closingIndex);
+
+  --mCount;
+
+  if (mCount == 2)
+  {
+    createProfilesTab(mCount - 1);
+  }
+
+  if (closingIndex == mCount - 1)
+  {
+    mNote->ChangeSelection(mCount - 2);
+  }
+}
+
+void App::onKeyDownControlT()
+{
+  createProfilesTab(mCount - 1);
+}
+
 void App::createProfilesTab(size_t index)
 {
-  auto *homepage = new Tabs::Homepage(mNote, LabelFontInfo, mProfilesModel);
+  auto *homepage = new Tabs::Homepage(
+    mNote,
+    LabelFontInfo,
+    mOptionsHeight,
+    mProfilesModel,
+    mLayoutsModel
+  );
   mNote->InsertPage(index, homepage, "Homepage");
   ++mCount;
   mNote->SetSelection(index);
+  homepage->focus();
 
   homepage->Bind(Events::CONNECTION, [this](Events::Connection e){
     if (e.GetSelection() == wxNOT_FOUND)
@@ -190,20 +266,7 @@ void App::createProfilesTab(size_t index)
     }
 
     const auto profileItem = e.getProfile();
-    const size_t selected = (size_t)mNote->GetSelection();
-
-    auto *client = new Tabs::Client(
-      mNote,
-      mProfilesModel->getBrokerOptions(profileItem),
-      mProfilesModel->getSnippetsModel(profileItem),
-      mLayoutsModel,
-      mProfilesModel->getName(profileItem),
-      mDarkMode
-    );
-    mNote->RemovePage(selected);
-    mNote->InsertPage(selected, client, "");
-    mNote->SetSelection(selected);
-    mNote->SetPageText(selected, mProfilesModel->getName(profileItem));
+    openProfile(profileItem);
   });
 }
 
@@ -214,10 +277,10 @@ void App::createSettingsTab()
   ++mCount;
 }
 
-std::filesystem::path App::getConfigDir()
+std::filesystem::path App::createConfigDir()
 {
   const auto configHome = Common::XdgBaseDir::configHome();
-  auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
+  const auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
 
   if (!fs::is_directory(config) || !fs::exists(config))
   {
@@ -229,6 +292,25 @@ std::filesystem::path App::getConfigDir()
   }
 
   mLogger->info("Config dir: {}", config);
+
+  return config;
+}
+
+std::filesystem::path App::createCacheDir()
+{
+  const auto configHome = Common::XdgBaseDir::cacheHome();
+  const auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
+
+  if (!fs::is_directory(config) || !fs::exists(config))
+  {
+    if (!fs::create_directory(config))
+    {
+      mLogger->warn("Could not create directory '%s'", config);
+      return {};
+    }
+  }
+
+  mLogger->info("Cache dir:  {}", config);
 
   return config;
 }
@@ -246,7 +328,7 @@ void App::setupIcon()
 
 std::filesystem::path App::getExecutablePath()
 {
-  auto pathfinder = []()
+  const auto pathfinder = []()
   {
 #if defined WIN32
     std::array<wchar_t, MAX_PATH> moduleFileName {};
@@ -274,4 +356,36 @@ std::filesystem::path App::getInstallPrefix()
   auto prefix = executableDir.parent_path();
   prefix.make_preferred();
   return prefix;
+}
+
+void App::openProfile(wxDataViewItem profileItem)
+{
+  auto *client = new Tabs::Client(
+    mNote,
+    mProfilesModel->getBrokerOptions(profileItem),
+    mProfilesModel->getClientOptions(profileItem),
+    mProfilesModel->getSnippetsModel(profileItem),
+    mProfilesModel->getTopicsSubscribed(profileItem),
+    mProfilesModel->getTopicsPublished(profileItem),
+    mLayoutsModel,
+    mProfilesModel->getName(profileItem),
+    mDarkMode,
+    mOptionsHeight
+  );
+
+  const size_t selected = (size_t)mNote->GetSelection();
+  mNote->RemovePage(selected);
+  mNote->InsertPage(selected, client, "");
+  mNote->SetSelection(selected);
+  mNote->SetPageText(selected, mProfilesModel->getName(profileItem));
+
+  client->focus();
+}
+
+int App::calculateOptionHeight()
+{
+  auto *button = new wxBitmapButton(mFrame, -1, *bin2cPlus18x18());
+  const auto bestSize = button->GetBestSize();
+  mFrame->RemoveChild(button);
+  return bestSize.y;
 }

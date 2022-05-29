@@ -59,20 +59,30 @@ std::string Snippets::getName(wxDataViewItem item) const
   return node.name;
 }
 
+std::set<std::string> Snippets::getKnownTopics() const
+{
+  std::set<std::string> result;
+  for (const auto &node : mNodes)
+  {
+    result.insert(node.second.message.topic);
+  }
+  return result;
+}
+
 wxDataViewItem Snippets::getRootItem()
 {
   return toItem(0);
 }
 
-bool Snippets::load(const std::string &connectionDir)
+bool Snippets::load(const std::string &profileDir)
 {
-  if (connectionDir.empty())
+  if (profileDir.empty())
   {
     mLogger->warn("No directory provided");
     return false;
   }
 
-  mSnippetsDir = connectionDir + "/snippets";
+  mSnippetsDir = profileDir + "/snippets";
 
   bool exists = fs::exists(mSnippetsDir);
   bool isDir = fs::is_directory(mSnippetsDir);
@@ -335,16 +345,16 @@ wxDataViewItem Snippets::moveBefore(
     }
   }
 
-  return moveAtIndex(item, parent, index);
+  return moveInsideAtIndex(item, parent, index);
 }
 
-wxDataViewItem Snippets::moveLast(
+wxDataViewItem Snippets::moveInsideLast(
   wxDataViewItem item,
   wxDataViewItem parent
 ) {
   wxDataViewItemArray children;
   const auto count = GetChildren(parent, children);
-  return moveAtIndex(item, parent, count);
+  return moveInsideAtIndex(item, parent, count);
 }
 
 wxDataViewItem Snippets::moveAfter(
@@ -365,17 +375,17 @@ wxDataViewItem Snippets::moveAfter(
     }
   }
 
-  return moveAtIndex(item, parent, index);
+  return moveInsideAtIndex(item, parent, index);
 }
 
-wxDataViewItem Snippets::moveInside(
+wxDataViewItem Snippets::moveInsideFirst(
   wxDataViewItem item,
   wxDataViewItem parent
 ) {
-  return moveAtIndex(item, parent, 0);
+  return moveInsideAtIndex(item, parent, 0);
 }
 
-wxDataViewItem Snippets::moveAtIndex(
+wxDataViewItem Snippets::moveInsideAtIndex(
   wxDataViewItem item,
   wxDataViewItem parent,
   size_t index

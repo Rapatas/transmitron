@@ -1,4 +1,4 @@
-#ifdef WIN32
+#ifdef _WIN32
 
 #include <fmt/core.h>
 
@@ -48,7 +48,7 @@ std::string XdgBaseDir::readStateHome()
   return readCacheHome();
 }
 
-std::vector<std::string> XdgBaseDir::readDataDirs()
+std::vector<std::string> XdgBaseDir::readDataDirs() const
 {
   auto var = Env::get("APPDATA");
   if (var.empty())
@@ -66,9 +66,9 @@ std::vector<std::string> XdgBaseDir::readDataDirs()
   return dirs;
 }
 
-std::vector<std::string> XdgBaseDir::readConfigDirs()
+std::vector<std::string> XdgBaseDir::readConfigDirs() const
 {
   return readDataDirs();
 }
 
-#endif // WIN32
+#endif // _WIN32

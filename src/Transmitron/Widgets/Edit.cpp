@@ -23,34 +23,54 @@ using namespace Transmitron::Widgets;
 wxDEFINE_EVENT(Events::EDIT_PUBLISH, Events::Edit); // NOLINT
 wxDEFINE_EVENT(Events::EDIT_SAVE_SNIPPET, Events::Edit); // NOLINT
 
+constexpr uint8_t ByteSize = std::numeric_limits<uint8_t>::digits;
+
 Edit::Edit(
   wxWindow* parent,
   wxWindowID id,
-  size_t optionsHeight,
+  int optionsHeight,
   bool darkMode
 ) :
   wxPanel(parent, id),
+  mStyles(initThemes()),
   mTheme(darkMode ? Theme::Dark : Theme::Light),
-  mOptionsHeight(optionsHeight)
+  mOptionsHeight(optionsHeight),
+  mTop(new wxBoxSizer(wxOrientation::wxHORIZONTAL)),
+  mVsizer(new wxBoxSizer(wxOrientation::wxVERTICAL)),
+  mBottom(new wxBoxSizer(wxOrientation::wxHORIZONTAL)),
+  mTopic(new TopicCtrl(this, -1)),
+  mRetained(false),
+  mQoS(MQTT::QoS::AtLeastOnce)
 {
   constexpr size_t FontSize = 9;
   mFont = wxFont(wxFontInfo(FontSize).FaceName("Consolas"));
-
-  setupScintilla();
 
   const int timestampBorderPx = 5;
   mInfoLine = new wxStaticText(this, -1, "0000-00-00 00:00:00.000");
   mInfoLine->SetFont(mFont);
 
-  mTopic = new TopicCtrl(this, -1);
-  mTopic->Bind(wxEVT_KEY_UP, &Edit::onTopicKeyDown, this);
+  mTopic->Bind(Events::TOPICCTRL_RETURN, &Edit::onTopicCtrlReturn, this);
+
+  mPublish = new wxBitmapButton(
+    this,
+    -1,
+    *bin2cSend18x18(),
+    wxDefaultPosition,
+    wxSize(mOptionsHeight, mOptionsHeight)
+  );
+  mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
+    auto *e = new Events::Edit(Events::EDIT_PUBLISH);
+    wxQueueEvent(this, e);
+  });
+
+  setupScintilla();
 
   mSaveSnippet = new wxButton(
     this,
     -1,
-    "",
+    "Store",
     wxDefaultPosition,
-    wxSize((int)optionsHeight, (int)optionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
   mSaveSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
   mSaveSnippet->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
@@ -72,18 +92,15 @@ Edit::Edit(
     -1,
     mFormats.begin()->first,
     wxDefaultPosition,
-    wxSize(FormatButtonWidth, (int)optionsHeight)
+    wxSize(FormatButtonWidth, mOptionsHeight)
   );
   for (const auto &format : mFormats)
   {
     mFormatSelect->Insert(format.first, 0);
   }
 
-  mTop = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
-  mVsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
-  mBottom = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
-  mTop->SetMinSize(0, (int)mOptionsHeight);
-  mBottom->SetMinSize(0, (int)mOptionsHeight);
+  mTop->SetMinSize(0, mOptionsHeight);
+  mBottom->SetMinSize(0, mOptionsHeight);
 
   mRetainedFalse = new wxStaticBitmap(this, -1, *bin2cNotPinned18x18());
   mRetainedFalse->SetToolTip("Not retained");
@@ -93,7 +110,6 @@ Edit::Edit(
   mRetainedTrue->Bind(wxEVT_LEFT_UP, &Edit::onRetainedClicked, this);
 
   mRetainedTrue->Hide();
-  mRetained = false;
 
   mQos0 = new wxStaticBitmap(this, -1, *bin2cQos0());
   mQos0->SetToolTip("QoS: 0");
@@ -109,19 +125,6 @@ Edit::Edit(
 
   mQos1->Hide();
   mQos2->Hide();
-  mQoS = MQTT::QoS::AtLeastOnce;
-
-  mPublish = new wxBitmapButton(
-    this,
-    -1,
-    *bin2cSend18x18(),
-    wxDefaultPosition,
-    wxSize((int)mOptionsHeight, (int)mOptionsHeight)
-  );
-  mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
-    auto *e = new Events::Edit(Events::EDIT_PUBLISH);
-    wxQueueEvent(this, e);
-  });
 
   mFormatSelect->Bind(wxEVT_COMBOBOX, &Edit::onFormatSelected, this);
 
@@ -338,6 +341,12 @@ void Edit::setReadOnly(bool readonly)
   mTop->Layout();
 }
 
+void Edit::addKnownTopics(
+  const wxObjectDataPtr<Models::KnownTopics> &knownTopicsModel
+) {
+  mTopic->addKnownTopics(knownTopicsModel);
+}
+
 MQTT::Message Edit::getMessage() const
 {
   return {
@@ -459,15 +468,10 @@ void Edit::onFormatSelected(wxCommandEvent &/* event */)
   format();
 }
 
-void Edit::onTopicKeyDown(wxKeyEvent &e)
+void Edit::onTopicCtrlReturn(Events::TopicCtrl &/* event */)
 {
-  if (
-    e.GetKeyCode() == WXK_RETURN
-    && !mTopic->IsEmpty()
-  ) {
-    auto *e = new Events::Edit(Events::EDIT_PUBLISH);
-    wxQueueEvent(this, e);
-  }
+  auto *e = new Events::Edit(Events::EDIT_PUBLISH);
+  wxQueueEvent(this, e);
 }
 
 std::string Edit::getTopic() const
@@ -554,3 +558,50 @@ void Edit::onRetainedClicked(wxMouseEvent &e)
   setRetained(!mRetained);
 }
 
+std::map<Edit::Theme, Edit::ThemeStyles> Edit::initThemes()
+{
+  auto color = [](uint8_t red, uint8_t green, uint8_t blue)
+  {
+    return 0
+      | (uint32_t)(red   << (ByteSize * 0))
+      | (uint32_t)(green << (ByteSize * 1))
+      | (uint32_t)(blue  << (ByteSize * 2))
+    ;
+  };
+
+  constexpr uint32_t BrightnessBump = color(80, 80, 80); // NOLINT
+  constexpr uint32_t Black  = color(30,  30,  30);  // NOLINT
+  constexpr uint32_t White  = color(250, 250, 250); // NOLINT
+  constexpr uint32_t Red    = color(180, 0,   0);   // NOLINT
+  constexpr uint32_t Orange = color(150, 120, 0);   // NOLINT
+  constexpr uint32_t Green  = color(0,   150, 0);   // NOLINT
+  constexpr uint32_t Pink   = color(200, 0,   150); // NOLINT
+  constexpr uint32_t Cyan   = color(0,   120, 150); // NOLINT
+
+  return {
+    {Theme::Light, {
+      {Style::Comment, {Black,  Black}},
+      {Style::Editor,  {Black,  White}},
+      {Style::Error,   {Black,  Red}},
+      {Style::Normal,  {Black,  White}},
+      {Style::Key,     {Green,  White}},
+      {Style::Keyword, {Cyan,   White}},
+      {Style::Number,  {Orange, White}},
+      {Style::String,  {Orange, White}},
+      {Style::Uri,     {Cyan,   White}},
+      {Style::Special, {Pink,   White}},
+    }},
+    {Theme::Dark, {
+      {Style::Comment, {White, Black}},
+      {Style::Editor,  {White, Black}},
+      {Style::Error,   {Black, Red}},
+      {Style::Normal,  {White, Black}},
+      {Style::Key,     {Green  | BrightnessBump, Black}},
+      {Style::Keyword, {Cyan   | BrightnessBump, Black}},
+      {Style::Number,  {Orange | BrightnessBump, Black}},
+      {Style::String,  {Orange | BrightnessBump, Black}},
+      {Style::Uri,     {Cyan   | BrightnessBump, Black}},
+      {Style::Special, {Pink   | BrightnessBump, Black}},
+    }}
+  };
+}

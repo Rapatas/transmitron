@@ -40,4 +40,6 @@ mkdir build && cd build
 conan install ../conan/ --build=missing
 cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_BUILD_TYPE=Release ..
 make -j $(nproc)
+make install DESTDIR=installation
+./installation/usr/local/bin/transmitron
 ```

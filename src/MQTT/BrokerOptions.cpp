@@ -1,4 +1,5 @@
 #include "BrokerOptions.hpp"
+#include <wx/utils.h>
 #include <chrono>
 #include <fmt/format.h>
 #include <string_view>
@@ -6,25 +7,14 @@
 
 using namespace MQTT;
 
-constexpr bool DefaultAutoReconnect = false;
-constexpr const std::string_view DefaultClientId{};
-constexpr const std::string_view DefaultHostname = "127.0.0.1";
-constexpr const std::string_view DefaultPassword{};
-constexpr const std::string_view DefaultUsername{};
-constexpr size_t DefaultKeepAliveIntervalSec = 60;
-constexpr size_t DefaultMaxInFlight = 10;
-constexpr size_t DefaultPort = 1883;
-constexpr size_t DefaultTimeoutSec = 15;
-constexpr size_t DefaultMaxReconnectRetries = 10;
-
 BrokerOptions::BrokerOptions() :
   mAutoReconnect(DefaultAutoReconnect),
   mMaxInFlight(DefaultMaxInFlight),
   mMaxReconnectRetries(DefaultMaxReconnectRetries),
   mPort(DefaultPort),
-  mConnectTimeout(DefaultTimeoutSec),
-  mDisconnectTimeout(DefaultTimeoutSec),
-  mKeepAliveInterval(DefaultKeepAliveIntervalSec),
+  mConnectTimeout(DefaultTimeout),
+  mDisconnectTimeout(DefaultTimeout),
+  mKeepAliveInterval(DefaultKeepAliveInterval),
   mClientId(DefaultClientId),
   mHostname(DefaultHostname),
   mPassword(DefaultPassword),
@@ -36,9 +26,9 @@ BrokerOptions::BrokerOptions(
   size_t maxInFlight,
   size_t maxReconnectRetries,
   size_t port,
-  size_t connectTimeout,
-  size_t disconnectTimeout,
-  size_t keepAliveInterval,
+  std::chrono::seconds connectTimeout,
+  std::chrono::seconds disconnectTimeout,
+  std::chrono::seconds keepAliveInterval,
   std::string clientId,
   std::string hostname,
   std::string password,
@@ -58,7 +48,7 @@ BrokerOptions::BrokerOptions(
 {
   if (mClientId.empty())
   {
-    mClientId = fmt::format("{}-client", rand());
+    mClientId = fmt::format("{}_{}", wxGetHostName(), rand());
   }
 }
 
@@ -82,7 +72,7 @@ BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data)
     .value_or(std::string(DefaultUsername));
 
   unsigned keepAliveInterval = extract<unsigned>(data, "keepAliveInterval")
-    .value_or(DefaultKeepAliveIntervalSec);
+    .value_or(DefaultKeepAliveInterval.count());
 
   unsigned maxInFlight = extract<unsigned>(data, "maxInFlight")
     .value_or(DefaultMaxInFlight);
@@ -91,10 +81,10 @@ BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data)
     .value_or(DefaultPort);
 
   unsigned connectTimeout = extract<unsigned>(data, "connectTimeout")
-    .value_or(DefaultTimeoutSec);
+    .value_or(DefaultTimeout.count());
 
   unsigned disconnectTimeout = extract<unsigned>(data, "disconnectTimeout")
-    .value_or(DefaultTimeoutSec);
+    .value_or(DefaultTimeout.count());
 
   unsigned maxReconnectRetries = extract<unsigned>(data, "maxReconnectRetries")
     .value_or(DefaultMaxReconnectRetries);
@@ -104,9 +94,9 @@ BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data)
     maxInFlight,
     maxReconnectRetries,
     port,
-    connectTimeout,
-    disconnectTimeout,
-    keepAliveInterval,
+    std::chrono::seconds(connectTimeout),
+    std::chrono::seconds(disconnectTimeout),
+    std::chrono::seconds(keepAliveInterval),
     clientId,
     hostname,
     password,
@@ -141,7 +131,7 @@ size_t BrokerOptions::getPort() const
   return mPort;
 }
 
-std::chrono::milliseconds BrokerOptions::getKeepAliveInterval() const
+std::chrono::seconds BrokerOptions::getKeepAliveInterval() const
 {
   return mKeepAliveInterval;
 }
@@ -151,12 +141,12 @@ size_t BrokerOptions::getMaxInFlight() const
   return mMaxInFlight;
 }
 
-std::chrono::milliseconds BrokerOptions::getConnectTimeout() const
+std::chrono::seconds BrokerOptions::getConnectTimeout() const
 {
   return mConnectTimeout;
 }
 
-std::chrono::milliseconds BrokerOptions::getDisconnectTimeout() const
+std::chrono::seconds BrokerOptions::getDisconnectTimeout() const
 {
   return mDisconnectTimeout;
 }

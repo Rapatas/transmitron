@@ -3,6 +3,7 @@ set(
   ${TRANSMITRON_BIN_NAME}_SOURCE
   Common/Env.Linux.cpp
   Common/Env.Windows.cpp
+  Common/Extract.cpp
   Common/Helpers.cpp
   Common/Log.cpp
   Common/String.cpp
@@ -16,6 +17,7 @@ set(
   MQTT/Subscription.cpp
   Transmitron/App.cpp
   Transmitron/Models/History.cpp
+  Transmitron/Models/KnownTopics.cpp
   Transmitron/Models/Layouts.cpp
   Transmitron/Models/Profiles.cpp
   Transmitron/Models/Snippets.cpp
@@ -41,6 +43,7 @@ set(
   Transmitron/Tabs/Client.cpp
   Transmitron/Tabs/Homepage.cpp
   Transmitron/Tabs/Settings.cpp
+  Transmitron/Types/ClientOptions.cpp
   Transmitron/Types/Subscription.cpp
   Transmitron/Widgets/Edit.cpp
   Transmitron/Widgets/Layouts.cpp
@@ -79,6 +82,13 @@ target_compile_features(
   ${TRANSMITRON_BIN_NAME}
   PRIVATE
     cxx_std_17
+)
+
+set_target_properties(
+  ${TRANSMITRON_BIN_NAME}
+  PROPERTIES
+    CXX_STANDARD 17
+    CXX_EXTENSIONS OFF
 )
 
 target_include_directories(${TRANSMITRON_BIN_NAME} PRIVATE . )
@@ -122,5 +132,6 @@ target_link_libraries(
     tinyxml2::tinyxml2
     fmt::fmt
     spdlog::spdlog
+    CLI11::CLI11
     stdc++fs
 )

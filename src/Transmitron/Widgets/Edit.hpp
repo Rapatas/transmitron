@@ -6,10 +6,11 @@
 #include <wx/stc/stc.h>
 #include <wx/wx.h>
 
-#include "TopicCtrl.hpp"
 #include "MQTT/Client.hpp"
 #include "MQTT/Message.hpp"
+#include "TopicCtrl.hpp"
 #include "Transmitron/Events/Edit.hpp"
+#include "Transmitron/Events/TopicCtrl.hpp"
 
 namespace Transmitron::Widgets
 {
@@ -22,7 +23,7 @@ public:
   explicit Edit(
     wxWindow* parent,
     wxWindowID id,
-    size_t optionsHeight,
+    int optionsHeight,
     bool darkMode
   );
 
@@ -45,6 +46,9 @@ public:
   void setQos(MQTT::QoS qos);
   void setTimestamp(const std::chrono::system_clock::time_point &timestamp);
   void setInfoLine(const std::string &info);
+  void addKnownTopics(
+    const wxObjectDataPtr<Models::KnownTopics> &knownTopicsModel
+  );
 
 private:
 
@@ -68,49 +72,15 @@ private:
     Uri,
   };
 
-  static constexpr uint32_t NoColor = 0x10000000;
-  static constexpr uint32_t BrightnessBump = (80 << 0) | (80 << 8) | (80 << 16); // NOLINT
+  using ThemeStyles = std::map<Style, std::pair<uint32_t, uint32_t>>;
 
-  static constexpr uint32_t Black  = (30  << 0) | (30  << 8) | (30  << 16); // NOLINT
-  static constexpr uint32_t White  = (250 << 0) | (250 << 8) | (250 << 16); // NOLINT
-  static constexpr uint32_t Red    = (180 << 0) | (0   << 8) | (0   << 16); // NOLINT
-  static constexpr uint32_t Orange = (150 << 0) | (120 << 8) | (0   << 16); // NOLINT
-  static constexpr uint32_t Green  = (0   << 0) | (150 << 8) | (0   << 16); // NOLINT
-  static constexpr uint32_t Pink   = (200 << 0) | (0   << 8) | (150 << 16); // NOLINT
-  static constexpr uint32_t Cyan   = (0   << 0) | (120 << 8) | (150 << 16); // NOLINT
-
-  const std::map<Theme, std::map<Style, std::pair<uint32_t, uint32_t>>> mStyles {
-    {Theme::Light, {
-      {Style::Comment, {Black,  Black}},
-      {Style::Editor,  {Black,  White}},
-      {Style::Error,   {Black,  Red}},
-      {Style::Normal,  {Black,  White}},
-      {Style::Key,     {Green,  White}},
-      {Style::Keyword, {Cyan,   White}},
-      {Style::Number,  {Orange, White}},
-      {Style::String,  {Orange, White}},
-      {Style::Uri,     {Cyan,   White}},
-      {Style::Special, {Pink,   White}},
-    }},
-    {Theme::Dark, {
-      {Style::Comment, {White, Black}},
-      {Style::Editor,  {White, Black}},
-      {Style::Error,   {Black, Red}},
-      {Style::Normal,  {White, Black}},
-      {Style::Key,     {Green  | BrightnessBump, Black}},
-      {Style::Keyword, {Cyan   | BrightnessBump, Black}},
-      {Style::Number,  {Orange | BrightnessBump, Black}},
-      {Style::String,  {Orange | BrightnessBump, Black}},
-      {Style::Uri,     {Cyan   | BrightnessBump, Black}},
-      {Style::Special, {Pink   | BrightnessBump, Black}},
-    }}
-  };
+  const std::map<Theme, ThemeStyles> mStyles;
 
   Theme mTheme;
   wxFont mFont;
 
   bool mReadOnly = false;
-  size_t mOptionsHeight;
+  const int mOptionsHeight;
 
   wxBoxSizer *mTop = nullptr;
   wxBoxSizer *mVsizer = nullptr;
@@ -157,8 +127,8 @@ private:
 
   void setupScintilla();
   void setStyle(Format format);
-  void onFormatSelected(wxCommandEvent &e);
-  void onTopicKeyDown(wxKeyEvent &e);
+  void onFormatSelected(wxCommandEvent &event);
+  void onTopicCtrlReturn(Events::TopicCtrl &event);
 
   std::string formatTry(
     const std::string &text,
@@ -166,6 +136,7 @@ private:
   );
 
   static Format formatGuess(const std::string &text);
+  static std::map<Theme, ThemeStyles> initThemes();
 };
 
 }

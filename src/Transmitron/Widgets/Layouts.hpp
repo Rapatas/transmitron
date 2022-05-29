@@ -22,18 +22,19 @@ public:
     wxWindowID id,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
     wxAuiManager &auiMan,
-    size_t optionsHeight
+    int optionsHeight
   );
+
+  bool setSelectedLayout(const std::string &layoutName);
 
 private:
 
-  const size_t mOptionsHeight;
+  const int mOptionsHeight;
 
   std::shared_ptr<spdlog::logger> mLogger;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
   wxDataViewItem mCurrentSelection;
   wxAuiManager &mAuiMan;
-  bool mReadOnly = false;
   wxFont mFont;
 
   wxBoxSizer *mSizer = nullptr;

@@ -11,7 +11,10 @@
 #include <wx/dataview.h>
 
 #include "Transmitron/Events/Connection.hpp"
+#include "Transmitron/Events/Layout.hpp"
+#include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Models/Profiles.hpp"
+#include "Transmitron/Types/ClientOptions.hpp"
 
 namespace Transmitron::Tabs
 {
@@ -24,12 +27,15 @@ public:
   explicit Homepage(
     wxWindow *parent,
     wxFontInfo labelFont,
-    const wxObjectDataPtr<Models::Profiles> &profilesModel
+    int optionsHeight,
+    const wxObjectDataPtr<Models::Profiles> &profilesModel,
+    const wxObjectDataPtr<Models::Layouts> &layoutsModel
   );
+
+  void focus();
 
 private:
 
-  static constexpr size_t OptionsHeight = 26;
 
   enum class ContextIDs : unsigned
   {
@@ -50,10 +56,12 @@ private:
     Password,
     Port,
     Username,
-    Max
+    Layout,
+    Max,
   };
 
   const wxFontInfo mLabelFont;
+  const int mOptionsHeight;
 
   std::shared_ptr<spdlog::logger> mLogger;
   wxButton *mConnect = nullptr;
@@ -63,10 +71,13 @@ private:
   wxPanel *mProfiles = nullptr;
   wxDataViewCtrl *mProfilesCtrl = nullptr;
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
+  wxObjectDataPtr<Models::Layouts> mLayoutsModel;
 
   // Profile Form.
   wxPanel *mProfileForm = nullptr;
   wxPropertyGrid *mProfileFormGrid = nullptr;
+  wxPropertyCategory *mGridCategoryBroker = nullptr;
+  wxPropertyCategory *mGridCategoryClient = nullptr;
   std::vector<wxPGProperty*> mProfileFormProperties;
 
   void onProfileActivated(wxDataViewEvent &event);
@@ -77,14 +88,21 @@ private:
   void onProfileContext(wxDataViewEvent &event);
   void onContextSelected(wxCommandEvent &event);
   void onProfileDelete(wxCommandEvent &event);
+  void onLayoutAdded(Events::Layout &event);
+  void onLayoutRemoved(Events::Layout &event);
+  void onLayoutChanged(Events::Layout &event);
 
   void setupProfiles();
   void setupProfileForm();
-  void fillPropertyGrid(
+  void propertyGridFill(
+    const wxString &name,
     const MQTT::BrokerOptions &brokerOptions,
-    const wxString &name
+    const Types::ClientOptions &clientOptions
   );
-  MQTT::BrokerOptions optionsFromPropertyGrid() const;
+  void propertyGridClear();
+  MQTT::BrokerOptions brokerOptionsFromPropertyGrid() const;
+  Types::ClientOptions clientOptionsFromPropertyGrid() const;
+  void refreshLayouts();
 };
 
 }

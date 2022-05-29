@@ -21,12 +21,13 @@ Layouts::Layouts(
   wxWindowID id,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
   wxAuiManager &auiMan,
-  size_t optionsHeight
+  int optionsHeight
 ) :
   wxPanel(parent, id),
   mOptionsHeight(optionsHeight),
   mLayoutsModel(layoutsModel),
-  mAuiMan(auiMan)
+  mAuiMan(auiMan),
+  mSizer(new wxBoxSizer(wxHORIZONTAL))
 {
   mLogger = Common::Log::create("Widgets::Layouts");
 
@@ -62,19 +63,21 @@ Layouts::Layouts(
   );
   mLayoutsEdit->Hide();
 
+  auto *label = new wxStaticText(this, wxID_ANY, "Layout:");
+
   mSave = new wxButton(
     this,
     -1,
     "",
     wxDefaultPosition,
-    wxSize((int)mOptionsHeight, (int)mOptionsHeight)
+    wxSize(mOptionsHeight, mOptionsHeight)
   );
   mSave->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
 
-  mSizer = new wxBoxSizer(wxHORIZONTAL);
-  mSizer->Add(mSave, 0, wxEXPAND);
+  mSizer->Add(label, 0, wxALIGN_CENTER_VERTICAL);
   mSizer->Add(mLayoutsLocked, 0, wxEXPAND);
   mSizer->Add(mLayoutsEdit, 0, wxEXPAND);
+  mSizer->Add(mSave, 0, wxEXPAND);
 
   mLayoutsEdit->Bind(
     wxEVT_COMBOBOX,
@@ -103,6 +106,24 @@ Layouts::Layouts(
   );
 
   SetSizer(mSizer);
+}
+
+bool Layouts::setSelectedLayout(const std::string &layoutName)
+{
+  const auto item = mLayoutsModel->findItemByName(layoutName);
+
+  if (!item.IsOk())
+  {
+    mLogger->warn("Could not find perspective '{}'", layoutName);
+    return false;
+  }
+
+  mLayoutsEdit->SetValue(layoutName);
+  mLayoutsLocked->SetValue(layoutName);
+  resize();
+  onLayoutSelected(layoutName);
+
+  return true;
 }
 
 void Layouts::onLayoutSaveClicked(wxCommandEvent &/* event */)
@@ -194,6 +215,8 @@ void Layouts::onLayoutAdded(Events::Layout &event)
     mLayoutsLocked->Hide();
     mLayoutsEdit->Show();
     mSizer->Layout();
+    auto *e = new Events::Layout(Events::LAYOUT_RESIZED);
+    wxQueueEvent(this, e);
 
     mLayoutsEdit->SelectAll();
     mLayoutsEdit->SetFocus();

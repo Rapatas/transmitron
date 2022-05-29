@@ -18,7 +18,10 @@ public:
 
   explicit App();
 
+  bool openProfile(const std::string &profileName);
+
   bool OnInit() override;
+  int FilterEvent(wxEvent &event) override;
 
 private:
 
@@ -27,22 +30,30 @@ private:
   wxFrame *mFrame = nullptr;
   wxAuiNotebook *mNote = nullptr;
   bool mDarkMode = false;
+  int mOptionsHeight = 0;
 
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
 
   const wxFontInfo LabelFontInfo;
 
-  void onPageClosing(wxBookCtrlEvent& event);
-  void onPageSelected(wxBookCtrlEvent& event);
+  void onPageClosing(wxBookCtrlEvent &event);
+  void onPageSelected(wxBookCtrlEvent &event);
+  void onKeyDownControlW();
+  void onKeyDownControlT();
 
   void createProfilesTab(size_t index);
   void createSettingsTab();
   void setupIcon();
 
-  std::filesystem::path getConfigDir();
+  std::filesystem::path createConfigDir();
+  std::filesystem::path createCacheDir();
   std::filesystem::path getExecutablePath();
   std::filesystem::path getInstallPrefix();
+
+  void openProfile(wxDataViewItem profileItem);
+
+  int calculateOptionHeight();
 };
 
 }

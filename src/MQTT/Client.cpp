@@ -99,7 +99,7 @@ void Client::cancel()
 
 std::shared_ptr<Subscription> Client::subscribe(const std::string &topic)
 {
-  auto it = std::find_if(
+  const auto it = std::find_if(
     std::begin(mSubscriptions),
     std::end(mSubscriptions),
     [topic](const auto &sub)
@@ -122,7 +122,7 @@ std::shared_ptr<Subscription> Client::subscribe(const std::string &topic)
     QoS::ExactlyOnce,
     shared_from_this()
   );
-  sub->setState(Subscription::State::Unsubscribed);
+  sub->setState(Subscription::State::ToSubscribe);
   mSubscriptions.insert({mSubscriptionIds, sub});
 
   mLogger->info("Checking if connected");
@@ -138,9 +138,18 @@ void Client::unsubscribe(size_t id)
 {
   const auto it = mSubscriptions.find(id);
   if (it == std::end(mSubscriptions)) { return; }
-  it->second->setState(Subscription::State::PendingUnsubscription);
   mLogger->info("Unsubscribing from {}", it->second->getFilter());
-  mClient->unsubscribe(it->second->getFilter(), nullptr, *this);
+  if (connected())
+  {
+    it->second->setState(Subscription::State::PendingUnsubscription);
+    mClient->unsubscribe(it->second->getFilter(), nullptr, *this);
+  }
+  else
+  {
+    it->second->setState(Subscription::State::Unsubscribed);
+    it->second->onUnsubscribed();
+    mSubscriptions.erase(it);
+  }
 }
 
 void Client::publish(
@@ -259,7 +268,7 @@ void Client::onSuccessPublish(const mqtt::token& /* tok */) {}
 
 void Client::onSuccessSubscribe(const mqtt::token& tok)
 {
-  auto it = std::find_if(
+  const auto it = std::find_if(
     std::begin(mSubscriptions),
     std::end(mSubscriptions),
     [&tok](const auto &sub)
@@ -270,7 +279,7 @@ void Client::onSuccessSubscribe(const mqtt::token& tok)
 
   if (it == std::end(mSubscriptions))
   {
-    std::cerr << "Unknown subscription ACK!\n";
+    mLogger->error("Unknown subscription ACK!");
     exit(1);
   }
 
@@ -278,7 +287,7 @@ void Client::onSuccessSubscribe(const mqtt::token& tok)
   it->second->onSubscribed();
 
   mLogger->info("Subscribed to topics:");
-  auto size = tok.get_topics()->size();
+  const auto size = tok.get_topics()->size();
   for (size_t i = 0; i != size; ++i)
   {
     mLogger->info("  - {}", tok.get_topics()->c_arr()[i]);
@@ -287,7 +296,7 @@ void Client::onSuccessSubscribe(const mqtt::token& tok)
 
 void Client::onSuccessUnsubscribe(const mqtt::token& tok)
 {
-  auto it = std::find_if(
+  const auto it = std::find_if(
     std::begin(mSubscriptions),
     std::end(mSubscriptions),
     [&tok](const auto &sub)
@@ -298,7 +307,7 @@ void Client::onSuccessUnsubscribe(const mqtt::token& tok)
 
   if (it == std::end(mSubscriptions))
   {
-    std::cerr << "Unknown unsubscription ACK!\n";
+    mLogger->error("Unknown unsubscription ACK!");
     exit(1);
   }
 
@@ -505,37 +514,39 @@ void Client::reconnect()
   }
   catch (const mqtt::exception& exc)
   {
-    std::cerr << "Error: " << exc.what() << std::endl;
+    mLogger->error("Error: {}", exc.what());
     exit(1);
   }
 }
 
 void Client::doSubscribe(size_t id)
 {
-  auto it = mSubscriptions.find(id);
+  const auto it = mSubscriptions.find(id);
   if (it == std::end(mSubscriptions)) { return; }
-  if (it->second->getState() == Subscription::State::Unsubscribed)
+  if (it->second->getState() != Subscription::State::ToSubscribe)
   {
-    mLogger->info(
-      "Actually subscribing: {} ({})",
-      it->second->getFilter(),
-      (unsigned)it->second->getQos()
-    );
-    mClient->subscribe(
-      it->second->getFilter(),
-      (int)it->second->getQos(),
-      nullptr,
-      *this
-    );
-    it->second->setState(Subscription::State::PendingSubscription);
+    return;
   }
+
+  mLogger->info(
+    "Actually subscribing: {} ({})",
+    it->second->getFilter(),
+    (unsigned)it->second->getQos()
+  );
+  mClient->subscribe(
+    it->second->getFilter(),
+    (int)it->second->getQos(),
+    nullptr,
+    *this
+  );
+  it->second->setState(Subscription::State::PendingSubscription);
 }
 
 void Client::cleanSubscriptions()
 {
   for (const auto &sub : mSubscriptions)
   {
-    sub.second->setState(Subscription::State::Unsubscribed);
+    sub.second->setState(Subscription::State::ToSubscribe);
   }
 }
 
@@ -543,7 +554,7 @@ void Client::cleanSubscriptions()
 
 bool Client::match(const std::string &filter, const std::string &topic)
 {
-  auto split = [](const std::string& str, char delim)
+  const auto split = [](const std::string& str, char delim)
     -> std::vector<std::string> {
       std::vector<std::string> strings;
       size_t start = 0;

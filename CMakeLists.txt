@@ -6,7 +6,7 @@ set(PROGRAM_DESCRIPTION "Open source MQTT Client for desktop. Flexible, native, 
 
 set(TRANSMITRON_VERSION_MAJOR 0)
 set(TRANSMITRON_VERSION_MINOR 0)
-set(TRANSMITRON_VERSION_PATCH 2)
+set(TRANSMITRON_VERSION_PATCH 3)
 set(TRANSMITRON_VERSION_POSTFIX "")
 
 string(CONCAT TRANSMITRON_VERSION
@@ -36,6 +36,7 @@ find_package(PahoMqttCpp REQUIRED)
 find_package(wxwidgets REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(fmt REQUIRED)
+find_package(CLI11 REQUIRED)
 find_package(spdlog REQUIRED)
 
 add_subdirectory(src)

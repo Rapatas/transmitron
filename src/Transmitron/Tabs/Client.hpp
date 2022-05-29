@@ -13,6 +13,8 @@
 #include "MQTT/BrokerOptions.hpp"
 #include "Transmitron/Events/Connection.hpp"
 #include "Transmitron/Events/Layout.hpp"
+#include "Transmitron/Models/KnownTopics.hpp"
+#include "Transmitron/Types/ClientOptions.hpp"
 #include "Transmitron/Widgets/TopicCtrl.hpp"
 #include "Transmitron/Widgets/Layouts.hpp"
 #include "Transmitron/Models/History.hpp"
@@ -33,16 +35,22 @@ public:
   Client(
     wxWindow* parent,
     const MQTT::BrokerOptions &brokerOptions,
-    const wxObjectDataPtr<Models::Snippets> &snippetsModel,
+    const Types::ClientOptions &clientOptions,
+    const wxObjectDataPtr<Models::Snippets> &snippets,
+    const wxObjectDataPtr<Models::KnownTopics> &topicsSubscribed,
+    const wxObjectDataPtr<Models::KnownTopics> &topicsPublished,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
     const wxString &name,
-    bool darkMode
+    bool darkMode,
+    int optionsHeight
   );
   Client(const Client &other) = delete;
   Client(Client &&other) = delete;
   Client &operator=(const Client &other) = delete;
   Client &operator=(Client &&other) = delete;
   ~Client();
+
+  void focus() const;
 
 private:
 
@@ -90,14 +98,17 @@ private:
   static constexpr size_t PaneMinWidth = 200;
   static constexpr size_t PaneMinHeight = 100;
   static constexpr size_t EditorMinHeight = 200;
-  static constexpr size_t OptionsHeight = 26;
 
   std::shared_ptr<spdlog::logger> mLogger;
   std::map<Panes, Pane> mPanes;
   const wxString mName;
   const MQTT::BrokerOptions mBrokerOptions;
+  const Types::ClientOptions mClientOptions;
   const wxFont mFont;
   const bool mDarkMode;
+  const int mOptionsHeight;
+  wxObjectDataPtr<Models::KnownTopics> mTopicsSubscribed;
+  wxObjectDataPtr<Models::KnownTopics> mTopicsPublished;
 
   wxBoxSizer *mMasterSizer = nullptr;
 
