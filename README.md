@@ -41,7 +41,7 @@
 </p>
 <hr>
 <p align="center">
-	<img src="https://i.imgur.com/JUEBvBS.png">
+	<img src="https://i.imgur.com/1OiGiB2.png">
 </p>
 
 
