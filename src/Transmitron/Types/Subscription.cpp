@@ -11,23 +11,39 @@ wxDEFINE_EVENT(Events::RECEIVED, Events::Subscription); // NOLINT
 
 Subscription::Subscription(const std::shared_ptr<MQTT::Subscription> &sub) :
   mSub(sub),
-  mMuted(false)
+  mMuted(false),
+  mId(mSub->getId()),
+  mFilter(mSub->getFilter()),
+  mQos(mSub->getQos()),
+  mColor(colorFromString(mFilter))
 {
-  mColor = colorFromString(sub->getFilter());
   sub->attachObserver(this);
 }
+
+Subscription::Subscription(
+  MQTT::Subscription::Id_t id,
+  std::string filter,
+  MQTT::QoS qos
+) :
+  mSub(nullptr),
+  mMuted(false),
+  mId(id),
+  mFilter(std::move(filter)),
+  mQos(qos),
+  mColor(colorFromString(mFilter))
+{}
 
 void Subscription::onSubscribed()
 {
   auto *e = new Events::Subscription(Events::SUBSCRIBED);
-  e->setId(mSub->getId());
+  e->setId(mId);
   wxQueueEvent(this, e);
 }
 
 void Subscription::onUnsubscribed()
 {
   auto *e = new Events::Subscription(Events::UNSUBSCRIBED);
-  e->setId(mSub->getId());
+  e->setId(mId);
   wxQueueEvent(this, e);
 }
 
@@ -35,13 +51,13 @@ void Subscription::onMessage(const MQTT::Message &message)
 {
   auto *e = new Events::Subscription(Events::RECEIVED);
   e->setMessage(message);
-  e->setId(mSub->getId());
+  e->setId(mId);
   wxQueueEvent(this, e);
 }
 
 size_t Subscription::getId() const
 {
-  return mSub->getId();
+  return mId;
 }
 
 void Subscription::setMuted(bool muted)
@@ -56,12 +72,13 @@ void Subscription::setColor(const wxColor &color)
 
 void Subscription::unsubscribe()
 {
+  if (mSub == nullptr) { return; }
   mSub->unsubscribe();
 }
 
 std::string Subscription::getFilter() const
 {
-  return mSub->getFilter();
+  return mFilter;
 }
 
 wxColor Subscription::getColor() const
@@ -71,7 +88,7 @@ wxColor Subscription::getColor() const
 
 MQTT::QoS Subscription::getQos() const
 {
-  return mSub->getQos();
+  return mQos;
 }
 
 bool Subscription::getMuted() const

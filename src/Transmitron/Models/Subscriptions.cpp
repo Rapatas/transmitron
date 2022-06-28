@@ -1,19 +1,30 @@
 #include <algorithm>
 #include <cstddef>
+#include <cstring>
+#include <fstream>
 #include <iterator>
+#include <memory>
 
 #include <wx/dcmemory.h>
 
+#include "MQTT/Subscription.hpp"
 #include "Subscriptions.hpp"
 #include "Common/Log.hpp"
 #include "Transmitron/Resources/qos/qos-0.hpp"
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
+#include "Transmitron/Types/Subscription.hpp"
 
+namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 
 Subscriptions::Subscriptions(std::shared_ptr<MQTT::Client> client) :
   mClient(std::move(client))
+{
+  mLogger = Common::Log::create("Models::Subscriptions");
+}
+
+Subscriptions::Subscriptions()
 {
   mLogger = Common::Log::create("Models::Subscriptions");
 }
@@ -38,6 +49,107 @@ bool Subscriptions::detachObserver(size_t id)
 
   mObservers.erase(it);
   return true;
+}
+
+bool Subscriptions::load(const std::string &recording)
+{
+  if (recording.empty())
+  {
+    mLogger->error("No file provided");
+    return false;
+  }
+
+  const bool exists = fs::exists(recording);
+  if (!exists)
+  {
+    mLogger->warn("File does not exist: {}", recording);
+    return false;
+  }
+
+  std::ifstream input(recording);
+  if (!input.is_open())
+  {
+    mLogger->warn("Could not open '{}': {}", recording, std::strerror(errno));
+    return false;
+  }
+
+  std::stringstream buffer;
+  buffer << input.rdbuf();
+  if (!nlohmann::json::accept(buffer.str()))
+  {
+    mLogger->warn("Could not parse '{}'", recording);
+    return false;
+  }
+  const auto data = nlohmann::json::parse(buffer.str());
+
+  const auto subscriptionsIt = data.find("subscriptions");
+  if (subscriptionsIt == std::end(data))
+  {
+    mLogger->warn("Could not find key 'subscriptions' in '{}'", recording);
+    return false;
+  }
+  if (!subscriptionsIt->is_array())
+  {
+    mLogger->warn("Key 'subscriptions' is not an array");
+    return false;
+  }
+
+  for (const auto &sub : *subscriptionsIt)
+  {
+    MQTT::Subscription::Id_t id;
+    std::string filter;
+    MQTT::QoS qos = MQTT::QoS::AtLeastOnce;
+
+    const auto idIt = sub.find("id");
+    if (false // NOLINT
+      || idIt == std::end(sub)
+      || !idIt->is_number_unsigned()
+    ) {
+      mLogger->warn("Subscription is missing id");
+      return false;
+    }
+    id = *idIt;
+
+    const auto filterIt = sub.find("filter");
+    if (true // NOLINT
+      && filterIt != std::end(sub)
+      && filterIt->is_string()
+    ) {
+      filter = *filterIt;
+    }
+
+    const auto qosIt = sub.find("qos");
+    if (true // NOLINT
+      && qosIt != std::end(sub)
+      && qosIt->is_number_unsigned()
+    ) {
+      qos = *qosIt;
+    }
+
+    auto subscription = std::make_unique<Types::Subscription>(id, filter, qos);
+    mSubscriptions.emplace(id, std::move(subscription));
+    mRemap.push_back(id);
+  }
+
+  mLogger->info("Loaded {} subscriptions", mSubscriptions.size());
+
+  return true;
+}
+
+nlohmann::json Subscriptions::toJson() const
+{
+  nlohmann::json result;
+
+  for (const auto &s : mSubscriptions)
+  {
+    result.push_back({
+      {"id", s.first},
+      {"filter", s.second->getFilter()},
+      {"qos", s.second->getQos()},
+    });
+  }
+
+  return result;
 }
 
 std::string Subscriptions::getFilter(wxDataViewItem item) const
@@ -138,6 +250,8 @@ void Subscriptions::solo(wxDataViewItem item)
 
 void Subscriptions::subscribe(const std::string &topic, MQTT::QoS /* qos */)
 {
+  if (mClient == nullptr) { return; }
+
   auto it = std::find_if(
     std::begin(mSubscriptions),
     std::end(mSubscriptions),

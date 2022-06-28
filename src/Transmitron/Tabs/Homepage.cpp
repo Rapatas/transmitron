@@ -1,4 +1,5 @@
 #include <chrono>
+#include <wx/statline.h>
 #include <wx/button.h>
 #include <wx/wx.h>
 #include <wx/artprov.h>
@@ -6,14 +7,17 @@
 
 #include "Homepage.hpp"
 #include "Common/Log.hpp"
+#include "Transmitron/Events/Recording.hpp"
 #include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Types/ClientOptions.hpp"
 #include "Transmitron/Notifiers/Layouts.hpp"
 
 using namespace Transmitron::Tabs;
 using namespace Transmitron;
+using namespace Transmitron::Events;
 
 wxDEFINE_EVENT(Events::CONNECTION, Events::Connection); // NOLINT
+wxDEFINE_EVENT(Events::RECORDING_OPEN, Events::Recording); // NOLINT
 
 Homepage::Homepage(
   wxWindow *parent,
@@ -37,9 +41,6 @@ Homepage::Homepage(
 {
   mLogger = Common::Log::create("Transmitron::Homepage");
 
-  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
-  this->SetSizer(hsizer);
-
   auto *notifier = new Notifiers::Layouts;
   mLayoutsModel->AddNotifier(notifier);
 
@@ -47,12 +48,27 @@ Homepage::Homepage(
   notifier->Bind(Events::LAYOUT_REMOVED, &Homepage::onLayoutRemoved, this);
   notifier->Bind(Events::LAYOUT_CHANGED, &Homepage::onLayoutChanged, this);
 
-  setupProfiles();
-  setupProfileForm();
+  auto *center = new wxPanel(this, wxID_ANY);
 
-  hsizer->Add(mProfiles,    1, wxEXPAND);
+  setupRecordings(this);
+  setupProfiles(center);
+  setupProfileButtons(this);
+  setupProfileForm(center);
+
+  auto *line = new wxStaticLine(this);
+
+  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
+  hsizer->Add(mProfiles, 1, wxEXPAND);
   hsizer->Add(mProfileForm, 1, wxEXPAND);
-  hsizer->Layout();
+  center->SetSizer(hsizer);
+
+  auto *vsizer = new wxBoxSizer(wxVERTICAL);
+  vsizer->Add(center, 1, wxEXPAND);
+  vsizer->Add(mProfileButtons, 0, wxEXPAND);
+  vsizer->Add(line, 0, wxEXPAND);
+  vsizer->Add(mRecordings, 0, wxEXPAND);
+  this->SetSizer(vsizer);
+  vsizer->Layout();
 
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Homepage::onContextSelected, this);
 }
@@ -73,7 +89,7 @@ void Homepage::focus()
   mProfilesCtrl->SetFocus();
 }
 
-void Homepage::setupProfiles()
+void Homepage::setupProfiles(wxPanel *parent)
 {
   wxDataViewColumn* const name = new wxDataViewColumn(
     "Name",
@@ -90,20 +106,10 @@ void Homepage::setupProfiles()
     wxALIGN_LEFT
   );
 
-  mProfiles = new wxPanel(this, -1);
+  mProfiles = new wxPanel(parent, -1);
 
   auto *label = new wxStaticText(mProfiles, -1, "Profiles");
   label->SetFont(mLabelFont);
-
-  auto *newProfile = new wxButton(
-    mProfiles,
-    -1,
-    "New Profile",
-    wxDefaultPosition,
-    wxSize(-1, mOptionsHeight)
-  );
-  newProfile->Bind(wxEVT_BUTTON, &Homepage::onNewProfileClicked, this);
-  newProfile->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
 
   mProfilesCtrl = new wxDataViewCtrl(mProfiles, -1);
   mProfilesCtrl->AssociateModel(mProfilesModel.get());
@@ -125,32 +131,38 @@ void Homepage::setupProfiles()
     this
   );
 
-  mConnect = new wxButton(
-    mProfiles,
-    -1,
-    "Connect",
-    wxDefaultPosition,
-    wxSize(-1, mOptionsHeight)
-  );
-  mConnect->Enable(false);
-  mConnect->Bind(wxEVT_BUTTON, &Homepage::onConnectClicked, this);
-  mConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
-
-  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
-  hsizer->SetMinSize(0, mOptionsHeight);
-  hsizer->Add(newProfile, 0, wxEXPAND);
-  hsizer->AddStretchSpacer(1);
-  hsizer->Add(mConnect, 0, wxEXPAND);
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
   vsizer->Add(label,         0, wxEXPAND);
   vsizer->Add(mProfilesCtrl, 1, wxEXPAND);
-  vsizer->Add(hsizer,        0, wxEXPAND);
   mProfiles->SetSizer(vsizer);
 }
 
-void Homepage::setupProfileForm()
+void Homepage::setupRecordings(wxPanel *parent)
 {
-  mProfileForm = new wxPanel(this, -1);
+  mRecordings = new wxPanel(parent, -1);
+
+  auto *label = new wxStaticText(mRecordings, -1, "Recordings");
+  label->SetFont(mLabelFont);
+
+  auto *recordingOpen = new wxButton(
+    mRecordings,
+    -1,
+    "Open Recording",
+    wxDefaultPosition,
+    wxSize(-1, mOptionsHeight)
+  );
+  recordingOpen->Bind(wxEVT_BUTTON, &Homepage::onRecordingOpen, this);
+  recordingOpen->SetBitmap(wxArtProvider::GetBitmap(wxART_MENU));
+
+  auto *vsizer = new wxBoxSizer(wxVERTICAL);
+  vsizer->Add(label,         0, wxEXPAND);
+  vsizer->Add(recordingOpen, 0, wxEXPAND);
+  mRecordings->SetSizer(vsizer);
+}
+
+void Homepage::setupProfileForm(wxPanel *parent)
+{
+  mProfileForm = new wxPanel(parent, -1);
 
   auto *label = new wxStaticText(mProfileForm, -1, "Profile Options");
   label->SetFont(mLabelFont);
@@ -209,8 +221,35 @@ void Homepage::setupProfileForm()
   auto *layoutPtr = new wxEnumProperty("Layout", "", layoutLabels);
   pfp.at(Properties::Layout) = pfg->AppendIn(mGridCategoryClient, layoutPtr);
 
+  auto *sizer = new wxBoxSizer(wxVERTICAL);
+  sizer->Add(label,            0, wxEXPAND);
+  sizer->Add(mProfileFormGrid, 1, wxEXPAND);
+  mProfileForm->SetSizer(sizer);
+
+  mProfileFormGrid->Bind(wxEVT_PG_CHANGED, &Homepage::onGridChanged, this);
+  mProfileFormGrid->Bind(wxEVT_PG_CHANGING, &Homepage::onGridChanged, this);
+  mProfileFormGrid->Bind(wxEVT_PG_LABEL_EDIT_BEGIN, &Homepage::onGridChanged, this);
+  mProfileFormGrid->Bind(wxEVT_PG_SELECTED, &Homepage::onGridChanged, this);
+
+  propertyGridClear();
+}
+
+void Homepage::setupProfileButtons(wxPanel *parent)
+{
+  mProfileButtons = new wxPanel(parent);
+
+  auto *newProfile = new wxButton(
+    mProfileButtons,
+    -1,
+    "New Profile",
+    wxDefaultPosition,
+    wxSize(-1, mOptionsHeight)
+  );
+  newProfile->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
+  newProfile->Bind(wxEVT_BUTTON, &Homepage::onNewProfileClicked, this);
+
   mSave = new wxButton(
-    mProfileForm,
+    mProfileButtons,
     -1,
     "Save",
     wxDefaultPosition,
@@ -218,20 +257,40 @@ void Homepage::setupProfileForm()
   );
   mSave->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
   mSave->Enable(false);
-
-  auto *bottomSizer = new wxBoxSizer(wxHORIZONTAL);
-  bottomSizer->SetMinSize(0, mOptionsHeight);
-  bottomSizer->AddStretchSpacer();
-  bottomSizer->Add(mSave, 0, wxEXPAND);
-  auto *sizer = new wxBoxSizer(wxVERTICAL);
-  sizer->Add(label,            0, wxEXPAND);
-  sizer->Add(mProfileFormGrid, 1, wxEXPAND);
-  sizer->Add(bottomSizer,      0, wxEXPAND);
-  mProfileForm->SetSizer(sizer);
-
   mSave->Bind(wxEVT_BUTTON, &Homepage::onSaveClicked, this);
 
-  propertyGridClear();
+  mCancel = new wxButton(
+    mProfileButtons,
+    -1,
+    "Cancel",
+    wxDefaultPosition,
+    wxSize(-1, mOptionsHeight)
+  );
+  mCancel->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
+  mCancel->Enable(false);
+  mCancel->Bind(wxEVT_BUTTON, &Homepage::onCancelClicked, this);
+
+  mConnect = new wxButton(
+    mProfileButtons,
+    -1,
+    "Connect",
+    wxDefaultPosition,
+    wxSize(-1, mOptionsHeight)
+  );
+  mConnect->Enable(false);
+  mConnect->Bind(wxEVT_BUTTON, &Homepage::onConnectClicked, this);
+  mConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
+
+  mProfileButtonsSizer = new wxBoxSizer(wxHORIZONTAL);
+  mProfileButtonsSizer->SetMinSize(0, mOptionsHeight);
+  mProfileButtonsSizer->Add(newProfile, 0, wxEXPAND);
+  mProfileButtonsSizer->AddStretchSpacer(1);
+  mProfileButtonsSizer->Add(mConnect, 0, wxEXPAND);
+  mProfileButtonsSizer->Add(mCancel, 0, wxEXPAND);
+  mProfileButtonsSizer->Add(mSave, 0, wxEXPAND);
+  mProfileButtonsSizer->Hide(mSave);
+  mProfileButtonsSizer->Hide(mCancel);
+  mProfileButtons->SetSizer(mProfileButtonsSizer);
 }
 
 void Homepage::onProfileActivated(wxDataViewEvent &e)
@@ -251,12 +310,12 @@ void Homepage::onProfileActivated(wxDataViewEvent &e)
   e.Skip();
 }
 
-void Homepage::onProfileSelected(wxDataViewEvent &e)
+void Homepage::onProfileSelected(wxDataViewEvent &event)
 {
-  const auto item = e.GetItem();
+  const auto item = event.GetItem();
   if (!item.IsOk())
   {
-    e.Skip();
+    event.Skip();
     return;
   }
 
@@ -265,7 +324,20 @@ void Homepage::onProfileSelected(wxDataViewEvent &e)
     mProfilesModel->getBrokerOptions(item),
     mProfilesModel->getClientOptions(item)
   );
-  e.Skip();
+  event.Skip();
+}
+
+void Homepage::onRecordingOpen(wxCommandEvent &event)
+{
+  auto *recordingEvent = new Events::Recording(RECORDING_OPEN);
+  wxQueueEvent(this, recordingEvent);
+  event.Skip();
+}
+
+void Homepage::onGridChanged(wxPropertyGridEvent& event)
+{
+  allowSave();
+  event.Skip();
 }
 
 void Homepage::onConnectClicked(wxCommandEvent &/* event */)
@@ -308,6 +380,24 @@ void Homepage::onSaveClicked(wxCommandEvent &/* event */)
 
   const auto clientOptions = clientOptionsFromPropertyGrid();
   mProfilesModel->updateClientOptions(item, clientOptions);
+
+  allowConnect();
+}
+
+void Homepage::onCancelClicked(wxCommandEvent &/* event */)
+{
+  propertyGridClear();
+
+  const auto item = mProfilesCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+
+  propertyGridFill(
+    mProfilesModel->getName(item),
+    mProfilesModel->getBrokerOptions(item),
+    mProfilesModel->getClientOptions(item)
+  );
+
+  allowConnect();
 }
 
 void Homepage::onNewProfileClicked(wxCommandEvent &/* event */)
@@ -324,6 +414,8 @@ void Homepage::onNewProfileClicked(wxCommandEvent &/* event */)
   const auto *namePtr = mProfileFormProperties.at(Properties::Name);
   const bool focus = true;
   mProfileFormGrid->SelectProperty(namePtr, focus);
+
+  allowSave();
 }
 
 void Homepage::onProfileContext(wxDataViewEvent &e)
@@ -428,6 +520,32 @@ void Homepage::refreshLayouts()
 
   mLogger->info("Previous layout was found ");
   pfpLayout->SetValue(newLayoutValue);
+}
+
+void Homepage::allowSave()
+{
+  mSave->Enable(true);
+  mCancel->Enable(true);
+  mProfileButtonsSizer->Show(mSave);
+  mProfileButtonsSizer->Show(mCancel);
+
+  mConnect->Enable(false);
+  mProfileButtonsSizer->Hide(mConnect);
+
+  mProfileButtonsSizer->Layout();
+}
+
+void Homepage::allowConnect()
+{
+  mSave->Enable(false);
+  mCancel->Enable(false);
+  mProfileButtonsSizer->Hide(mSave);
+  mProfileButtonsSizer->Hide(mCancel);
+
+  mConnect->Enable(true);
+  mProfileButtonsSizer->Show(mConnect);
+
+  mProfileButtonsSizer->Layout();
 }
 
 void Homepage::propertyGridFill(

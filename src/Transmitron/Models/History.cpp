@@ -1,17 +1,23 @@
+#include <filesystem>
+#include <fstream>
 #include <wx/dcmemory.h>
 #include "History.hpp"
+#include "Common/Log.hpp"
+#include "MQTT/Message.hpp"
 #include "Transmitron/Resources/pin/pinned-18x18.hpp"
 #include "Transmitron/Resources/pin/not-pinned-18x18.hpp"
 #include "Transmitron/Resources/qos/qos-0.hpp"
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
 
+namespace fs = std::filesystem;
 using namespace Transmitron::Models;
 using namespace Transmitron;
 
 History::History(const wxObjectDataPtr<Subscriptions> &subscriptions) :
   mSubscriptions(subscriptions)
 {
+  mLogger = Common::Log::create("Models::History");
   mSubscriptions->attachObserver(this);
 }
 
@@ -41,6 +47,123 @@ void History::clear()
 {
   mMessages.clear();
   remap();
+}
+
+bool History::load(const std::string &recording)
+{
+  if (recording.empty())
+  {
+    mLogger->error("No file provided");
+    return false;
+  }
+
+  const bool exists = fs::exists(recording);
+  if (!exists)
+  {
+    mLogger->warn("File does not exist: {}", recording);
+    return false;
+  }
+
+  std::ifstream input(recording);
+  if (!input.is_open())
+  {
+    mLogger->warn("Could not open '{}': {}", recording, std::strerror(errno));
+    return false;
+  }
+
+  std::stringstream buffer;
+  buffer << input.rdbuf();
+  if (!nlohmann::json::accept(buffer.str()))
+  {
+    mLogger->warn("Could not parse '{}'", recording);
+    return false;
+  }
+  const auto data = nlohmann::json::parse(buffer.str());
+
+  const auto messagesIt = data.find("messages");
+  if (messagesIt == std::end(data))
+  {
+    mLogger->warn("Could not find key 'messages' in '{}'", recording);
+    return false;
+  }
+  if (!messagesIt->is_array())
+  {
+    mLogger->warn("Key 'messages' is not an array");
+    return false;
+  }
+
+  for (const auto &msg : *messagesIt)
+  {
+    Node node;
+
+    const auto subscriptionIt = msg.find("subscription");
+    if (false // NOLINT
+      || subscriptionIt == std::end(msg)
+      || !subscriptionIt->is_number_unsigned()
+    ) {
+      mLogger->warn("Message is missing subscription id");
+      return false;
+    }
+    node.subscriptionId = *subscriptionIt;
+
+    const auto topicIt = msg.find("topic");
+    if (true // NOLINT
+      && topicIt != std::end(msg)
+      && topicIt->is_string()
+    ) {
+      node.message.topic = *topicIt;
+    }
+
+    const auto qosIt = msg.find("qos");
+    if (true // NOLINT
+      && qosIt != std::end(msg)
+      && qosIt->is_number_unsigned()
+    ) {
+      node.message.qos = *qosIt;
+    }
+
+    const auto payloadIt = msg.find("payload");
+    if (true // NOLINT
+      && payloadIt != std::end(msg)
+      && payloadIt->is_string()
+    ) {
+      node.message.payload = *payloadIt;
+    }
+
+    const auto retainedIt = msg.find("retained");
+    if (true // NOLINT
+      && retainedIt != std::end(msg)
+      && retainedIt->is_string()
+    ) {
+      node.message.retained = *retainedIt;
+    }
+
+    mMessages.push_back(node);
+    mRemap.push_back(mMessages.size() - 1);
+    RowAppended();
+  }
+
+  mLogger->info("Loaded {} messages", mMessages.size());
+
+  return true;
+}
+
+nlohmann::json History::toJson() const
+{
+  nlohmann::json result;
+
+  for (const auto &m : mMessages)
+  {
+    result.push_back({
+      {"subscription", m.subscriptionId},
+      {"topic", m.message.topic},
+      {"qos", m.message.qos},
+      {"payload", m.message.payload},
+      {"retained", m.message.retained},
+    });
+  }
+
+  return result;
 }
 
 void History::onMessage(

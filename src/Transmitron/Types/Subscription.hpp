@@ -4,6 +4,7 @@
 #include <map>
 #include <wx/colour.h>
 #include <wx/event.h>
+#include "MQTT/QualityOfService.hpp"
 #include "MQTT/Subscription.hpp"
 
 namespace Transmitron::Types
@@ -16,6 +17,11 @@ class Subscription :
 public:
 
   Subscription(const std::shared_ptr<MQTT::Subscription> &sub);
+  Subscription(
+    MQTT::Subscription::Id_t id,
+    std::string filter,
+    MQTT::QoS qos
+  );
 
   // MQTT::Subscription::Observer interface.
   void onSubscribed() override;
@@ -35,8 +41,11 @@ public:
 private:
 
   std::shared_ptr<MQTT::Subscription> mSub;
-  wxColor mColor;
   bool mMuted;
+  MQTT::Subscription::Id_t mId;
+  std::string mFilter;
+  MQTT::QoS mQos;
+  wxColor mColor;
 
   static wxColor colorFromString(const std::string &data);
 };

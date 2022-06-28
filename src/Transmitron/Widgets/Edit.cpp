@@ -7,6 +7,7 @@
 #include <wx/artprov.h>
 #include <wx/sizer.h>
 #include <wx/stc/stc.h>
+#include "Common/Helpers.hpp"
 #include "Edit.hpp"
 #include "Transmitron/Events/Edit.hpp"
 #include "Transmitron/Resources/send/send-18x18.hpp"
@@ -18,6 +19,7 @@
 
 using namespace nlohmann;
 using namespace Transmitron;
+using namespace Common;
 using namespace Transmitron::Widgets;
 
 wxDEFINE_EVENT(Events::EDIT_PUBLISH, Events::Edit); // NOLINT
@@ -306,18 +308,9 @@ void Edit::setPayload(const std::string &text)
 
 void Edit::setTimestamp(const std::chrono::system_clock::time_point &timestamp)
 {
-  const std::time_t timestampC = std::chrono::system_clock::to_time_t(timestamp);
-  const std::tm timestampTm = *std::localtime(&timestampC);
-  const std::string format = "%Y-%m-%d %H:%M:%S";
-  std::stringstream ss;
-  ss << std::put_time(&timestampTm, format.c_str());
-
-  const auto seconds = std::chrono::time_point_cast<std::chrono::seconds>(timestamp);
-  const auto fraction = timestamp - seconds;
-  const auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(fraction).count();
-  ss << "." << millis;
-
-  mInfoLine->SetLabel(ss.str());
+  const std::string format = "%Y-%m-%d %H:%M:%Sms";
+  const auto text = Helpers::timeToString(timestamp, format);
+  mInfoLine->SetLabel(text);
 }
 
 void Edit::setInfoLine(const std::string &info)

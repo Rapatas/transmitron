@@ -1,6 +1,7 @@
 #ifndef TRANSMITRON_MODELS_HISTORY_HPP
 #define TRANSMITRON_MODELS_HISTORY_HPP
 
+#include <spdlog/spdlog.h>
 #include <wx/dataview.h>
 #include <mqtt/message.h>
 #include "MQTT/Client.hpp"
@@ -36,6 +37,7 @@ public:
   size_t attachObserver(Observer *observer);
   bool detachObserver(size_t id);
   void clear();
+  bool load(const std::string &recording);
 
   std::string getPayload(const wxDataViewItem &item) const;
   std::string getTopic(const wxDataViewItem &item) const;
@@ -44,6 +46,7 @@ public:
   const MQTT::Message &getMessage(const wxDataViewItem &item) const;
   void setFilter(const std::string &filter);
   std::string getFilter() const;
+  nlohmann::json toJson() const;
 
 private:
 
@@ -53,6 +56,7 @@ private:
     MQTT::Subscription::Id_t subscriptionId {};
   };
 
+  std::shared_ptr<spdlog::logger> mLogger;
   std::vector<Node> mMessages;
   std::vector<size_t> mRemap;
   wxObjectDataPtr<Subscriptions> mSubscriptions;
@@ -89,7 +93,10 @@ private:
   void onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor color) override;
   void onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) override;
   void onCleared(MQTT::Subscription::Id_t subscriptionId) override;
-  void onMessage(MQTT::Subscription::Id_t subscriptionId, const MQTT::Message &message) override;
+  void onMessage(
+    MQTT::Subscription::Id_t subscriptionId,
+    const MQTT::Message &message
+  ) override;
 };
 
 }
