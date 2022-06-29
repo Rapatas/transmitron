@@ -459,7 +459,7 @@ void App::openRecording(const wxString &filename)
   const auto utf8 = filename.ToUTF8();
   const std::string encodedStr(utf8.data(), utf8.length());
   std::filesystem::path p(encodedStr);
-  const auto filenameStr = p.filename().string();
+  const auto filenameStr = p.stem().string();
   const std::string decodedStr = Url::decode(filenameStr);
 
   wxObjectDataPtr<Models::Subscriptions> subscriptions;
