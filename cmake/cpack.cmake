@@ -79,11 +79,19 @@ set(CPACK_NSIS_DISPLAY_NAME ${TRANSMITRON_NAME})
 set(CPACK_NSIS_CONTACT ${CPACK_PACKAGE_CONTACT})
 set(CPACK_NSIS_COMPRESSOR "${CPACK_NSIS_COMPRESSOR}\n  SetCompressorDictSize 64")
 set(CPACK_NSIS_COMPRESSOR "${CPACK_NSIS_COMPRESSOR}\n  BrandingText '${CPACK_PACKAGE_DESCRIPTION_SUMMARY}'")
-set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "\
+set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
   WriteRegStr SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe' '' '$INSTDIR\\\\bin\\\\transmitron.exe'\n\
-  WriteRegStr SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe' 'Path' '$INSTDIR\\\\bin'")
-set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "\
-  DeleteRegKey SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe'")
+  WriteRegStr SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe' 'Path' '$INSTDIR\\\\bin'
+")
+set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
+  DeleteRegKey SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe'
+")
+set(CPACK_NSIS_CREATE_ICONS_EXTRA "
+  CreateShortCut \\\"$DESKTOP\\\\Transmitron.lnk\\\" \\\"$INSTDIR\\\\bin\\\\transmitron.exe\\\"
+")
+set(CPACK_NSIS_DELETE_ICONS_EXTRA "
+  Delete \\\"$DESKTOP\\\\Transmitron.lnk\\\"
+")
 
 # DEB (Linux .deb bundle)
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtk2.0-dev")
