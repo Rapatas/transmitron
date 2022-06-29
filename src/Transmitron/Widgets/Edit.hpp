@@ -2,6 +2,8 @@
 #define TRANSMITRON_WIDGETS_EDIT_HPP
 
 #include <chrono>
+
+#include <spdlog/spdlog.h>
 #include <wx/stattext.h>
 #include <wx/stc/stc.h>
 #include <wx/wx.h>
@@ -74,6 +76,7 @@ private:
 
   using ThemeStyles = std::map<Style, std::pair<uint32_t, uint32_t>>;
 
+  std::shared_ptr<spdlog::logger> mLogger;
   const std::map<Theme, ThemeStyles> mStyles;
 
   Theme mTheme;
@@ -111,7 +114,8 @@ private:
     Auto,
     Text,
     Json,
-    Xml
+    Xml,
+    Binary,
   };
   Format mCurrentFormat = Format::Auto;
 
@@ -120,6 +124,7 @@ private:
     {"Text", Format::Text},
     {"Json", Format::Json},
     {"Xml", Format::Xml},
+    {"Binary", Format::Binary},
   };
 
   void onQosClicked(wxMouseEvent &e);

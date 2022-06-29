@@ -17,6 +17,8 @@ std::string timeToString(
   const std::string &format
 );
 
+std::string hexDump(const std::vector<uint8_t>& bytes, size_t columns);
+
 }
 }
 

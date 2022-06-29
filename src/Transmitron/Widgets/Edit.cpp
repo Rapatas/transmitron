@@ -1,12 +1,15 @@
 #include <chrono>
 #include <iomanip>
-#include <nlohmann/json.hpp>
 #include <sstream>
+
+#include <nlohmann/json.hpp>
 #include <tinyxml2.h>
 #include <wx/clipbrd.h>
 #include <wx/artprov.h>
 #include <wx/sizer.h>
 #include <wx/stc/stc.h>
+
+#include "Common/Log.hpp"
 #include "Common/Helpers.hpp"
 #include "Edit.hpp"
 #include "Transmitron/Events/Edit.hpp"
@@ -44,6 +47,7 @@ Edit::Edit(
   mRetained(false),
   mQoS(MQTT::QoS::AtLeastOnce)
 {
+  mLogger = Common::Log::create("Widgets::Edit");
   constexpr size_t FontSize = 9;
   mFont = wxFont(wxFontInfo(FontSize).FaceName("Consolas"));
 
@@ -261,6 +265,7 @@ void Edit::setStyle(Format format)
     }
     break;
 
+    case Format::Binary:
     case Format::Text:
     default:
     {
@@ -424,6 +429,12 @@ std::string Edit::formatTry(
     }
   }
 
+  if (format == Format::Binary)
+  {
+    const std::vector<uint8_t> bytes{std::begin(text), std::end(text)};
+    return Helpers::hexDump(bytes, 10);
+  }
+
   return text;
 }
 
@@ -451,6 +462,11 @@ Edit::Format Edit::formatGuess(const std::string &text)
     || c == 'n'
   ) {
     return Format::Json;
+  }
+
+  if (::isprint(c) == 0)
+  {
+    return Format::Binary;
   }
 
   return Format::Text;
