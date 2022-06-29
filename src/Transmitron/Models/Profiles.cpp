@@ -161,8 +161,12 @@ bool Profiles::rename(
     return false;
   }
 
+  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
+  snippets->load(pathNew);
+
   profile->name = name;
   profile->path = pathNew;
+  profile->snippets = snippets;
   profile->saved = false;
 
   save(id);
