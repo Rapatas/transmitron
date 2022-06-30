@@ -14,7 +14,6 @@ class BrokerOptions
 public:
 
   static constexpr bool DefaultAutoReconnect = false;
-  static constexpr const std::string_view DefaultClientId {};
   static constexpr const std::string_view DefaultHostname = "127.0.0.1";
   static constexpr const std::string_view DefaultPassword {};
   static constexpr const std::string_view DefaultUsername {};

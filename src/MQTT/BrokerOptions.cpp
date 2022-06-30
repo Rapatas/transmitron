@@ -15,7 +15,7 @@ BrokerOptions::BrokerOptions() :
   mConnectTimeout(DefaultTimeout),
   mDisconnectTimeout(DefaultTimeout),
   mKeepAliveInterval(DefaultKeepAliveInterval),
-  mClientId(DefaultClientId),
+  mClientId(fmt::format("{}_{}", wxGetHostName(), rand())),
   mHostname(DefaultHostname),
   mPassword(DefaultPassword),
   mUsername(DefaultUsername)
@@ -60,7 +60,7 @@ BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data)
     .value_or(DefaultAutoReconnect);
 
   std::string clientId = extract<std::string>(data, "clientId")
-    .value_or(std::string(DefaultClientId));
+    .value_or(std::string(fmt::format("{}_{}", wxGetHostName(), rand())));
 
   std::string hostname = extract<std::string>(data, "hostname")
     .value_or(std::string(DefaultHostname));
