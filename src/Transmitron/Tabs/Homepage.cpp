@@ -450,17 +450,9 @@ void Homepage::onContextSelected(wxCommandEvent &e)
 
 void Homepage::onProfileDelete(wxCommandEvent & /* event */)
 {
-  mLogger->info("Requesting delete");
   const auto item = mProfilesCtrl->GetSelection();
   mProfilesModel->remove(item);
-
-  const wxDataViewItem parent(nullptr);
-  wxDataViewItemArray children;
-  mProfilesModel->GetChildren(parent, children);
-  if (children.empty())
-  {
-    propertyGridClear();
-  }
+  propertyGridClear();
 }
 
 void Homepage::onLayoutAdded(Events::Layout &/* event */)
