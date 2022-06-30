@@ -266,7 +266,7 @@ void Homepage::setupProfileButtons(wxPanel *parent)
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
-  mCancel->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
+  mCancel->SetBitmap(wxArtProvider::GetBitmap(wxART_UNDO));
   mCancel->Enable(false);
   mCancel->Bind(wxEVT_BUTTON, &Homepage::onCancelClicked, this);
 
