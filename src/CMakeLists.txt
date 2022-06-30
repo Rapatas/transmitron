@@ -51,12 +51,12 @@ set(
   main.cpp
 )
 
-set(INFO_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/Transmitron/Info.in.cpp")
-set(INFO_POST_CONF "${CMAKE_BINARY_DIR}/Transmitron/Info.cpp")
+set(INFO_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/Common/Info.in.cpp")
+set(INFO_POST_CONF "${CMAKE_BINARY_DIR}/Common/Info.cpp")
 list(APPEND ${TRANSMITRON_BIN_NAME}_SOURCE ${INFO_POST_CONF})
 
-set(VERSION_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/Transmitron/Version.in.cpp")
-set(VERSION_POST_CONF "${CMAKE_BINARY_DIR}/Transmitron/Version.cpp")
+set(VERSION_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/Common/Version.in.cpp")
+set(VERSION_POST_CONF "${CMAKE_BINARY_DIR}/Common/Version.cpp")
 list(APPEND ${TRANSMITRON_BIN_NAME}_SOURCE ${VERSION_POST_CONF})
 
 configure_file(${INFO_PRE_CONF} ${INFO_POST_CONF} @ONLY)

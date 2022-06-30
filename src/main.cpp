@@ -3,8 +3,8 @@
 #include <exception>
 #include <wx/app.h>
 #include <wx/init.h>
-#include "Transmitron/Info.hpp"
-#include "Transmitron/Version.hpp"
+#include "Common/Info.hpp"
+#include "Common/Version.hpp"
 #include "Transmitron/App.hpp"
 
 int main(int argc, char **argv)
@@ -15,8 +15,8 @@ int main(int argc, char **argv)
 
     const auto projectInfo = fmt::format(
       "{} {}",
-      getProjectName(),
-      getProjectVersion()
+      Common::getProjectName(),
+      Common::getProjectVersion()
     );
     args.set_version_flag("--version", projectInfo);
 

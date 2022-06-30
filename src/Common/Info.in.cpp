@@ -1,10 +1,10 @@
-#include "Transmitron/Info.hpp"
+#include "Common/Info.hpp"
 
 #ifndef PROJECT_NAME
 #define PROJECT_NAME "@PROJECT_NAME@"
 #endif // PROJECT_NAME
 
-const char *getProjectName()
+const char *Common::getProjectName()
 {
     return PROJECT_NAME;
 }
@@ -13,7 +13,7 @@ const char *getProjectName()
 #define PROJECT_DESCRIPTION "@PROJECT_DESCRIPTION@"
 #endif // PROJECT_DESCRIPTION
 
-const char *getProjectDescription()
+const char *Common::getProjectDescription()
 {
     return PROJECT_DESCRIPTION;
 }

@@ -14,7 +14,7 @@
 #include "Common/Url.hpp"
 #include "Common/XdgBaseDir.hpp"
 #include "Events/Connection.hpp"
-#include "Info.hpp"
+#include "Common/Info.hpp"
 #include "MQTT/Client.hpp"
 #include "Resources/gear/gear-18x18.hpp"
 #include "Resources/history/history-18x14.hpp"
