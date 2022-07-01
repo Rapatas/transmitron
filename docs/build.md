@@ -16,13 +16,7 @@ Then, in the container:
 ```bash
 macro-make
 cd build_rapatas_transmitron_linux_compiler
-make install DESTDIR=./installed
-```
-
-Now you can launch it on the host with:
-
-```bash
-./build_rapatas_transmitron_linux_compiler/installed/usr/local/bin/transmitron
+make package
 ```
 
 ## Windows
