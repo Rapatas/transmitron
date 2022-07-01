@@ -306,7 +306,10 @@ void App::onRecordingOpen(Events::Recording &/* event */)
     return;
   }
 
-  openRecording(openFileDialog.GetPath());
+  const auto filename = openFileDialog.GetPath();
+  const auto utf8 = filename.ToUTF8();
+  const std::string encodedStr(utf8.data(), utf8.length());
+  openRecording(encodedStr);
 }
 
 
@@ -454,25 +457,23 @@ void App::openProfile(wxDataViewItem item)
   client->focus();
 }
 
-void App::openRecording(const wxString &filename)
+void App::openRecording(const std::string &filename)
 {
-  const auto utf8 = filename.ToUTF8();
-  const std::string encodedStr(utf8.data(), utf8.length());
-  std::filesystem::path p(encodedStr);
-  const auto filenameStr = p.stem().string();
+  std::filesystem::path path(filename);
+  const auto filenameStr = path.stem().string();
   const std::string decodedStr = Url::decode(filenameStr);
 
   wxObjectDataPtr<Models::Subscriptions> subscriptions;
   subscriptions = new Models::Subscriptions();
-  const auto subscriptionsLoaded = subscriptions->load(encodedStr);
+  const auto subscriptionsLoaded = subscriptions->load(filename);
 
   wxObjectDataPtr<Models::History> history;
   history = new Models::History(subscriptions);
-  const auto historyLoaded = history->load(encodedStr);
+  const auto historyLoaded = history->load(filename);
 
   if (!subscriptionsLoaded || !historyLoaded)
   {
-    mLogger->warn("Could not load recording: '{}'", encodedStr);
+    mLogger->warn("Could not load recording: '{}'", filename);
     return;
   }
 

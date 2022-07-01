@@ -27,6 +27,14 @@ int main(int argc, char **argv)
       "Profile to launch"
     );
 
+    std::string recordingFile;
+    auto *recordingFileOpt = args.add_option(
+      "recording,--recording",
+      recordingFile,
+      "History recording file to load"
+    );
+    recordingFileOpt->option_text(".TMRC");
+
     try { args.parse(argc, argv); }
     catch (const CLI::ParseError &e) { return args.exit(e); }
 
@@ -38,6 +46,10 @@ int main(int argc, char **argv)
     if (!profileNameOpt->empty())
     {
       app->openProfile(profileName);
+    }
+    else if (!recordingFileOpt->empty())
+    {
+      app->openRecording(recordingFile);
     }
 
     app->OnRun();

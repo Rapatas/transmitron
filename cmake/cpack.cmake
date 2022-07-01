@@ -94,9 +94,11 @@ set(CPACK_NSIS_DELETE_ICONS_EXTRA "
 ")
 
 # DEB (Linux .deb bundle)
+add_subdirectory(${CMAKE_SOURCE_DIR}/resources/debian)
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtk2.0-dev")
 set(CPACK_DEBIAN_PACKAGE_SECTION "internet")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER ${CPACK_PACKAGE_CONTACT})
+SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA ${DEB_POSTINST_POST_CONF})
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "## Features:
 
  Profiles: Store connections to brokers.

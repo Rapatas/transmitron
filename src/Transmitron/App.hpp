@@ -20,6 +20,7 @@ public:
   explicit App();
 
   bool openProfile(const std::string &profileName);
+  void openRecording(const std::string &filename);
 
   bool OnInit() override;
   int FilterEvent(wxEvent &event) override;
@@ -55,7 +56,6 @@ private:
   std::filesystem::path getInstallPrefix();
 
   void openProfile(wxDataViewItem item);
-  void openRecording(const wxString &filename);
 
   int calculateOptionHeight();
 };
