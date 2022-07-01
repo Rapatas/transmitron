@@ -1,45 +1,46 @@
 # Build
 
-## Ubuntu 18.04
+The recommended build method is to use the provided docker images:
 
-### Requirements
-
-- [conan](https://conan.io/) package manager
-- gcc-8 (or grater)
-- libgtk2.0-dev
-
-### Steps
-
-**C++ 17**
+## Linux (Debian)
 
 ```bash
-sudo apt-get install -y gcc-8
+git clone https://github.com/Rapatas/transmitron.git
+cd transmitron
+./docker/linux/build-image.sh
+docker run --rm -it -v $PWD:/workspace rapatas_transmitron_linux_compiler bash
 ```
 
-**conan**
+Then, in the container:
 
 ```bash
-pip3 install conan --upgrade
-conan config set general.revisions_enabled=1
-conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
+macro-make
+cd build_rapatas_transmitron_linux_compiler
+make install DESTDIR=./installed
 ```
 
-**libgtk2.0-dev**
+Now you can launch it on the host with:
 
 ```bash
-sudo apt install -y libgtk2.0-dev
+./build_rapatas_transmitron_linux_compiler/installed/usr/local/bin/transmitron
 ```
 
-**transmitron**
+## Windows
+
+**Transmitron is cross-compiled from Linux to windows. You will need a Linux
+host to run this image.**
 
 ```bash
-git clone https://github.com/rapatas/transmitron.git
-cd transmitron/
+git clone https://github.com/Rapatas/transmitron.git
+cd transmitron
+./docker/windows/build-image.sh
+docker run --rm -it -v $PWD:/workspace rapatas_transmitron_windows_compiler bash
+```
 
-mkdir build && cd build
-conan install ../conan/ --build=missing
-cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_BUILD_TYPE=Release ..
-make -j $(nproc)
-make install DESTDIR=installation
-./installation/usr/local/bin/transmitron
+Then, in the container:
+
+```bash
+macro-make
+cd build_rapatas_transmitron_windows_compiler
+make package
 ```

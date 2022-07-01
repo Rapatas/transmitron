@@ -425,7 +425,6 @@ std::filesystem::path App::getInstallPrefix()
   const std::filesystem::path executable = getExecutablePath();
   const auto executableDir = executable.parent_path();
   auto prefix = executableDir.parent_path();
-  prefix.make_preferred();
   return prefix;
 }
 
