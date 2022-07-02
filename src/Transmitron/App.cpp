@@ -124,6 +124,7 @@ int App::FilterEvent(wxEvent &event)
   }
 
   const auto keyEvent = dynamic_cast<wxKeyEvent&>(event);
+
   if (keyEvent.GetKeyCode() == 'W' && keyEvent.ControlDown())
   {
     onKeyDownControlW();
@@ -136,7 +137,7 @@ int App::FilterEvent(wxEvent &event)
     return wxEventFilter::Event_Processed;
   }
 
-  return wxEventFilter::Event_Skip;
+  return wxEventFilter::Event_Ignore;
 }
 
 bool App::openProfile(const std::string &profileName)
