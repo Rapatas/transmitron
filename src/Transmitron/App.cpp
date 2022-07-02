@@ -137,7 +137,7 @@ int App::FilterEvent(wxEvent &event)
     return wxEventFilter::Event_Processed;
   }
 
-  return wxEventFilter::Event_Ignore;
+  return wxEventFilter::Event_Skip;
 }
 
 bool App::openProfile(const std::string &profileName)
