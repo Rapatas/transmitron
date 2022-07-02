@@ -1,8 +1,10 @@
 #include <iomanip>
 #include <iostream>
 #include <sstream>
+#include <string_view>
 #include <vector>
 
+#include <date/date.h>
 #include <fmt/format.h>
 
 #include "Helpers.hpp"
@@ -27,26 +29,24 @@ wxColor Common::Helpers::colorFromNumber(size_t number)
 }
 
 std::string Common::Helpers::timeToString(
-  const system_clock::time_point &timestamp,
-  const std::string &format
+  const system_clock::time_point &timestamp
 ) {
-  const std::time_t timestampC = system_clock::to_time_t(timestamp);
-  const std::tm timestampTm = *std::localtime(&timestampC);
-  std::stringstream ss;
-  ss << std::put_time(&timestampTm, format.c_str());
+  return date::format("%F %T", floor<milliseconds>(timestamp));
+}
 
-  const std::string &ms{"ms"};
-  if (true // NOLINT
-    && format.length() >= ms.length()
-    && (0 == format.compare(format.length() - ms.length(), ms.length(), ms))
-  ) {
-    const auto secs = time_point_cast<seconds>(timestamp);
-    const auto fraction = timestamp - secs;
-    const auto millis = duration_cast<milliseconds>(fraction).count();
-    ss << "." << millis;
-  }
+std::string Common::Helpers::timeToFilename(
+  const system_clock::time_point &timestamp
+) {
+  return date::format("%Y%m%dT%H%M%S", floor<seconds>(timestamp));
+}
 
-  return ss.str();
+std::chrono::system_clock::time_point Common::Helpers::stringToTime(
+  const std::string &line
+) {
+  system_clock::time_point tp;
+  std::stringstream ss(line);
+  ss >> date::parse("%F %T", tp);
+  return tp;
 }
 
 std::string Common::Helpers::hexDump(

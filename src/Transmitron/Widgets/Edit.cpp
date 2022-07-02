@@ -313,8 +313,7 @@ void Edit::setPayload(const std::string &text)
 
 void Edit::setTimestamp(const std::chrono::system_clock::time_point &timestamp)
 {
-  const std::string format = "%Y-%m-%d %H:%M:%Sms";
-  const auto text = Helpers::timeToString(timestamp, format);
+  const auto text = Helpers::timeToString(timestamp);
   mInfoLine->SetLabel(text);
 }
 

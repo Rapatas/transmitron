@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <fstream>
 #include <wx/dcmemory.h>
+#include "Common/Helpers.hpp"
 #include "History.hpp"
 #include "Common/Log.hpp"
 #include "MQTT/Message.hpp"
@@ -130,6 +131,14 @@ bool History::load(const std::string &recording)
       node.message.payload = *payloadIt;
     }
 
+    const auto timestampIt = msg.find("timestamp");
+    if (true // NOLINT
+      && timestampIt != std::end(msg)
+      && timestampIt->is_string()
+    ) {
+      node.message.timestamp = Common::Helpers::stringToTime(*timestampIt);
+    }
+
     const auto retainedIt = msg.find("retained");
     if (true // NOLINT
       && retainedIt != std::end(msg)
@@ -154,12 +163,14 @@ nlohmann::json History::toJson() const
 
   for (const auto &m : mMessages)
   {
+    const auto timestamp = Common::Helpers::timeToString(m.message.timestamp);
     result.push_back({
       {"subscription", m.subscriptionId},
       {"topic", m.message.topic},
       {"qos", m.message.qos},
       {"payload", m.message.payload},
       {"retained", m.message.retained},
+      {"timestamp", timestamp},
     });
   }
 

@@ -37,6 +37,7 @@ RUN true \
   && conan install fmt/8.0.1@                         --build=missing \
   && conan install spdlog/1.9.2@                      --build=missing \
   && conan install cli11/2.1.2@                       --build=missing \
+  && conan install date/3.0.1@                        --build=missing \
   && conan install wxwidgets/3.1.5@bincrafters/stable --build=missing -o wxwidgets:webview=False
 
 COPY ./macro-make  /usr/local/bin

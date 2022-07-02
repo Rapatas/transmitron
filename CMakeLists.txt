@@ -38,6 +38,7 @@ find_package(tinyxml2 REQUIRED)
 find_package(fmt REQUIRED)
 find_package(CLI11 REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(date REQUIRED)
 
 add_subdirectory(src)
 

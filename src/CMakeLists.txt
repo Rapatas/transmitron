@@ -133,5 +133,6 @@ target_link_libraries(
     fmt::fmt
     spdlog::spdlog
     CLI11::CLI11
+    date::date
     stdc++fs
 )

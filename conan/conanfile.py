@@ -13,7 +13,9 @@ class TransmitronConan(ConanFile):
         "fmt/8.0.1",
         "spdlog/1.9.2",
         "cli11/2.1.2",
+        "date/3.0.1",
     ]
     default_options = {
         "wxwidgets:webview": False,
+        "date:header_only": True,
     }

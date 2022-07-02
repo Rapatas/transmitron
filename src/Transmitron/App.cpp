@@ -262,8 +262,7 @@ void App::onRecordingSave(Events::Recording &event)
   const std::string encoded = Url::encode(nameStr);
 
   const auto now = std::chrono::system_clock::now();
-  const std::string format = "%Y%m%dT%H%M%S";
-  const auto timestamp = Helpers::timeToString(now, format);
+  const auto timestamp = Helpers::timeToFilename(now);
   const auto filename = encoded + "-" + timestamp + ".tmrc";
 
   wxFileDialog saveFileDialog(

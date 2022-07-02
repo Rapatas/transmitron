@@ -1,7 +1,7 @@
 <p align="center">
     <img
         width="20%"
-		alt="Transmitron Name"
+		alt="Transmitron Logo"
 		src="./resources/images/transmitron.svg">
     <br>
     <img

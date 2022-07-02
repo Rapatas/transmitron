@@ -25,6 +25,7 @@ RUN true \
   && conan install tinyxml2/8.0.0@                    --profile=windows --build=missing \
   && conan install fmt/8.0.1@                         --profile=windows --build=missing \
   && conan install spdlog/1.9.2@                      --profile=windows --build=missing \
+  && conan install date/3.0.1@                        --build=missing \
   && conan install cli11/2.1.1@                       --profile=windows --build=missing
 
 COPY ./toolchain.cmake /opt/cmake-toolchains/linux-x86_64-to-windows-x86_64.cmake
