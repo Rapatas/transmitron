@@ -7,5 +7,5 @@ install(
   DESTINATION bin
 )
 
-add_subdirectory(${CMAKE_SOURCE_DIR}/resources/desktop)
+add_subdirectory(${CMAKE_SOURCE_DIR}/resources/debian)
 add_subdirectory(${CMAKE_SOURCE_DIR}/resources/images)

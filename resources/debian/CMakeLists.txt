@@ -7,8 +7,36 @@ if (UNIX AND NOT APPLE)
 
   install(CODE "
     include(CPack)
-    MESSAGE(\"CMAKE_INSTALL_PREFIX=\${CMAKE_INSTALL_PREFIX}\")
     configure_file(${DEB_POSTINST_PRE_CONF} ${DEB_POSTINST_POST_CONF} @ONLY)
   ")
+
+  install(
+    FILES
+      mimetypes-transmitron.xml
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/mime/packages/
+  )
+
+  set(DESKTOP_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/transmitron.in.desktop")
+  set(DESKTOP_POST_CONF "${CMAKE_BINARY_DIR}/transmitron.desktop")
+  configure_file(${DESKTOP_PRE_CONF} ${DESKTOP_POST_CONF} @ONLY)
+
+  install(
+    FILES
+      ${DESKTOP_POST_CONF}
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications
+  )
+
+  install(
+    FILES
+      transmitron.svg
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps
+  )
+
+  install(
+    FILES
+      transmitron.svg
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/mimetypes
+    RENAME text-transmitron.svg
+  )
 
 endif ()
