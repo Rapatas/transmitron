@@ -2,7 +2,7 @@
     <img
         width="20%"
 		alt="Transmitron Name"
-		src="./resources/desktop/transmitron.svg">
+		src="./resources/images/transmitron.svg">
     <br>
     <img
         width="60%"

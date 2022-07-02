@@ -26,17 +26,4 @@ if (UNIX AND NOT APPLE)
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications
   )
 
-  install(
-    FILES
-      transmitron.svg
-    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/apps
-  )
-
-  install(
-    FILES
-      transmitron.svg
-    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/scalable/mimetypes
-    RENAME text-transmitron.svg
-  )
-
 endif ()
