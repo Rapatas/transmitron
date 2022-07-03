@@ -10,7 +10,6 @@
 #include "Common/Url.hpp"
 #include "MQTT/BrokerOptions.hpp"
 #include "Profiles.hpp"
-#include "Transmitron/Info.hpp"
 #include "Transmitron/Models/KnownTopics.hpp"
 #include "Transmitron/Types/ClientOptions.hpp"
 #include "Transmitron/Notifiers/Layouts.hpp"
@@ -161,8 +160,12 @@ bool Profiles::rename(
     return false;
   }
 
+  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
+  snippets->load(pathNew);
+
   profile->name = name;
   profile->path = pathNew;
+  profile->snippets = snippets;
   profile->saved = false;
 
   save(id);

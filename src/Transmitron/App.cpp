@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <fstream>
 #include <stdexcept>
 
 #include <fmt/core.h>
@@ -8,10 +9,13 @@
 #include <wx/settings.h>
 
 #include "App.hpp"
-#include "Events/Connection.hpp"
+#include "Common/Helpers.hpp"
 #include "Common/Log.hpp"
+#include "Common/Url.hpp"
 #include "Common/XdgBaseDir.hpp"
-#include "Info.hpp"
+#include "Events/Connection.hpp"
+#include "Common/Info.hpp"
+#include "MQTT/Client.hpp"
 #include "Resources/gear/gear-18x18.hpp"
 #include "Resources/history/history-18x14.hpp"
 #include "Resources/history/history-18x18.hpp"
@@ -32,9 +36,13 @@
 #include "Tabs/Client.hpp"
 #include "Tabs/Homepage.hpp"
 #include "Tabs/Settings.hpp"
+#include "Transmitron/Events/Recording.hpp"
+#include "Transmitron/Models/History.hpp"
 #include "Transmitron/Models/Layouts.hpp"
+#include "Transmitron/Models/Subscriptions.hpp"
 
 using namespace Transmitron;
+using namespace Common;
 namespace fs = std::filesystem;
 
 constexpr size_t DefaultWindowWidth = 800;
@@ -116,6 +124,7 @@ int App::FilterEvent(wxEvent &event)
   }
 
   const auto keyEvent = dynamic_cast<wxKeyEvent&>(event);
+
   if (keyEvent.GetKeyCode() == 'W' && keyEvent.ControlDown())
   {
     onKeyDownControlW();
@@ -244,6 +253,66 @@ void App::onKeyDownControlT()
   createProfilesTab(mCount - 1);
 }
 
+void App::onRecordingSave(Events::Recording &event)
+{
+  const auto name = event.getName();
+  const auto nameUtf8 = name.ToUTF8();
+  const std::string nameStr(nameUtf8.data(), nameUtf8.length());
+  mLogger->info("Storing recording for {}", nameStr);
+  const std::string encoded = Url::encode(nameStr);
+
+  const auto now = std::chrono::system_clock::now();
+  const auto timestamp = Helpers::timeToFilename(now);
+  const auto filename = encoded + "-" + timestamp + ".tmrc";
+
+  wxFileDialog saveFileDialog(
+    mFrame,
+    _("Save TMRC file"),
+    "",
+    filename,
+    "TMRC files (*.tmrc)|*.tmrc",
+    wxFD_SAVE | wxFD_OVERWRITE_PROMPT
+  );
+
+  if (saveFileDialog.ShowModal() == wxID_CANCEL)
+  {
+    return;
+  }
+
+  const auto filepath = saveFileDialog.GetPath().ToStdString();
+  std::ofstream out(filepath);
+  if (!out.is_open())
+  {
+    mLogger->error("Cannot save current contents in file '{}'.", filepath);
+    return;
+  }
+
+  out << event.getContents();
+}
+
+void App::onRecordingOpen(Events::Recording &/* event */)
+{
+  wxFileDialog openFileDialog(
+    mFrame,
+    _("Open tmrc file"),
+    "",
+    "",
+    "TMRC files (*.tmrc)|*.tmrc",
+    wxFD_OPEN | wxFD_FILE_MUST_EXIST
+  );
+
+  if (openFileDialog.ShowModal() == wxID_CANCEL)
+  {
+    return;
+  }
+
+  const auto filename = openFileDialog.GetPath();
+  const auto utf8 = filename.ToUTF8();
+  const std::string encodedStr(utf8.data(), utf8.length());
+  openRecording(encodedStr);
+}
+
+
 void App::createProfilesTab(size_t index)
 {
   auto *homepage = new Tabs::Homepage(
@@ -257,6 +326,8 @@ void App::createProfilesTab(size_t index)
   ++mCount;
   mNote->SetSelection(index);
   homepage->focus();
+
+  homepage->Bind(Events::RECORDING_OPEN, &App::onRecordingOpen, this);
 
   homepage->Bind(Events::CONNECTION, [this](Events::Connection e){
     if (e.GetSelection() == wxNOT_FOUND)
@@ -354,21 +425,63 @@ std::filesystem::path App::getInstallPrefix()
   const std::filesystem::path executable = getExecutablePath();
   const auto executableDir = executable.parent_path();
   auto prefix = executableDir.parent_path();
-  prefix.make_preferred();
   return prefix;
 }
 
-void App::openProfile(wxDataViewItem profileItem)
+void App::openProfile(wxDataViewItem item)
 {
+  const auto options = mProfilesModel->getBrokerOptions(item);
+
   auto *client = new Tabs::Client(
     mNote,
-    mProfilesModel->getBrokerOptions(profileItem),
-    mProfilesModel->getClientOptions(profileItem),
-    mProfilesModel->getSnippetsModel(profileItem),
-    mProfilesModel->getTopicsSubscribed(profileItem),
-    mProfilesModel->getTopicsPublished(profileItem),
+    options,
+    mProfilesModel->getClientOptions(item),
+    mProfilesModel->getSnippetsModel(item),
+    mProfilesModel->getTopicsSubscribed(item),
+    mProfilesModel->getTopicsPublished(item),
     mLayoutsModel,
-    mProfilesModel->getName(profileItem),
+    mProfilesModel->getName(item),
+    mDarkMode,
+    mOptionsHeight
+  );
+
+  client->Bind(Events::RECORDING_SAVE, &App::onRecordingSave, this);
+
+  const size_t selected = (size_t)mNote->GetSelection();
+  mNote->RemovePage(selected);
+  mNote->InsertPage(selected, client, "");
+  mNote->SetSelection(selected);
+  mNote->SetPageText(selected, mProfilesModel->getName(item));
+
+  client->focus();
+}
+
+void App::openRecording(const std::string &filename)
+{
+  std::filesystem::path path(filename);
+  const auto filenameStr = path.stem().string();
+  const std::string decodedStr = Url::decode(filenameStr);
+
+  wxObjectDataPtr<Models::Subscriptions> subscriptions;
+  subscriptions = new Models::Subscriptions();
+  const auto subscriptionsLoaded = subscriptions->load(filename);
+
+  wxObjectDataPtr<Models::History> history;
+  history = new Models::History(subscriptions);
+  const auto historyLoaded = history->load(filename);
+
+  if (!subscriptionsLoaded || !historyLoaded)
+  {
+    mLogger->warn("Could not load recording: '{}'", filename);
+    return;
+  }
+
+  auto *client = new Tabs::Client(
+    mNote,
+    history,
+    subscriptions,
+    mLayoutsModel,
+    decodedStr,
     mDarkMode,
     mOptionsHeight
   );
@@ -377,7 +490,7 @@ void App::openProfile(wxDataViewItem profileItem)
   mNote->RemovePage(selected);
   mNote->InsertPage(selected, client, "");
   mNote->SetSelection(selected);
-  mNote->SetPageText(selected, mProfilesModel->getName(profileItem));
+  mNote->SetPageText(selected, decodedStr);
 
   client->focus();
 }

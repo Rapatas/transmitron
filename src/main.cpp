@@ -3,8 +3,8 @@
 #include <exception>
 #include <wx/app.h>
 #include <wx/init.h>
-#include "Transmitron/Info.hpp"
-#include "Transmitron/Version.hpp"
+#include "Common/Info.hpp"
+#include "Common/Version.hpp"
 #include "Transmitron/App.hpp"
 
 int main(int argc, char **argv)
@@ -15,8 +15,8 @@ int main(int argc, char **argv)
 
     const auto projectInfo = fmt::format(
       "{} {}",
-      getProjectName(),
-      getProjectVersion()
+      Common::getProjectName(),
+      Common::getProjectVersion()
     );
     args.set_version_flag("--version", projectInfo);
 
@@ -26,6 +26,14 @@ int main(int argc, char **argv)
       profileName,
       "Profile to launch"
     );
+
+    std::string recordingFile;
+    auto *recordingFileOpt = args.add_option(
+      "recording,--recording",
+      recordingFile,
+      "History recording file to load"
+    );
+    recordingFileOpt->option_text(".TMRC");
 
     try { args.parse(argc, argv); }
     catch (const CLI::ParseError &e) { return args.exit(e); }
@@ -38,6 +46,10 @@ int main(int argc, char **argv)
     if (!profileNameOpt->empty())
     {
       app->openProfile(profileName);
+    }
+    else if (!recordingFileOpt->empty())
+    {
+      app->openRecording(recordingFile);
     }
 
     app->OnRun();

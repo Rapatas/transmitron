@@ -185,6 +185,8 @@ void Client::setBrokerOptions(BrokerOptions brokerOptions)
   mConnectOptions.set_clean_session(true);
   mConnectOptions.set_keep_alive_interval(mBrokerOptions.getKeepAliveInterval());
   mConnectOptions.set_connect_timeout(mBrokerOptions.getConnectTimeout());
+  mConnectOptions.set_user_name(mBrokerOptions.getUsername());
+  mConnectOptions.set_password(mBrokerOptions.getPassword());
 }
 
 // Setters }

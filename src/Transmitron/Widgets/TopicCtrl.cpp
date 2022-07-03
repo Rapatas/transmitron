@@ -40,8 +40,14 @@ TopicCtrl::TopicCtrl(
   Bind(wxEVT_RIGHT_DOWN,  &TopicCtrl::onRightClicked,  this);
   Bind(wxEVT_KILL_FOCUS,  &TopicCtrl::onLostFocus,     this);
   Bind(wxEVT_KEY_DOWN,    &TopicCtrl::onKeyDown,       this);
-  Bind(wxEVT_KEY_UP,   &TopicCtrl::onKeyUp, this);
+  Bind(wxEVT_KEY_UP,      &TopicCtrl::onKeyUp,         this);
 
+#ifdef WIN32
+
+  // Required to stop Ctrl-A and Return from causing a wxBell on Windows.
+  Bind(wxEVT_CHAR, &TopicCtrl::onChar, this);
+
+#endif
 
   Bind(wxEVT_COMMAND_TEXT_UPDATED,  &TopicCtrl::onValueChanged,    this);
   Bind(wxEVT_COMMAND_MENU_SELECTED, &TopicCtrl::onContextSelected, this);
@@ -218,6 +224,23 @@ void TopicCtrl::onKeyUp(wxKeyEvent &event)
   event.Skip();
 }
 
+void TopicCtrl::onChar(wxKeyEvent &event)
+{
+  // Don't skip if Enter.
+  if (event.GetKeyCode() == WXK_RETURN)
+  {
+    return;
+  }
+
+  // Don't skip if `Ctrl-A`.
+  if (event.ControlDown() && event.GetKeyCode() == 1)
+  {
+    return;
+  }
+
+  event.Skip();
+}
+
 void TopicCtrl::onKeyDown(wxKeyEvent &e)
 {
   if (e.GetKeyCode() == WXK_ESCAPE)
@@ -270,13 +293,7 @@ void TopicCtrl::onKeyDown(wxKeyEvent &e)
     return;
   }
 
-#ifndef WIN32
-
-  // Do not skip this event on windows. A windows bug plays the error sound when
-  // we skip it. https://wiki.wxwidgets.org/WxBell
   e.Skip(true);
-
-#endif
 }
 
 wxDragResult TopicCtrl::NotAllowedDropTarget::OnData(

@@ -56,6 +56,7 @@ private:
   void onDoubleClicked(wxMouseEvent &e);
   void onKeyDown(wxKeyEvent &e);
   void onKeyUp(wxKeyEvent &e);
+  void onChar(wxKeyEvent &e);
   void onLeftDown(wxMouseEvent &e);
   void onLeftUp(wxMouseEvent &e);
   void onLostFocus(wxFocusEvent &e);

@@ -64,14 +64,15 @@ private:
   const int mOptionsHeight;
 
   std::shared_ptr<spdlog::logger> mLogger;
-  wxButton *mConnect = nullptr;
-  wxButton *mSave = nullptr;
 
   // Profiles.
   wxPanel *mProfiles = nullptr;
   wxDataViewCtrl *mProfilesCtrl = nullptr;
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
+
+  // Recordings.
+  wxPanel *mRecordings = nullptr;
 
   // Profile Form.
   wxPanel *mProfileForm = nullptr;
@@ -80,10 +81,18 @@ private:
   wxPropertyCategory *mGridCategoryClient = nullptr;
   std::vector<wxPGProperty*> mProfileFormProperties;
 
+  // Buttons.
+  wxPanel *mProfileButtons;
+  wxBoxSizer *mProfileButtonsSizer;
+  wxButton *mConnect = nullptr;
+  wxButton *mSave = nullptr;
+  wxButton *mCancel = nullptr;
+
   void onProfileActivated(wxDataViewEvent &event);
   void onProfileSelected(wxDataViewEvent &event);
   void onConnectClicked(wxCommandEvent &event);
   void onSaveClicked(wxCommandEvent &event);
+  void onCancelClicked(wxCommandEvent &event);
   void onNewProfileClicked(wxCommandEvent &event);
   void onProfileContext(wxDataViewEvent &event);
   void onContextSelected(wxCommandEvent &event);
@@ -91,9 +100,13 @@ private:
   void onLayoutAdded(Events::Layout &event);
   void onLayoutRemoved(Events::Layout &event);
   void onLayoutChanged(Events::Layout &event);
+  void onRecordingOpen(wxCommandEvent &event);
+  void onGridChanged(wxPropertyGridEvent& event);
 
-  void setupProfiles();
-  void setupProfileForm();
+  void setupProfiles(wxPanel *parent);
+  void setupRecordings(wxPanel *parent);
+  void setupProfileForm(wxPanel *parent);
+  void setupProfileButtons(wxPanel *parent);
   void propertyGridFill(
     const wxString &name,
     const MQTT::BrokerOptions &brokerOptions,
@@ -103,6 +116,8 @@ private:
   MQTT::BrokerOptions brokerOptionsFromPropertyGrid() const;
   Types::ClientOptions clientOptionsFromPropertyGrid() const;
   void refreshLayouts();
+  void allowSave();
+  void allowConnect();
 };
 
 }

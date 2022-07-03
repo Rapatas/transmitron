@@ -5,6 +5,7 @@
 #include <wx/wx.h>
 #include <wx/aui/auibook.h>
 
+#include "Transmitron/Events/Recording.hpp"
 #include "Transmitron/Models/Profiles.hpp"
 #include "Transmitron/Models/Layouts.hpp"
 
@@ -19,6 +20,7 @@ public:
   explicit App();
 
   bool openProfile(const std::string &profileName);
+  void openRecording(const std::string &filename);
 
   bool OnInit() override;
   int FilterEvent(wxEvent &event) override;
@@ -41,6 +43,8 @@ private:
   void onPageSelected(wxBookCtrlEvent &event);
   void onKeyDownControlW();
   void onKeyDownControlT();
+  void onRecordingSave(Events::Recording &event);
+  void onRecordingOpen(Events::Recording &event);
 
   void createProfilesTab(size_t index);
   void createSettingsTab();
@@ -51,7 +55,7 @@ private:
   std::filesystem::path getExecutablePath();
   std::filesystem::path getInstallPrefix();
 
-  void openProfile(wxDataViewItem profileItem);
+  void openProfile(wxDataViewItem item);
 
   int calculateOptionHeight();
 };

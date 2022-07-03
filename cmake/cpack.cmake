@@ -31,15 +31,10 @@ set(CPACK_PACKAGE_CHECKSUM "SHA256")
 set(CPACK_PACKAGE_CONTACT "Andy Rapatas <https://github.com/rapatas>")
 set(CPACK_PACKAGE_HOMEPAGE_URL "https://github.com/rapatas/transmitron")
 set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")
+set(CPACK_PACKAGE_VENDOR "Andy Rapatas")
 set(CPACK_PACKAGE_DESCRIPTION "${PROGRAM_DESCRIPTION}")
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE.txt")
 set(CPACK_RESOURCE_FILE_README  "${CMAKE_SOURCE_DIR}/README.md")
-
-if(APPLE)
-  set(CPACK_PACKAGE_VENDOR "Organisation")
-else()
-  set(CPACK_PACKAGE_VENDOR ${CPACK_PACKAGE_HOMEPAGE_URL})
-endif()
 
 string(CONCAT CPACK_PACKAGE_FILE_NAME
   ${TRANSMITRON_BIN_NAME}
@@ -79,23 +74,41 @@ set(CPACK_NSIS_DISPLAY_NAME ${TRANSMITRON_NAME})
 set(CPACK_NSIS_CONTACT ${CPACK_PACKAGE_CONTACT})
 set(CPACK_NSIS_COMPRESSOR "${CPACK_NSIS_COMPRESSOR}\n  SetCompressorDictSize 64")
 set(CPACK_NSIS_COMPRESSOR "${CPACK_NSIS_COMPRESSOR}\n  BrandingText '${CPACK_PACKAGE_DESCRIPTION_SUMMARY}'")
-set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "\
+set(CPACK_NSIS_EXTRA_PREINSTALL_COMMANDS "
+  !include \\\"${CMAKE_SOURCE_DIR}\\\\resources\\\\windows\\\\FileAssociation.nsh\\\"\n\
+  !include \\\"${CMAKE_SOURCE_DIR}\\\\resources\\\\windows\\\\FileFunc.nsh\\\"
+")
+set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
   WriteRegStr SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe' '' '$INSTDIR\\\\bin\\\\transmitron.exe'\n\
-  WriteRegStr SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe' 'Path' '$INSTDIR\\\\bin'")
-set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "\
-  DeleteRegKey SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe'")
+  WriteRegStr SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe' 'Path' '$INSTDIR\\\\bin'\n\
+  \\\${RegisterExtension} '$INSTDIR\\\\bin\\\\transmitron.exe' '.tmrc' 'History Recording'\n\
+  \\\${RefreshShellIcons}
+")
+set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
+  DeleteRegKey SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe'\n\
+  \\\${UnRegisterExtension} '.tmrc' 'History Recording'\n\
+  \\\${RefreshShellIcons}
+")
+set(CPACK_NSIS_CREATE_ICONS_EXTRA "
+  CreateShortCut \\\"$DESKTOP\\\\Transmitron.lnk\\\" \\\"$INSTDIR\\\\bin\\\\transmitron.exe\\\"
+")
+set(CPACK_NSIS_DELETE_ICONS_EXTRA "
+  Delete \\\"$DESKTOP\\\\Transmitron.lnk\\\"
+")
 
 # DEB (Linux .deb bundle)
 set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtk2.0-dev")
 set(CPACK_DEBIAN_PACKAGE_SECTION "internet")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER ${CPACK_PACKAGE_CONTACT})
+SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA ${DEB_POSTINST_POST_CONF})
 set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "## Features:
 
  Profiles: Store connections to brokers.
  Multiple Connections: Connect to multiple Profiles at the same time using tabs.
  Snippets: Store messages in a nested folder structure, ready to publish.
+ Record History: Record received messages and play them back later.
  Folding: For messages with nested data.
- Syntax highlight, detection & formatting: Supports JSON and XML.
+ Syntax highlight, detection & formatting: Supports JSON, XML & binary.
  Flexible: Resize, drag, detach or hide each sidebar separately.
  Layouts: Store sidebar locations and sizes.
  XDG BaseDir: Respects the XDG Base Directory specification.

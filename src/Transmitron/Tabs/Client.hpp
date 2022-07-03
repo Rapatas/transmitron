@@ -10,10 +10,10 @@
 #include <wx/combobox.h>
 
 #include "MQTT/Client.hpp"
-#include "MQTT/BrokerOptions.hpp"
 #include "Transmitron/Events/Connection.hpp"
 #include "Transmitron/Events/Layout.hpp"
 #include "Transmitron/Models/KnownTopics.hpp"
+#include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Types/ClientOptions.hpp"
 #include "Transmitron/Widgets/TopicCtrl.hpp"
 #include "Transmitron/Widgets/Layouts.hpp"
@@ -44,6 +44,17 @@ public:
     bool darkMode,
     int optionsHeight
   );
+
+  Client(
+    wxWindow* parent,
+    const wxObjectDataPtr<Models::History> &historyModel,
+    const wxObjectDataPtr<Models::Subscriptions> &subscriptionsModel,
+    const wxObjectDataPtr<Models::Layouts> &layoutsModel,
+    const wxString &name,
+    bool darkMode,
+    int optionsHeight
+  );
+
   Client(const Client &other) = delete;
   Client(Client &&other) = delete;
   Client &operator=(const Client &other) = delete;
@@ -102,13 +113,13 @@ private:
   std::shared_ptr<spdlog::logger> mLogger;
   std::map<Panes, Pane> mPanes;
   const wxString mName;
-  const MQTT::BrokerOptions mBrokerOptions;
   const Types::ClientOptions mClientOptions;
   const wxFont mFont;
   const bool mDarkMode;
   const int mOptionsHeight;
   wxObjectDataPtr<Models::KnownTopics> mTopicsSubscribed;
   wxObjectDataPtr<Models::KnownTopics> mTopicsPublished;
+  wxObjectDataPtr<Models::Layouts> mLayoutsModel;
 
   wxBoxSizer *mMasterSizer = nullptr;
 
@@ -126,6 +137,7 @@ private:
   wxDataViewCtrl *mHistoryCtrl = nullptr;
   wxCheckBox *mAutoScroll = nullptr;
   wxButton *mHistoryClear = nullptr;
+  wxButton *mHistoryRecord = nullptr;
   Widgets::TopicCtrl *mHistorySearchFilter = nullptr;
   wxButton *mHistorySearchButton = nullptr;
 
@@ -152,6 +164,7 @@ private:
   void allowCancel();
   void allowConnect();
   void allowDisconnect();
+  void allowNothing();
   void onCancelClicked(wxCommandEvent &event);
   void onConnectClicked(wxCommandEvent &event);
   void onDisconnectClicked(wxCommandEvent &event);
@@ -182,6 +195,7 @@ private:
 
   // History.
   void onHistoryClearClicked(wxCommandEvent &event);
+  void onHistoryRecordClicked(wxCommandEvent &event);
   void onHistorySelected(wxDataViewEvent &event);
   void onHistoryDoubleClicked(wxDataViewEvent &event);
   void onHistorySearchKey(wxKeyEvent &event);
@@ -195,10 +209,8 @@ private:
   void onPublishSaveSnippet(Events::Edit &e);
 
   // Setup.
-  void setupPanelConnect(
-    wxWindow *parent,
-    const wxObjectDataPtr<Models::Layouts> &layoutsModel
-  );
+  void setupPanels();
+  void setupPanelConnect(wxWindow *parent);
   void setupPanelHistory(wxWindow *parent);
   void setupPanelPreview(wxWindow *parent);
   void setupPanelPublish(wxWindow *parent);

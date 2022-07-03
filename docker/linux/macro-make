@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -eu
+
+build_dir="build_$(cat /etc/compilername)"
+
+mkdir -p "/workspace/$build_dir"
+cd "/workspace/$build_dir"
+
+rm -f *_*_*_*
+
+/opt/pyenv/shims/conan \
+  install ../conan \
+  --build=missing \
+  --update
+
+/opt/pyenv/shims/cmake \
+  -DCMAKE_MODULE_PATH=$PWD \
+  -DCMAKE_BUILD_TYPE=Release \
+  ..
+
+make -j $(nproc)

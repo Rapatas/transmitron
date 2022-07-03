@@ -44,9 +44,11 @@ public:
   };
 
   explicit Subscriptions(std::shared_ptr<MQTT::Client> client);
+  explicit Subscriptions();
 
   size_t attachObserver(Observer *observer);
   bool detachObserver(size_t id);
+  bool load(const std::string &recording);
 
   void mute(wxDataViewItem item);
   void setColor(wxDataViewItem item, const wxColor &color);
@@ -61,6 +63,7 @@ public:
   std::string getFilter(MQTT::Subscription::Id_t subscriptionId) const;
   std::string getFilter(wxDataViewItem item) const;
   wxColor getColor(MQTT::Subscription::Id_t subscriptionId) const;
+  nlohmann::json toJson() const;
 
 private:
 
