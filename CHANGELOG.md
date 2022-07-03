@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.0.4] - 2022-07-02
+
+### Added
+
+- History recording and playback.
+- Hex-dump payload formatting.
+- Cancel button in homepage.
+- Associated .TMRC file-type with Transmitron.
+
+### Fixed
+
+- Windows desktop shortcut not created during installation.
+- Crash when saving snippet on a renamed profile.
+- MQTT username and password not applied to connection.
+- Client ID not populated during profile creation.
+- Deleting profile does not clear property grid.
+- Ctrl-A triggering the bell on Windows.
+
 ## [0.0.3] - 2022-05-29
 
 ### Added

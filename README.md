@@ -41,7 +41,7 @@
 </p>
 <hr>
 <p align="center">
-	<img src="https://i.imgur.com/1OiGiB2.png">
+	<img src="https://i.imgur.com/4EeB22V.png">
 </p>
 
 
@@ -50,8 +50,9 @@
 - **Profiles.** Store connections to brokers.
 - **Multiple Connections.** Connect to multiple `Profiles` at the same time using tabs.
 - **Snippets.** Store messages in a nested folder structure, ready to publish.
+- **Record History.** Record received messages and play them back later.
 - **Text Folding.** For messages with nested data.
-- **Syntax highlight, detection & formatting.** Supports JSON and XML.
+- **Syntax highlight, detection & formatting.** Supports JSON, XML & binary.
 - **Auto complete topics.** Subscribed and published topics are cached.
 - **Flexible.** Resize, drag, detach or hide each sidebar separately.
 - **Layouts.** Store sidebar locations and sizes.
