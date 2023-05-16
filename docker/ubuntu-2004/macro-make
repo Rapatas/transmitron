@@ -10,14 +10,11 @@ cd "/workspace/$build_dir"
 conan \
   install ../conan \
   --build=missing \
-  --update \
-  --profile:build=default \
-  --profile:host=windows
+  --update
 
 cmake \
   -DCMAKE_MODULE_PATH=$PWD \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_TOOLCHAIN_FILE=/opt/cmake-toolchains/linux-x86_64-to-windows-x86_64.cmake \
   ..
 
 make -j $(nproc)

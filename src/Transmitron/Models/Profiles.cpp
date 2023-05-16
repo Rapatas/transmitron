@@ -1,4 +1,4 @@
-#include <filesystem>
+#include "Common/Filesystem.hpp"
 #include <fstream>
 #include <iterator>
 #include <optional>
@@ -14,7 +14,7 @@
 #include "Transmitron/Types/ClientOptions.hpp"
 #include "Transmitron/Notifiers/Layouts.hpp"
 
-namespace fs = std::filesystem;
+namespace fs = Common::fs;
 using namespace Transmitron::Models;
 using namespace Transmitron;
 using namespace Common;
@@ -480,7 +480,7 @@ bool Profiles::saveOptionsClient(size_t id)
   return true;
 }
 
-wxDataViewItem Profiles::loadProfile(const std::filesystem::path &directory)
+wxDataViewItem Profiles::loadProfile(const Common::fs::path &directory)
 {
   const std::string encoded = directory.stem().u8string();
   std::string decoded;
@@ -544,7 +544,7 @@ wxDataViewItem Profiles::loadProfile(const std::filesystem::path &directory)
 }
 
 std::optional<MQTT::BrokerOptions> Profiles::loadProfileOptionsBroker(
-  const std::filesystem::path &directory
+  const Common::fs::path &directory
 ) {
   const auto brokerOptionsFilepath = fmt::format(
     "{}/{}",
@@ -573,7 +573,7 @@ std::optional<MQTT::BrokerOptions> Profiles::loadProfileOptionsBroker(
 }
 
 std::optional<Types::ClientOptions> Profiles::loadProfileOptionsClient(
-  const std::filesystem::path &directory
+  const Common::fs::path &directory
 ) {
   const auto clientOptionsFilepath = fmt::format(
     "{}/{}",

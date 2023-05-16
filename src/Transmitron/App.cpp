@@ -1,4 +1,4 @@
-#include <filesystem>
+#include "Common/Filesystem.hpp"
 #include <fstream>
 #include <stdexcept>
 
@@ -43,7 +43,7 @@
 
 using namespace Transmitron;
 using namespace Common;
-namespace fs = std::filesystem;
+namespace fs = Common::fs;
 
 constexpr size_t DefaultWindowWidth = 800;
 constexpr size_t DefaultWindowHeight = 600;
@@ -348,7 +348,7 @@ void App::createSettingsTab()
   ++mCount;
 }
 
-std::filesystem::path App::createConfigDir()
+Common::fs::path App::createConfigDir()
 {
   const auto configHome = Common::XdgBaseDir::configHome();
   const auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
@@ -367,7 +367,7 @@ std::filesystem::path App::createConfigDir()
   return config;
 }
 
-std::filesystem::path App::createCacheDir()
+Common::fs::path App::createCacheDir()
 {
   const auto configHome = Common::XdgBaseDir::cacheHome();
   const auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
@@ -388,7 +388,7 @@ std::filesystem::path App::createCacheDir()
 
 void App::setupIcon()
 {
-  std::filesystem::path p = fmt::format(
+  Common::fs::path p = fmt::format(
     "{}/share/transmitron/transmitron.ico",
     getInstallPrefix().string()
   );
@@ -397,7 +397,7 @@ void App::setupIcon()
   mFrame->SetIcons(wxIconBundle(p.string()));
 }
 
-std::filesystem::path App::getExecutablePath()
+Common::fs::path App::getExecutablePath()
 {
   const auto pathfinder = []()
   {
@@ -411,18 +411,18 @@ std::filesystem::path App::getExecutablePath()
 
     return std::wstring(moduleFileName.data(), moduleFileName.size());
 #else
-    return std::filesystem::read_symlink("/proc/self/exe");
+    return Common::fs::read_symlink("/proc/self/exe");
 #endif
   };
 
-  static const std::filesystem::path p = pathfinder();
+  static const Common::fs::path p = pathfinder();
   mLogger->info("Executable path: {}", p.string());
   return p;
 }
 
-std::filesystem::path App::getInstallPrefix()
+Common::fs::path App::getInstallPrefix()
 {
-  const std::filesystem::path executable = getExecutablePath();
+  const Common::fs::path executable = getExecutablePath();
   const auto executableDir = executable.parent_path();
   auto prefix = executableDir.parent_path();
   return prefix;
@@ -458,7 +458,7 @@ void App::openProfile(wxDataViewItem item)
 
 void App::openRecording(const std::string &filename)
 {
-  std::filesystem::path path(filename);
+  Common::fs::path path(filename);
   const auto filenameStr = path.stem().string();
   const std::string decodedStr = Url::decode(filenameStr);
 

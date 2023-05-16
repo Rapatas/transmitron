@@ -3,7 +3,7 @@
 #include <cstring>
 #include <fstream>
 
-namespace fs = std::filesystem;
+namespace fs = Common::fs;
 using namespace Transmitron::Models;
 
 KnownTopics::KnownTopics()
@@ -17,7 +17,7 @@ KnownTopics::~KnownTopics()
   save();
 }
 
-bool KnownTopics::load(std::filesystem::path filepath)
+bool KnownTopics::load(Common::fs::path filepath)
 {
   mLogger->info("Loading {}", filepath.string());
   mFilepath = std::move(filepath);

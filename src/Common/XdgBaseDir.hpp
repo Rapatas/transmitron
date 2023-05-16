@@ -2,7 +2,7 @@
 #define COMMON_XDGBASEDIR_H
 
 #include <vector>
-#include <filesystem>
+#include "Common/Filesystem.hpp"
 
 namespace Common
 {
@@ -11,25 +11,25 @@ class XdgBaseDir
 {
 public:
 
-  static std::filesystem::path configHome();
-  static std::filesystem::path cacheHome();
-  static std::filesystem::path dataHome();
-  static std::filesystem::path stateHome();
-  static std::vector<std::filesystem::path> dataDirs();
-  static std::vector<std::filesystem::path> configDirs();
+  static Common::fs::path configHome();
+  static Common::fs::path cacheHome();
+  static Common::fs::path dataHome();
+  static Common::fs::path stateHome();
+  static std::vector<Common::fs::path> dataDirs();
+  static std::vector<Common::fs::path> configDirs();
 
 private:
 
   static XdgBaseDir &instance();
   XdgBaseDir();
 
-  std::filesystem::path mHome;
-  std::filesystem::path mConfigHome;
-  std::filesystem::path mCacheHome;
-  std::filesystem::path mDataHome;
-  std::filesystem::path mStateHome;
-  std::vector<std::filesystem::path> mDataDirs;
-  std::vector<std::filesystem::path> mConfigDirs;
+  Common::fs::path mHome;
+  Common::fs::path mConfigHome;
+  Common::fs::path mCacheHome;
+  Common::fs::path mDataHome;
+  Common::fs::path mStateHome;
+  std::vector<Common::fs::path> mDataDirs;
+  std::vector<Common::fs::path> mConfigDirs;
 
   static std::string readHome();
   std::string readConfigHome();

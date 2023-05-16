@@ -18,4 +18,5 @@ class TransmitronConan(ConanFile):
     default_options = {
         "wxwidgets:webview": False,
         "date:header_only": True,
+        "openssl:no_zlib": True
     }

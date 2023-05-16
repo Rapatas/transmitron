@@ -50,10 +50,10 @@ private:
   void createSettingsTab();
   void setupIcon();
 
-  std::filesystem::path createConfigDir();
-  std::filesystem::path createCacheDir();
-  std::filesystem::path getExecutablePath();
-  std::filesystem::path getInstallPrefix();
+  Common::fs::path createConfigDir();
+  Common::fs::path createCacheDir();
+  Common::fs::path getExecutablePath();
+  Common::fs::path getInstallPrefix();
 
   void openProfile(wxDataViewItem item);
 

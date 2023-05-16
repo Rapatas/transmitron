@@ -1,7 +1,7 @@
 #ifndef TRANSMITRON_MODELS_PROFILES_HPP
 #define TRANSMITRON_MODELS_PROFILES_HPP
 
-#include <filesystem>
+#include "Common/Filesystem.hpp"
 
 #include <spdlog/spdlog.h>
 #include <wx/dataview.h>
@@ -96,7 +96,7 @@ private:
     std::string name;
     Types::ClientOptions clientOptions;
     MQTT::BrokerOptions brokerOptions;
-    std::filesystem::path path;
+    Common::fs::path path;
     wxObjectDataPtr<Snippets> snippets;
     wxObjectDataPtr<KnownTopics> topicsSubscribed;
     wxObjectDataPtr<KnownTopics> topicsPublished;
@@ -117,12 +117,12 @@ private:
   bool saveOptionsBroker(size_t id);
   bool saveOptionsClient(size_t id);
   bool ensureDirectoryExists(const std::string &dir) const;
-  wxDataViewItem loadProfile(const std::filesystem::path &directory);
+  wxDataViewItem loadProfile(const Common::fs::path &directory);
   std::optional<MQTT::BrokerOptions> loadProfileOptionsBroker(
-    const std::filesystem::path &directory
+    const Common::fs::path &directory
   );
   std::optional<Types::ClientOptions> loadProfileOptionsClient(
-    const std::filesystem::path &directory
+    const Common::fs::path &directory
   );
   void renameLayoutIfMissing(const std::string &newName);
 
