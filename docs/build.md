@@ -1,13 +1,13 @@
 # Build
 
-The recommended build method is to use the provided docker images:
+The recommended build method is to use the provided docker images.
 
-## Linux (Debian)
+## Ubuntu 20.04 (and later)
 
 ```bash
 git clone https://github.com/Rapatas/transmitron.git
 cd transmitron
-./docker/linux/build-image.sh
+./docker/ubuntu-2004/build-image.sh
 docker run --rm -it -v $PWD:/workspace rapatas_transmitron_linux_compiler bash
 ```
 
@@ -15,8 +15,25 @@ Then, in the container:
 
 ```bash
 macro-make
-cd build_rapatas_transmitron_linux_compiler
-make package
+cd build_rapatas_transmitron_ubuntu-2004_compiler
+cpack
+```
+
+## Ubuntu 18.04
+
+```bash
+git clone https://github.com/Rapatas/transmitron.git
+cd transmitron
+./docker/ubuntu-1804/build-image.sh
+docker run --rm -it -v $PWD:/workspace rapatas_transmitron_linux_compiler bash
+```
+
+Then, in the container:
+
+```bash
+macro-make
+cd build_rapatas_transmitron_ubuntu-1804_compiler
+cpack
 ```
 
 ## Windows
@@ -36,5 +53,5 @@ Then, in the container:
 ```bash
 macro-make
 cd build_rapatas_transmitron_windows_compiler
-make package
+cpack
 ```
