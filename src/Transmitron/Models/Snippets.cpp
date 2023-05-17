@@ -1,5 +1,5 @@
 #include <algorithm>
-#include <filesystem>
+#include "Common/Filesystem.hpp"
 #include <fstream>
 #include <ios>
 #include <iterator>
@@ -13,7 +13,7 @@
 #include "Common/Log.hpp"
 #include "Snippets.hpp"
 
-namespace fs = std::filesystem;
+namespace fs = Common::fs;
 using namespace Transmitron::Models;
 using namespace Common;
 
@@ -441,7 +441,7 @@ wxDataViewItem Snippets::moveInsideAtIndex(
 }
 
 void Snippets::loadDirectoryRecursive(
-  const std::filesystem::path &path,
+  const Common::fs::path &path,
   Node::Id_t parentId
 ) {
   const bool isRoot = parentId == std::numeric_limits<Node::Id_t>::max();
@@ -505,7 +505,7 @@ void Snippets::loadDirectoryRecursive(
 }
 
 void Snippets::loadSnippet(
-  const std::filesystem::path &path,
+  const Common::fs::path &path,
   Node::Id_t parentId
 ) {
   std::string decoded;
@@ -563,7 +563,7 @@ void Snippets::loadSnippet(
 }
 
 bool Snippets::indexFileRead(
-  const std::filesystem::path &path,
+  const Common::fs::path &path,
   Node::Id_t id
 ) {
   const std::string indexPath = fmt::format(

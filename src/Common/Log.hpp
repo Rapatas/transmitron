@@ -1,7 +1,6 @@
 #ifndef COMMON_LOG_H
 #define COMMON_LOG_H
 
-#include <filesystem>
 #include <spdlog/common.h>
 #include <string>
 #include <memory>

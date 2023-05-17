@@ -15,13 +15,25 @@ steps:
       - git clone https://github.com/rapatas/transmitron.git .
       - git checkout ${DRONE_COMMIT}
 
-  - name: Build Linux
-    image: rapatas_transmitron_linux_compiler
+  - name: Build Ubuntu 20.04
+    image: rapatas_transmitron_ubuntu-2004_compiler
     pull: if-not-exists
     user: 0
     commands:
-      - mkdir build-release-linux-amd64
-      - cd    build-release-linux-amd64
+      - mkdir build-release-ubuntu-2004-amd64
+      - cd    build-release-ubuntu-2004-amd64
+      - conan install ../conan/ --build=missing
+      - cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_BUILD_TYPE=Release ..
+      - make -j $(nproc)
+      - make package
+
+  - name: Build Ubuntu 18.04
+    image: rapatas_transmitron_ubuntu-1804_compiler
+    pull: if-not-exists
+    user: 0
+    commands:
+      - mkdir build-release-ubuntu-1804-amd64
+      - cd    build-release-ubuntu-1804-amd64
       - conan install ../conan/ --build=missing
       - cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_BUILD_TYPE=Release ..
       - make -j $(nproc)

@@ -13,5 +13,5 @@ cp "$script_dir/../../resources/cmake-installer.sh" "$temp_dir/"
 cp "$script_dir/../../resources/update-alternatives-clang.sh" "$temp_dir/"
 
 docker build \
-  -t rapatas_transmitron_windows_compiler \
+  -t rapatas_transmitron_ubuntu-2004_compiler \
   "$temp_dir"

@@ -1,7 +1,7 @@
 #ifndef TRANSMITRON_MODELS_KNOWNTOPICS_HPP
 #define TRANSMITRON_MODELS_KNOWNTOPICS_HPP
 
-#include <filesystem>
+#include "Common/Filesystem.hpp"
 #include <set>
 #include <vector>
 #include <wx/dataview.h>
@@ -29,7 +29,7 @@ public:
   KnownTopics &operator=(const KnownTopics &other) = delete;
   KnownTopics &operator=(KnownTopics &&other) = delete;
 
-  bool load(std::filesystem::path filepath);
+  bool load(Common::fs::path filepath);
 
   void clear();
   void setFilter(std::string filter);
@@ -64,7 +64,7 @@ private:
   using Topics = std::set<std::string>;
 
   std::shared_ptr<spdlog::logger> mLogger;
-  std::filesystem::path mFilepath;
+  Common::fs::path mFilepath;
   Topics mTopics;
   std::vector<Topics::const_iterator> mRemap;
   std::string mFilter;

@@ -1,7 +1,7 @@
 #ifndef TRANSMITRON_MODELS_SNIPPETS_HPP
 #define TRANSMITRON_MODELS_SNIPPETS_HPP
 
-#include <filesystem>
+#include "Common/Filesystem.hpp"
 #include <list>
 #include <set>
 #include <memory>
@@ -117,11 +117,11 @@ private:
   std::string mSnippetsDir;
 
   void loadDirectoryRecursive(
-    const std::filesystem::path &path,
+    const Common::fs::path &path,
     Node::Id_t parentId
   );
-  void loadSnippet(const std::filesystem::path &path, Node::Id_t parentId);
-  bool indexFileRead(const std::filesystem::path &path, Node::Id_t id);
+  void loadSnippet(const Common::fs::path &path, Node::Id_t parentId);
+  bool indexFileRead(const Common::fs::path &path, Node::Id_t id);
   bool indexFileWrite(Node::Id_t id);
   bool save(Node::Id_t id);
   bool saveSnippet(Node::Id_t id);

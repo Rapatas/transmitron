@@ -10,23 +10,24 @@
 #include "MQTT/Subscription.hpp"
 #include "Subscriptions.hpp"
 #include "Common/Log.hpp"
+#include "Common/Filesystem.hpp"
 #include "Transmitron/Resources/qos/qos-0.hpp"
 #include "Transmitron/Resources/qos/qos-1.hpp"
 #include "Transmitron/Resources/qos/qos-2.hpp"
 #include "Transmitron/Types/Subscription.hpp"
 
-namespace fs = std::filesystem;
 using namespace Transmitron::Models;
+using namespace Common;
 
 Subscriptions::Subscriptions(std::shared_ptr<MQTT::Client> client) :
   mClient(std::move(client))
 {
-  mLogger = Common::Log::create("Models::Subscriptions");
+  mLogger = Log::create("Models::Subscriptions");
 }
 
 Subscriptions::Subscriptions()
 {
-  mLogger = Common::Log::create("Models::Subscriptions");
+  mLogger = Log::create("Models::Subscriptions");
 }
 
 size_t Subscriptions::attachObserver(Observer *observer)
