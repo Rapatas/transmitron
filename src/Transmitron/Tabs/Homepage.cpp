@@ -10,6 +10,7 @@
 #include "Transmitron/Events/Recording.hpp"
 #include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Types/ClientOptions.hpp"
+#include "Transmitron/Widgets/Container.hpp"
 
 using namespace Transmitron::Tabs;
 using namespace Transmitron;
@@ -40,13 +41,17 @@ Homepage::Homepage(
 {
   mLogger = Common::Log::create("Transmitron::Homepage");
 
-  auto *center = new wxPanel(this, wxID_ANY);
+  auto *container = new Widgets::Container(this);
+  auto *master = new wxPanel(container);
+  container->contain(master);
 
-  setupRecordings(this);
+  auto *center = new wxPanel(master, wxID_ANY);
+
+  setupRecordings(master);
   setupProfiles(center);
-  setupProfileButtons(this);
+  setupProfileButtons(master);
 
-  auto *line = new wxStaticLine(this);
+  auto *line = new wxStaticLine(master);
 
   auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
   hsizer->Add(mProfiles, 1, wxEXPAND);
@@ -57,8 +62,12 @@ Homepage::Homepage(
   vsizer->Add(mProfileButtons, 0, wxEXPAND);
   vsizer->Add(line, 0, wxEXPAND);
   vsizer->Add(mRecordings, 0, wxEXPAND);
-  this->SetSizer(vsizer);
+  master->SetSizer(vsizer);
   vsizer->Layout();
+
+  auto *sizer = new wxBoxSizer(wxVERTICAL);
+  sizer->Add(container, 1, wxEXPAND);
+  SetSizer(sizer);
 
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Homepage::onContextSelected, this);
 }
