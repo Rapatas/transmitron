@@ -5,9 +5,11 @@
 #include <wx/wx.h>
 #include <wx/aui/auibook.h>
 
+#include "Transmitron/Events/Profile.hpp"
 #include "Transmitron/Events/Recording.hpp"
 #include "Transmitron/Models/Profiles.hpp"
 #include "Transmitron/Models/Layouts.hpp"
+#include "Transmitron/Tabs/Settings.hpp"
 
 namespace Transmitron
 {
@@ -33,6 +35,7 @@ private:
   wxAuiNotebook *mNote = nullptr;
   bool mDarkMode = false;
   int mOptionsHeight = 0;
+  Tabs::Settings *mSettingsTab = nullptr;
 
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
@@ -45,8 +48,10 @@ private:
   void onKeyDownControlT();
   void onRecordingSave(Events::Recording &event);
   void onRecordingOpen(Events::Recording &event);
+  void onProfileCreate(Events::Profile &event);
+  void onProfileEdit(Events::Profile &event);
 
-  void createProfilesTab(size_t index);
+  void createHomepageTab(size_t index);
   void createSettingsTab();
   void setupIcon();
 

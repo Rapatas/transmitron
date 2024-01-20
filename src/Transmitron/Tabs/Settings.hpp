@@ -27,6 +27,9 @@ public:
     const wxObjectDataPtr<Models::Layouts> &layoutsModel
   );
 
+  void createProfile();
+  void selectProfile(wxDataViewItem profile);
+
 private:
 
   enum class ContextIDs : unsigned

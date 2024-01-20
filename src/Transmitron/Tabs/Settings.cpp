@@ -73,6 +73,34 @@ Settings::Settings(
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Settings::onContextSelected, this);
 }
 
+void Settings::createProfile()
+{
+  const auto item = mProfilesModel->createProfile();
+  mProfilesCtrl->Select(item);
+  mProfilesCtrl->EnsureVisible(item);
+  propertyGridFill(
+    mProfilesModel->getName(item),
+    mProfilesModel->getBrokerOptions(item),
+    mProfilesModel->getClientOptions(item)
+  );
+
+  const auto *namePtr = mProfileFormProperties.at(Properties::Name);
+  const bool focus = true;
+  mProfileFormGrid->SelectProperty(namePtr, focus);
+
+  allowSave();
+}
+
+void Settings::selectProfile(wxDataViewItem profile)
+{
+  mProfilesCtrl->Select(profile);
+  propertyGridFill(
+    mProfilesModel->getName(profile),
+    mProfilesModel->getBrokerOptions(profile),
+    mProfilesModel->getClientOptions(profile)
+  );
+}
+
 void Settings::setupLayouts(wxPanel *parent)
 {
   auto *renderer = new wxDataViewTextRenderer(
@@ -434,21 +462,7 @@ void Settings::onGridChanged(wxPropertyGridEvent& event)
 void Settings::onButtonClickedNewProfile(wxCommandEvent &event)
 {
   (void)event;
-
-  const auto item = mProfilesModel->createProfile();
-  mProfilesCtrl->Select(item);
-  mProfilesCtrl->EnsureVisible(item);
-  propertyGridFill(
-    mProfilesModel->getName(item),
-    mProfilesModel->getBrokerOptions(item),
-    mProfilesModel->getClientOptions(item)
-  );
-
-  const auto *namePtr = mProfileFormProperties.at(Properties::Name);
-  const bool focus = true;
-  mProfileFormGrid->SelectProperty(namePtr, focus);
-
-  allowSave();
+  createProfile();
 }
 
 void Settings::onButtonClickedCancel(wxCommandEvent &event)

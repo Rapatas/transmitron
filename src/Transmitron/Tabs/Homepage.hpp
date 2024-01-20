@@ -39,8 +39,9 @@ private:
 
   enum class ContextIDs : unsigned
   {
+    ProfilesConnect,
     ProfilesCreate,
-    ProfilesDelete,
+    ProfilesEdit,
   };
 
   wxFontInfo mLabelFont;
@@ -72,7 +73,8 @@ private:
   void onProfileActivated(wxDataViewEvent &event);
   void onProfileContext(wxDataViewEvent &event);
   void onProfileCreate(wxCommandEvent &event);
-  void onProfileDelete(wxCommandEvent &event);
+  void onProfileEdit(wxCommandEvent &event);
+  void onProfileConnect(wxCommandEvent &event);
   void onProfileSelected(wxDataViewEvent &event);
 
   void setupProfiles(wxPanel *parent);
@@ -80,6 +82,8 @@ private:
   void setupRecordings(wxPanel *parent);
 
   void onQuickConnect();
+
+  void connectTo(wxDataViewItem profile);
 
 };
 

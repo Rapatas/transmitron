@@ -206,7 +206,7 @@ void Profiles::updateQuickConnect(std::string url)
 {
   const auto parts = String::split(url, ':');
 
-  const auto port = [&]()
+  const auto port = [&]() -> size_t
   {
     if (parts.size() != 2) { return DefaultMqttPort; }
     const auto &portStr = parts[1];

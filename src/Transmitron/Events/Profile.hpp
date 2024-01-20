@@ -7,24 +7,21 @@
 namespace Transmitron::Events
 {
 
-class Connection;
-wxDECLARE_EVENT(CONNECTION, Connection);
-wxDECLARE_EVENT(CONNECTED, Connection);
-wxDECLARE_EVENT(DISCONNECTED, Connection);
-wxDECLARE_EVENT(FAILURE, Connection);
-wxDECLARE_EVENT(LOST, Connection);
+class Profile;
+wxDECLARE_EVENT(PROFILE_CREATE, Profile);
+wxDECLARE_EVENT(PROFILE_EDIT, Profile);
 
 // NOLINTNEXTLINE
-class Connection :
+class Profile :
   public wxCommandEvent
 {
 public:
 
-  Connection(wxEventType commandType = CONNECTION, int id = 0) :
+  Profile(wxEventType commandType, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
 
-  Connection(const Connection& event) :
+  Profile(const Profile& event) :
     wxCommandEvent(event)
   {
     this->setProfile(event.getProfile());
@@ -32,7 +29,7 @@ public:
 
   wxEvent* Clone() const override
   {
-    return new Connection(*this);
+    return new Profile(*this);
   }
 
   wxDataViewItem getProfile() const

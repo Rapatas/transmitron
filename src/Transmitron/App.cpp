@@ -36,6 +36,7 @@
 #include "Tabs/Client.hpp"
 #include "Tabs/Homepage.hpp"
 #include "Tabs/Settings.hpp"
+#include "Transmitron/Events/Profile.hpp"
 #include "Transmitron/Events/Recording.hpp"
 #include "Transmitron/Models/History.hpp"
 #include "Transmitron/Models/Layouts.hpp"
@@ -103,7 +104,7 @@ bool App::OnInit()
 
   createSettingsTab();
 
-  createProfilesTab(1);
+  createHomepageTab(1);
 
   auto *newProfilesTab = new wxPanel(mNote);
   mNote->AddPage(newProfilesTab, "", false, *bin2cPlus18x18());
@@ -163,7 +164,7 @@ void App::onPageSelected(wxBookCtrlEvent& event)
 
   if ((size_t)event.GetSelection() == mCount - 1)
   {
-    createProfilesTab(mCount - 1);
+    createHomepageTab(mCount - 1);
     event.Veto();
     return;
   }
@@ -212,7 +213,7 @@ void App::onPageClosing(wxBookCtrlEvent& event)
 
   if (mCount == 2)
   {
-    createProfilesTab(mCount - 1);
+    createHomepageTab(mCount - 1);
   }
 
   if ((size_t)event.GetOldSelection() == mCount - 1)
@@ -239,7 +240,7 @@ void App::onKeyDownControlW()
 
   if (mCount == 2)
   {
-    createProfilesTab(mCount - 1);
+    createHomepageTab(mCount - 1);
   }
 
   if (closingIndex == mCount - 1)
@@ -250,7 +251,7 @@ void App::onKeyDownControlW()
 
 void App::onKeyDownControlT()
 {
-  createProfilesTab(mCount - 1);
+  createHomepageTab(mCount - 1);
 }
 
 void App::onRecordingSave(Events::Recording &event)
@@ -290,6 +291,19 @@ void App::onRecordingSave(Events::Recording &event)
   out << event.getContents();
 }
 
+void App::onProfileCreate(Events::Profile &event)
+{
+  (void)event;
+  mNote->ChangeSelection(0);
+  mSettingsTab->createProfile();
+}
+
+void App::onProfileEdit(Events::Profile &event)
+{
+  mNote->ChangeSelection(0);
+  mSettingsTab->selectProfile(event.getProfile());
+}
+
 void App::onRecordingOpen(Events::Recording &/* event */)
 {
   wxFileDialog openFileDialog(
@@ -313,7 +327,7 @@ void App::onRecordingOpen(Events::Recording &/* event */)
 }
 
 
-void App::createProfilesTab(size_t index)
+void App::createHomepageTab(size_t index)
 {
   auto *homepage = new Tabs::Homepage(
     mNote,
@@ -328,6 +342,8 @@ void App::createProfilesTab(size_t index)
   homepage->focus();
 
   homepage->Bind(Events::RECORDING_OPEN, &App::onRecordingOpen, this);
+  homepage->Bind(Events::PROFILE_CREATE, &App::onProfileCreate, this);
+  homepage->Bind(Events::PROFILE_EDIT, &App::onProfileEdit, this);
 
   homepage->Bind(Events::CONNECTION, [this](Events::Connection e){
     if (e.GetSelection() == wxNOT_FOUND)
@@ -343,8 +359,8 @@ void App::createProfilesTab(size_t index)
 
 void App::createSettingsTab()
 {
-  auto *settingsTab = new Tabs::Settings(mNote, LabelFontInfo, mOptionsHeight, mProfilesModel, mLayoutsModel);
-  settingsTab->Bind(Events::CONNECTION, [this](Events::Connection e){
+  mSettingsTab = new Tabs::Settings(mNote, LabelFontInfo, mOptionsHeight, mProfilesModel, mLayoutsModel);
+  mSettingsTab->Bind(Events::CONNECTION, [this](Events::Connection e){
     if (e.GetSelection() == wxNOT_FOUND)
     {
       e.Skip();
@@ -354,7 +370,7 @@ void App::createSettingsTab()
     const auto profileItem = e.getProfile();
     openProfile(profileItem);
   });
-  mNote->AddPage(settingsTab, "", false, *bin2cGear18x18());
+  mNote->AddPage(mSettingsTab, "", false, *bin2cGear18x18());
   ++mCount;
 }
 
