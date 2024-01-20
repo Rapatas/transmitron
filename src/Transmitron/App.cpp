@@ -45,10 +45,10 @@ using namespace Transmitron;
 using namespace Common;
 namespace fs = Common::fs;
 
-constexpr size_t DefaultWindowWidth = 800;
-constexpr size_t DefaultWindowHeight = 600;
+constexpr size_t DefaultWindowWidth = 600;
+constexpr size_t DefaultWindowHeight = 500;
 constexpr size_t MinWindowWidth = 550;
-constexpr size_t MinWindowHeight = 300;
+constexpr size_t MinWindowHeight = 400;
 constexpr size_t LabelFontSize = 15;
 
 App::App() :

@@ -49,12 +49,14 @@ public:
   );
   wxDataViewItem createProfile();
   bool remove(wxDataViewItem item);
+  void updateQuickConnect(std::string url);
   std::string getUniqueName() const;
 
   const MQTT::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
   const Types::ClientOptions &getClientOptions(wxDataViewItem item) const;
   wxString getName(wxDataViewItem item) const;
   wxDataViewItem getItemFromName(const std::string &profileName) const;
+  wxDataViewItem getQuickConnect() const;
 
   wxObjectDataPtr<Snippets> getSnippetsModel(wxDataViewItem item);
   wxObjectDataPtr<KnownTopics> getTopicsSubscribed(wxDataViewItem item);
@@ -112,10 +114,12 @@ private:
   std::string mConfigProfilesDir;
   std::string mCacheProfilesDir;
   wxObjectDataPtr<Layouts> mLayoutsModel;
+  Node::Id_t mQuickConnectId{};
 
   bool save(size_t id);
   bool saveOptionsBroker(size_t id);
   bool saveOptionsClient(size_t id);
+  void createQuickConnect();
   bool ensureDirectoryExists(const std::string &dir) const;
   wxDataViewItem loadProfile(const Common::fs::path &directory);
   std::optional<MQTT::BrokerOptions> loadProfileOptionsBroker(

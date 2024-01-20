@@ -136,7 +136,13 @@ void Settings::setupProfiles(wxPanel *parent)
   auto *label = new wxStaticText(mProfilesLeft, -1, "Profiles");
   label->SetFont(mLabelFont);
 
-  mProfilesCtrl = new wxDataViewCtrl(mProfilesLeft, -1);
+  mProfilesCtrl = new wxDataViewCtrl(
+    mProfilesLeft,
+    -1,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxDV_NO_HEADER
+  );
   mProfilesCtrl->AssociateModel(mProfilesModel.get());
   mProfilesCtrl->AppendColumn(name);
   // mProfilesCtrl->Bind(

@@ -45,28 +45,21 @@ Homepage::Homepage(
   auto *master = new wxPanel(container);
   container->contain(master);
 
-  auto *center = new wxPanel(master, wxID_ANY);
-
+  setupProfiles(master);
+  setupQuickConnect(master);
   setupRecordings(master);
-  setupProfiles(center);
-  setupProfileButtons(master);
-
-  auto *line = new wxStaticLine(master);
-
-  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
-  hsizer->Add(mProfiles, 1, wxEXPAND);
-  center->SetSizer(hsizer);
 
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
-  vsizer->Add(center, 1, wxEXPAND);
-  vsizer->Add(mProfileButtons, 0, wxEXPAND);
-  vsizer->Add(line, 0, wxEXPAND);
+  vsizer->Add(mQuickConnect, 0, wxEXPAND);
+  vsizer->AddSpacer(5);
   vsizer->Add(mRecordings, 0, wxEXPAND);
+  vsizer->AddSpacer(5);
+  vsizer->Add(mProfiles, 1, wxEXPAND);
   master->SetSizer(vsizer);
-  vsizer->Layout();
 
   auto *sizer = new wxBoxSizer(wxVERTICAL);
-  sizer->Add(container, 1, wxEXPAND);
+  container->SetMinSize(wxSize(0, 400));
+  sizer->Add(container, 0, wxEXPAND);
   SetSizer(sizer);
 
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Homepage::onContextSelected, this);
@@ -101,11 +94,18 @@ void Homepage::setupProfiles(wxPanel *parent)
   );
 
   mProfiles = new wxPanel(parent, -1);
+  mProfiles->SetMinSize(wxSize(0, 400));
 
   auto *label = new wxStaticText(mProfiles, -1, "Profiles");
   label->SetFont(mLabelFont);
 
-  mProfilesCtrl = new wxDataViewCtrl(mProfiles, -1);
+  mProfilesCtrl = new wxDataViewCtrl(
+    mProfiles,
+    -1,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxDV_NO_HEADER
+  );
   mProfilesCtrl->AssociateModel(mProfilesModel.get());
   mProfilesCtrl->AppendColumn(name);
   mProfilesCtrl->AppendColumn(url);
@@ -131,6 +131,42 @@ void Homepage::setupProfiles(wxPanel *parent)
   mProfiles->SetSizer(vsizer);
 }
 
+void Homepage::setupQuickConnect(wxPanel *parent)
+{
+  mQuickConnect = new wxPanel(parent);
+
+  auto *panel = new wxPanel(mQuickConnect);
+
+  mQuickConnectUrl = new wxTextCtrl(panel, wxID_ANY);
+  mQuickConnectUrl->SetHint("localhost:1883");
+  mQuickConnectUrl->Bind(wxEVT_KEY_DOWN, [&](wxKeyEvent &event){
+    const auto isEnter = event.GetKeyCode() == WXK_RETURN;
+    if (isEnter)
+    {
+      onQuickConnect();
+    }
+    event.Skip();
+  });
+  mQuickConnectBtn = new wxButton(panel, wxID_ANY, "Connect");
+  mQuickConnectBtn->Bind(wxEVT_BUTTON, [&](wxCommandEvent &event){
+    onQuickConnect();
+    event.Skip();
+  });
+
+  auto *label = new wxStaticText(mQuickConnect, -1, "Quick Connect");
+  label->SetFont(mLabelFont);
+
+  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
+  hsizer->Add(mQuickConnectUrl, 1, wxEXPAND);
+  hsizer->Add(mQuickConnectBtn, 0, wxEXPAND);
+  panel->SetSizer(hsizer);
+
+  auto *vsizer = new wxBoxSizer(wxVERTICAL);
+  vsizer->Add(label, 0, wxEXPAND);
+  vsizer->Add(panel, 0, wxEXPAND);
+  mQuickConnect->SetSizer(vsizer);
+}
+
 void Homepage::setupRecordings(wxPanel *parent)
 {
   mRecordings = new wxPanel(parent, -1);
@@ -141,7 +177,7 @@ void Homepage::setupRecordings(wxPanel *parent)
   auto *recordingOpen = new wxButton(
     mRecordings,
     -1,
-    "Open Recording",
+    "Open recording... (*.tmrc)",
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
@@ -154,43 +190,9 @@ void Homepage::setupRecordings(wxPanel *parent)
   mRecordings->SetSizer(vsizer);
 }
 
-void Homepage::setupProfileButtons(wxPanel *parent)
+void Homepage::onProfileActivated(wxDataViewEvent &event)
 {
-  mProfileButtons = new wxPanel(parent);
-
-  auto *newProfile = new wxButton(
-    mProfileButtons,
-    -1,
-    "New Profile",
-    wxDefaultPosition,
-    wxSize(-1, mOptionsHeight)
-  );
-  newProfile->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
-  newProfile->Bind(wxEVT_BUTTON, &Homepage::onNewProfileClicked, this);
-
-
-  mConnect = new wxButton(
-    mProfileButtons,
-    -1,
-    "Connect",
-    wxDefaultPosition,
-    wxSize(-1, mOptionsHeight)
-  );
-  mConnect->Enable(false);
-  mConnect->Bind(wxEVT_BUTTON, &Homepage::onConnectClicked, this);
-  mConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
-
-  mProfileButtonsSizer = new wxBoxSizer(wxHORIZONTAL);
-  mProfileButtonsSizer->SetMinSize(0, mOptionsHeight);
-  mProfileButtonsSizer->Add(newProfile, 0, wxEXPAND);
-  mProfileButtonsSizer->AddStretchSpacer(1);
-  mProfileButtonsSizer->Add(mConnect, 0, wxEXPAND);
-  mProfileButtons->SetSizer(mProfileButtonsSizer);
-}
-
-void Homepage::onProfileActivated(wxDataViewEvent &e)
-{
-  const auto &profileItem = e.GetItem();
+  const auto &profileItem = event.GetItem();
   const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
   mLogger->info(
     "Queueing event for profile at {}:{}",
@@ -202,11 +204,13 @@ void Homepage::onProfileActivated(wxDataViewEvent &e)
   connectionEvent->setProfile(profileItem);
   wxQueueEvent(this, connectionEvent);
 
-  e.Skip();
+  event.Skip();
 }
 
 void Homepage::onProfileSelected(wxDataViewEvent &event)
 {
+  (void)this;
+
   const auto item = event.GetItem();
   if (!item.IsOk())
   {
@@ -252,15 +256,23 @@ void Homepage::onNewProfileClicked(wxCommandEvent &/* event */)
   mProfilesCtrl->EnsureVisible(item);
 }
 
-void Homepage::onProfileContext(wxDataViewEvent &e)
+void Homepage::onProfileContext(wxDataViewEvent &event)
 {
-  if (!e.GetItem().IsOk())
+  if (!event.GetItem().IsOk())
   {
-    e.Skip();
+    event.Skip();
     return;
   }
 
   wxMenu menu;
+
+  auto *create = new wxMenuItem(
+    nullptr,
+    (unsigned)ContextIDs::ProfilesDelete,
+    "Create"
+  );
+  create->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
+  menu.Append(create);
 
   auto *del = new wxMenuItem(
     nullptr,
@@ -273,17 +285,43 @@ void Homepage::onProfileContext(wxDataViewEvent &e)
   PopupMenu(&menu);
 }
 
-void Homepage::onContextSelected(wxCommandEvent &e)
+void Homepage::onContextSelected(wxCommandEvent &event)
 {
-  switch ((ContextIDs)e.GetId())
+  switch ((ContextIDs)event.GetId())
   {
-    case ContextIDs::ProfilesDelete: onProfileDelete(e); break;
+    case ContextIDs::ProfilesDelete: onProfileDelete(event); break;
+    case ContextIDs::ProfilesCreate: onProfileCreate(event); break;
   }
-  e.Skip();
+  event.Skip();
+}
+
+void Homepage::onProfileCreate(wxCommandEvent & /* event */)
+{
 }
 
 void Homepage::onProfileDelete(wxCommandEvent & /* event */)
 {
   const auto item = mProfilesCtrl->GetSelection();
   mProfilesModel->remove(item);
+}
+
+void Homepage::onQuickConnect()
+{
+  const auto wxs = mQuickConnectUrl->GetValue();
+  const auto utf8 = wxs.ToUTF8();
+  const std::string url(utf8.data(), utf8.length());
+
+  mProfilesModel->updateQuickConnect(url);
+
+  const auto &profileItem = mProfilesModel->getQuickConnect();
+  const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
+  mLogger->info(
+    "Queueing event for profile at {}:{}",
+    brokerOptions.getHostname(),
+    brokerOptions.getPort()
+  );
+
+  auto *connectionEvent = new Events::Connection();
+  connectionEvent->setProfile(profileItem);
+  wxQueueEvent(this, connectionEvent);
 }

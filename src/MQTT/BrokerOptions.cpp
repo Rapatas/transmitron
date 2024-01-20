@@ -175,3 +175,13 @@ size_t BrokerOptions::getMaxReconnectRetries() const
 {
   return mMaxReconnectRetries;
 }
+
+void BrokerOptions::setHostname(std::string hostname)
+{
+  mHostname = std::move(hostname);
+}
+
+void BrokerOptions::setPort(size_t port)
+{
+  mPort = port;
+}

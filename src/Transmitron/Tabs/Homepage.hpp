@@ -2,6 +2,7 @@
 #define TRANSMITRON_TABS_HOMEPAGE_HPP
 
 #include <spdlog/spdlog.h>
+#include <wx/gtk/textctrl.h>
 #include <wx/propgrid/property.h>
 #include <wx/propgrid/props.h>
 #include <wx/panel.h>
@@ -39,6 +40,7 @@ private:
 
   enum class ContextIDs : unsigned
   {
+    ProfilesCreate,
     ProfilesDelete,
   };
 
@@ -56,27 +58,30 @@ private:
   // Recordings.
   wxPanel *mRecordings = nullptr;
 
-  // Buttons.
-  wxPanel *mProfileButtons = nullptr;
-  wxBoxSizer *mProfileButtonsSizer = nullptr;
-  wxButton *mConnect = nullptr;
+  // Quick Connect.
+  wxPanel *mQuickConnect = nullptr;
+  wxTextCtrl *mQuickConnectUrl = nullptr;
+  wxButton *mQuickConnectBtn = nullptr;
 
-  void onProfileActivated(wxDataViewEvent &event);
-  void onProfileSelected(wxDataViewEvent &event);
-  void onConnectClicked(wxCommandEvent &event);
   void onCancelClicked(wxCommandEvent &event);
   void onNewProfileClicked(wxCommandEvent &event);
-  void onProfileContext(wxDataViewEvent &event);
-  void onContextSelected(wxCommandEvent &event);
-  void onProfileDelete(wxCommandEvent &event);
-  void onLayoutAdded(Events::Layout &event);
-  void onLayoutRemoved(Events::Layout &event);
-  void onLayoutChanged(Events::Layout &event);
   void onRecordingOpen(wxCommandEvent &event);
 
+  void onConnectClicked(wxCommandEvent &event);
+  void onContextSelected(wxCommandEvent &event);
+
+  void onProfileActivated(wxDataViewEvent &event);
+  void onProfileContext(wxDataViewEvent &event);
+  void onProfileCreate(wxCommandEvent &event);
+  void onProfileDelete(wxCommandEvent &event);
+  void onProfileSelected(wxDataViewEvent &event);
+
   void setupProfiles(wxPanel *parent);
+  void setupQuickConnect(wxPanel *parent);
   void setupRecordings(wxPanel *parent);
-  void setupProfileButtons(wxPanel *parent);
+
+  void onQuickConnect();
+
 };
 
 }

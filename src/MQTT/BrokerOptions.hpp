@@ -53,6 +53,9 @@ public:
   size_t getMaxReconnectRetries() const;
   size_t getPort() const;
 
+  void setHostname(std::string hostname);
+  void setPort(size_t port);
+
 private:
 
   bool mAutoReconnect;
