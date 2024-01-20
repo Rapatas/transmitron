@@ -1,6 +1,7 @@
 
 set(
   ${TRANSMITRON_BIN_NAME}_SOURCE
+
   Common/Env.Linux.cpp
   Common/Env.Windows.cpp
   Common/Extract.cpp
@@ -45,10 +46,12 @@ set(
   Transmitron/Tabs/Settings.cpp
   Transmitron/Types/ClientOptions.cpp
   Transmitron/Types/Subscription.cpp
+  Transmitron/Widgets/Container.cpp
   Transmitron/Widgets/Edit.cpp
   Transmitron/Widgets/Layouts.cpp
   Transmitron/Widgets/TopicCtrl.cpp
   main.cpp
+
 )
 
 set(INFO_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/Common/Info.in.cpp")
