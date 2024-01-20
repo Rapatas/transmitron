@@ -343,7 +343,17 @@ void App::createProfilesTab(size_t index)
 
 void App::createSettingsTab()
 {
-  auto *settingsTab = new Tabs::Settings(mNote, LabelFontInfo, mLayoutsModel);
+  auto *settingsTab = new Tabs::Settings(mNote, LabelFontInfo, mOptionsHeight, mProfilesModel, mLayoutsModel);
+  settingsTab->Bind(Events::CONNECTION, [this](Events::Connection e){
+    if (e.GetSelection() == wxNOT_FOUND)
+    {
+      e.Skip();
+      return;
+    }
+
+    const auto profileItem = e.getProfile();
+    openProfile(profileItem);
+  });
   mNote->AddPage(settingsTab, "", false, *bin2cGear18x18());
   ++mCount;
 }
@@ -448,10 +458,25 @@ void App::openProfile(wxDataViewItem item)
   client->Bind(Events::RECORDING_SAVE, &App::onRecordingSave, this);
 
   const size_t selected = (size_t)mNote->GetSelection();
-  mNote->RemovePage(selected);
-  mNote->InsertPage(selected, client, "");
-  mNote->SetSelection(selected);
-  mNote->SetPageText(selected, mProfilesModel->getName(item));
+  const auto target = selected == 0
+    ? mCount - 1
+    : selected;
+
+  mLogger->info("Target: {}", target);
+
+  if (selected != 0)
+  {
+    // Remove homepage.
+    mNote->RemovePage(selected);
+  }
+  else
+  {
+    ++mCount;
+  }
+
+  mNote->InsertPage(target, client, "");
+  mNote->SetSelection(target);
+  mNote->SetPageText(target, mProfilesModel->getName(item));
 
   client->focus();
 }

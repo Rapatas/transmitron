@@ -42,26 +42,8 @@ private:
     ProfilesDelete,
   };
 
-  enum Properties : size_t
-  {
-    AutoReconnect,
-    ClientId,
-    ConnectTimeout,
-    DisconnectTimeout,
-    Hostname,
-    KeepAlive,
-    MaxInFlight,
-    MaxReconnectRetries,
-    Name,
-    Password,
-    Port,
-    Username,
-    Layout,
-    Max,
-  };
-
-  const wxFontInfo mLabelFont;
-  const int mOptionsHeight;
+  wxFontInfo mLabelFont;
+  int mOptionsHeight;
 
   std::shared_ptr<spdlog::logger> mLogger;
 
@@ -74,24 +56,14 @@ private:
   // Recordings.
   wxPanel *mRecordings = nullptr;
 
-  // Profile Form.
-  wxPanel *mProfileForm = nullptr;
-  wxPropertyGrid *mProfileFormGrid = nullptr;
-  wxPropertyCategory *mGridCategoryBroker = nullptr;
-  wxPropertyCategory *mGridCategoryClient = nullptr;
-  std::vector<wxPGProperty*> mProfileFormProperties;
-
   // Buttons.
-  wxPanel *mProfileButtons;
-  wxBoxSizer *mProfileButtonsSizer;
+  wxPanel *mProfileButtons = nullptr;
+  wxBoxSizer *mProfileButtonsSizer = nullptr;
   wxButton *mConnect = nullptr;
-  wxButton *mSave = nullptr;
-  wxButton *mCancel = nullptr;
 
   void onProfileActivated(wxDataViewEvent &event);
   void onProfileSelected(wxDataViewEvent &event);
   void onConnectClicked(wxCommandEvent &event);
-  void onSaveClicked(wxCommandEvent &event);
   void onCancelClicked(wxCommandEvent &event);
   void onNewProfileClicked(wxCommandEvent &event);
   void onProfileContext(wxDataViewEvent &event);
@@ -101,23 +73,10 @@ private:
   void onLayoutRemoved(Events::Layout &event);
   void onLayoutChanged(Events::Layout &event);
   void onRecordingOpen(wxCommandEvent &event);
-  void onGridChanged(wxPropertyGridEvent& event);
 
   void setupProfiles(wxPanel *parent);
   void setupRecordings(wxPanel *parent);
-  void setupProfileForm(wxPanel *parent);
   void setupProfileButtons(wxPanel *parent);
-  void propertyGridFill(
-    const wxString &name,
-    const MQTT::BrokerOptions &brokerOptions,
-    const Types::ClientOptions &clientOptions
-  );
-  void propertyGridClear();
-  MQTT::BrokerOptions brokerOptionsFromPropertyGrid() const;
-  Types::ClientOptions clientOptionsFromPropertyGrid() const;
-  void refreshLayouts();
-  void allowSave();
-  void allowConnect();
 };
 
 }
