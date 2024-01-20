@@ -236,6 +236,7 @@ wxDataViewItem Profiles::createProfile()
   snippets->load(path);
 
   wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
+  wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
 
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>();
@@ -244,6 +245,7 @@ wxDataViewItem Profiles::createProfile()
   profile->saved = false;
   profile->snippets = snippets;
   profile->topicsSubscribed = topicsSubscribed;
+  profile->topicsPublished = topicsPublished;
   mProfiles.insert({id, std::move(profile)});
 
   save(id);
