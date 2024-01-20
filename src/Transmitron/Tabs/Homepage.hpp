@@ -2,7 +2,6 @@
 #define TRANSMITRON_TABS_HOMEPAGE_HPP
 
 #include <spdlog/spdlog.h>
-#include <wx/gtk/textctrl.h>
 #include <wx/propgrid/property.h>
 #include <wx/propgrid/props.h>
 #include <wx/panel.h>
