@@ -1,6 +1,7 @@
 #include <wx/artprov.h>
 #include <wx/colour.h>
 #include <wx/button.h>
+#include <wx/listctrl.h>
 #include <wx/wx.h>
 #include <wx/propgrid/propgrid.h>
 
@@ -43,30 +44,52 @@ Settings::Settings(
   notifier->Bind(Events::LAYOUT_CHANGED, &Settings::onLayoutChanged, this);
 
   auto *master = new wxPanel(this);
-  master->SetMinSize(wxSize(600, 0));
+  master->SetMinSize(wxSize(600, 500));
 
-  mProfiles = new wxPanel(master);
+  auto *left = new wxPanel(master);
+  left->SetMinSize(wxSize(90, 0));
 
-  setupLayouts(master);
-  setupProfiles(mProfiles);
-  setupProfileButtons(master);
-  setupProfileForm(mProfiles);
+  mSections = new wxListCtrl(
+    left,
+    wxID_ANY,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxLC_LIST | wxLC_SINGLE_SEL
+  );
+  mSections->InsertItem(0, "Layouts");
+  mSections->InsertItem(1, "Profiles");
+  mSections->Bind(wxEVT_LIST_ITEM_SELECTED, &Settings::onSectionSelected, this);
 
-  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
-  hsizer->Add(mProfilesLeft, 0, wxEXPAND);
-  hsizer->Add(mProfileForm, 1, wxEXPAND);
-  mProfiles->SetSizer(hsizer);
+  auto *labelSections = new wxStaticText(left, wxID_ANY, "Settings");
+  labelSections->SetFont(mLabelFont);
 
-  auto *vsizer = new wxBoxSizer(wxVERTICAL);
-  vsizer->Add(mLayouts, 0, wxEXPAND);
-  vsizer->Add(mProfiles, 0, wxEXPAND);
-  vsizer->Add(mProfileButtons, 0, wxEXPAND);
-  vsizer->Layout();
-  master->SetSizer(vsizer);
+  auto *lsizer = new wxBoxSizer(wxVERTICAL);
+  lsizer->Add(labelSections, 0, wxEXPAND);
+  lsizer->Add(mSections, 1, wxEXPAND);
+  left->SetSizer(lsizer);
+
+  auto *right = new wxPanel(master);
+
+  setupLayouts(right);
+  setupProfiles(right);
+
+  mSectionSizer = new wxBoxSizer(wxVERTICAL);
+  mSectionSizer->Add(mLayouts, 1, wxEXPAND);
+  mSectionSizer->Add(mProfiles, 1, wxEXPAND);
+  right->SetSizer(mSectionSizer);
+
+  mSectionSizer->Hide(mProfiles);
+  mSectionSizer->Hide(mLayouts);
+
+  auto *msizer = new wxBoxSizer(wxHORIZONTAL);
+  msizer->Add(left, 0, wxEXPAND);
+  msizer->AddSpacer(10);
+  msizer->Add(right, 1, wxEXPAND);
+  master->SetSizer(msizer);
 
   auto *sizer = new wxBoxSizer(wxHORIZONTAL);
   sizer->AddStretchSpacer(1);
-  sizer->Add(master, 0, wxEXPAND);
+  sizer->Add(master, 0);
   sizer->AddStretchSpacer(1);
   SetSizer(sizer);
 
@@ -78,22 +101,28 @@ void Settings::createProfile()
   const auto item = mProfilesModel->createProfile();
   mProfilesCtrl->Select(item);
   mProfilesCtrl->EnsureVisible(item);
+  mProfileDelete->Enable();
+  mProfileOptionsSizer->Show(mProfileOptions);
+  mProfileOptionsSizer->Layout();
   propertyGridFill(
     mProfilesModel->getName(item),
     mProfilesModel->getBrokerOptions(item),
     mProfilesModel->getClientOptions(item)
   );
 
-  const auto *namePtr = mProfileFormProperties.at(Properties::Name);
+  const auto *namePtr = mProfileProperties.at(Properties::Name);
   const bool focus = true;
-  mProfileFormGrid->SelectProperty(namePtr, focus);
+  mProfileGrid->SelectProperty(namePtr, focus);
 
   allowSave();
 }
 
 void Settings::selectProfile(wxDataViewItem profile)
 {
+  mSections->SetItemState(1, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
   mProfilesCtrl->Select(profile);
+  mProfileOptionsSizer->Show(mProfileOptions);
+  mProfileOptionsSizer->Layout();
   propertyGridFill(
     mProfilesModel->getName(profile),
     mProfilesModel->getBrokerOptions(profile),
@@ -118,7 +147,7 @@ void Settings::setupLayouts(wxPanel *parent)
 
   mLayouts = new wxPanel(parent, -1);
 
-  auto *label = new wxStaticText(mLayouts, -1, "Layouts");
+  auto *label = new wxStaticText(mLayouts, wxID_ANY, "Layouts");
   label->SetFont(mLabelFont);
 
   mLayoutsCtrl = new wxDataViewListCtrl(
@@ -137,7 +166,7 @@ void Settings::setupLayouts(wxPanel *parent)
   );
 
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
-  vsizer->Add(label,        0, wxEXPAND);
+  vsizer->Add(label, 0, wxEXPAND);
   vsizer->Add(mLayoutsCtrl, 1, wxEXPAND);
   mLayouts->SetSizer(vsizer);
 
@@ -150,6 +179,9 @@ void Settings::setupLayouts(wxPanel *parent)
 
 void Settings::setupProfiles(wxPanel *parent)
 {
+  mProfiles = new wxPanel(parent);
+  mProfiles->SetMinSize(wxSize(200, 200));
+
   wxDataViewColumn* const name = new wxDataViewColumn(
     "Name",
     new wxDataViewTextRenderer(),
@@ -158,26 +190,15 @@ void Settings::setupProfiles(wxPanel *parent)
     wxALIGN_LEFT
   );
 
-  mProfilesLeft = new wxPanel(parent, -1);
-  mProfilesLeft->SetMinSize(wxSize(200, 200));
-
-  auto *label = new wxStaticText(mProfilesLeft, -1, "Profiles");
-  label->SetFont(mLabelFont);
-
   mProfilesCtrl = new wxDataViewCtrl(
-    mProfilesLeft,
+    mProfiles,
     -1,
     wxDefaultPosition,
-    wxDefaultSize,
+    wxSize(200, 0),
     wxDV_NO_HEADER
   );
   mProfilesCtrl->AssociateModel(mProfilesModel.get());
   mProfilesCtrl->AppendColumn(name);
-  // mProfilesCtrl->Bind(
-  //   wxEVT_DATAVIEW_ITEM_ACTIVATED,
-  //   &Settings::onProfileActivated,
-  //   this
-  //  );
   mProfilesCtrl->Bind(
     wxEVT_DATAVIEW_SELECTION_CHANGED,
     &Settings::onProfileSelected,
@@ -189,35 +210,71 @@ void Settings::setupProfiles(wxPanel *parent)
     this
   );
 
-  auto *vsizer = new wxBoxSizer(wxVERTICAL);
-  vsizer->Add(label,         0, wxEXPAND);
-  vsizer->Add(mProfilesCtrl, 1, wxEXPAND);
-  mProfilesLeft->SetSizer(vsizer);
-}
+  auto *profileCreate = new wxButton(
+    mProfiles,
+    -1,
+    "",
+    wxDefaultPosition,
+    wxSize(mOptionsHeight, mOptionsHeight)
+  );
+  profileCreate->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
+  profileCreate->Bind(wxEVT_BUTTON, &Settings::onButtonClickedNewProfile, this);
 
-void Settings::setupProfileForm(wxPanel *parent)
-{
-  mProfileForm = new wxPanel(parent, -1);
-  mProfileForm->SetMinSize(wxSize(200, 400));
+  mProfileDelete = new wxButton(
+    mProfiles,
+    -1,
+    "",
+    wxDefaultPosition,
+    wxSize(mOptionsHeight, mOptionsHeight)
+  );
+  mProfileDelete->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+  mProfileDelete->Bind(wxEVT_BUTTON, &Settings::onProfileDelete, this);
+  mProfileDelete->Disable();
 
-  auto *label = new wxStaticText(mProfileForm, -1, "Profile Options");
+  setupProfileOptions(mProfiles);
+
+  auto *label = new wxStaticText(mProfiles, wxID_ANY, "Profiles");
   label->SetFont(mLabelFont);
 
-  mProfileFormGrid = new wxPropertyGrid(
-    mProfileForm,
+  auto *bsizer = new wxBoxSizer(wxHORIZONTAL);
+  bsizer->Add(label, 1, wxEXPAND);
+  bsizer->Add(profileCreate, 0, wxEXPAND);
+  bsizer->Add(mProfileDelete, 0, wxEXPAND);
+
+  auto *lsizer = new wxBoxSizer(wxVERTICAL);
+  lsizer->Add(bsizer, 0, wxEXPAND);
+  lsizer->Add(mProfilesCtrl, 1, wxEXPAND);
+
+  mProfileOptionsSizer = new wxBoxSizer(wxVERTICAL);
+  mProfileOptionsSizer->AddSpacer(mOptionsHeight);
+  mProfileOptionsSizer->Add(mProfileOptions, 1, wxEXPAND);
+  mProfileOptionsSizer->Hide(mProfileOptions);
+
+  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
+  hsizer->Add(lsizer, 0, wxEXPAND);
+  hsizer->Add(mProfileOptionsSizer, 1, wxEXPAND);
+  mProfiles->SetSizer(hsizer);
+}
+
+void Settings::setupProfileOptions(wxPanel *parent)
+{
+  mProfileOptions = new wxPanel(parent);
+
+  mProfileGrid = new wxPropertyGrid(
+    mProfileOptions,
     -1,
     wxDefaultPosition,
     wxDefaultSize,
     wxPG_SPLITTER_AUTO_CENTER
   );
 
-  mProfileFormGrid->DedicateKey(WXK_UP);
-  mProfileFormGrid->DedicateKey(WXK_DOWN);
+  mProfileGrid->DedicateKey(WXK_UP);
+  mProfileGrid->DedicateKey(WXK_DOWN);
 
-  mProfileFormGrid->Enable(false);
+  mProfileGrid->Enable(false);
 
-  auto &pfp = mProfileFormProperties;
-  auto &pfg = mProfileFormGrid;
+  auto &pfp = mProfileProperties;
+  auto &pfg = mProfileGrid;
 
   pfp.resize(Properties::Max);
 
@@ -225,7 +282,7 @@ void Settings::setupProfileForm(wxPanel *parent)
     pfg->Append(new wxStringProperty("Name", "", {}));
 
   mGridCategoryBroker = new wxPropertyCategory("Broker");
-  mProfileFormGrid->Append(mGridCategoryBroker);
+  mProfileGrid->Append(mGridCategoryBroker);
 
   pfp.at(Properties::Hostname) =
     pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Hostname", "", {}));
@@ -251,41 +308,19 @@ void Settings::setupProfileForm(wxPanel *parent)
     pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Max Reconnect Retries", "", {}));
 
   mGridCategoryClient = new wxPropertyCategory("Client");
-  mProfileFormGrid->Append(mGridCategoryClient);
+  mProfileGrid->Append(mGridCategoryClient);
 
   const auto layoutLabels = mLayoutsModel->getLabelArray();
   auto *layoutPtr = new wxEnumProperty("Layout", "", layoutLabels);
   pfp.at(Properties::Layout) = pfg->AppendIn(mGridCategoryClient, layoutPtr);
 
-  auto *sizer = new wxBoxSizer(wxVERTICAL);
-  sizer->Add(label,            0, wxEXPAND);
-  sizer->Add(mProfileFormGrid, 1, wxEXPAND);
-  mProfileForm->SetSizer(sizer);
-
-  mProfileFormGrid->Bind(wxEVT_PG_CHANGED, &Settings::onGridChanged, this);
-  mProfileFormGrid->Bind(wxEVT_PG_CHANGING, &Settings::onGridChanged, this);
-  mProfileFormGrid->Bind(wxEVT_PG_LABEL_EDIT_BEGIN, &Settings::onGridChanged, this);
-  mProfileFormGrid->Bind(wxEVT_PG_SELECTED, &Settings::onGridChanged, this);
-
-  propertyGridClear();
-}
-
-void Settings::setupProfileButtons(wxPanel *parent)
-{
-  mProfileButtons = new wxPanel(parent);
-
-  auto *newProfile = new wxButton(
-    mProfileButtons,
-    -1,
-    "New Profile",
-    wxDefaultPosition,
-    wxSize(-1, mOptionsHeight)
-  );
-  newProfile->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
-  newProfile->Bind(wxEVT_BUTTON, &Settings::onButtonClickedNewProfile, this);
+  mProfileGrid->Bind(wxEVT_PG_CHANGED, &Settings::onGridChanged, this);
+  mProfileGrid->Bind(wxEVT_PG_CHANGING, &Settings::onGridChanged, this);
+  mProfileGrid->Bind(wxEVT_PG_LABEL_EDIT_BEGIN, &Settings::onGridChanged, this);
+  mProfileGrid->Bind(wxEVT_PG_SELECTED, &Settings::onGridChanged, this);
 
   mSave = new wxButton(
-    mProfileButtons,
+    mProfileOptions,
     -1,
     "Save",
     wxDefaultPosition,
@@ -296,7 +331,7 @@ void Settings::setupProfileButtons(wxPanel *parent)
   mSave->Bind(wxEVT_BUTTON, &Settings::onButtonClickedSave, this);
 
   mCancel = new wxButton(
-    mProfileButtons,
+    mProfileOptions,
     -1,
     "Cancel",
     wxDefaultPosition,
@@ -307,7 +342,7 @@ void Settings::setupProfileButtons(wxPanel *parent)
   mCancel->Bind(wxEVT_BUTTON, &Settings::onButtonClickedCancel, this);
 
   mConnect = new wxButton(
-    mProfileButtons,
+    mProfileOptions,
     -1,
     "Connect",
     wxDefaultPosition,
@@ -319,14 +354,19 @@ void Settings::setupProfileButtons(wxPanel *parent)
 
   mProfileButtonsSizer = new wxBoxSizer(wxHORIZONTAL);
   mProfileButtonsSizer->SetMinSize(0, mOptionsHeight);
-  mProfileButtonsSizer->Add(newProfile, 0, wxEXPAND);
   mProfileButtonsSizer->AddStretchSpacer(1);
   mProfileButtonsSizer->Add(mConnect, 0, wxEXPAND);
   mProfileButtonsSizer->Add(mCancel, 0, wxEXPAND);
   mProfileButtonsSizer->Add(mSave, 0, wxEXPAND);
   mProfileButtonsSizer->Hide(mSave);
   mProfileButtonsSizer->Hide(mCancel);
-  mProfileButtons->SetSizer(mProfileButtonsSizer);
+
+  auto *sizer = new wxBoxSizer(wxVERTICAL);
+  sizer->Add(mProfileGrid, 1, wxEXPAND);
+  sizer->Add(mProfileButtonsSizer, 0, wxEXPAND);
+  mProfileOptions->SetSizer(sizer);
+
+  propertyGridClear();
 }
 
 void Settings::onLayoutsContext(wxDataViewEvent &event)
@@ -441,9 +481,16 @@ void Settings::onProfileSelected(wxDataViewEvent &event)
   const auto item = event.GetItem();
   if (!item.IsOk())
   {
+    mProfileDelete->Disable();
+    mProfileOptionsSizer->Hide(mProfileOptions);
+    mProfileOptionsSizer->Layout();
     event.Skip();
     return;
   }
+
+  mProfileDelete->Enable();
+  mProfileOptionsSizer->Show(mProfileOptions);
+  mProfileOptionsSizer->Layout();
 
   propertyGridFill(
     mProfilesModel->getName(item),
@@ -494,7 +541,7 @@ void Settings::onButtonClickedSave(wxCommandEvent &event)
     return;
   }
 
-  const auto wxs = mProfileFormProperties.at(Properties::Name)->GetValue().GetString();
+  const auto wxs = mProfileProperties.at(Properties::Name)->GetValue().GetString();
   const auto utf8 = wxs.ToUTF8();
   const std::string name(utf8.data(), utf8.length());
   mProfilesModel->rename(item, name);
@@ -561,9 +608,9 @@ void Settings::propertyGridClear()
 {
   mSave->Enable(false);
   mConnect->Enable(false);
-  mProfileFormGrid->Enable(false);
+  mProfileGrid->Enable(false);
 
-  auto &pfp = mProfileFormProperties;
+  auto &pfp = mProfileProperties;
 
   pfp.at(Properties::Name)->SetValue({});
   pfp.at(Properties::AutoReconnect)->SetValue({});
@@ -585,7 +632,7 @@ void Settings::propertyGridFill(
   const MQTT::BrokerOptions &brokerOptions,
   const Types::ClientOptions &clientOptions
 ) {
-  auto &pfp = mProfileFormProperties;
+  auto &pfp = mProfileProperties;
 
   pfp.at(Properties::Name)->SetValue(name);
 
@@ -612,12 +659,12 @@ void Settings::propertyGridFill(
 
   mSave->Enable(true);
   mConnect->Enable(true);
-  mProfileFormGrid->Enable(true);
+  mProfileGrid->Enable(true);
 }
 
 MQTT::BrokerOptions Settings::brokerOptionsFromPropertyGrid() const
 {
-  const auto &pfp = mProfileFormProperties;
+  const auto &pfp = mProfileProperties;
 
   const bool autoReconnect       = pfp.at(Properties::AutoReconnect)->GetValue();
   const auto maxInFlight         = (size_t)pfp.at(Properties::MaxInFlight)->GetValue().GetInteger();
@@ -648,7 +695,7 @@ MQTT::BrokerOptions Settings::brokerOptionsFromPropertyGrid() const
 
 Types::ClientOptions Settings::clientOptionsFromPropertyGrid() const
 {
-  const auto &pfp = mProfileFormProperties;
+  const auto &pfp = mProfileProperties;
 
   const auto &pfpLayout = pfp.at(Properties::Layout);
   const auto layoutValue = pfpLayout->GetValue();
@@ -672,8 +719,8 @@ void Settings::onLayoutRemoved(Events::Layout &/* event */)
 
 void Settings::onLayoutChanged(Events::Layout &/* event */)
 {
-  auto &pfp = mProfileFormProperties;
-  auto &pfg = mProfileFormGrid;
+  auto &pfp = mProfileProperties;
+  auto &pfg = mProfileGrid;
 
   auto &pfpLayout = pfp.at(Properties::Layout);
   wxVariant layoutValue = pfpLayout->GetValue();
@@ -689,8 +736,8 @@ void Settings::onLayoutChanged(Events::Layout &/* event */)
 
 void Settings::refreshLayouts()
 {
-  auto &pfp = mProfileFormProperties;
-  auto &pfg = mProfileFormGrid;
+  auto &pfp = mProfileProperties;
+  auto &pfg = mProfileGrid;
 
   auto &pfpLayout = pfp.at(Properties::Layout);
   wxVariant layoutValue = pfpLayout->GetValue();
@@ -717,4 +764,21 @@ void Settings::refreshLayouts()
 
   mLogger->info("Previous layout was found ");
   pfpLayout->SetValue(newLayoutValue);
+}
+
+void Settings::onSectionSelected(wxListEvent &event)
+{
+  const auto selected = event.GetIndex();
+  if (selected == 0)
+  {
+    mSectionSizer->Hide(mProfiles);
+    mSectionSizer->Show(mLayouts);
+    mSectionSizer->Layout();
+  }
+  else
+  {
+    mSectionSizer->Show(mProfiles);
+    mSectionSizer->Hide(mLayouts);
+    mSectionSizer->Layout();
+  }
 }

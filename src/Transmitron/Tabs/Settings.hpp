@@ -3,6 +3,7 @@
 
 #include <spdlog/spdlog.h>
 #include <wx/panel.h>
+#include <wx/stattext.h>
 #include <wx/sizer.h>
 #include <wx/dataview.h>
 #include <wx/propgrid/property.h>
@@ -64,16 +65,19 @@ private:
 
   // Profiles.
   wxPanel *mProfiles = nullptr;
-  wxPanel *mProfilesLeft = nullptr;
   wxDataViewCtrl *mProfilesCtrl = nullptr;
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
-
-  // Profile Form.
-  wxPanel *mProfileForm = nullptr;
-  wxPropertyGrid *mProfileFormGrid = nullptr;
+  wxPropertyGrid *mProfileGrid = nullptr;
   wxPropertyCategory *mGridCategoryBroker = nullptr;
   wxPropertyCategory *mGridCategoryClient = nullptr;
-  std::vector<wxPGProperty*> mProfileFormProperties;
+  std::vector<wxPGProperty*> mProfileProperties;
+  wxPanel *mProfileOptions = nullptr;
+  wxBoxSizer *mProfileButtonsSizer = nullptr;
+  wxBoxSizer *mProfileOptionsSizer = nullptr;
+  wxButton *mProfileDelete = nullptr;
+  wxButton *mConnect = nullptr;
+  wxButton *mSave = nullptr;
+  wxButton *mCancel = nullptr;
 
   // Layouts.
   wxPanel *mLayouts = nullptr;
@@ -81,16 +85,14 @@ private:
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
   wxDataViewColumn *mLayoutColumnName = nullptr;
 
-  // Buttons.
-  wxPanel *mProfileButtons = nullptr;
-  wxBoxSizer *mProfileButtonsSizer = nullptr;
-  wxButton *mConnect = nullptr;
-  wxButton *mSave = nullptr;
-  wxButton *mCancel = nullptr;
+
+  // Navigation.
+  wxListCtrl *mSections = nullptr;
+  wxBoxSizer *mSectionSizer = nullptr;
 
   void setupLayouts(wxPanel *parent);
   void setupProfiles(wxPanel *parent);
-  void setupProfileForm(wxPanel *parent);
+  void setupProfileOptions(wxPanel *parent);
   void setupProfileButtons(wxPanel *parent);
 
   void propertyGridClear();
@@ -122,9 +124,12 @@ private:
   void onGridChanged(wxPropertyGridEvent& event);
 
   void onButtonClickedNewProfile(wxCommandEvent &event);
+  void onButtonClickedProfileDelete(wxCommandEvent &event);
   void onButtonClickedCancel(wxCommandEvent &event);
   void onButtonClickedSave(wxCommandEvent &event);
   void onButtonClickedConnect(wxCommandEvent &event);
+
+  void onSectionSelected(wxListEvent &event);
 
 };
 
