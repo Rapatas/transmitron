@@ -46,7 +46,6 @@ set(
   Transmitron/Tabs/Settings.cpp
   Transmitron/Types/ClientOptions.cpp
   Transmitron/Types/Subscription.cpp
-  Transmitron/Widgets/Container.cpp
   Transmitron/Widgets/Edit.cpp
   Transmitron/Widgets/Layouts.cpp
   Transmitron/Widgets/TopicCtrl.cpp

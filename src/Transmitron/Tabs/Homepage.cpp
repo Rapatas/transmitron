@@ -12,7 +12,6 @@
 #include "Transmitron/Events/Profile.hpp"
 #include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Types/ClientOptions.hpp"
-#include "Transmitron/Widgets/Container.hpp"
 
 using namespace Transmitron::Tabs;
 using namespace Transmitron;
@@ -45,9 +44,8 @@ Homepage::Homepage(
 {
   mLogger = Common::Log::create("Transmitron::Homepage");
 
-  auto *container = new Widgets::Container(this);
-  auto *master = new wxPanel(container);
-  container->contain(master);
+  auto *master = new wxPanel(this);
+  master->SetMinSize(wxSize(400, 400));
 
   setupProfiles(master);
   setupQuickConnect(master);
@@ -61,9 +59,10 @@ Homepage::Homepage(
   vsizer->Add(mRecordings, 0, wxEXPAND);
   master->SetSizer(vsizer);
 
-  auto *sizer = new wxBoxSizer(wxVERTICAL);
-  container->SetMinSize(wxSize(0, 400));
-  sizer->Add(container, 0, wxEXPAND);
+  auto *sizer = new wxBoxSizer(wxHORIZONTAL);
+  sizer->AddStretchSpacer(1);
+  sizer->Add(master, 0);
+  sizer->AddStretchSpacer(1);
   SetSizer(sizer);
 
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Homepage::onContextSelected, this);

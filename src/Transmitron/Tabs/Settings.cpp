@@ -7,7 +7,6 @@
 #include "Common/Log.hpp"
 #include "Settings.hpp"
 #include "Transmitron/Models/Layouts.hpp"
-#include "Transmitron/Widgets/Container.hpp"
 #include "Transmitron/Notifiers/Layouts.hpp"
 #include "Transmitron/Events/Connection.hpp"
 
@@ -43,9 +42,8 @@ Settings::Settings(
   notifier->Bind(Events::LAYOUT_REMOVED, &Settings::onLayoutRemoved, this);
   notifier->Bind(Events::LAYOUT_CHANGED, &Settings::onLayoutChanged, this);
 
-  auto *container = new Widgets::Container(this);
-  auto *master = new wxPanel(container);
-  container->contain(master);
+  auto *master = new wxPanel(this);
+  master->SetMinSize(wxSize(600, 0));
 
   mProfiles = new wxPanel(master);
 
@@ -66,8 +64,10 @@ Settings::Settings(
   vsizer->Layout();
   master->SetSizer(vsizer);
 
-  auto *sizer = new wxBoxSizer(wxVERTICAL);
-  sizer->Add(container, 1, wxEXPAND);
+  auto *sizer = new wxBoxSizer(wxHORIZONTAL);
+  sizer->AddStretchSpacer(1);
+  sizer->Add(master, 0, wxEXPAND);
+  sizer->AddStretchSpacer(1);
   SetSizer(sizer);
 
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Settings::onContextSelected, this);
