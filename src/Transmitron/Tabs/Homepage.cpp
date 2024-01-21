@@ -137,6 +137,7 @@ void Homepage::setupProfiles(wxPanel *parent)
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
+  mProfileCreate->SetToolTip("Create a new profile");
   mProfileCreate->SetBitmap(wxArtProvider::GetBitmap(wxART_PLUS));
   mProfileCreate->Bind(wxEVT_BUTTON, &Homepage::onProfileCreate, this);
 
@@ -147,6 +148,7 @@ void Homepage::setupProfiles(wxPanel *parent)
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
+  mProfileEdit->SetToolTip("Edit selected profile");
   mProfileEdit->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
   mProfileEdit->Bind(wxEVT_BUTTON, &Homepage::onProfileEdit, this);
 
@@ -157,6 +159,7 @@ void Homepage::setupProfiles(wxPanel *parent)
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
+  mProfileConnect->SetToolTip("Connect to selected profile");
   mProfileConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
   mProfileConnect->Bind(wxEVT_BUTTON, &Homepage::onProfileConnect, this);
 
@@ -199,6 +202,7 @@ void Homepage::setupQuickConnect(wxPanel *parent)
     event.Skip();
   });
   mQuickConnectBtn = new wxButton(panel, wxID_ANY, "Connect");
+  mQuickConnectBtn->SetToolTip("Connect to broker with default settings");
   mQuickConnectBtn->Bind(wxEVT_BUTTON, [&](wxCommandEvent &event){
     onQuickConnect();
     event.Skip();
@@ -232,6 +236,7 @@ void Homepage::setupRecordings(wxPanel *parent)
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
+  recordingOpen->SetToolTip("Open a .tmrc file to review MQTT history");
   recordingOpen->Bind(wxEVT_BUTTON, &Homepage::onRecordingOpen, this);
   recordingOpen->SetBitmap(wxArtProvider::GetBitmap(wxART_MENU));
 

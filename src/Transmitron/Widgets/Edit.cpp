@@ -64,6 +64,7 @@ Edit::Edit(
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
+  mPublish->SetToolTip("Publish");
   mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
     auto *e = new Events::Edit(Events::EDIT_PUBLISH);
     wxQueueEvent(this, e);

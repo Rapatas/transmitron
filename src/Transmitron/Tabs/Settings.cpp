@@ -180,6 +180,7 @@ void Settings::setupLayouts(wxPanel *parent)
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
+  mLayoutDelete->SetToolTip("Delete selected layout");
   mLayoutDelete->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
   mLayoutDelete->Disable();
   mLayoutDelete->Bind(wxEVT_BUTTON, &Settings::onLayoutsDelete, this);
@@ -245,6 +246,7 @@ void Settings::setupProfiles(wxPanel *parent)
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
+  profileCreate->SetToolTip("Create a new profile");
   profileCreate->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
   profileCreate->Bind(wxEVT_BUTTON, &Settings::onButtonClickedNewProfile, this);
 
@@ -255,6 +257,7 @@ void Settings::setupProfiles(wxPanel *parent)
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
+  mProfileDelete->SetToolTip("Delete selected profile");
   mProfileDelete->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
   mProfileDelete->Bind(wxEVT_BUTTON, &Settings::onProfileDelete, this);
   mProfileDelete->Disable();
@@ -354,6 +357,7 @@ void Settings::setupProfileOptions(wxPanel *parent)
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
+  mSave->SetToolTip("Save changes to this profile");
   mSave->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
   mSave->Enable(false);
   mSave->Bind(wxEVT_BUTTON, &Settings::onButtonClickedSave, this);
@@ -365,6 +369,7 @@ void Settings::setupProfileOptions(wxPanel *parent)
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
+  mCancel->SetToolTip("Reset this profile to last saved state");
   mCancel->SetBitmap(wxArtProvider::GetBitmap(wxART_UNDO));
   mCancel->Enable(false);
   mCancel->Bind(wxEVT_BUTTON, &Settings::onButtonClickedCancel, this);
@@ -376,6 +381,7 @@ void Settings::setupProfileOptions(wxPanel *parent)
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
+  mConnect->SetToolTip("Connect to this profile");
   mConnect->Enable(false);
   mConnect->Bind(wxEVT_BUTTON, &Settings::onButtonClickedConnect, this);
   mConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));

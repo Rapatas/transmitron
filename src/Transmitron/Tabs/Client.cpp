@@ -330,19 +330,21 @@ void Client::setupPanelHistory(wxWindow *parent)
   mHistoryClear = new wxButton(
     panel,
     -1,
-    "Clear",
+    "",
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
+  mHistoryClear->SetToolTip("Clear history");
   mHistoryClear->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
 
   mHistoryRecord = new wxButton(
     panel,
     -1,
-    "Store history",
+    "",
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
+  mHistoryRecord->SetToolTip("Store history recording");
   mHistoryRecord->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
 
   auto *topSizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
@@ -404,6 +406,7 @@ void Client::setupPanelConnect(wxWindow *parent)
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
+  mConnect->SetToolTip("Attempt to reconnect");
   mDisconnect = new wxButton(
     mProfileBar,
     -1,
@@ -418,6 +421,7 @@ void Client::setupPanelConnect(wxWindow *parent)
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
+  mCancel->SetToolTip("Stop connection attempt");
 
   mLayouts = new Widgets::Layouts(mProfileBar, -1, mLayoutsModel, mAuiMan, mOptionsHeight);
   mLayouts->Bind(Events::LAYOUT_SELECTED, &Client::onLayoutSelected, this);
@@ -524,6 +528,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
+  mSubscribe->SetToolTip("Subscribe");
 
   wxDataViewColumn* const icon = new wxDataViewColumn(
     "icon",
