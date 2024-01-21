@@ -47,8 +47,8 @@ Homepage::Homepage(
   auto *master = new wxPanel(this);
   master->SetMinSize(wxSize(400, 400));
 
-  setupProfiles(master);
   setupQuickConnect(master);
+  setupProfiles(master);
   setupRecordings(master);
 
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
@@ -99,9 +99,6 @@ void Homepage::setupProfiles(wxPanel *parent)
   mProfiles = new wxPanel(parent, -1);
   mProfiles->SetMinSize(wxSize(0, 400));
 
-  auto *label = new wxStaticText(mProfiles, -1, "Profiles");
-  label->SetFont(mLabelFont);
-
   mProfilesCtrl = new wxDataViewCtrl(
     mProfiles,
     -1,
@@ -128,8 +125,51 @@ void Homepage::setupProfiles(wxPanel *parent)
     this
   );
 
+  auto *row = new wxPanel(mProfiles);
+
+  auto *label = new wxStaticText(row, -1, "Profiles");
+  label->SetFont(mLabelFont);
+
+  mProfileCreate  = new wxButton(
+    row,
+    wxID_ANY,
+    "",
+    wxDefaultPosition,
+    wxSize(mOptionsHeight, mOptionsHeight)
+  );
+  mProfileCreate->SetBitmap(wxArtProvider::GetBitmap(wxART_PLUS));
+  mProfileCreate->Bind(wxEVT_BUTTON, &Homepage::onProfileCreate, this);
+
+  mProfileEdit    = new wxButton(
+    row,
+    wxID_ANY,
+    "",
+    wxDefaultPosition,
+    wxSize(mOptionsHeight, mOptionsHeight)
+  );
+  mProfileEdit->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
+  mProfileEdit->Bind(wxEVT_BUTTON, &Homepage::onProfileEdit, this);
+
+  mProfileConnect = new wxButton(
+    row,
+    wxID_ANY,
+    "",
+    wxDefaultPosition,
+    wxSize(mOptionsHeight, mOptionsHeight)
+  );
+  mProfileConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
+  mProfileConnect->Bind(wxEVT_BUTTON, &Homepage::onProfileConnect, this);
+
+  auto *rsizer = new wxBoxSizer(wxHORIZONTAL);
+  rsizer->Add(label, 0);
+  rsizer->AddStretchSpacer(1);
+  rsizer->Add(mProfileCreate, 0);
+  rsizer->Add(mProfileEdit, 0);
+  rsizer->Add(mProfileConnect, 0);
+  row->SetSizer(rsizer);
+
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
-  vsizer->Add(label,         0, wxEXPAND);
+  vsizer->Add(row,         0, wxEXPAND);
   vsizer->Add(mProfilesCtrl, 1, wxEXPAND);
   mProfiles->SetSizer(vsizer);
 }

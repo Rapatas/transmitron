@@ -54,6 +54,9 @@ private:
   wxDataViewCtrl *mProfilesCtrl = nullptr;
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
+  wxButton *mProfileCreate = nullptr;
+  wxButton *mProfileEdit = nullptr;
+  wxButton *mProfileConnect = nullptr;
 
   // Recordings.
   wxPanel *mRecordings = nullptr;
