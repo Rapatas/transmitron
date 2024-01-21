@@ -145,13 +145,16 @@ void Settings::setupLayouts(wxPanel *parent)
     wxALIGN_LEFT
   );
 
-  mLayouts = new wxPanel(parent, -1);
+  mLayouts = new wxPanel(parent);
 
-  auto *label = new wxStaticText(mLayouts, wxID_ANY, "Layouts");
+  auto *base = new wxPanel(mLayouts);
+  base->SetMinSize(wxSize(200, 0));
+
+  auto *label = new wxStaticText(base, wxID_ANY, "Layouts");
   label->SetFont(mLabelFont);
 
   mLayoutsCtrl = new wxDataViewListCtrl(
-    mLayouts,
+    base,
     -1,
     wxDefaultPosition,
     wxDefaultSize,
@@ -164,11 +167,36 @@ void Settings::setupLayouts(wxPanel *parent)
     &Settings::onLayoutsContext,
     this
   );
+  mLayoutsCtrl->Bind(
+    wxEVT_DATAVIEW_SELECTION_CHANGED,
+    &Settings::onLayoutSelected,
+    this
+  );
+
+  mLayoutDelete = new wxButton(
+    base,
+    wxID_ANY,
+    "",
+    wxDefaultPosition,
+    wxSize(mOptionsHeight, mOptionsHeight)
+  );
+  mLayoutDelete->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+  mLayoutDelete->Disable();
+  mLayoutDelete->Bind(wxEVT_BUTTON, &Settings::onLayoutsDelete, this);
+
+  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
+  hsizer->Add(label, 0, wxEXPAND);
+  hsizer->AddStretchSpacer(1);
+  hsizer->Add(mLayoutDelete, 0, wxEXPAND);
 
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
-  vsizer->Add(label, 0, wxEXPAND);
+  vsizer->Add(hsizer, 0, wxEXPAND);
   vsizer->Add(mLayoutsCtrl, 1, wxEXPAND);
-  mLayouts->SetSizer(vsizer);
+  base->SetSizer(vsizer);
+
+  auto *sizer = new wxBoxSizer(wxHORIZONTAL);
+  sizer->Add(base, 0, wxEXPAND);
+  mLayouts->SetSizer(sizer);
 
   mLayoutsCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_START_EDITING,
@@ -203,7 +231,7 @@ void Settings::setupProfiles(wxPanel *parent)
     wxEVT_DATAVIEW_SELECTION_CHANGED,
     &Settings::onProfileSelected,
     this
-   );
+  );
   mProfilesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
     &Settings::onProfileContext,
@@ -717,6 +745,27 @@ void Settings::onLayoutRemoved(Events::Layout &/* event */)
   refreshLayouts();
 }
 
+void Settings::onLayoutSelected(wxDataViewEvent &event)
+{
+  const auto item = event.GetItem();
+  if (!item.IsOk())
+  {
+    mLayoutDelete->Disable();
+    event.Skip();
+    return;
+  }
+
+  if (mLayoutsModel->getDefault() == item)
+  {
+    mLayoutDelete->Disable();
+    event.Skip();
+    return;
+  }
+
+  mLayoutDelete->Enable();
+  event.Skip();
+}
+
 void Settings::onLayoutChanged(Events::Layout &/* event */)
 {
   auto &pfp = mProfileProperties;
@@ -740,30 +789,33 @@ void Settings::refreshLayouts()
   auto &pfg = mProfileGrid;
 
   auto &pfpLayout = pfp.at(Properties::Layout);
-  wxVariant layoutValue = pfpLayout->GetValue();
-  const auto layoutName = pfpLayout->ValueToString(layoutValue);
-  mLogger->info("Previous layout was: {}", layoutName);
+  const auto layoutLabels = mLayoutsModel->getLabelArray();
+
+  const auto selectedValue = [&]() -> std::optional<wxString>
+  {
+    if (!mProfileOptions->IsShown()) { return std::nullopt; }
+
+    wxVariant layoutValue = pfpLayout->GetValue();
+    const auto layoutName = pfpLayout->ValueToString(layoutValue);
+    mLogger->debug("Previous layout was: {}", layoutName);
+
+    return layoutName;
+  }();
 
   pfg->RemoveProperty(pfpLayout);
 
-  const auto layoutLabels = mLayoutsModel->getLabelArray();
   auto *layoutPtr = new wxEnumProperty("Layout", "", layoutLabels);
   pfpLayout = pfg->AppendIn(mGridCategoryClient, layoutPtr);
 
-  wxVariant newLayoutValue = pfpLayout->GetValue();
-  const bool hasValue = pfpLayout->StringToValue(newLayoutValue, layoutName);
-  if (!hasValue)
+  if (selectedValue)
   {
-    mLogger->info("Previous layout not found");
-    wxVariant layoutValue = pfpLayout->GetValue();
-    const wxString layoutName = std::string(Models::Layouts::DefaultName);
-    pfpLayout->StringToValue(layoutValue, layoutName);
-    pfpLayout->SetValue(layoutValue);
-    return;
+    wxVariant newLayoutValue;
+    const bool containsValue = pfpLayout->StringToValue(newLayoutValue, selectedValue.value());
+    if (containsValue)
+    {
+      pfpLayout->SetValue(newLayoutValue);
+    }
   }
-
-  mLogger->info("Previous layout was found ");
-  pfpLayout->SetValue(newLayoutValue);
 }
 
 void Settings::onSectionSelected(wxListEvent &event)

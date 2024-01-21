@@ -84,6 +84,7 @@ private:
   wxDataViewListCtrl *mLayoutsCtrl = nullptr;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
   wxDataViewColumn *mLayoutColumnName = nullptr;
+  wxButton *mLayoutDelete = nullptr;
 
 
   // Navigation.
@@ -116,6 +117,7 @@ private:
   void onLayoutAdded(Events::Layout &event);
   void onLayoutChanged(Events::Layout &event);
   void onLayoutRemoved(Events::Layout &event);
+  void onLayoutSelected(wxDataViewEvent &event);
 
   void onProfileContext(wxDataViewEvent &event);
   void onProfileDelete(wxCommandEvent &event);
