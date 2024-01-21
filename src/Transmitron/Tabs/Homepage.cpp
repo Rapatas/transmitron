@@ -180,8 +180,16 @@ void Homepage::setupQuickConnect(wxPanel *parent)
 
   auto *panel = new wxPanel(mQuickConnect);
 
+  auto item = mProfilesModel->getQuickConnect();
+  const auto &options = mProfilesModel->getBrokerOptions(item);
+  const auto hint = fmt::format(
+    "{}:{}",
+    options.getHostname(),
+    options.getPort()
+  );
+
   mQuickConnectUrl = new wxTextCtrl(panel, wxID_ANY);
-  mQuickConnectUrl->SetHint("localhost:1883");
+  mQuickConnectUrl->SetHint(hint);
   mQuickConnectUrl->Bind(wxEVT_KEY_DOWN, [&](wxKeyEvent &event){
     const auto isEnter = event.GetKeyCode() == WXK_RETURN;
     if (isEnter)
@@ -363,7 +371,10 @@ void Homepage::onQuickConnect()
   const auto utf8 = wxs.ToUTF8();
   const std::string url(utf8.data(), utf8.length());
 
-  mProfilesModel->updateQuickConnect(url);
+  if (!url.empty())
+  {
+    mProfilesModel->updateQuickConnect(url);
+  }
 
   const auto &profileItem = mProfilesModel->getQuickConnect();
   const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
