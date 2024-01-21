@@ -167,12 +167,12 @@ bool Profiles::rename(
     return false;
   }
 
-  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
-  snippets->load(pathNew);
+  wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  messages->load(pathNew);
 
   profile->name = name;
   profile->path = pathNew;
-  profile->snippets = snippets;
+  profile->messages = messages;
   profile->saved = false;
 
   save(id);
@@ -271,8 +271,8 @@ void Profiles::createQuickConnect()
     canSave = false;
   }
 
-  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
-  snippets->load(path);
+  wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  messages->load(path);
 
   wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
   wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
@@ -282,7 +282,7 @@ void Profiles::createQuickConnect()
   profile->name = uniqueName;
   profile->path = path;
   profile->saved = false;
-  profile->snippets = snippets;
+  profile->messages = messages;
   profile->topicsSubscribed = topicsSubscribed;
   profile->topicsPublished = topicsPublished;
   mProfiles.insert({id, std::move(profile)});
@@ -312,8 +312,8 @@ wxDataViewItem Profiles::createProfile()
     return wxDataViewItem(0);
   }
 
-  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
-  snippets->load(path);
+  wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  messages->load(path);
 
   wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
   wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
@@ -323,7 +323,7 @@ wxDataViewItem Profiles::createProfile()
   profile->name = uniqueName;
   profile->path = path;
   profile->saved = false;
-  profile->snippets = snippets;
+  profile->messages = messages;
   profile->topicsSubscribed = topicsSubscribed;
   profile->topicsPublished = topicsPublished;
   mProfiles.insert({id, std::move(profile)});
@@ -379,9 +379,9 @@ wxDataViewItem Profiles::getQuickConnect() const
   return toItem(mQuickConnectId);
 }
 
-wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
+wxObjectDataPtr<Messages> Profiles::getMessagesModel(wxDataViewItem item)
 {
-  return mProfiles.at(toId(item))->snippets;
+  return mProfiles.at(toId(item))->messages;
 }
 
 wxObjectDataPtr<KnownTopics> Profiles::getTopicsSubscribed(wxDataViewItem item)
@@ -597,8 +597,8 @@ wxDataViewItem Profiles::loadProfile(const Common::fs::path &directory)
     return opt.value();
   }();
 
-  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
-  snippets->load(directory.string());
+  wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  messages->load(directory.string());
 
   wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
   wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
@@ -613,7 +613,7 @@ wxDataViewItem Profiles::loadProfile(const Common::fs::path &directory)
     topicsPublished->load(topics + "/published.txt");
   }
 
-  topicsPublished->append(snippets->getKnownTopics());
+  topicsPublished->append(messages->getKnownTopics());
 
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>(Node{
@@ -621,7 +621,7 @@ wxDataViewItem Profiles::loadProfile(const Common::fs::path &directory)
     clientOptions,
     brokerOptions,
     directory,
-    snippets,
+    messages,
     topicsSubscribed,
     topicsPublished,
     true

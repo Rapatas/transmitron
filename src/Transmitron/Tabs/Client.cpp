@@ -20,8 +20,8 @@
 #include "Transmitron/Resources/preview/preview-18x18.hpp"
 #include "Transmitron/Resources/send/send-18x14.hpp"
 #include "Transmitron/Resources/send/send-18x18.hpp"
-#include "Transmitron/Resources/snippets/snippets-18x14.hpp"
-#include "Transmitron/Resources/snippets/snippets-18x18.hpp"
+#include "Transmitron/Resources/messages/messages-18x14.hpp"
+#include "Transmitron/Resources/messages/messages-18x18.hpp"
 #include "Transmitron/Resources/subscription/subscription-18x14.hpp"
 #include "Transmitron/Resources/subscription/subscription-18x18.hpp"
 
@@ -42,7 +42,7 @@ Client::Client(
   wxWindow* parent,
   const MQTT::BrokerOptions &brokerOptions,
   const Types::ClientOptions &clientOptions,
-  const wxObjectDataPtr<Models::Snippets> &snippets,
+  const wxObjectDataPtr<Models::Messages> &messages,
   const wxObjectDataPtr<Models::KnownTopics> &topicsSubscribed,
   const wxObjectDataPtr<Models::KnownTopics> &topicsPublished,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
@@ -67,7 +67,7 @@ Client::Client(
   mTopicsPublished(topicsPublished),
   mLayoutsModel(layoutsModel),
   mMasterSizer(new wxBoxSizer(wxVERTICAL)),
-  mSnippetsModel(snippets),
+  mMessagesModel(messages),
   mClient(std::make_shared<MQTT::Client>()),
   mMqttObserverId(mClient->attachObserver(this))
 {
@@ -155,12 +155,12 @@ void Client::setupPanels()
 
   if (mClient != nullptr)
   {
-    mPanes[Panes::Snippets] = {
-      "Snippets",
+    mPanes[Panes::Messages] = {
+      "Messages",
       {},
       nullptr,
-      bin2cSnippets18x18(),
-      bin2cSnippets18x14(),
+      bin2cMessages18x18(),
+      bin2cMessages18x14(),
       nullptr
     };
 
@@ -173,10 +173,10 @@ void Client::setupPanels()
       nullptr
     };
 
-    mPanes.at(Panes::Snippets).info.Left();
+    mPanes.at(Panes::Messages).info.Left();
     mPanes.at(Panes::Publish).info.Bottom();
 
-    mPanes.at(Panes::Snippets).info.Layer(1);
+    mPanes.at(Panes::Messages).info.Layer(1);
     mPanes.at(Panes::Publish).info.Layer(2);
   }
 
@@ -214,7 +214,7 @@ void Client::setupPanels()
 
   if (mClient != nullptr)
   {
-    setupPanelSnippets(wrapper);
+    setupPanelMessages(wrapper);
     setupPanelPublish(wrapper);
   }
   setupPanelSubscriptions(wrapper);
@@ -601,8 +601,8 @@ void Client::setupPanelPreview(wxWindow *parent)
   mPanes.at(Panes::Preview).panel = panel;
   panel->setReadOnly(true);
   panel->Bind(
-    Events::EDIT_SAVE_SNIPPET,
-    &Client::onPreviewSaveSnippet,
+    Events::EDIT_SAVE_MESSAGE,
+    &Client::onPreviewSaveMessage,
     this
   );
 }
@@ -623,96 +623,96 @@ void Client::setupPanelPublish(wxWindow *parent)
     this
   );
   panel->Bind(
-    Events::EDIT_SAVE_SNIPPET,
-    &Client::onPublishSaveSnippet,
+    Events::EDIT_SAVE_MESSAGE,
+    &Client::onPublishSaveMessage,
     this
   );
 }
 
-void Client::setupPanelSnippets(wxWindow *parent)
+void Client::setupPanelMessages(wxWindow *parent)
 {
   auto *renderer = new wxDataViewIconTextRenderer(
     wxDataViewIconTextRenderer::GetDefaultType(),
     wxDATAVIEW_CELL_EDITABLE
   );
 
-  mSnippetColumns.at(Snippets::Column::Name) = new wxDataViewColumn(
+  mMessageColumns.at(Messages::Column::Name) = new wxDataViewColumn(
     L"name",
     renderer,
-    (unsigned)Models::Snippets::Column::Name,
+    (unsigned)Models::Messages::Column::Name,
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
 
   auto *panel = new wxPanel(parent, -1);
-  mPanes.at(Panes::Snippets).panel = panel;
+  mPanes.at(Panes::Messages).panel = panel;
 
-  mSnippetsCtrl = new wxDataViewListCtrl(
+  mMessagesCtrl = new wxDataViewListCtrl(
     panel,
     -1,
     wxDefaultPosition,
     wxDefaultSize,
     wxDV_NO_HEADER
   );
-  mSnippetsCtrl->AppendColumn(mSnippetColumns.at(Snippets::Column::Name));
-  mSnippetsCtrl->AssociateModel(mSnippetsModel.get());
+  mMessagesCtrl->AppendColumn(mMessageColumns.at(Messages::Column::Name));
+  mMessagesCtrl->AssociateModel(mMessagesModel.get());
 
   // Windows only works with unicode.
-  mSnippetsCtrl->EnableDropTarget(wxDF_UNICODETEXT);
-  mSnippetsCtrl->EnableDragSource(wxDF_UNICODETEXT);
+  mMessagesCtrl->EnableDropTarget(wxDF_UNICODETEXT);
+  mMessagesCtrl->EnableDragSource(wxDF_UNICODETEXT);
 
-  mSnippetsCtrl->SetFont(mFont);
+  mMessagesCtrl->SetFont(mFont);
 
   wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
-  vsizer->Add(mSnippetsCtrl, 1, wxEXPAND);
+  vsizer->Add(mMessagesCtrl, 1, wxEXPAND);
   panel->SetSizer(vsizer);
-  mSnippetsCtrl->Bind(
+  mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
-    &Client::onSnippetsContext,
+    &Client::onMessagesContext,
     this
   );
-  mSnippetsCtrl->Bind(
+  mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_START_EDITING,
-    &Client::onSnippetsEdit,
+    &Client::onMessagesEdit,
     this
   );
-  mSnippetsCtrl->Bind(
+  mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_VALUE_CHANGED,
-    &Client::onSnippetsChanged,
+    &Client::onMessagesChanged,
     this
   );
-  mSnippetsCtrl->Bind(
+  mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_SELECTION_CHANGED,
-    &Client::onSnippetsSelected,
+    &Client::onMessagesSelected,
     this
   );
-  mSnippetsCtrl->Bind(
+  mMessagesCtrl->Bind(
     wxEVT_COMMAND_DATAVIEW_ITEM_ACTIVATED,
-    &Client::onSnippetsActivated,
+    &Client::onMessagesActivated,
     this
   );
-  mSnippetsCtrl->Bind(
+  mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_BEGIN_DRAG,
-    &Client::onSnippetsDrag,
+    &Client::onMessagesDrag,
     this
   );
-  mSnippetsCtrl->Bind(
+  mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_DROP,
-    &Client::onSnippetsDrop,
+    &Client::onMessagesDrop,
     this
   );
-  mSnippetsCtrl->Bind(
+  mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE,
-    &Client::onSnippetsDropPossible,
+    &Client::onMessagesDropPossible,
     this
   );
 }
 
 // Setup }
 
-// Snippets {
+// Messages {
 
-void Client::onSnippetsSelected(wxDataViewEvent &e)
+void Client::onMessagesSelected(wxDataViewEvent &e)
 {
   auto item = e.GetItem();
   if (!item.IsOk())
@@ -725,20 +725,20 @@ void Client::onSnippetsSelected(wxDataViewEvent &e)
     mPanes.at(Panes::Publish).panel
   );
 
-  if (!mSnippetsModel->IsContainer(item))
+  if (!mMessagesModel->IsContainer(item))
   {
-    const auto &message = mSnippetsModel->getMessage(item);
-    const auto &name = mSnippetsModel->getName(item);
+    const auto &message = mMessagesModel->getMessage(item);
+    const auto &name = mMessagesModel->getName(item);
     publish->setMessage(message);
     publish->setInfoLine(name);
   }
 }
 
-void Client::onSnippetsEdit(wxDataViewEvent &e)
+void Client::onMessagesEdit(wxDataViewEvent &e)
 {
-  if (mSnippetExplicitEditRequest)
+  if (mMessageExplicitEditRequest)
   {
-    mSnippetExplicitEditRequest = false;
+    mMessageExplicitEditRequest = false;
     e.Skip();
   }
   else
@@ -747,7 +747,7 @@ void Client::onSnippetsEdit(wxDataViewEvent &e)
   }
 }
 
-void Client::onSnippetsChanged(wxDataViewEvent &e)
+void Client::onMessagesChanged(wxDataViewEvent &e)
 {
   const auto item = e.GetItem();
   if (!item.IsOk())
@@ -756,7 +756,7 @@ void Client::onSnippetsChanged(wxDataViewEvent &e)
     return;
   }
 
-  const auto name = mSnippetsModel->getName(item);
+  const auto name = mMessagesModel->getName(item);
 
   auto *publish = dynamic_cast<Widgets::Edit*>(
     mPanes.at(Panes::Publish).panel
@@ -764,33 +764,33 @@ void Client::onSnippetsChanged(wxDataViewEvent &e)
   publish->setInfoLine(name);
 }
 
-void Client::onSnippetsActivated(wxDataViewEvent &e)
+void Client::onMessagesActivated(wxDataViewEvent &e)
 {
   const auto item = e.GetItem();
   if (!item.IsOk()) { return; }
 
-  if (mSnippetsModel->IsContainer(item))
+  if (mMessagesModel->IsContainer(item))
   {
-    if (mSnippetsCtrl->IsExpanded(item))
+    if (mMessagesCtrl->IsExpanded(item))
     {
-      mSnippetsCtrl->Collapse(item);
+      mMessagesCtrl->Collapse(item);
     }
     else
     {
-      mSnippetsCtrl->Expand(item);
+      mMessagesCtrl->Expand(item);
     }
   }
   else
   {
-    const auto message = mSnippetsModel->getMessage(item);
+    const auto message = mMessagesModel->getMessage(item);
     mClient->publish(message);
   }
 }
 
-void Client::onSnippetsDrag(wxDataViewEvent &e)
+void Client::onMessagesDrag(wxDataViewEvent &e)
 {
   auto item = e.GetItem();
-  mSnippetsWasExpanded = mSnippetsCtrl->IsExpanded(item);
+  mMessagesWasExpanded = mMessagesCtrl->IsExpanded(item);
 
   const void *id = item.GetID();
   uintptr_t message = 0;
@@ -807,7 +807,7 @@ void Client::onSnippetsDrag(wxDataViewEvent &e)
   e.Skip(false);
 }
 
-void Client::onSnippetsDrop(wxDataViewEvent &e)
+void Client::onMessagesDrop(wxDataViewEvent &e)
 {
   const auto target = e.GetItem();
 
@@ -826,75 +826,75 @@ void Client::onSnippetsDrop(wxDataViewEvent &e)
 
   if (pIndex == -1)
   {
-    if (!mSnippetsModel->IsContainer(target))
+    if (!mMessagesModel->IsContainer(target))
     {
-      moved = mSnippetsModel->moveAfter(item, target);
+      moved = mMessagesModel->moveAfter(item, target);
     }
     else
     {
       if (target.IsOk())
       {
-        moved = mSnippetsModel->moveInsideFirst(item, target);
+        moved = mMessagesModel->moveInsideFirst(item, target);
       }
       else
       {
-        moved = mSnippetsModel->moveInsideLast(item, target);
+        moved = mMessagesModel->moveInsideLast(item, target);
       }
     }
   }
   else
   {
     const auto index = (size_t)pIndex;
-    moved = mSnippetsModel->moveInsideAtIndex(item, target, index);
+    moved = mMessagesModel->moveInsideAtIndex(item, target, index);
   }
 
 #else
 
-  if (mSnippetsPossible.first)
+  if (mMessagesPossible.first)
   {
-    if (mSnippetsModel->IsContainer(target))
+    if (mMessagesModel->IsContainer(target))
     {
-      moved = mSnippetsModel->moveInsideFirst(item, target);
+      moved = mMessagesModel->moveInsideFirst(item, target);
     }
     else
     {
-      moved = mSnippetsModel->moveAfter(item, target);
+      moved = mMessagesModel->moveAfter(item, target);
     }
   }
   else
   {
     if (target.IsOk())
     {
-      moved = mSnippetsModel->moveBefore(item, target);
+      moved = mMessagesModel->moveBefore(item, target);
     }
     else
     {
-      moved = mSnippetsModel->moveInsideLast(item, target);
+      moved = mMessagesModel->moveInsideLast(item, target);
     }
   }
 
 #endif // WIN32
 
-  mSnippetsPossible = {false, wxDataViewItem(nullptr)};
+  mMessagesPossible = {false, wxDataViewItem(nullptr)};
 
   if (!moved.IsOk())
   {
     return;
   }
 
-  mSnippetsCtrl->Refresh();
-  mSnippetsCtrl->EnsureVisible(moved);
-  if (mSnippetsWasExpanded)
+  mMessagesCtrl->Refresh();
+  mMessagesCtrl->EnsureVisible(moved);
+  if (mMessagesWasExpanded)
   {
-    mSnippetsCtrl->Expand(moved);
+    mMessagesCtrl->Expand(moved);
   }
-  mSnippetsCtrl->Select(moved);
+  mMessagesCtrl->Select(moved);
 }
 
-void Client::onSnippetsDropPossible(wxDataViewEvent &e)
+void Client::onMessagesDropPossible(wxDataViewEvent &e)
 {
   const auto item = e.GetItem();
-  mSnippetsPossible = {true, item};
+  mMessagesPossible = {true, item};
 
 #ifdef WIN32
 
@@ -912,7 +912,7 @@ void Client::onSnippetsDropPossible(wxDataViewEvent &e)
 #endif // WIN32
 }
 
-// Snippets }
+// Messages }
 
 // Connection {
 
@@ -1076,8 +1076,8 @@ void Client::onHistoryContext(wxDataViewEvent& e)
 
   auto *save = new wxMenuItem(
     nullptr,
-    (unsigned)ContextIDs::HistorySaveSnippet,
-    "Save Snippet"
+    (unsigned)ContextIDs::HistorySaveMessage,
+    "Save Message"
   );
   save->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
   menu.Append(save);
@@ -1085,33 +1085,33 @@ void Client::onHistoryContext(wxDataViewEvent& e)
   PopupMenu(&menu);
 }
 
-void Client::onSnippetsContext(wxDataViewEvent& e)
+void Client::onMessagesContext(wxDataViewEvent& e)
 {
   wxMenu menu;
 
   if (!e.GetItem().IsOk())
   {
-    mSnippetsCtrl->UnselectAll();
+    mMessagesCtrl->UnselectAll();
   }
   else
   {
     const auto item = e.GetItem();
 
-    if (!mSnippetsModel->IsContainer(item))
+    if (!mMessagesModel->IsContainer(item))
     {
       auto *publish = new wxMenuItem(
         nullptr,
-        (unsigned)ContextIDs::SnippetPublish,
+        (unsigned)ContextIDs::MessagePublish,
         "Publish"
       );
       menu.Append(publish);
     }
 
-    if (!mSnippetsModel->IsContainer(item))
+    if (!mMessagesModel->IsContainer(item))
     {
       auto *overwrite = new wxMenuItem(
         nullptr,
-        (unsigned)ContextIDs::SnippetOverwrite,
+        (unsigned)ContextIDs::MessageOverwrite,
         "Overwrite"
       );
       overwrite->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE_AS));
@@ -1120,7 +1120,7 @@ void Client::onSnippetsContext(wxDataViewEvent& e)
 
     auto *rename = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::SnippetRename,
+      (unsigned)ContextIDs::MessageRename,
       "Rename"
     );
     rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
@@ -1128,7 +1128,7 @@ void Client::onSnippetsContext(wxDataViewEvent& e)
 
     auto *del = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::SnippetDelete,
+      (unsigned)ContextIDs::MessageDelete,
       "Delete"
     );
     del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
@@ -1137,23 +1137,23 @@ void Client::onSnippetsContext(wxDataViewEvent& e)
 
   if (
     !e.GetItem().IsOk()
-    || mSnippetsModel->IsContainer(e.GetItem())
+    || mMessagesModel->IsContainer(e.GetItem())
   ) {
     auto *newFolder = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::SnippetNewFolder,
+      (unsigned)ContextIDs::MessageNewFolder,
       "New Folder"
     );
     newFolder->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW_DIR));
     menu.Append(newFolder);
 
-    auto *newSnippet = new wxMenuItem(
+    auto *newMessage = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::SnippetNewSnippet,
-      "New Snippet"
+      (unsigned)ContextIDs::MessageNewMessage,
+      "New Message"
     );
-    newSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE));
-    menu.Append(newSnippet);
+    newMessage->SetBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE));
+    menu.Append(newMessage);
   }
 
   PopupMenu(&menu);
@@ -1190,8 +1190,8 @@ void Client::onContextSelected(wxCommandEvent& event)
     case ContextIDs::HistoryEdit: {
       onContextSelectedHistoryEdit(event);
     } break;
-    case ContextIDs::HistorySaveSnippet: {
-      onContextSelectedHistorySaveSnippet(event);
+    case ContextIDs::HistorySaveMessage: {
+      onContextSelectedHistorySaveMessage(event);
     } break;
     case ContextIDs::HistoryCopyTopic: {
       onContextSelectedHistoryCopyTopic(event);
@@ -1199,23 +1199,23 @@ void Client::onContextSelected(wxCommandEvent& event)
     case ContextIDs::HistoryCopyPayload: {
       onContextSelectedHistoryCopyPayload(event);
     } break;
-    case ContextIDs::SnippetNewFolder: {
-      onContextSelectedSnippetNewFolder(event);
+    case ContextIDs::MessageNewFolder: {
+      onContextSelectedMessageNewFolder(event);
     } break;
-    case ContextIDs::SnippetNewSnippet: {
-      onContextSelectedSnippetNewSnippet(event);
+    case ContextIDs::MessageNewMessage: {
+      onContextSelectedMessageNewMessage(event);
     } break;
-    case ContextIDs::SnippetDelete: {
-      onContextSelectedSnippetDelete(event);
+    case ContextIDs::MessageDelete: {
+      onContextSelectedMessageDelete(event);
     } break;
-    case ContextIDs::SnippetRename: {
-      onContextSelectedSnippetRename(event);
+    case ContextIDs::MessageRename: {
+      onContextSelectedMessageRename(event);
     } break;
-    case ContextIDs::SnippetPublish: {
-      onContextSelectedSnippetPublish(event);
+    case ContextIDs::MessagePublish: {
+      onContextSelectedMessagePublish(event);
     } break;
-    case ContextIDs::SnippetOverwrite: {
-      onContextSelectedSnippetOverwrite(event);
+    case ContextIDs::MessageOverwrite: {
+      onContextSelectedMessageOverwrite(event);
     } break;
   }
   event.Skip();
@@ -1316,17 +1316,17 @@ void Client::onContextSelectedHistoryEdit(wxCommandEvent &/* event */)
   publish->setRetained(mHistoryModel->getRetained(item));
 }
 
-void Client::onContextSelectedHistorySaveSnippet(wxCommandEvent &/* event */)
+void Client::onContextSelectedHistorySaveMessage(wxCommandEvent &/* event */)
 {
-  auto snippetItem = mSnippetsCtrl->GetSelection();
-  if (!mSnippetsModel->IsContainer(snippetItem))
+  auto messageItem = mMessagesCtrl->GetSelection();
+  if (!mMessagesModel->IsContainer(messageItem))
   {
-    snippetItem = mSnippetsModel->GetParent(snippetItem);
+    messageItem = mMessagesModel->GetParent(messageItem);
   }
 
   const auto historyItem = mHistoryCtrl->GetSelection();
   const auto &message = mHistoryModel->getMessage(historyItem);
-  const auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
+  const auto inserted = mMessagesModel->createMessage(messageItem, message);
 
   if (!inserted.IsOk())
   {
@@ -1336,14 +1336,14 @@ void Client::onContextSelectedHistorySaveSnippet(wxCommandEvent &/* event */)
   auto *publish = dynamic_cast<Widgets::Edit*>(
     mPanes.at(Panes::Publish).panel
   );
-  publish->setMessage(mSnippetsModel->getMessage(inserted));
+  publish->setMessage(mMessagesModel->getMessage(inserted));
 
-  mSnippetsCtrl->Select(inserted);
-  mSnippetsCtrl->EnsureVisible(inserted);
+  mMessagesCtrl->Select(inserted);
+  mMessagesCtrl->EnsureVisible(inserted);
 
-  auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
-  mSnippetExplicitEditRequest = true;
-  mSnippetsCtrl->EditItem(inserted, nameColumn);
+  auto *nameColumn = mMessageColumns.at(Messages::Column::Name);
+  mMessageExplicitEditRequest = true;
+  mMessagesCtrl->EditItem(inserted, nameColumn);
 }
 
 void Client::onContextSelectedHistoryCopyTopic(wxCommandEvent &/* event */)
@@ -1372,35 +1372,35 @@ void Client::onContextSelectedHistoryCopyPayload(wxCommandEvent &/* event */)
   }
 }
 
-void Client::onContextSelectedSnippetRename(wxCommandEvent &/* event */)
+void Client::onContextSelectedMessageRename(wxCommandEvent &/* event */)
 {
-  const auto item = mSnippetsCtrl->GetSelection();
+  const auto item = mMessagesCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
-  mSnippetExplicitEditRequest = true;
-  mSnippetsCtrl->EditItem(item, mSnippetColumns.at(Snippets::Column::Name));
+  mMessageExplicitEditRequest = true;
+  mMessagesCtrl->EditItem(item, mMessageColumns.at(Messages::Column::Name));
 }
 
-void Client::onContextSelectedSnippetPublish(wxCommandEvent &/* event */)
+void Client::onContextSelectedMessagePublish(wxCommandEvent &/* event */)
 {
-  const auto item = mSnippetsCtrl->GetSelection();
+  const auto item = mMessagesCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
   auto *publish = dynamic_cast<Widgets::Edit*>(
     mPanes.at(Panes::Publish).panel
   );
 
-  const auto &message = mSnippetsModel->getMessage(item);
-  const auto &name = mSnippetsModel->getName(item);
+  const auto &message = mMessagesModel->getMessage(item);
+  const auto &name = mMessagesModel->getName(item);
   publish->setMessage(message);
   publish->setInfoLine(name);
 
   mClient->publish(message);
 }
 
-void Client::onContextSelectedSnippetOverwrite(wxCommandEvent &/* event */)
+void Client::onContextSelectedMessageOverwrite(wxCommandEvent &/* event */)
 {
-  const auto item = mSnippetsCtrl->GetSelection();
+  const auto item = mMessagesCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
   auto *publish = dynamic_cast<Widgets::Edit*>(
@@ -1408,22 +1408,22 @@ void Client::onContextSelectedSnippetOverwrite(wxCommandEvent &/* event */)
   );
   const auto message = publish->getMessage();
 
-  mSnippetsModel->replace(item, message);
+  mMessagesModel->replace(item, message);
 }
 
-void Client::onContextSelectedSnippetDelete(wxCommandEvent &/* event */)
+void Client::onContextSelectedMessageDelete(wxCommandEvent &/* event */)
 {
-  const auto item = mSnippetsCtrl->GetSelection();
+  const auto item = mMessagesCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
-  const bool done = mSnippetsModel->remove(item);
+  const bool done = mMessagesModel->remove(item);
   if (!done)
   {
     return;
   }
 
-  const auto root = mSnippetsModel->getRootItem();
-  mSnippetsCtrl->Select(root);
+  const auto root = mMessagesModel->getRootItem();
+  mMessagesCtrl->Select(root);
 
   auto *publish = dynamic_cast<Widgets::Edit*>(
     mPanes.at(Panes::Publish).panel
@@ -1431,15 +1431,15 @@ void Client::onContextSelectedSnippetDelete(wxCommandEvent &/* event */)
   publish->setInfoLine({});
 }
 
-void Client::onContextSelectedSnippetNewSnippet(wxCommandEvent &/* event */)
+void Client::onContextSelectedMessageNewMessage(wxCommandEvent &/* event */)
 {
-  auto item = mSnippetsCtrl->GetSelection();
-  if (!mSnippetsModel->IsContainer(item))
+  auto item = mMessagesCtrl->GetSelection();
+  if (!mMessagesModel->IsContainer(item))
   {
-    item = mSnippetsModel->GetParent(item);
+    item = mMessagesModel->GetParent(item);
   }
 
-  const auto inserted = mSnippetsModel->createSnippet(item, {});
+  const auto inserted = mMessagesModel->createMessage(item, {});
   if (!inserted.IsOk())
   {
     return;
@@ -1448,39 +1448,39 @@ void Client::onContextSelectedSnippetNewSnippet(wxCommandEvent &/* event */)
   auto *publish = dynamic_cast<Widgets::Edit*>(
     mPanes.at(Panes::Publish).panel
   );
-  const auto &message = mSnippetsModel->getMessage(item);
-  const auto &name = mSnippetsModel->getName(item);
+  const auto &message = mMessagesModel->getMessage(item);
+  const auto &name = mMessagesModel->getName(item);
   publish->setMessage(message);
   publish->setInfoLine(name);
 
-  mSnippetsCtrl->Select(inserted);
-  mSnippetsCtrl->EnsureVisible(inserted);
+  mMessagesCtrl->Select(inserted);
+  mMessagesCtrl->EnsureVisible(inserted);
 
-  auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
-  mSnippetExplicitEditRequest = true;
-  mSnippetsCtrl->EditItem(inserted, nameColumn);
+  auto *nameColumn = mMessageColumns.at(Messages::Column::Name);
+  mMessageExplicitEditRequest = true;
+  mMessagesCtrl->EditItem(inserted, nameColumn);
 }
 
-void Client::onContextSelectedSnippetNewFolder(wxCommandEvent &/* event */)
+void Client::onContextSelectedMessageNewFolder(wxCommandEvent &/* event */)
 {
-  auto item = mSnippetsCtrl->GetSelection();
-  if (!mSnippetsModel->IsContainer(item))
+  auto item = mMessagesCtrl->GetSelection();
+  if (!mMessagesModel->IsContainer(item))
   {
-    item = mSnippetsModel->GetParent(item);
+    item = mMessagesModel->GetParent(item);
   }
 
-  const auto inserted = mSnippetsModel->createFolder(item);
+  const auto inserted = mMessagesModel->createFolder(item);
   if (!inserted.IsOk())
   {
     return;
   }
 
-  mSnippetsCtrl->Select(inserted);
-  mSnippetsCtrl->EnsureVisible(inserted);
+  mMessagesCtrl->Select(inserted);
+  mMessagesCtrl->EnsureVisible(inserted);
 
-  auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
-  mSnippetExplicitEditRequest = true;
-  mSnippetsCtrl->EditItem(inserted, nameColumn);
+  auto *nameColumn = mMessageColumns.at(Messages::Column::Name);
+  mMessageExplicitEditRequest = true;
+  mMessagesCtrl->EditItem(inserted, nameColumn);
 }
 
 // Context }
@@ -1645,14 +1645,14 @@ void Client::onPublishClicked(wxCommandEvent &/* event */)
   mClient->publish(message);
 }
 
-void Client::onPublishSaveSnippet(Events::Edit &/* event */)
+void Client::onPublishSaveMessage(Events::Edit &/* event */)
 {
   mLogger->info("Saving current message");
-  auto snippetItem = mSnippetsCtrl->GetSelection();
-  if (!mSnippetsModel->IsContainer(snippetItem))
+  auto messageItem = mMessagesCtrl->GetSelection();
+  if (!mMessagesModel->IsContainer(messageItem))
   {
     mLogger->info("Selecting parent");
-    snippetItem = mSnippetsModel->GetParent(snippetItem);
+    messageItem = mMessagesModel->GetParent(messageItem);
   }
 
   auto *publish = dynamic_cast<Widgets::Edit*>(
@@ -1661,22 +1661,22 @@ void Client::onPublishSaveSnippet(Events::Edit &/* event */)
 
   const auto &message = publish->getMessage();
   mLogger->info("Storing {}", message.topic);
-  auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
+  auto inserted = mMessagesModel->createMessage(messageItem, message);
   if (inserted.IsOk())
   {
     auto *publish = dynamic_cast<Widgets::Edit*>(
       mPanes.at(Panes::Publish).panel
     );
-    const auto &message = mSnippetsModel->getMessage(inserted);
-    const auto &name = mSnippetsModel->getName(inserted);
+    const auto &message = mMessagesModel->getMessage(inserted);
+    const auto &name = mMessagesModel->getName(inserted);
     publish->setMessage(message);
     publish->setInfoLine(name);
 
-    mSnippetsCtrl->Select(inserted);
-    mSnippetsCtrl->EnsureVisible(inserted);
-    auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
-    mSnippetExplicitEditRequest = true;
-    mSnippetsCtrl->EditItem(inserted, nameColumn);
+    mMessagesCtrl->Select(inserted);
+    mMessagesCtrl->EnsureVisible(inserted);
+    auto *nameColumn = mMessageColumns.at(Messages::Column::Name);
+    mMessageExplicitEditRequest = true;
+    mMessagesCtrl->EditItem(inserted, nameColumn);
   }
 }
 
@@ -1722,10 +1722,10 @@ void Client::onHistoryDoubleClicked(wxDataViewEvent &event)
 {
   if (!event.GetItem().IsOk()) { return; }
 
-  const auto snippetItem = mSnippetsCtrl->GetSelection();
-  if (snippetItem.IsOk())
+  const auto messageItem = mMessagesCtrl->GetSelection();
+  if (messageItem.IsOk())
   {
-    mSnippetsCtrl->Unselect(snippetItem);
+    mMessagesCtrl->Unselect(messageItem);
   }
 
   const auto historyItem = event.GetItem();
@@ -1770,14 +1770,14 @@ void Client::onHistorySearchButton(wxCommandEvent &/* event */)
 
 // Preview {
 
-void Client::onPreviewSaveSnippet(Events::Edit &/* event */)
+void Client::onPreviewSaveMessage(Events::Edit &/* event */)
 {
   mLogger->info("Saving current message");
-  auto snippetItem = mSnippetsCtrl->GetSelection();
-  if (!mSnippetsModel->IsContainer(snippetItem))
+  auto messageItem = mMessagesCtrl->GetSelection();
+  if (!mMessagesModel->IsContainer(messageItem))
   {
     mLogger->info("Selecting parent");
-    snippetItem = mSnippetsModel->GetParent(snippetItem);
+    messageItem = mMessagesModel->GetParent(messageItem);
   }
 
   auto *preview = dynamic_cast<Widgets::Edit*>(
@@ -1786,14 +1786,14 @@ void Client::onPreviewSaveSnippet(Events::Edit &/* event */)
 
   const auto &message = preview->getMessage();
   mLogger->info("Storing {}", message.topic);
-  auto inserted = mSnippetsModel->createSnippet(snippetItem, message);
+  auto inserted = mMessagesModel->createMessage(messageItem, message);
   if (inserted.IsOk())
   {
-    mSnippetsCtrl->Select(inserted);
-    mSnippetsCtrl->EnsureVisible(inserted);
-    auto *nameColumn = mSnippetColumns.at(Snippets::Column::Name);
-    mSnippetExplicitEditRequest = true;
-    mSnippetsCtrl->EditItem(inserted, nameColumn);
+    mMessagesCtrl->Select(inserted);
+    mMessagesCtrl->EnsureVisible(inserted);
+    auto *nameColumn = mMessageColumns.at(Messages::Column::Name);
+    mMessageExplicitEditRequest = true;
+    mMessagesCtrl->EditItem(inserted, nameColumn);
   }
 }
 

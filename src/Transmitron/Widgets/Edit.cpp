@@ -26,7 +26,7 @@ using namespace Common;
 using namespace Transmitron::Widgets;
 
 wxDEFINE_EVENT(Events::EDIT_PUBLISH, Events::Edit); // NOLINT
-wxDEFINE_EVENT(Events::EDIT_SAVE_SNIPPET, Events::Edit); // NOLINT
+wxDEFINE_EVENT(Events::EDIT_SAVE_MESSAGE, Events::Edit); // NOLINT
 
 constexpr uint8_t ByteSize = std::numeric_limits<uint8_t>::digits;
 
@@ -71,16 +71,16 @@ Edit::Edit(
 
   setupScintilla();
 
-  mSaveSnippet = new wxButton(
+  mSaveMessage = new wxButton(
     this,
     -1,
     "Store",
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
-  mSaveSnippet->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
-  mSaveSnippet->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
-    auto *e = new Events::Edit(Events::EDIT_SAVE_SNIPPET);
+  mSaveMessage->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
+  mSaveMessage->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
+    auto *e = new Events::Edit(Events::EDIT_SAVE_MESSAGE);
     wxQueueEvent(this, e);
   });
 
@@ -144,7 +144,7 @@ Edit::Edit(
   mTop->Add(mQos2, 0, wxEXPAND);
   mTop->AddSpacer(2);
   mTop->Add(mPublish, 0, wxEXPAND);
-  mBottom->Add(mSaveSnippet, 0, wxEXPAND);
+  mBottom->Add(mSaveMessage, 0, wxEXPAND);
   mBottom->AddStretchSpacer(1);
   mBottom->Add(formatLabel, 0, wxALIGN_CENTER_VERTICAL);
   mBottom->Add(mFormatSelect, 0, wxEXPAND);

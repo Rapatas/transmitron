@@ -106,7 +106,7 @@ private:
 
   wxStaticText *mInfoLine = nullptr;
 
-  wxButton *mSaveSnippet = nullptr;
+  wxButton *mSaveMessage = nullptr;
   wxComboBox *mFormatSelect = nullptr;
 
   enum class Format

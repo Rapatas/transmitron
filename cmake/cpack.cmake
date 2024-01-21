@@ -102,7 +102,7 @@ set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "## Features:
 
  Profiles: Store connections to brokers.
  Multiple Connections: Connect to multiple Profiles at the same time using tabs.
- Snippets: Store messages in a nested folder structure, ready to publish.
+ Archive: Store messages in a nested folder structure.
  Record History: Record received messages and play them back later.
  Folding: For messages with nested data.
  Syntax highlight, detection & formatting: Supports JSON, XML & binary.

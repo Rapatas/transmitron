@@ -11,15 +11,15 @@
 
 #include "Common/Url.hpp"
 #include "Common/Log.hpp"
-#include "Snippets.hpp"
+#include "Messages.hpp"
 
 namespace fs = Common::fs;
 using namespace Transmitron::Models;
 using namespace Common;
 
-Snippets::Snippets()
+Messages::Messages()
 {
-  mLogger = Common::Log::create("Models::Snippets");
+  mLogger = Common::Log::create("Models::Messages");
 
   const auto id = getNextId();
   Node root {
@@ -35,7 +35,7 @@ Snippets::Snippets()
   mNodes.insert({id, std::move(root)});
 }
 
-MQTT::Message Snippets::getMessage(wxDataViewItem item) const
+MQTT::Message Messages::getMessage(wxDataViewItem item) const
 {
   if (!item.IsOk())
   {
@@ -47,7 +47,7 @@ MQTT::Message Snippets::getMessage(wxDataViewItem item) const
   return node.message;
 }
 
-std::string Snippets::getName(wxDataViewItem item) const
+std::string Messages::getName(wxDataViewItem item) const
 {
   if (!item.IsOk())
   {
@@ -59,7 +59,7 @@ std::string Snippets::getName(wxDataViewItem item) const
   return node.name;
 }
 
-std::set<std::string> Snippets::getKnownTopics() const
+std::set<std::string> Messages::getKnownTopics() const
 {
   std::set<std::string> result;
   for (const auto &node : mNodes)
@@ -69,12 +69,12 @@ std::set<std::string> Snippets::getKnownTopics() const
   return result;
 }
 
-wxDataViewItem Snippets::getRootItem()
+wxDataViewItem Messages::getRootItem()
 {
   return toItem(0);
 }
 
-bool Snippets::load(const std::string &profileDir)
+bool Messages::load(const std::string &profileDir)
 {
   if (profileDir.empty())
   {
@@ -82,34 +82,34 @@ bool Snippets::load(const std::string &profileDir)
     return false;
   }
 
-  mSnippetsDir = profileDir + "/snippets";
+  mMessagesDir = profileDir + "/messages";
 
-  bool exists = fs::exists(mSnippetsDir);
-  bool isDir = fs::is_directory(mSnippetsDir);
+  bool exists = fs::exists(mMessagesDir);
+  bool isDir = fs::is_directory(mMessagesDir);
 
-  if (exists && !isDir && !fs::remove(mSnippetsDir))
+  if (exists && !isDir && !fs::remove(mMessagesDir))
   {
-    mLogger->warn("Could not remove file {}", mSnippetsDir);
+    mLogger->warn("Could not remove file {}", mMessagesDir);
     return false;
   }
 
-  if (!exists && !fs::create_directory(mSnippetsDir))
+  if (!exists && !fs::create_directory(mMessagesDir))
   {
     mLogger->warn(
-      "Could not create snippets directory: {}",
-      mSnippetsDir
+      "Could not create messages directory: {}",
+      mMessagesDir
     );
     return false;
   }
 
-  mNodes.at(0).encoded = mSnippetsDir;
+  mNodes.at(0).encoded = mMessagesDir;
 
-  loadDirectoryRecursive(mSnippetsDir, std::numeric_limits<Node::Id_t>::max());
+  loadDirectoryRecursive(mMessagesDir, std::numeric_limits<Node::Id_t>::max());
 
   return true;
 }
 
-wxDataViewItem Snippets::createFolder(
+wxDataViewItem Messages::createFolder(
   wxDataViewItem parentItem
 ) {
   const constexpr std::string_view NewName{"New Folder"};
@@ -166,11 +166,11 @@ wxDataViewItem Snippets::createFolder(
   return item;
 }
 
-wxDataViewItem Snippets::createSnippet(
+wxDataViewItem Messages::createMessage(
   wxDataViewItem parentItem,
   const MQTT::Message &message
 ) {
-  const constexpr std::string_view NewName{"New Snippet"};
+  const constexpr std::string_view NewName{"New Message"};
 
   auto parentId = toId(parentItem);
   Node &parentNode = mNodes.at(parentId);
@@ -188,7 +188,7 @@ wxDataViewItem Snippets::createSnippet(
   }
 
   mLogger->info(
-    "Creating snippet '{}' under [{}]'{}'",
+    "Creating message '{}' under [{}]'{}'",
     uniqueName,
     parentId,
     parentNode.name
@@ -200,7 +200,7 @@ wxDataViewItem Snippets::createSnippet(
     parentId,
     uniqueName,
     encoded,
-    Node::Type::Snippet,
+    Node::Type::Message,
     {},
     message,
     false,
@@ -218,7 +218,7 @@ wxDataViewItem Snippets::createSnippet(
   return item;
 }
 
-wxDataViewItem Snippets::insert(
+wxDataViewItem Messages::insert(
   const std::string &name,
   const MQTT::Message &message,
   wxDataViewItem parentItem
@@ -237,7 +237,7 @@ wxDataViewItem Snippets::insert(
   }
 
   mLogger->info(
-    "Creating snippet '{}' under [{}]'{}'",
+    "Creating message '{}' under [{}]'{}'",
     name,
     parentId,
     parentNode.name
@@ -256,7 +256,7 @@ wxDataViewItem Snippets::insert(
     parentId,
     name,
     encoded,
-    Node::Type::Snippet,
+    Node::Type::Message,
     {},
     message,
     false,
@@ -273,15 +273,15 @@ wxDataViewItem Snippets::insert(
   return item;
 }
 
-wxDataViewItem Snippets::replace(
+wxDataViewItem Messages::replace(
   wxDataViewItem item,
   const MQTT::Message &message
 ) {
   const auto id = toId(item);
   auto &node = mNodes.at(id);
-  if (node.type != Node::Type::Snippet)
+  if (node.type != Node::Type::Message)
   {
-    mLogger->warn("Can only replace snippets");
+    mLogger->warn("Can only replace messages");
     return wxDataViewItem(nullptr);
   }
 
@@ -299,7 +299,7 @@ wxDataViewItem Snippets::replace(
   return item;
 }
 
-bool Snippets::remove(wxDataViewItem item)
+bool Messages::remove(wxDataViewItem item)
 {
   const auto id = toId(item);
   auto &node = mNodes.at(id);
@@ -327,7 +327,7 @@ bool Snippets::remove(wxDataViewItem item)
   return true;
 }
 
-wxDataViewItem Snippets::moveBefore(
+wxDataViewItem Messages::moveBefore(
   wxDataViewItem item,
   wxDataViewItem sibling
 ) {
@@ -348,7 +348,7 @@ wxDataViewItem Snippets::moveBefore(
   return moveInsideAtIndex(item, parent, index);
 }
 
-wxDataViewItem Snippets::moveInsideLast(
+wxDataViewItem Messages::moveInsideLast(
   wxDataViewItem item,
   wxDataViewItem parent
 ) {
@@ -357,7 +357,7 @@ wxDataViewItem Snippets::moveInsideLast(
   return moveInsideAtIndex(item, parent, count);
 }
 
-wxDataViewItem Snippets::moveAfter(
+wxDataViewItem Messages::moveAfter(
   wxDataViewItem item,
   wxDataViewItem sibling
 ) {
@@ -378,14 +378,14 @@ wxDataViewItem Snippets::moveAfter(
   return moveInsideAtIndex(item, parent, index);
 }
 
-wxDataViewItem Snippets::moveInsideFirst(
+wxDataViewItem Messages::moveInsideFirst(
   wxDataViewItem item,
   wxDataViewItem parent
 ) {
   return moveInsideAtIndex(item, parent, 0);
 }
 
-wxDataViewItem Snippets::moveInsideAtIndex(
+wxDataViewItem Messages::moveInsideAtIndex(
   wxDataViewItem item,
   wxDataViewItem parent,
   size_t index
@@ -440,7 +440,7 @@ wxDataViewItem Snippets::moveInsideAtIndex(
   return item;
 }
 
-void Snippets::loadDirectoryRecursive(
+void Messages::loadDirectoryRecursive(
   const Common::fs::path &path,
   Node::Id_t parentId
 ) {
@@ -488,7 +488,7 @@ void Snippets::loadDirectoryRecursive(
     }
     else
     {
-      loadSnippet(entry.path(), currentId);
+      loadMessage(entry.path(), currentId);
     }
   }
 
@@ -504,7 +504,7 @@ void Snippets::loadDirectoryRecursive(
   }
 }
 
-void Snippets::loadSnippet(
+void Messages::loadMessage(
   const Common::fs::path &path,
   Node::Id_t parentId
 ) {
@@ -523,15 +523,15 @@ void Snippets::loadSnippet(
     return;
   }
 
-  std::ifstream snippetFile(path);
-  if (!snippetFile.is_open())
+  std::ifstream messageFile(path);
+  if (!messageFile.is_open())
   {
     mLogger->warn("Could not load '{}': failed to open", path.string());
     return;
   }
 
   std::stringstream buffer;
-  buffer << snippetFile.rdbuf();
+  buffer << messageFile.rdbuf();
   const std::string &sbuffer = buffer.str();
 
   MQTT::Message message;
@@ -552,7 +552,7 @@ void Snippets::loadSnippet(
     parentId,
     decoded,
     path.stem().string(),
-    Node::Type::Snippet,
+    Node::Type::Message,
     {},
     message,
     true,
@@ -562,7 +562,7 @@ void Snippets::loadSnippet(
   mNodes.at(parentId).children.push_back(newId);
 }
 
-bool Snippets::indexFileRead(
+bool Messages::indexFileRead(
   const Common::fs::path &path,
   Node::Id_t id
 ) {
@@ -620,7 +620,7 @@ bool Snippets::indexFileRead(
   return true;
 }
 
-bool Snippets::indexFileWrite(Node::Id_t id)
+bool Messages::indexFileWrite(Node::Id_t id)
 {
   const auto nodePath = getNodePath(id);
   const auto indexPath = nodePath + "/.index.json";
@@ -645,7 +645,7 @@ bool Snippets::indexFileWrite(Node::Id_t id)
   return true;
 }
 
-bool Snippets::hasChildNamed(
+bool Messages::hasChildNamed(
   wxDataViewItem parent,
   const std::string &name
 ) const {
@@ -661,12 +661,12 @@ bool Snippets::hasChildNamed(
   );
 }
 
-unsigned Snippets::GetColumnCount() const
+unsigned Messages::GetColumnCount() const
 {
   return static_cast<unsigned>(Column::Max);
 }
 
-wxString Snippets::GetColumnType(unsigned int col) const
+wxString Messages::GetColumnType(unsigned int col) const
 {
   switch ((Column)col)
   {
@@ -677,7 +677,7 @@ wxString Snippets::GetColumnType(unsigned int col) const
   }
 }
 
-void Snippets::GetValue(
+void Messages::GetValue(
   wxVariant &variant,
   const wxDataViewItem &item,
   unsigned int /* col */
@@ -692,14 +692,14 @@ void Snippets::GetValue(
     case Node::Type::Folder: {
       value.SetIcon(wxArtProvider::GetIcon(wxART_FOLDER));
     } break;
-    case Node::Type::Snippet: {
+    case Node::Type::Message: {
       value.SetIcon(wxArtProvider::GetIcon(wxART_NORMAL_FILE));
     } break;
   }
   variant << value;
 }
 
-bool Snippets::SetValue(
+bool Messages::SetValue(
   const wxVariant &value,
   const wxDataViewItem &item,
   unsigned int col
@@ -743,13 +743,13 @@ bool Snippets::SetValue(
     "{}/{}{}",
     parentPath,
     node.encoded,
-    (node.type == Node::Type::Snippet) ? ".json" : ""
+    (node.type == Node::Type::Message) ? ".json" : ""
   );
   const std::string pathNew = fmt::format(
     "{}/{}{}",
     parentPath,
     encoded,
-    (node.type == Node::Type::Snippet) ? ".json" : ""
+    (node.type == Node::Type::Message) ? ".json" : ""
   );
 
   std::error_code ec;
@@ -776,14 +776,14 @@ bool Snippets::SetValue(
   return true;
 }
 
-bool Snippets::IsEnabled(
+bool Messages::IsEnabled(
   const wxDataViewItem &/* item */,
   unsigned int /* col */
 ) const {
   return true;
 }
 
-wxDataViewItem Snippets::GetParent(
+wxDataViewItem Messages::GetParent(
   const wxDataViewItem &item
 ) const {
 
@@ -797,7 +797,7 @@ wxDataViewItem Snippets::GetParent(
   return toItem(parent);
 }
 
-bool Snippets::IsContainer(
+bool Messages::IsContainer(
   const wxDataViewItem &item
 ) const {
 
@@ -810,7 +810,7 @@ bool Snippets::IsContainer(
   return node.type == Node::Type::Folder;
 }
 
-unsigned Snippets::GetChildren(
+unsigned Messages::GetChildren(
   const wxDataViewItem &parent,
   wxDataViewItemArray &array
 ) const {
@@ -830,7 +830,7 @@ unsigned Snippets::GetChildren(
   return (unsigned)node.children.size();
 }
 
-Snippets::Node::Id_t Snippets::toId(const wxDataViewItem &item)
+Messages::Node::Id_t Messages::toId(const wxDataViewItem &item)
 {
   uintptr_t result = 0;
   const void *id = item.GetID();
@@ -838,7 +838,7 @@ Snippets::Node::Id_t Snippets::toId(const wxDataViewItem &item)
   return result;
 }
 
-wxDataViewItem Snippets::toItem(Node::Id_t id)
+wxDataViewItem Messages::toItem(Node::Id_t id)
 {
   void *itemId = nullptr;
   const uintptr_t value = id;
@@ -846,19 +846,19 @@ wxDataViewItem Snippets::toItem(Node::Id_t id)
   return wxDataViewItem(itemId);
 }
 
-Snippets::Node::Id_t Snippets::getNextId()
+Messages::Node::Id_t Messages::getNextId()
 {
   return mNextAvailableId++;
 }
 
-bool Snippets::isRecursive(wxDataViewItem parent, wxDataViewItem item) const
+bool Messages::isRecursive(wxDataViewItem parent, wxDataViewItem item) const
 {
   if (!parent.IsOk()) { return false; }
   if (parent == item) { return true; }
   return isRecursive(GetParent(parent), item);
 }
 
-std::string Snippets::getNodePath(Node::Id_t id) const
+std::string Messages::getNodePath(Node::Id_t id) const
 {
   Node::Id_t currentId = id;
   std::vector<std::string> parts;
@@ -879,7 +879,7 @@ std::string Snippets::getNodePath(Node::Id_t id) const
 
   result.pop_back();
 
-  if (mNodes.at(id).type == Node::Type::Snippet)
+  if (mNodes.at(id).type == Node::Type::Message)
   {
     result += ".json";
   }
@@ -887,7 +887,7 @@ std::string Snippets::getNodePath(Node::Id_t id) const
   return result;
 }
 
-bool Snippets::save(Node::Id_t id)
+bool Messages::save(Node::Id_t id)
 {
   auto &node = mNodes.at(id);
   if (node.saved) { return true; }
@@ -895,13 +895,13 @@ bool Snippets::save(Node::Id_t id)
 
   switch (node.type)
   {
-    case Node::Type::Snippet: return saveSnippet(id);
+    case Node::Type::Message: return saveMessage(id);
     case Node::Type::Folder:  return saveFolder(id);
   }
   return false;
 }
 
-bool Snippets::saveSnippet(Node::Id_t id)
+bool Messages::saveMessage(Node::Id_t id)
 {
   auto &node = mNodes.at(id);
   const auto nodePath = getNodePath(id);
@@ -920,7 +920,7 @@ bool Snippets::saveSnippet(Node::Id_t id)
   return true;
 }
 
-bool Snippets::saveFolder(Node::Id_t id)
+bool Messages::saveFolder(Node::Id_t id)
 {
   const auto nodePath = getNodePath(id);
 
@@ -947,7 +947,7 @@ bool Snippets::saveFolder(Node::Id_t id)
   return true;
 }
 
-bool Snippets::moveFile(Node::Id_t nodeId, Node::Id_t newParentId)
+bool Messages::moveFile(Node::Id_t nodeId, Node::Id_t newParentId)
 {
   const auto &node = mNodes.at(nodeId);
 
@@ -960,7 +960,7 @@ bool Snippets::moveFile(Node::Id_t nodeId, Node::Id_t newParentId)
     "{}/{}{}",
     getNodePath(newParentId),
     node.encoded,
-    (node.type == Node::Type::Snippet) ? ".json" : ""
+    (node.type == Node::Type::Message) ? ".json" : ""
   );
 
   if (fs::exists(pathNew))
@@ -986,7 +986,7 @@ bool Snippets::moveFile(Node::Id_t nodeId, Node::Id_t newParentId)
   return true;
 }
 
-bool Snippets::moveCheck(
+bool Messages::moveCheck(
   wxDataViewItem item,
   wxDataViewItem parent,
   size_t index
@@ -1035,7 +1035,7 @@ bool Snippets::moveCheck(
   return true;
 }
 
-void Snippets::moveUnderNewParent(
+void Messages::moveUnderNewParent(
   Node::Id_t nodeId,
   Node::Id_t newParentId,
   size_t index
@@ -1071,7 +1071,7 @@ void Snippets::moveUnderNewParent(
   }
 }
 
-void Snippets::moveUnderSameParent(
+void Messages::moveUnderSameParent(
   Node::Id_t nodeId,
   Node::Id_t newParentId,
   size_t index

@@ -29,8 +29,8 @@
 #include "Resources/qos/qos-2.hpp"
 #include "Resources/send/send-18x14.hpp"
 #include "Resources/send/send-18x18.hpp"
-#include "Resources/snippets/snippets-18x14.hpp"
-#include "Resources/snippets/snippets-18x18.hpp"
+#include "Resources/messages/messages-18x14.hpp"
+#include "Resources/messages/messages-18x18.hpp"
 #include "Resources/subscription/subscription-18x14.hpp"
 #include "Resources/subscription/subscription-18x18.hpp"
 #include "Tabs/Client.hpp"
@@ -462,7 +462,7 @@ void App::openProfile(wxDataViewItem item)
     mNote,
     options,
     mProfilesModel->getClientOptions(item),
-    mProfilesModel->getSnippetsModel(item),
+    mProfilesModel->getMessagesModel(item),
     mProfilesModel->getTopicsSubscribed(item),
     mProfilesModel->getTopicsPublished(item),
     mLayoutsModel,

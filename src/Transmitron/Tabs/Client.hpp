@@ -19,7 +19,7 @@
 #include "Transmitron/Widgets/Layouts.hpp"
 #include "Transmitron/Models/History.hpp"
 #include "Transmitron/Models/Subscriptions.hpp"
-#include "Transmitron/Models/Snippets.hpp"
+#include "Transmitron/Models/Messages.hpp"
 #include "Transmitron/Widgets/Edit.hpp"
 
 namespace Transmitron::Tabs
@@ -36,7 +36,7 @@ public:
     wxWindow* parent,
     const MQTT::BrokerOptions &brokerOptions,
     const Types::ClientOptions &clientOptions,
-    const wxObjectDataPtr<Models::Snippets> &snippets,
+    const wxObjectDataPtr<Models::Messages> &messages,
     const wxObjectDataPtr<Models::KnownTopics> &topicsSubscribed,
     const wxObjectDataPtr<Models::KnownTopics> &topicsPublished,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
@@ -76,22 +76,22 @@ private:
     HistoryRetainedClear,
     HistoryResend,
     HistoryEdit,
-    HistorySaveSnippet,
+    HistorySaveMessage,
     HistoryCopyTopic,
     HistoryCopyPayload,
-    SnippetRename,
-    SnippetDelete,
-    SnippetNewSnippet,
-    SnippetNewFolder,
-    SnippetPublish,
-    SnippetOverwrite,
+    MessageRename,
+    MessageDelete,
+    MessageNewMessage,
+    MessageNewFolder,
+    MessagePublish,
+    MessageOverwrite,
   };
 
   enum class Panes : unsigned
   {
     History = 0,
     Subscriptions = 1,
-    Snippets = 2,
+    Messages = 2,
     Publish = 3,
     Preview = 4,
   };
@@ -147,13 +147,13 @@ private:
   wxObjectDataPtr<Models::Subscriptions> mSubscriptionsModel;
   wxDataViewCtrl *mSubscriptionsCtrl = nullptr;
 
-  // Snippets:
-  wxObjectDataPtr<Models::Snippets> mSnippetsModel;
-  wxDataViewCtrl *mSnippetsCtrl = nullptr;
-  std::array<wxDataViewColumn*, Models::Snippets::Column::Max> mSnippetColumns {};
-  bool mSnippetExplicitEditRequest = false;
-  bool mSnippetsWasExpanded = false;
-  std::pair<bool, wxDataViewItem> mSnippetsPossible;
+  // Messages:
+  wxObjectDataPtr<Models::Messages> mMessagesModel;
+  wxDataViewCtrl *mMessagesCtrl = nullptr;
+  std::array<wxDataViewColumn*, Models::Messages::Column::Max> mMessageColumns {};
+  bool mMessageExplicitEditRequest = false;
+  bool mMessagesWasExpanded = false;
+  std::pair<bool, wxDataViewItem> mMessagesPossible;
 
   std::shared_ptr<MQTT::Client> mClient;
   size_t mMqttObserverId = 0;
@@ -174,15 +174,15 @@ private:
   void onContextSelectedHistoryEdit(wxCommandEvent &event);
   void onContextSelectedHistoryResend(wxCommandEvent &event);
   void onContextSelectedHistoryRetainedClear(wxCommandEvent &event);
-  void onContextSelectedHistorySaveSnippet(wxCommandEvent &event);
+  void onContextSelectedHistorySaveMessage(wxCommandEvent &event);
   void onContextSelectedHistoryCopyTopic(wxCommandEvent &event);
   void onContextSelectedHistoryCopyPayload(wxCommandEvent &event);
-  void onContextSelectedSnippetDelete(wxCommandEvent &event);
-  void onContextSelectedSnippetNewFolder(wxCommandEvent &event);
-  void onContextSelectedSnippetNewSnippet(wxCommandEvent &event);
-  void onContextSelectedSnippetRename(wxCommandEvent &event);
-  void onContextSelectedSnippetPublish(wxCommandEvent &event);
-  void onContextSelectedSnippetOverwrite(wxCommandEvent &event);
+  void onContextSelectedMessageDelete(wxCommandEvent &event);
+  void onContextSelectedMessageNewFolder(wxCommandEvent &event);
+  void onContextSelectedMessageNewMessage(wxCommandEvent &event);
+  void onContextSelectedMessageRename(wxCommandEvent &event);
+  void onContextSelectedMessagePublish(wxCommandEvent &event);
+  void onContextSelectedMessageOverwrite(wxCommandEvent &event);
   void onContextSelectedSubscriptionsChangeColor(wxCommandEvent &event);
   void onContextSelectedSubscriptionsClear(wxCommandEvent &event);
   void onContextSelectedSubscriptionsMute(wxCommandEvent &event);
@@ -190,7 +190,7 @@ private:
   void onContextSelectedSubscriptionsUnmute(wxCommandEvent &event);
   void onContextSelectedSubscriptionsUnsubscribe(wxCommandEvent &event);
   void onHistoryContext(wxDataViewEvent &event);
-  void onSnippetsContext(wxDataViewEvent &e);
+  void onMessagesContext(wxDataViewEvent &e);
   void onSubscriptionContext(wxDataViewEvent &event);
 
   // History.
@@ -202,11 +202,11 @@ private:
   void onHistorySearchButton(wxCommandEvent &event);
 
   // Preview.
-  void onPreviewSaveSnippet(Events::Edit &e);
+  void onPreviewSaveMessage(Events::Edit &e);
 
   // Publish.
   void onPublishClicked(wxCommandEvent &event);
-  void onPublishSaveSnippet(Events::Edit &e);
+  void onPublishSaveMessage(Events::Edit &e);
 
   // Setup.
   void setupPanels();
@@ -214,17 +214,17 @@ private:
   void setupPanelHistory(wxWindow *parent);
   void setupPanelPreview(wxWindow *parent);
   void setupPanelPublish(wxWindow *parent);
-  void setupPanelSnippets(wxWindow *parent);
+  void setupPanelMessages(wxWindow *parent);
   void setupPanelSubscriptions(wxWindow *parent);
 
-  // Snippets.
-  void onSnippetsActivated(wxDataViewEvent &e);
-  void onSnippetsDrag(wxDataViewEvent &e);
-  void onSnippetsDrop(wxDataViewEvent &e);
-  void onSnippetsDropPossible(wxDataViewEvent &e);
-  void onSnippetsEdit(wxDataViewEvent &e);
-  void onSnippetsChanged(wxDataViewEvent &e);
-  void onSnippetsSelected(wxDataViewEvent &e);
+  // Messages.
+  void onMessagesActivated(wxDataViewEvent &e);
+  void onMessagesDrag(wxDataViewEvent &e);
+  void onMessagesDrop(wxDataViewEvent &e);
+  void onMessagesDropPossible(wxDataViewEvent &e);
+  void onMessagesEdit(wxDataViewEvent &e);
+  void onMessagesChanged(wxDataViewEvent &e);
+  void onMessagesSelected(wxDataViewEvent &e);
 
   // Subscriptions.
   void onSubscribeClicked(wxCommandEvent &event);
