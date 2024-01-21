@@ -24,7 +24,7 @@ steps:
       - cd    build-release-ubuntu-2004-amd64
       - conan install ../conan/ --build=missing
       - cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_BUILD_TYPE=Release ..
-      - make -j $(nproc)
+      - make -j 6
       - make package
 
   - name: Build Ubuntu 18.04
@@ -36,7 +36,7 @@ steps:
       - cd    build-release-ubuntu-1804-amd64
       - conan install ../conan/ --build=missing
       - cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_BUILD_TYPE=Release ..
-      - make -j $(nproc)
+      - make -j 6
       - make package
 
   - name: Build Windows
@@ -48,7 +48,7 @@ steps:
       - cd    build-release-windows-amd64
       - conan install ../conan/ --profile=windows --build=missing
       - cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_TOOLCHAIN_FILE=/opt/cmake-toolchains/linux-x86_64-to-windows-x86_64.cmake -DCMAKE_BUILD_TYPE=Release ..
-      - make -j $(nproc)
+      - make -j 6
       - make package
 
   - name: Release Notes

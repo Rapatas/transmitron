@@ -32,6 +32,8 @@ TopicCtrl::TopicCtrl(
   SetFont(mFont);
   SetWindowStyle(wxWANTS_CHARS);
 
+  SetHint("Topic...");
+
   mLogger = Common::Log::create("Transmitron::TopicCtrl");
 
   Bind(wxEVT_LEFT_UP,     &TopicCtrl::onLeftUp,        this);

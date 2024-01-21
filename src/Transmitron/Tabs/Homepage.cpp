@@ -7,10 +7,11 @@
 
 #include "Homepage.hpp"
 #include "Common/Log.hpp"
+#include "Transmitron/Events/Edit.hpp"
 #include "Transmitron/Events/Recording.hpp"
+#include "Transmitron/Events/Profile.hpp"
 #include "Transmitron/Models/Layouts.hpp"
 #include "Transmitron/Types/ClientOptions.hpp"
-#include "Transmitron/Notifiers/Layouts.hpp"
 
 using namespace Transmitron::Tabs;
 using namespace Transmitron;
@@ -18,6 +19,8 @@ using namespace Transmitron::Events;
 
 wxDEFINE_EVENT(Events::CONNECTION, Events::Connection); // NOLINT
 wxDEFINE_EVENT(Events::RECORDING_OPEN, Events::Recording); // NOLINT
+wxDEFINE_EVENT(Events::PROFILE_EDIT, Events::Profile); // NOLINT
+wxDEFINE_EVENT(Events::PROFILE_CREATE, Events::Profile); // NOLINT
 
 Homepage::Homepage(
   wxWindow *parent,
@@ -41,34 +44,26 @@ Homepage::Homepage(
 {
   mLogger = Common::Log::create("Transmitron::Homepage");
 
-  auto *notifier = new Notifiers::Layouts;
-  mLayoutsModel->AddNotifier(notifier);
+  auto *master = new wxPanel(this);
+  master->SetMinSize(wxSize(400, 400));
 
-  notifier->Bind(Events::LAYOUT_ADDED,   &Homepage::onLayoutAdded,   this);
-  notifier->Bind(Events::LAYOUT_REMOVED, &Homepage::onLayoutRemoved, this);
-  notifier->Bind(Events::LAYOUT_CHANGED, &Homepage::onLayoutChanged, this);
-
-  auto *center = new wxPanel(this, wxID_ANY);
-
-  setupRecordings(this);
-  setupProfiles(center);
-  setupProfileButtons(this);
-  setupProfileForm(center);
-
-  auto *line = new wxStaticLine(this);
-
-  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
-  hsizer->Add(mProfiles, 1, wxEXPAND);
-  hsizer->Add(mProfileForm, 1, wxEXPAND);
-  center->SetSizer(hsizer);
+  setupQuickConnect(master);
+  setupProfiles(master);
+  setupRecordings(master);
 
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
-  vsizer->Add(center, 1, wxEXPAND);
-  vsizer->Add(mProfileButtons, 0, wxEXPAND);
-  vsizer->Add(line, 0, wxEXPAND);
+  vsizer->Add(mQuickConnect, 0, wxEXPAND);
+  vsizer->AddSpacer(10);
+  vsizer->Add(mProfiles, 1, wxEXPAND);
+  vsizer->AddSpacer(10);
   vsizer->Add(mRecordings, 0, wxEXPAND);
-  this->SetSizer(vsizer);
-  vsizer->Layout();
+  master->SetSizer(vsizer);
+
+  auto *sizer = new wxBoxSizer(wxHORIZONTAL);
+  sizer->AddStretchSpacer(1);
+  sizer->Add(master, 0);
+  sizer->AddStretchSpacer(1);
+  SetSizer(sizer);
 
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Homepage::onContextSelected, this);
 }
@@ -81,11 +76,6 @@ void Homepage::focus()
 
   const auto first = children.front();
   mProfilesCtrl->Select(first);
-  propertyGridFill(
-    mProfilesModel->getName(first),
-    mProfilesModel->getBrokerOptions(first),
-    mProfilesModel->getClientOptions(first)
-  );
   mProfilesCtrl->SetFocus();
 }
 
@@ -107,11 +97,15 @@ void Homepage::setupProfiles(wxPanel *parent)
   );
 
   mProfiles = new wxPanel(parent, -1);
+  mProfiles->SetMinSize(wxSize(0, 400));
 
-  auto *label = new wxStaticText(mProfiles, -1, "Profiles");
-  label->SetFont(mLabelFont);
-
-  mProfilesCtrl = new wxDataViewCtrl(mProfiles, -1);
+  mProfilesCtrl = new wxDataViewCtrl(
+    mProfiles,
+    -1,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxDV_NO_HEADER
+  );
   mProfilesCtrl->AssociateModel(mProfilesModel.get());
   mProfilesCtrl->AppendColumn(name);
   mProfilesCtrl->AppendColumn(url);
@@ -131,10 +125,101 @@ void Homepage::setupProfiles(wxPanel *parent)
     this
   );
 
+  auto *row = new wxPanel(mProfiles);
+
+  auto *label = new wxStaticText(row, -1, "Profiles");
+  label->SetFont(mLabelFont);
+
+  mProfileCreate  = new wxButton(
+    row,
+    wxID_ANY,
+    "",
+    wxDefaultPosition,
+    wxSize(mOptionsHeight, mOptionsHeight)
+  );
+  mProfileCreate->SetToolTip("Create a new profile");
+  mProfileCreate->SetBitmap(wxArtProvider::GetBitmap(wxART_PLUS));
+  mProfileCreate->Bind(wxEVT_BUTTON, &Homepage::onProfileCreate, this);
+
+  mProfileEdit    = new wxButton(
+    row,
+    wxID_ANY,
+    "",
+    wxDefaultPosition,
+    wxSize(mOptionsHeight, mOptionsHeight)
+  );
+  mProfileEdit->SetToolTip("Edit selected profile");
+  mProfileEdit->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
+  mProfileEdit->Bind(wxEVT_BUTTON, &Homepage::onProfileEdit, this);
+
+  mProfileConnect = new wxButton(
+    row,
+    wxID_ANY,
+    "",
+    wxDefaultPosition,
+    wxSize(mOptionsHeight, mOptionsHeight)
+  );
+  mProfileConnect->SetToolTip("Connect to selected profile");
+  mProfileConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
+  mProfileConnect->Bind(wxEVT_BUTTON, &Homepage::onProfileConnect, this);
+
+  auto *rsizer = new wxBoxSizer(wxHORIZONTAL);
+  rsizer->Add(label, 0);
+  rsizer->AddStretchSpacer(1);
+  rsizer->Add(mProfileCreate, 0);
+  rsizer->Add(mProfileEdit, 0);
+  rsizer->Add(mProfileConnect, 0);
+  row->SetSizer(rsizer);
+
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
-  vsizer->Add(label,         0, wxEXPAND);
+  vsizer->Add(row,         0, wxEXPAND);
   vsizer->Add(mProfilesCtrl, 1, wxEXPAND);
   mProfiles->SetSizer(vsizer);
+}
+
+void Homepage::setupQuickConnect(wxPanel *parent)
+{
+  mQuickConnect = new wxPanel(parent);
+
+  auto *panel = new wxPanel(mQuickConnect);
+
+  auto item = mProfilesModel->getQuickConnect();
+  const auto &options = mProfilesModel->getBrokerOptions(item);
+  const auto hint = fmt::format(
+    "{}:{}",
+    options.getHostname(),
+    options.getPort()
+  );
+
+  mQuickConnectUrl = new wxTextCtrl(panel, wxID_ANY);
+  mQuickConnectUrl->SetHint(hint);
+  mQuickConnectUrl->Bind(wxEVT_KEY_DOWN, [&](wxKeyEvent &event){
+    const auto isEnter = event.GetKeyCode() == WXK_RETURN;
+    if (isEnter)
+    {
+      onQuickConnect();
+    }
+    event.Skip();
+  });
+  mQuickConnectBtn = new wxButton(panel, wxID_ANY, "Connect");
+  mQuickConnectBtn->SetToolTip("Connect to broker with default settings");
+  mQuickConnectBtn->Bind(wxEVT_BUTTON, [&](wxCommandEvent &event){
+    onQuickConnect();
+    event.Skip();
+  });
+
+  auto *label = new wxStaticText(mQuickConnect, -1, "Quick Connect");
+  label->SetFont(mLabelFont);
+
+  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
+  hsizer->Add(mQuickConnectBtn, 0, wxEXPAND);
+  hsizer->Add(mQuickConnectUrl, 1, wxEXPAND);
+  panel->SetSizer(hsizer);
+
+  auto *vsizer = new wxBoxSizer(wxVERTICAL);
+  vsizer->Add(label, 0, wxEXPAND);
+  vsizer->Add(panel, 0, wxEXPAND);
+  mQuickConnect->SetSizer(vsizer);
 }
 
 void Homepage::setupRecordings(wxPanel *parent)
@@ -147,167 +232,25 @@ void Homepage::setupRecordings(wxPanel *parent)
   auto *recordingOpen = new wxButton(
     mRecordings,
     -1,
-    "Open Recording",
+    "Browse...",
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
+  recordingOpen->SetToolTip("Open a .tmrc file to review MQTT history");
   recordingOpen->Bind(wxEVT_BUTTON, &Homepage::onRecordingOpen, this);
   recordingOpen->SetBitmap(wxArtProvider::GetBitmap(wxART_MENU));
 
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
   vsizer->Add(label,         0, wxEXPAND);
-  vsizer->Add(recordingOpen, 0, wxEXPAND);
+  vsizer->Add(recordingOpen, 0);
   mRecordings->SetSizer(vsizer);
 }
 
-void Homepage::setupProfileForm(wxPanel *parent)
+void Homepage::onProfileActivated(wxDataViewEvent &event)
 {
-  mProfileForm = new wxPanel(parent, -1);
-
-  auto *label = new wxStaticText(mProfileForm, -1, "Profile Options");
-  label->SetFont(mLabelFont);
-
-  mProfileFormGrid = new wxPropertyGrid(
-    mProfileForm,
-    -1,
-    wxDefaultPosition,
-    wxDefaultSize,
-    wxPG_SPLITTER_AUTO_CENTER
-  );
-
-  mProfileFormGrid->DedicateKey(WXK_UP);
-  mProfileFormGrid->DedicateKey(WXK_DOWN);
-
-  mProfileFormGrid->Enable(false);
-
-  auto &pfp = mProfileFormProperties;
-  auto &pfg = mProfileFormGrid;
-
-  pfp.resize(Properties::Max);
-
-  pfp.at(Properties::Name) =
-    pfg->Append(new wxStringProperty("Name", "", {}));
-
-  mGridCategoryBroker = new wxPropertyCategory("Broker");
-  mProfileFormGrid->Append(mGridCategoryBroker);
-
-  pfp.at(Properties::Hostname) =
-    pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Hostname", "", {}));
-  pfp.at(Properties::Port) =
-    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Port", "", {}));
-  pfp.at(Properties::Username) =
-    pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Username", "", {}));
-  pfp.at(Properties::Password) =
-    pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Password", "", {}));
-  pfp.at(Properties::ConnectTimeout) =
-    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Connect Timeout (s)", "", {}));
-  pfp.at(Properties::DisconnectTimeout) =
-    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Disconnect Timeout (s)", "", {}));
-  pfp.at(Properties::MaxInFlight) =
-    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Max in flight", "", {}));
-  pfp.at(Properties::KeepAlive) =
-    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Keep alive interval", "", {}));
-  pfp.at(Properties::ClientId) =
-    pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Client ID", "", {}));
-  pfp.at(Properties::AutoReconnect) =
-    pfg->AppendIn(mGridCategoryBroker, new wxBoolProperty("Auto Reconnect", "", {}));
-  pfp.at(Properties::MaxReconnectRetries) =
-    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Max Reconnect Retries", "", {}));
-
-  mGridCategoryClient = new wxPropertyCategory("Client");
-  mProfileFormGrid->Append(mGridCategoryClient);
-
-  const auto layoutLabels = mLayoutsModel->getLabelArray();
-  auto *layoutPtr = new wxEnumProperty("Layout", "", layoutLabels);
-  pfp.at(Properties::Layout) = pfg->AppendIn(mGridCategoryClient, layoutPtr);
-
-  auto *sizer = new wxBoxSizer(wxVERTICAL);
-  sizer->Add(label,            0, wxEXPAND);
-  sizer->Add(mProfileFormGrid, 1, wxEXPAND);
-  mProfileForm->SetSizer(sizer);
-
-  mProfileFormGrid->Bind(wxEVT_PG_CHANGED, &Homepage::onGridChanged, this);
-  mProfileFormGrid->Bind(wxEVT_PG_CHANGING, &Homepage::onGridChanged, this);
-  mProfileFormGrid->Bind(wxEVT_PG_LABEL_EDIT_BEGIN, &Homepage::onGridChanged, this);
-  mProfileFormGrid->Bind(wxEVT_PG_SELECTED, &Homepage::onGridChanged, this);
-
-  propertyGridClear();
-}
-
-void Homepage::setupProfileButtons(wxPanel *parent)
-{
-  mProfileButtons = new wxPanel(parent);
-
-  auto *newProfile = new wxButton(
-    mProfileButtons,
-    -1,
-    "New Profile",
-    wxDefaultPosition,
-    wxSize(-1, mOptionsHeight)
-  );
-  newProfile->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
-  newProfile->Bind(wxEVT_BUTTON, &Homepage::onNewProfileClicked, this);
-
-  mSave = new wxButton(
-    mProfileButtons,
-    -1,
-    "Save",
-    wxDefaultPosition,
-    wxSize(-1, mOptionsHeight)
-  );
-  mSave->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
-  mSave->Enable(false);
-  mSave->Bind(wxEVT_BUTTON, &Homepage::onSaveClicked, this);
-
-  mCancel = new wxButton(
-    mProfileButtons,
-    -1,
-    "Cancel",
-    wxDefaultPosition,
-    wxSize(-1, mOptionsHeight)
-  );
-  mCancel->SetBitmap(wxArtProvider::GetBitmap(wxART_UNDO));
-  mCancel->Enable(false);
-  mCancel->Bind(wxEVT_BUTTON, &Homepage::onCancelClicked, this);
-
-  mConnect = new wxButton(
-    mProfileButtons,
-    -1,
-    "Connect",
-    wxDefaultPosition,
-    wxSize(-1, mOptionsHeight)
-  );
-  mConnect->Enable(false);
-  mConnect->Bind(wxEVT_BUTTON, &Homepage::onConnectClicked, this);
-  mConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
-
-  mProfileButtonsSizer = new wxBoxSizer(wxHORIZONTAL);
-  mProfileButtonsSizer->SetMinSize(0, mOptionsHeight);
-  mProfileButtonsSizer->Add(newProfile, 0, wxEXPAND);
-  mProfileButtonsSizer->AddStretchSpacer(1);
-  mProfileButtonsSizer->Add(mConnect, 0, wxEXPAND);
-  mProfileButtonsSizer->Add(mCancel, 0, wxEXPAND);
-  mProfileButtonsSizer->Add(mSave, 0, wxEXPAND);
-  mProfileButtonsSizer->Hide(mSave);
-  mProfileButtonsSizer->Hide(mCancel);
-  mProfileButtons->SetSizer(mProfileButtonsSizer);
-}
-
-void Homepage::onProfileActivated(wxDataViewEvent &e)
-{
-  const auto &profileItem = e.GetItem();
-  const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
-  mLogger->info(
-    "Queueing event for profile at {}:{}",
-    brokerOptions.getHostname(),
-    brokerOptions.getPort()
-  );
-
-  auto *connectionEvent = new Events::Connection();
-  connectionEvent->setProfile(profileItem);
-  wxQueueEvent(this, connectionEvent);
-
-  e.Skip();
+  const auto &profileItem = event.GetItem();
+  connectTo(profileItem);
+  event.Skip();
 }
 
 void Homepage::onProfileSelected(wxDataViewEvent &event)
@@ -319,11 +262,6 @@ void Homepage::onProfileSelected(wxDataViewEvent &event)
     return;
   }
 
-  propertyGridFill(
-    mProfilesModel->getName(item),
-    mProfilesModel->getBrokerOptions(item),
-    mProfilesModel->getClientOptions(item)
-  );
   event.Skip();
 }
 
@@ -331,12 +269,6 @@ void Homepage::onRecordingOpen(wxCommandEvent &event)
 {
   auto *recordingEvent = new Events::Recording(RECORDING_OPEN);
   wxQueueEvent(this, recordingEvent);
-  event.Skip();
-}
-
-void Homepage::onGridChanged(wxPropertyGridEvent& event)
-{
-  allowSave();
   event.Skip();
 }
 
@@ -361,284 +293,117 @@ void Homepage::onConnectClicked(wxCommandEvent &/* event */)
   wxQueueEvent(this, connectionEvent);
 }
 
-void Homepage::onSaveClicked(wxCommandEvent &/* event */)
-{
-  const auto item = mProfilesCtrl->GetSelection();
-
-  if (!item.IsOk())
-  {
-    return;
-  }
-
-  const auto wxs = mProfileFormProperties.at(Properties::Name)->GetValue().GetString();
-  const auto utf8 = wxs.ToUTF8();
-  const std::string name(utf8.data(), utf8.length());
-  mProfilesModel->rename(item, name);
-
-  const auto brokerOptions = brokerOptionsFromPropertyGrid();
-  mProfilesModel->updateBrokerOptions(item, brokerOptions);
-
-  const auto clientOptions = clientOptionsFromPropertyGrid();
-  mProfilesModel->updateClientOptions(item, clientOptions);
-
-  allowConnect();
-}
-
-void Homepage::onCancelClicked(wxCommandEvent &/* event */)
-{
-  propertyGridClear();
-
-  const auto item = mProfilesCtrl->GetSelection();
-  if (!item.IsOk()) { return; }
-
-  propertyGridFill(
-    mProfilesModel->getName(item),
-    mProfilesModel->getBrokerOptions(item),
-    mProfilesModel->getClientOptions(item)
-  );
-
-  allowConnect();
-}
-
 void Homepage::onNewProfileClicked(wxCommandEvent &/* event */)
 {
   const auto item = mProfilesModel->createProfile();
   mProfilesCtrl->Select(item);
   mProfilesCtrl->EnsureVisible(item);
-  propertyGridFill(
-    mProfilesModel->getName(item),
-    mProfilesModel->getBrokerOptions(item),
-    mProfilesModel->getClientOptions(item)
-  );
-
-  const auto *namePtr = mProfileFormProperties.at(Properties::Name);
-  const bool focus = true;
-  mProfileFormGrid->SelectProperty(namePtr, focus);
-
-  allowSave();
 }
 
-void Homepage::onProfileContext(wxDataViewEvent &e)
+void Homepage::onProfileContext(wxDataViewEvent &event)
 {
-  if (!e.GetItem().IsOk())
-  {
-    e.Skip();
-    return;
-  }
-
   wxMenu menu;
 
-  auto *del = new wxMenuItem(
-    nullptr,
-    (unsigned)ContextIDs::ProfilesDelete,
-    "Delete"
-  );
-  del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
-  menu.Append(del);
+  if (event.GetItem().IsOk())
+  {
+
+    auto *connect = new wxMenuItem(
+      nullptr,
+      (unsigned)ContextIDs::ProfilesConnect,
+      "Connect"
+    );
+    connect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
+    menu.Append(connect);
+
+    auto *edit = new wxMenuItem(
+      nullptr,
+      (unsigned)ContextIDs::ProfilesEdit,
+      "Edit"
+    );
+    edit->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
+    menu.Append(edit);
+
+  }
+  else
+  {
+
+    auto *create = new wxMenuItem(
+      nullptr,
+      (unsigned)ContextIDs::ProfilesCreate,
+      "Create profile"
+    );
+    create->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
+    menu.Append(create);
+
+  }
 
   PopupMenu(&menu);
 }
 
-void Homepage::onContextSelected(wxCommandEvent &e)
+void Homepage::onContextSelected(wxCommandEvent &event)
 {
-  switch ((ContextIDs)e.GetId())
+  switch ((ContextIDs)event.GetId())
   {
-    case ContextIDs::ProfilesDelete: onProfileDelete(e); break;
+    case ContextIDs::ProfilesConnect: onProfileConnect(event); break;
+    case ContextIDs::ProfilesCreate: onProfileCreate(event); break;
+    case ContextIDs::ProfilesEdit: onProfileEdit(event); break;
   }
-  e.Skip();
+  event.Skip();
 }
 
-void Homepage::onProfileDelete(wxCommandEvent & /* event */)
+void Homepage::onProfileCreate(wxCommandEvent & /* event */)
 {
-  const auto item = mProfilesCtrl->GetSelection();
-  mProfilesModel->remove(item);
-  propertyGridClear();
+  auto *newEvent = new Events::Profile(PROFILE_CREATE);
+  wxQueueEvent(this, newEvent);
 }
 
-void Homepage::onLayoutAdded(Events::Layout &/* event */)
+void Homepage::onProfileEdit(wxCommandEvent &event)
 {
-  refreshLayouts();
+  (void)event;
+  auto *newEvent = new Events::Profile(PROFILE_EDIT);
+  newEvent->setProfile(mProfilesCtrl->GetSelection());
+  wxQueueEvent(this, newEvent);
 }
 
-void Homepage::onLayoutRemoved(Events::Layout &/* event */)
+void Homepage::onProfileConnect(wxCommandEvent & /* event */)
 {
-  refreshLayouts();
+  connectTo(mProfilesCtrl->GetSelection());
 }
 
-void Homepage::onLayoutChanged(Events::Layout &/* event */)
+void Homepage::onQuickConnect()
 {
-  auto &pfp = mProfileFormProperties;
-  auto &pfg = mProfileFormGrid;
+  const auto wxs = mQuickConnectUrl->GetValue();
+  const auto utf8 = wxs.ToUTF8();
+  const std::string url(utf8.data(), utf8.length());
 
-  auto &pfpLayout = pfp.at(Properties::Layout);
-  wxVariant layoutValue = pfpLayout->GetValue();
-
-  pfg->RemoveProperty(pfpLayout);
-
-  const auto layoutLabels = mLayoutsModel->getLabelArray();
-  auto *layoutPtr = new wxEnumProperty("Layout", "", layoutLabels);
-  pfpLayout = pfg->AppendIn(mGridCategoryClient, layoutPtr);
-
-  pfpLayout->SetValue(layoutValue);
-}
-
-void Homepage::refreshLayouts()
-{
-  auto &pfp = mProfileFormProperties;
-  auto &pfg = mProfileFormGrid;
-
-  auto &pfpLayout = pfp.at(Properties::Layout);
-  wxVariant layoutValue = pfpLayout->GetValue();
-  const auto layoutName = pfpLayout->ValueToString(layoutValue);
-  mLogger->info("Previous layout was: {}", layoutName);
-
-  pfg->RemoveProperty(pfpLayout);
-
-  const auto layoutLabels = mLayoutsModel->getLabelArray();
-  auto *layoutPtr = new wxEnumProperty("Layout", "", layoutLabels);
-  pfpLayout = pfg->AppendIn(mGridCategoryClient, layoutPtr);
-
-  wxVariant newLayoutValue = pfpLayout->GetValue();
-  const bool hasValue = pfpLayout->StringToValue(newLayoutValue, layoutName);
-  if (!hasValue)
+  if (!url.empty())
   {
-    mLogger->info("Previous layout not found");
-    wxVariant layoutValue = pfpLayout->GetValue();
-    const wxString layoutName = std::string(Models::Layouts::DefaultName);
-    pfpLayout->StringToValue(layoutValue, layoutName);
-    pfpLayout->SetValue(layoutValue);
-    return;
+    mProfilesModel->updateQuickConnect(url);
   }
 
-  mLogger->info("Previous layout was found ");
-  pfpLayout->SetValue(newLayoutValue);
+  const auto &profileItem = mProfilesModel->getQuickConnect();
+  const auto &brokerOptions = mProfilesModel->getBrokerOptions(profileItem);
+  mLogger->info(
+    "Queueing event for profile at {}:{}",
+    brokerOptions.getHostname(),
+    brokerOptions.getPort()
+  );
+
+  auto *connectionEvent = new Events::Connection();
+  connectionEvent->setProfile(profileItem);
+  wxQueueEvent(this, connectionEvent);
 }
 
-void Homepage::allowSave()
+void Homepage::connectTo(wxDataViewItem profile)
 {
-  mSave->Enable(true);
-  mCancel->Enable(true);
-  mProfileButtonsSizer->Show(mSave);
-  mProfileButtonsSizer->Show(mCancel);
+  const auto &brokerOptions = mProfilesModel->getBrokerOptions(profile);
+  mLogger->info(
+    "Queueing event for profile at {}:{}",
+    brokerOptions.getHostname(),
+    brokerOptions.getPort()
+  );
 
-  mConnect->Enable(false);
-  mProfileButtonsSizer->Hide(mConnect);
-
-  mProfileButtonsSizer->Layout();
-}
-
-void Homepage::allowConnect()
-{
-  mSave->Enable(false);
-  mCancel->Enable(false);
-  mProfileButtonsSizer->Hide(mSave);
-  mProfileButtonsSizer->Hide(mCancel);
-
-  mConnect->Enable(true);
-  mProfileButtonsSizer->Show(mConnect);
-
-  mProfileButtonsSizer->Layout();
-}
-
-void Homepage::propertyGridFill(
-  const wxString &name,
-  const MQTT::BrokerOptions &brokerOptions,
-  const Types::ClientOptions &clientOptions
-) {
-  auto &pfp = mProfileFormProperties;
-
-  pfp.at(Properties::Name)->SetValue(name);
-
-  pfp.at(Properties::AutoReconnect)->SetValue(brokerOptions.getAutoReconnect());
-  pfp.at(Properties::ClientId)->SetValue(brokerOptions.getClientId());
-  pfp.at(Properties::ConnectTimeout)->SetValue((int)brokerOptions.getConnectTimeout().count());
-  pfp.at(Properties::DisconnectTimeout)->SetValue((int)brokerOptions.getDisconnectTimeout().count());
-  pfp.at(Properties::Hostname)->SetValue(brokerOptions.getHostname());
-  pfp.at(Properties::KeepAlive)->SetValue((int)brokerOptions.getKeepAliveInterval().count());
-  pfp.at(Properties::MaxInFlight)->SetValue((int)brokerOptions.getMaxInFlight());
-  pfp.at(Properties::MaxReconnectRetries)->SetValue((int)brokerOptions.getMaxReconnectRetries());
-  pfp.at(Properties::Password)->SetValue(brokerOptions.getPassword());
-  pfp.at(Properties::Port)->SetValue((int)brokerOptions.getPort());
-  pfp.at(Properties::Username)->SetValue(brokerOptions.getUsername());
-
-  (void)clientOptions;
-  auto &pfpLayout = pfp.at(Properties::Layout);
-  wxVariant layoutValue = pfpLayout->GetValue();
-  const bool hasValue = pfpLayout->StringToValue(layoutValue, clientOptions.getLayout());
-  if (hasValue)
-  {
-    pfpLayout->SetValue(layoutValue);
-  }
-
-  mSave->Enable(true);
-  mConnect->Enable(true);
-  mProfileFormGrid->Enable(true);
-}
-
-void Homepage::propertyGridClear()
-{
-  mSave->Enable(false);
-  mConnect->Enable(false);
-  mProfileFormGrid->Enable(false);
-
-  auto &pfp = mProfileFormProperties;
-
-  pfp.at(Properties::Name)->SetValue({});
-  pfp.at(Properties::AutoReconnect)->SetValue({});
-  pfp.at(Properties::ClientId)->SetValue({});
-  pfp.at(Properties::ConnectTimeout)->SetValue({});
-  pfp.at(Properties::DisconnectTimeout)->SetValue({});
-  pfp.at(Properties::Hostname)->SetValue({});
-  pfp.at(Properties::KeepAlive)->SetValue({});
-  pfp.at(Properties::MaxInFlight)->SetValue({});
-  pfp.at(Properties::MaxReconnectRetries)->SetValue({});
-  pfp.at(Properties::Password)->SetValue({});
-  pfp.at(Properties::Port)->SetValue({});
-  pfp.at(Properties::Username)->SetValue({});
-  pfp.at(Properties::Layout)->SetValue({});
-}
-
-MQTT::BrokerOptions Homepage::brokerOptionsFromPropertyGrid() const
-{
-  const auto &pfp = mProfileFormProperties;
-
-  const bool autoReconnect       = pfp.at(Properties::AutoReconnect)->GetValue();
-  const auto maxInFlight         = (size_t)pfp.at(Properties::MaxInFlight)->GetValue().GetInteger();
-  const auto maxReconnectRetries = (size_t)pfp.at(Properties::MaxReconnectRetries)->GetValue().GetInteger();
-  const auto port                = (size_t)pfp.at(Properties::Port)->GetValue().GetInteger();
-  const auto connectTimeout      = (size_t)pfp.at(Properties::ConnectTimeout)->GetValue().GetInteger();
-  const auto disconnectTimeout   = (size_t)pfp.at(Properties::DisconnectTimeout)->GetValue().GetInteger();
-  const auto keepAliveInterval   = (size_t)pfp.at(Properties::KeepAlive)->GetValue().GetLong();
-  const auto clientId            = pfp.at(Properties::ClientId)->GetValue();
-  const auto hostname            = pfp.at(Properties::Hostname)->GetValue();
-  const auto password            = pfp.at(Properties::Password)->GetValue();
-  const auto username            = pfp.at(Properties::Username)->GetValue();
-
-  return MQTT::BrokerOptions {
-    autoReconnect,
-    maxInFlight,
-    maxReconnectRetries,
-    port,
-    std::chrono::seconds(connectTimeout),
-    std::chrono::seconds(disconnectTimeout),
-    std::chrono::seconds(keepAliveInterval),
-    clientId,
-    hostname,
-    password,
-    username,
-  };
-}
-
-Types::ClientOptions Homepage::clientOptionsFromPropertyGrid() const
-{
-  const auto &pfp = mProfileFormProperties;
-
-  const auto &pfpLayout = pfp.at(Properties::Layout);
-  const auto layoutValue = pfpLayout->GetValue();
-  const auto layoutIndex = (size_t)layoutValue.GetInteger();
-  const auto layout = mLayoutsModel->getLabelArray()[layoutIndex];
-
-  return Types::ClientOptions {
-    layout.ToStdString(),
-  };
+  auto *connectionEvent = new Events::Connection();
+  connectionEvent->setProfile(profile);
+  wxQueueEvent(this, connectionEvent);
 }

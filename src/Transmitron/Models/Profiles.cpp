@@ -1,4 +1,5 @@
 #include "Common/Filesystem.hpp"
+#include <algorithm>
 #include <fstream>
 #include <iterator>
 #include <optional>
@@ -7,6 +8,7 @@
 #include <fmt/core.h>
 
 #include "Common/Log.hpp"
+#include "Common/String.hpp"
 #include "Common/Url.hpp"
 #include "MQTT/BrokerOptions.hpp"
 #include "Profiles.hpp"
@@ -18,6 +20,8 @@ namespace fs = Common::fs;
 using namespace Transmitron::Models;
 using namespace Transmitron;
 using namespace Common;
+
+constexpr size_t DefaultMqttPort = 1883;
 
 Profiles::Profiles(const wxObjectDataPtr<Layouts> &layouts) :
   mLayoutsModel(layouts)
@@ -53,10 +57,13 @@ bool Profiles::load(
   if (!ensureDirectoryExists(mConfigProfilesDir)) { return false; }
   if (!ensureDirectoryExists(mCacheProfilesDir))  { return false; }
 
+  createQuickConnect();
+
   for (const auto &entry : fs::directory_iterator(mConfigProfilesDir))
   {
     mLogger->info("Checking {}", entry.path().u8string());
     if (entry.status().type() != fs::file_type::directory) { continue; }
+    if (entry.path().filename() == "QuickConnect") { continue; }
 
     const auto item = loadProfile(entry.path());
     if (!item.IsOk())
@@ -160,12 +167,12 @@ bool Profiles::rename(
     return false;
   }
 
-  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
-  snippets->load(pathNew);
+  wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  messages->load(pathNew);
 
   profile->name = name;
   profile->path = pathNew;
-  profile->snippets = snippets;
+  profile->messages = messages;
   profile->saved = false;
 
   save(id);
@@ -195,6 +202,35 @@ bool Profiles::remove(wxDataViewItem item)
   return true;
 }
 
+void Profiles::updateQuickConnect(std::string url)
+{
+  const auto parts = String::split(url, ':');
+
+  const auto port = [&]() -> size_t
+  {
+    if (parts.size() != 2) { return DefaultMqttPort; }
+    const auto &portStr = parts[1];
+    const auto isNumeric = std::all_of(
+      portStr.begin(),
+      portStr.end(),
+      [](char value){ return std::isdigit(value) != 0; }
+    );
+    if (!isNumeric) { return DefaultMqttPort; }
+    return std::stoul(portStr);
+  }();
+
+  const auto domain = [&]()
+  {
+    if (parts.empty()) { return std::string("localhost"); }
+    return parts[0];
+  }();
+
+  auto &node = mProfiles.at(mQuickConnectId);
+
+  node->brokerOptions.setPort(port);
+  node->brokerOptions.setHostname(domain);
+}
+
 std::string Profiles::getUniqueName() const
 {
   const constexpr std::string_view NewProfileName{"New Profile"};
@@ -215,6 +251,50 @@ std::string Profiles::getUniqueName() const
   return uniqueName;
 }
 
+void Profiles::createQuickConnect()
+{
+  if (mQuickConnectId != 0) { return; }
+
+  const std::string uniqueName = "QuickConnect";
+  const std::string encoded = Url::encode(uniqueName);
+
+  const std::string path = fmt::format(
+    "{}/{}",
+    mConfigProfilesDir,
+    encoded
+  );
+
+  bool canSave = true;
+  if (!fs::exists(path) && !fs::create_directory(path))
+  {
+    mLogger->warn("Could not create profile '{}' directory", path);
+    canSave = false;
+  }
+
+  wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  messages->load(path);
+
+  wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
+  wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
+
+  const auto id = mAvailableId++;
+  auto profile = std::make_unique<Node>();
+  profile->name = uniqueName;
+  profile->path = path;
+  profile->saved = false;
+  profile->messages = messages;
+  profile->topicsSubscribed = topicsSubscribed;
+  profile->topicsPublished = topicsPublished;
+  mProfiles.insert({id, std::move(profile)});
+
+  mQuickConnectId = id;
+
+  if (canSave)
+  {
+    save(id);
+  }
+}
+
 wxDataViewItem Profiles::createProfile()
 {
   const std::string uniqueName = getUniqueName();
@@ -232,8 +312,8 @@ wxDataViewItem Profiles::createProfile()
     return wxDataViewItem(0);
   }
 
-  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
-  snippets->load(path);
+  wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  messages->load(path);
 
   wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
   wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
@@ -243,7 +323,7 @@ wxDataViewItem Profiles::createProfile()
   profile->name = uniqueName;
   profile->path = path;
   profile->saved = false;
-  profile->snippets = snippets;
+  profile->messages = messages;
   profile->topicsSubscribed = topicsSubscribed;
   profile->topicsPublished = topicsPublished;
   mProfiles.insert({id, std::move(profile)});
@@ -294,9 +374,14 @@ wxDataViewItem Profiles::getItemFromName(const std::string &profileName) const
   return toItem(it->first);
 }
 
-wxObjectDataPtr<Snippets> Profiles::getSnippetsModel(wxDataViewItem item)
+wxDataViewItem Profiles::getQuickConnect() const
 {
-  return mProfiles.at(toId(item))->snippets;
+  return toItem(mQuickConnectId);
+}
+
+wxObjectDataPtr<Messages> Profiles::getMessagesModel(wxDataViewItem item)
+{
+  return mProfiles.at(toId(item))->messages;
 }
 
 wxObjectDataPtr<KnownTopics> Profiles::getTopicsSubscribed(wxDataViewItem item)
@@ -378,9 +463,10 @@ unsigned Profiles::GetChildren(
     return 0;
   }
 
-  for (const auto &node : mProfiles)
+  for (const auto &[nodeId, node] : mProfiles)
   {
-    children.Add(toItem(node.first));
+    if (nodeId == mQuickConnectId) { continue; }
+    children.Add(toItem(nodeId));
   }
 
   std::sort(
@@ -511,8 +597,8 @@ wxDataViewItem Profiles::loadProfile(const Common::fs::path &directory)
     return opt.value();
   }();
 
-  wxObjectDataPtr<Models::Snippets> snippets{new Models::Snippets};
-  snippets->load(directory.string());
+  wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  messages->load(directory.string());
 
   wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
   wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
@@ -527,7 +613,7 @@ wxDataViewItem Profiles::loadProfile(const Common::fs::path &directory)
     topicsPublished->load(topics + "/published.txt");
   }
 
-  topicsPublished->append(snippets->getKnownTopics());
+  topicsPublished->append(messages->getKnownTopics());
 
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>(Node{
@@ -535,7 +621,7 @@ wxDataViewItem Profiles::loadProfile(const Common::fs::path &directory)
     clientOptions,
     brokerOptions,
     directory,
-    snippets,
+    messages,
     topicsSubscribed,
     topicsPublished,
     true

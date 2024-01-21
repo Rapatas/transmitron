@@ -29,13 +29,14 @@
 #include "Resources/qos/qos-2.hpp"
 #include "Resources/send/send-18x14.hpp"
 #include "Resources/send/send-18x18.hpp"
-#include "Resources/snippets/snippets-18x14.hpp"
-#include "Resources/snippets/snippets-18x18.hpp"
+#include "Resources/messages/messages-18x14.hpp"
+#include "Resources/messages/messages-18x18.hpp"
 #include "Resources/subscription/subscription-18x14.hpp"
 #include "Resources/subscription/subscription-18x18.hpp"
 #include "Tabs/Client.hpp"
 #include "Tabs/Homepage.hpp"
 #include "Tabs/Settings.hpp"
+#include "Transmitron/Events/Profile.hpp"
 #include "Transmitron/Events/Recording.hpp"
 #include "Transmitron/Models/History.hpp"
 #include "Transmitron/Models/Layouts.hpp"
@@ -45,10 +46,10 @@ using namespace Transmitron;
 using namespace Common;
 namespace fs = Common::fs;
 
-constexpr size_t DefaultWindowWidth = 800;
-constexpr size_t DefaultWindowHeight = 600;
+constexpr size_t DefaultWindowWidth = 600;
+constexpr size_t DefaultWindowHeight = 500;
 constexpr size_t MinWindowWidth = 550;
-constexpr size_t MinWindowHeight = 300;
+constexpr size_t MinWindowHeight = 400;
 constexpr size_t LabelFontSize = 15;
 
 App::App() :
@@ -103,7 +104,7 @@ bool App::OnInit()
 
   createSettingsTab();
 
-  createProfilesTab(1);
+  createHomepageTab(1);
 
   auto *newProfilesTab = new wxPanel(mNote);
   mNote->AddPage(newProfilesTab, "", false, *bin2cPlus18x18());
@@ -163,7 +164,7 @@ void App::onPageSelected(wxBookCtrlEvent& event)
 
   if ((size_t)event.GetSelection() == mCount - 1)
   {
-    createProfilesTab(mCount - 1);
+    createHomepageTab(mCount - 1);
     event.Veto();
     return;
   }
@@ -212,7 +213,7 @@ void App::onPageClosing(wxBookCtrlEvent& event)
 
   if (mCount == 2)
   {
-    createProfilesTab(mCount - 1);
+    createHomepageTab(mCount - 1);
   }
 
   if ((size_t)event.GetOldSelection() == mCount - 1)
@@ -239,7 +240,7 @@ void App::onKeyDownControlW()
 
   if (mCount == 2)
   {
-    createProfilesTab(mCount - 1);
+    createHomepageTab(mCount - 1);
   }
 
   if (closingIndex == mCount - 1)
@@ -250,7 +251,7 @@ void App::onKeyDownControlW()
 
 void App::onKeyDownControlT()
 {
-  createProfilesTab(mCount - 1);
+  createHomepageTab(mCount - 1);
 }
 
 void App::onRecordingSave(Events::Recording &event)
@@ -290,6 +291,19 @@ void App::onRecordingSave(Events::Recording &event)
   out << event.getContents();
 }
 
+void App::onProfileCreate(Events::Profile &event)
+{
+  (void)event;
+  mNote->ChangeSelection(0);
+  mSettingsTab->createProfile();
+}
+
+void App::onProfileEdit(Events::Profile &event)
+{
+  mNote->ChangeSelection(0);
+  mSettingsTab->selectProfile(event.getProfile());
+}
+
 void App::onRecordingOpen(Events::Recording &/* event */)
 {
   wxFileDialog openFileDialog(
@@ -313,7 +327,7 @@ void App::onRecordingOpen(Events::Recording &/* event */)
 }
 
 
-void App::createProfilesTab(size_t index)
+void App::createHomepageTab(size_t index)
 {
   auto *homepage = new Tabs::Homepage(
     mNote,
@@ -328,6 +342,8 @@ void App::createProfilesTab(size_t index)
   homepage->focus();
 
   homepage->Bind(Events::RECORDING_OPEN, &App::onRecordingOpen, this);
+  homepage->Bind(Events::PROFILE_CREATE, &App::onProfileCreate, this);
+  homepage->Bind(Events::PROFILE_EDIT, &App::onProfileEdit, this);
 
   homepage->Bind(Events::CONNECTION, [this](Events::Connection e){
     if (e.GetSelection() == wxNOT_FOUND)
@@ -343,8 +359,18 @@ void App::createProfilesTab(size_t index)
 
 void App::createSettingsTab()
 {
-  auto *settingsTab = new Tabs::Settings(mNote, LabelFontInfo, mLayoutsModel);
-  mNote->AddPage(settingsTab, "", false, *bin2cGear18x18());
+  mSettingsTab = new Tabs::Settings(mNote, LabelFontInfo, mOptionsHeight, mProfilesModel, mLayoutsModel);
+  mSettingsTab->Bind(Events::CONNECTION, [this](Events::Connection e){
+    if (e.GetSelection() == wxNOT_FOUND)
+    {
+      e.Skip();
+      return;
+    }
+
+    const auto profileItem = e.getProfile();
+    openProfile(profileItem);
+  });
+  mNote->AddPage(mSettingsTab, "", false, *bin2cGear18x18());
   ++mCount;
 }
 
@@ -436,7 +462,7 @@ void App::openProfile(wxDataViewItem item)
     mNote,
     options,
     mProfilesModel->getClientOptions(item),
-    mProfilesModel->getSnippetsModel(item),
+    mProfilesModel->getMessagesModel(item),
     mProfilesModel->getTopicsSubscribed(item),
     mProfilesModel->getTopicsPublished(item),
     mLayoutsModel,
@@ -448,10 +474,25 @@ void App::openProfile(wxDataViewItem item)
   client->Bind(Events::RECORDING_SAVE, &App::onRecordingSave, this);
 
   const size_t selected = (size_t)mNote->GetSelection();
-  mNote->RemovePage(selected);
-  mNote->InsertPage(selected, client, "");
-  mNote->SetSelection(selected);
-  mNote->SetPageText(selected, mProfilesModel->getName(item));
+  const auto target = selected == 0
+    ? mCount - 1
+    : selected;
+
+  mLogger->info("Target: {}", target);
+
+  if (selected != 0)
+  {
+    // Remove homepage.
+    mNote->RemovePage(selected);
+  }
+  else
+  {
+    ++mCount;
+  }
+
+  mNote->InsertPage(target, client, "");
+  mNote->SetSelection(target);
+  mNote->SetPageText(target, mProfilesModel->getName(item));
 
   client->focus();
 }
@@ -500,5 +541,6 @@ int App::calculateOptionHeight()
   auto *button = new wxBitmapButton(mFrame, -1, *bin2cPlus18x18());
   const auto bestSize = button->GetBestSize();
   mFrame->RemoveChild(button);
+  button->Destroy();
   return bestSize.y;
 }

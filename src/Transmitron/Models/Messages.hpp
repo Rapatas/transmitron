@@ -1,5 +1,5 @@
-#ifndef TRANSMITRON_MODELS_SNIPPETS_HPP
-#define TRANSMITRON_MODELS_SNIPPETS_HPP
+#ifndef TRANSMITRON_MODELS_MESSAGES_HPP
+#define TRANSMITRON_MODELS_MESSAGES_HPP
 
 #include "Common/Filesystem.hpp"
 #include <list>
@@ -14,7 +14,7 @@
 namespace Transmitron::Models
 {
 
-class Snippets :
+class Messages :
   public wxDataViewModel
 {
 public:
@@ -25,7 +25,7 @@ public:
     Max
   };
 
-  explicit Snippets();
+  explicit Messages();
 
   bool load(const std::string &profileDir);
 
@@ -36,7 +36,7 @@ public:
   wxDataViewItem createFolder(
     wxDataViewItem parent
   );
-  wxDataViewItem createSnippet(
+  wxDataViewItem createMessage(
     wxDataViewItem parent,
     const MQTT::Message &message
   );
@@ -97,7 +97,7 @@ private:
     enum class Type
     {
       Folder,
-      Snippet,
+      Message,
     };
 
     using Id_t = size_t;
@@ -114,17 +114,17 @@ private:
   std::shared_ptr<spdlog::logger> mLogger;
   Node::Id_t mNextAvailableId = 0;
   std::map<Node::Id_t, Node> mNodes;
-  std::string mSnippetsDir;
+  std::string mMessagesDir;
 
   void loadDirectoryRecursive(
     const Common::fs::path &path,
     Node::Id_t parentId
   );
-  void loadSnippet(const Common::fs::path &path, Node::Id_t parentId);
+  void loadMessage(const Common::fs::path &path, Node::Id_t parentId);
   bool indexFileRead(const Common::fs::path &path, Node::Id_t id);
   bool indexFileWrite(Node::Id_t id);
   bool save(Node::Id_t id);
-  bool saveSnippet(Node::Id_t id);
+  bool saveMessage(Node::Id_t id);
   bool saveFolder(Node::Id_t id);
   bool moveFile(Node::Id_t nodeId, Node::Id_t newParentId);
   bool moveCheck(
@@ -152,4 +152,4 @@ private:
 
 }
 
-#endif // TRANSMITRON_MODELS_SNIPPETS_HPP
+#endif // TRANSMITRON_MODELS_MESSAGES_HPP

@@ -24,3 +24,5 @@ BEGIN
     VALUE "Translation", 0x409, 1200
   END
 END
+
+#include "wx/msw/wx.rc"

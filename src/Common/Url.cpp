@@ -1,6 +1,7 @@
 #include "Url.hpp"
 
 #include <algorithm>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 
 #include <fmt/format.h>
@@ -26,7 +27,7 @@ bool Url::encodable(char c)
 
 bool Url::isHexChar(char c)
 {
-  return isdigit(c) == 1 || (c >= 'A' && c <= 'F');
+  return isdigit(c) != 0 || (c >= 'A' && c <= 'F');
 }
 
 std::string Url::encode(const std::string &data)
@@ -85,8 +86,9 @@ std::string Url::decode(const std::string &data)
     if (!isHexChar(c))
     {
       const auto msg = fmt::format(
-        "Unexpected printable ASCII char '0x{:X}'",
-        (uint8_t)c
+        "Unexpected non-printable ASCII char '0x{:X}' '{}'",
+        (uint8_t)c,
+        c
       );
       throw std::runtime_error(msg.c_str());
     }

@@ -1,6 +1,7 @@
 
 set(
   ${TRANSMITRON_BIN_NAME}_SOURCE
+
   Common/Env.Linux.cpp
   Common/Env.Windows.cpp
   Common/Extract.cpp
@@ -20,7 +21,7 @@ set(
   Transmitron/Models/KnownTopics.cpp
   Transmitron/Models/Layouts.cpp
   Transmitron/Models/Profiles.cpp
-  Transmitron/Models/Snippets.cpp
+  Transmitron/Models/Messages.cpp
   Transmitron/Models/Subscriptions.cpp
   Transmitron/Notifiers/Layouts.cpp
   Transmitron/Resources/gear/gear-18x18.cpp
@@ -36,8 +37,8 @@ set(
   Transmitron/Resources/qos/qos-2.cpp
   Transmitron/Resources/send/send-18x14.cpp
   Transmitron/Resources/send/send-18x18.cpp
-  Transmitron/Resources/snippets/snippets-18x14.cpp
-  Transmitron/Resources/snippets/snippets-18x18.cpp
+  Transmitron/Resources/messages/messages-18x14.cpp
+  Transmitron/Resources/messages/messages-18x18.cpp
   Transmitron/Resources/subscription/subscription-18x14.cpp
   Transmitron/Resources/subscription/subscription-18x18.cpp
   Transmitron/Tabs/Client.cpp
@@ -49,6 +50,7 @@ set(
   Transmitron/Widgets/Layouts.cpp
   Transmitron/Widgets/TopicCtrl.cpp
   main.cpp
+
 )
 
 set(INFO_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/Common/Info.in.cpp")

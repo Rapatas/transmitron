@@ -8,7 +8,7 @@ namespace Transmitron::Events
 
 class Edit;
 wxDECLARE_EVENT(EDIT_PUBLISH, Edit);
-wxDECLARE_EVENT(EDIT_SAVE_SNIPPET, Edit);
+wxDECLARE_EVENT(EDIT_SAVE_MESSAGE, Edit);
 
 // NOLINTNEXTLINE
 class Edit :
