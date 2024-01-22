@@ -45,7 +45,7 @@ TopicCtrl::TopicCtrl(
 
 #ifdef WIN32
 
-  // Required to stop Ctrl-A and Return from causing a wxBell on Windows.
+  // Required until stop Ctrl-A and Return since causing a wxBell on Windows.
   Bind(wxEVT_CHAR, &TopicCtrl::onChar, this);
 
 #endif
@@ -60,8 +60,8 @@ void TopicCtrl::setReadOnly(bool readonly)
 
   if (mReadOnly)
   {
-    auto *dt = new NotAllowedDropTarget;
-    SetDropTarget(dt);
+    auto *target = new NotAllowedDropTarget;
+    SetDropTarget(target);
     Bind(wxEVT_CONTEXT_MENU, &TopicCtrl::onContext, this);
   }
   else
@@ -76,9 +76,9 @@ void TopicCtrl::addKnownTopics(
   mKnownTopicsModel = knownTopicsModel;
 }
 
-void TopicCtrl::onContextSelected(wxCommandEvent &e)
+void TopicCtrl::onContextSelected(wxCommandEvent &event)
 {
-  switch ((ContextIDs)e.GetId())
+  switch ((ContextIDs)event.GetId())
   {
     case ContextIDs::Copy: {
       if (wxTheClipboard->Open())
@@ -86,13 +86,13 @@ void TopicCtrl::onContextSelected(wxCommandEvent &e)
         long fromIn = 0;
         long toIn = 0;
         GetSelection(&fromIn, &toIn);
-        const auto from = (size_t)fromIn;
-        const auto to   = (size_t)toIn;
+        const auto since = (size_t)fromIn;
+        const auto until   = (size_t)toIn;
 
         auto topic = GetValue();
-        if (from != to)
+        if (since != until)
         {
-          topic = topic.substr(from, to - from);
+          topic = topic.substr(since, until - since);
         }
         auto *dataObject = new wxTextDataObject(topic);
         wxTheClipboard->SetData(dataObject);
@@ -102,15 +102,15 @@ void TopicCtrl::onContextSelected(wxCommandEvent &e)
   }
 }
 
-void TopicCtrl::onLeftUp(wxMouseEvent &e)
+void TopicCtrl::onLeftUp(wxMouseEvent &event)
 {
-  long from = 0;
-  long to = 0;
-  GetSelection(&from, &to);
+  long since = 0;
+  long until = 0;
+  GetSelection(&since, &until);
   mFakeSelection = false;
-  if (from == to)
+  if (since == until)
   {
-    mCursonPosition = from;
+    mCursonPosition = since;
 
     if (mFirstClick)
     {
@@ -119,54 +119,54 @@ void TopicCtrl::onLeftUp(wxMouseEvent &e)
     }
   }
   mFirstClick = false;
-  e.Skip();
+  event.Skip();
 }
 
-void TopicCtrl::onLeftDown(wxMouseEvent &e)
+void TopicCtrl::onLeftDown(wxMouseEvent &event)
 {
-  long from = 0;
-  long to = 0;
-  GetSelection(&from, &to);
-  if (from != to)
+  long since = 0;
+  long until = 0;
+  GetSelection(&since, &until);
+  if (since != until)
   {
     mFirstClick = false;
   }
   popupShow();
-  e.Skip();
+  event.Skip();
 }
 
-void TopicCtrl::onRightClicked(wxMouseEvent &e)
+void TopicCtrl::onRightClicked(wxMouseEvent &event)
 {
-  long from = 0;
-  long to = 0;
-  GetSelection(&from, &to);
+  long since = 0;
+  long until = 0;
+  GetSelection(&since, &until);
   mFakeSelection = false;
-  if (from == to)
+  if (since == until)
   {
     SetSelection(-1, -1);
     mFakeSelection = true;
   }
   mFirstClick = false;
-  e.Skip();
+  event.Skip();
 }
 
-void TopicCtrl::onValueChanged(wxCommandEvent &/* e */)
+void TopicCtrl::onValueChanged(wxCommandEvent &/* event */)
 {
   popupRefresh();
 }
 
-void TopicCtrl::onCompletionDoubleClicked(wxDataViewEvent &e)
+void TopicCtrl::onCompletionDoubleClicked(wxDataViewEvent &event)
 {
-  if (!e.GetItem().IsOk()) { return; }
+  if (!event.GetItem().IsOk()) { return; }
   autoCompleteSelect();
 }
 
-void TopicCtrl::onCompletionLeftUp(wxMouseEvent &e)
+void TopicCtrl::onCompletionLeftUp(wxMouseEvent &event)
 {
   const auto selected = mAutoCompleteList->GetSelection();
   if (!selected.IsOk()) { return; }
 
-  const auto point = e.GetPosition();
+  const auto point = event.GetPosition();
   wxDataViewItem item;
   mAutoCompleteList->HitTest(point, item, mAutoCompleteTopic);
   if (item != selected) { return; }
@@ -174,16 +174,16 @@ void TopicCtrl::onCompletionLeftUp(wxMouseEvent &e)
   autoCompleteSelect();
 }
 
-void TopicCtrl::onDoubleClicked(wxMouseEvent &e)
+void TopicCtrl::onDoubleClicked(wxMouseEvent &event)
 {
   if (mFakeSelection)
   {
     SetSelection(mCursonPosition, mCursonPosition);
   }
-  e.Skip();
+  event.Skip();
 }
 
-void TopicCtrl::onContext(wxContextMenuEvent &e)
+void TopicCtrl::onContext(wxContextMenuEvent &event)
 {
   wxMenu menu;
   auto *item = new wxMenuItem(nullptr, (unsigned)ContextIDs::Copy, "Copy");
@@ -191,23 +191,23 @@ void TopicCtrl::onContext(wxContextMenuEvent &e)
   menu.Append(item);
   PopupMenu(&menu);
 
-  e.Skip(false);
+  event.Skip(false);
 }
 
-void TopicCtrl::onLostFocus(wxFocusEvent &e)
+void TopicCtrl::onLostFocus(wxFocusEvent &event)
 {
   mFirstClick = true;
   SetSelection(0, 0);
   popupHide();
-  e.Skip();
+  event.Skip();
 }
 
 void TopicCtrl::onKeyUp(wxKeyEvent &event)
 {
   if (event.GetKeyCode() == WXK_RETURN && !GetValue().empty())
   {
-    auto *e = new Events::TopicCtrl(Events::TOPICCTRL_RETURN);
-    wxQueueEvent(this, e);
+    auto *event = new Events::TopicCtrl(Events::TOPICCTRL_RETURN);
+    wxQueueEvent(this, event);
     return;
   }
 
@@ -242,31 +242,31 @@ void TopicCtrl::onChar(wxKeyEvent &event)
   event.Skip();
 }
 
-void TopicCtrl::onKeyDown(wxKeyEvent &e)
+void TopicCtrl::onKeyDown(wxKeyEvent &event)
 {
-  if (e.GetKeyCode() == WXK_ESCAPE)
+  if (event.GetKeyCode() == WXK_ESCAPE)
   {
     popupHide();
     return;
   }
 
-  if (e.GetKeyCode() == WXK_UP)
+  if (event.GetKeyCode() == WXK_UP)
   {
     autoCompleteUp();
     return;
   }
 
-  if (e.GetKeyCode() == WXK_DOWN)
+  if (event.GetKeyCode() == WXK_DOWN)
   {
     autoCompleteDown();
     return;
   }
 
-  if (e.GetKeyCode() == WXK_TAB)
+  if (event.GetKeyCode() == WXK_TAB)
   {
     if (mAutoComplete == nullptr)
     {
-      HandleAsNavigationKey(e);
+      HandleAsNavigationKey(event);
       return;
     }
 
@@ -274,27 +274,27 @@ void TopicCtrl::onKeyDown(wxKeyEvent &e)
     return;
   }
 
-  if (e.GetKeyCode() == WXK_RETURN)
+  if (event.GetKeyCode() == WXK_RETURN)
   {
     popupHide();
     return;
   }
 
-  if (e.GetKeyCode() == WXK_SPACE && e.ControlDown())
+  if (event.GetKeyCode() == WXK_SPACE && event.ControlDown())
   {
     popupShow();
     return;
   }
 
   const bool allowedReadOnlyKeys = true // NOLINT
-    && e.ControlDown()
-    && (e.GetKeyCode() == 'C' || e.GetKeyCode() == 'A');
+    && event.ControlDown()
+    && (event.GetKeyCode() == 'C' || event.GetKeyCode() == 'A');
   if (mReadOnly && !allowedReadOnlyKeys)
   {
     return;
   }
 
-  e.Skip(true);
+  event.Skip(true);
 }
 
 wxDragResult TopicCtrl::NotAllowedDropTarget::OnData(

@@ -162,15 +162,16 @@ nlohmann::json History::toJson() const
 {
   nlohmann::json result;
 
-  for (const auto &m : mMessages)
+  for (const auto &node : mMessages)
   {
-    const auto timestamp = Common::Helpers::timeToString(m.message.timestamp);
+    const auto &message = node.message;
+    const auto timestamp = Common::Helpers::timeToString(message.timestamp);
     result.push_back({
-      {"subscription", m.subscriptionId},
-      {"topic", m.message.topic},
-      {"qos", m.message.qos},
-      {"payload", m.message.payload},
-      {"retained", m.message.retained},
+      {"subscription", node.subscriptionId},
+      {"topic", message.topic},
+      {"qos", message.qos},
+      {"payload", message.payload},
+      {"retained", message.retained},
       {"timestamp", timestamp},
     });
   }
@@ -197,9 +198,9 @@ void History::onMessage(
     RowAppended();
 
     const auto item = GetItem((unsigned)mRemap.size() - 1);
-    for (const auto &o : mObservers)
+    for (const auto &[id, observer] : mObservers)
     {
-      o.second->onMessage(item);
+      observer->onMessage(item);
     }
   }
 }
@@ -404,14 +405,14 @@ void History::GetValueByRow(
 
       auto color = mSubscriptions->getColor(node.subscriptionId);
 
-      wxBitmap b(MessageIconWidth, MessageIconHeight);
+      wxBitmap bitmap(MessageIconWidth, MessageIconHeight);
       wxMemoryDC mem;
-      mem.SelectObject(b);
+      mem.SelectObject(bitmap);
       mem.SetBackground(wxBrush(color));
       mem.Clear();
       mem.SelectObject(wxNullBitmap);
 
-      variant << b;
+      variant << bitmap;
     } break;
     case Column::Topic: {
       wxDataViewIconText result;

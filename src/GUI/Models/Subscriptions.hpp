@@ -92,9 +92,9 @@ private:
     unsigned int col
   ) override;
 
-  void onSubscribed(Events::Subscription &e);
-  void onUnsubscribed(Events::Subscription &e);
-  void onMessage(Events::Subscription &e);
+  void onSubscribed(Events::Subscription &event);
+  void onUnsubscribed(Events::Subscription &event);
+  void onMessage(Events::Subscription &event);
 };
 
 } // namespace Rapatas::Transmitron::GUI::Models

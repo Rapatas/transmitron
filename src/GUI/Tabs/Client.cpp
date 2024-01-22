@@ -422,7 +422,7 @@ void Client::setupPanelConnect(wxWindow *parent)
   mLayouts->Bind(Events::LAYOUT_SELECTED, &Client::onLayoutSelected, this);
   mLayouts->Bind(Events::LAYOUT_RESIZED,  &Client::onLayoutResized,  this);
 
-  auto cb = [this](Panes pane, wxCommandEvent &/* event */)
+  auto callback = [this](Panes pane, wxCommandEvent &/* event */)
   {
     auto widget = mPanes.at(pane);
 
@@ -478,7 +478,7 @@ void Client::setupPanelConnect(wxWindow *parent)
     button->SetBitmap(*bitmap);
     button->Bind(
       wxEVT_BUTTON,
-      std::bind(cb, pane.first, std::placeholders::_1)
+      std::bind(callback, pane.first, std::placeholders::_1)
     );
     mProfileSizer->Add(button, 0, wxEXPAND);
 
@@ -712,12 +712,12 @@ void Client::setupPanelMessages(wxWindow *parent)
 
 // Messages {
 
-void Client::onMessagesSelected(wxDataViewEvent &e)
+void Client::onMessagesSelected(wxDataViewEvent &event)
 {
-  auto item = e.GetItem();
+  auto item = event.GetItem();
   if (!item.IsOk())
   {
-    e.Skip();
+    event.Skip();
     return;
   }
 
@@ -734,25 +734,25 @@ void Client::onMessagesSelected(wxDataViewEvent &e)
   }
 }
 
-void Client::onMessagesEdit(wxDataViewEvent &e)
+void Client::onMessagesEdit(wxDataViewEvent &event)
 {
   if (mMessageExplicitEditRequest)
   {
     mMessageExplicitEditRequest = false;
-    e.Skip();
+    event.Skip();
   }
   else
   {
-    e.Veto();
+    event.Veto();
   }
 }
 
-void Client::onMessagesChanged(wxDataViewEvent &e)
+void Client::onMessagesChanged(wxDataViewEvent &event)
 {
-  const auto item = e.GetItem();
+  const auto item = event.GetItem();
   if (!item.IsOk())
   {
-    e.Skip();
+    event.Skip();
     return;
   }
 
@@ -764,9 +764,9 @@ void Client::onMessagesChanged(wxDataViewEvent &e)
   publish->setInfoLine(name);
 }
 
-void Client::onMessagesActivated(wxDataViewEvent &e)
+void Client::onMessagesActivated(wxDataViewEvent &event)
 {
-  const auto item = e.GetItem();
+  const auto item = event.GetItem();
   if (!item.IsOk()) { return; }
 
   if (mMessagesModel->IsContainer(item))
@@ -787,32 +787,32 @@ void Client::onMessagesActivated(wxDataViewEvent &e)
   }
 }
 
-void Client::onMessagesDrag(wxDataViewEvent &e)
+void Client::onMessagesDrag(wxDataViewEvent &event)
 {
-  auto item = e.GetItem();
+  auto item = event.GetItem();
   mMessagesWasExpanded = mMessagesCtrl->IsExpanded(item);
 
   const void *id = item.GetID();
   uintptr_t message = 0;
   std::memcpy(&message, &id, sizeof(uintptr_t));
-  auto *o = new wxTextDataObject(std::to_string(message));
+  auto *object = new wxTextDataObject(std::to_string(message));
 
-  e.SetDataFormat(o->GetFormat());
-  e.SetDataSize(o->GetDataSize());
-  e.SetDataObject(o);
+  event.SetDataFormat(object->GetFormat());
+  event.SetDataSize(object->GetDataSize());
+  event.SetDataObject(object);
 
   // Required for windows, ignored on all else.
-  e.SetDragFlags(wxDrag_AllowMove);
+  event.SetDragFlags(wxDrag_AllowMove);
 
-  e.Skip(false);
+  event.Skip(false);
 }
 
-void Client::onMessagesDrop(wxDataViewEvent &e)
+void Client::onMessagesDrop(wxDataViewEvent &event)
 {
-  const auto target = e.GetItem();
+  const auto target = event.GetItem();
 
   wxTextDataObject object;
-  object.SetData(e.GetDataFormat(), e.GetDataSize(), e.GetDataBuffer());
+  object.SetData(event.GetDataFormat(), event.GetDataSize(), event.GetDataBuffer());
   const uintptr_t message = std::stoul(object.GetText().ToStdString());
   void *id = nullptr;
   std::memcpy(&id, &message, sizeof(uintptr_t));
@@ -822,7 +822,7 @@ void Client::onMessagesDrop(wxDataViewEvent &e)
 
 #ifdef WIN32
 
-  const auto pIndex = e.GetProposedDropIndex();
+  const auto pIndex = event.GetProposedDropIndex();
 
   if (pIndex == -1)
   {
@@ -891,14 +891,14 @@ void Client::onMessagesDrop(wxDataViewEvent &e)
   mMessagesCtrl->Select(moved);
 }
 
-void Client::onMessagesDropPossible(wxDataViewEvent &e)
+void Client::onMessagesDropPossible(wxDataViewEvent &event)
 {
-  const auto item = e.GetItem();
+  const auto item = event.GetItem();
   mMessagesPossible = {true, item};
 
 #ifdef WIN32
 
-  e.Skip(false);
+  event.Skip(false);
 
 #else
 
@@ -907,7 +907,7 @@ void Client::onMessagesDropPossible(wxDataViewEvent &e)
   // - If this skips, the drop event target is the hovered item.
   // - If this does not skip, the drop event target is this event's target.
 
-  e.Skip(true);
+  event.Skip(true);
 
 #endif // WIN32
 }
@@ -1024,11 +1024,11 @@ void Client::onSubscriptionContext(wxDataViewEvent& event)
   PopupMenu(&menu);
 }
 
-void Client::onHistoryContext(wxDataViewEvent& e)
+void Client::onHistoryContext(wxDataViewEvent& event)
 {
-  if (!e.GetItem().IsOk()) { return; }
+  if (!event.GetItem().IsOk()) { return; }
 
-  mHistoryCtrl->Select(e.GetItem());
+  mHistoryCtrl->Select(event.GetItem());
 
   wxMenu menu;
 
@@ -1085,17 +1085,17 @@ void Client::onHistoryContext(wxDataViewEvent& e)
   PopupMenu(&menu);
 }
 
-void Client::onMessagesContext(wxDataViewEvent& e)
+void Client::onMessagesContext(wxDataViewEvent& event)
 {
   wxMenu menu;
 
-  if (!e.GetItem().IsOk())
+  if (!event.GetItem().IsOk())
   {
     mMessagesCtrl->UnselectAll();
   }
   else
   {
-    const auto item = e.GetItem();
+    const auto item = event.GetItem();
 
     if (!mMessagesModel->IsContainer(item))
     {
@@ -1136,8 +1136,8 @@ void Client::onMessagesContext(wxDataViewEvent& e)
   }
 
   if (
-    !e.GetItem().IsOk()
-    || mMessagesModel->IsContainer(e.GetItem())
+    !event.GetItem().IsOk()
+    || mMessagesModel->IsContainer(event.GetItem())
   ) {
     auto *newFolder = new wxMenuItem(
       nullptr,
@@ -1489,26 +1489,26 @@ void Client::onContextSelectedMessageNewFolder(wxCommandEvent &/* event */)
 
 void Client::onConnected()
 {
-  auto *e = new Events::Connection(Events::CONNECTION_CONNECTED);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Connection(Events::CONNECTION_CONNECTED);
+  wxQueueEvent(this, event);
 }
 
 void Client::onDisconnected()
 {
-  auto *e = new Events::Connection(Events::CONNECTION_DISCONNECTED);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Connection(Events::CONNECTION_DISCONNECTED);
+  wxQueueEvent(this, event);
 }
 
 void Client::onConnectionLost()
 {
-  auto *e = new Events::Connection(Events::CONNECTION_LOST);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Connection(Events::CONNECTION_LOST);
+  wxQueueEvent(this, event);
 }
 
 void Client::onConnectionFailure()
 {
-  auto *e = new Events::Connection(Events::CONNECTION_FAILURE);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Connection(Events::CONNECTION_FAILURE);
+  wxQueueEvent(this, event);
 }
 
 void Client::onConnectedSync(Events::Connection &/* event */)
@@ -1712,10 +1712,10 @@ void Client::onHistoryRecordClicked(wxCommandEvent &/* event */)
   };
 
   mLogger->info("Queuing up recording event");
-  auto *e = new Events::Recording(Events::RECORDING_SAVE);
-  e->setContents(contents.dump());
-  e->setName(mName);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Recording(Events::RECORDING_SAVE);
+  event->setContents(contents.dump());
+  event->setName(mName);
+  wxQueueEvent(this, event);
 }
 
 void Client::onHistoryDoubleClicked(wxDataViewEvent &event)
@@ -1738,14 +1738,14 @@ void Client::onHistoryDoubleClicked(wxDataViewEvent &event)
 void Client::onHistorySearchKey(wxKeyEvent &event)
 {
   const auto filter = mHistorySearchFilter->GetValue().ToStdString();
-  long from = 0;
-  long to = 0;
-  mHistorySearchFilter->GetSelection(&from, &to);
+  long since = 0;
+  long until = 0;
+  mHistorySearchFilter->GetSelection(&since, &until);
 
   const auto isBackspace = event.GetKeyCode() == WXK_BACK;
   const auto isEnter     = event.GetKeyCode() == WXK_RETURN;
 
-  const auto isAllSelected = (from == 0 && to == (long)filter.size());
+  const auto isAllSelected = (since == 0 && until == (long)filter.size());
   const auto willBeEmpty   = filter.empty() || filter.size() == 1 || isAllSelected;
 
   if (isBackspace && willBeEmpty)

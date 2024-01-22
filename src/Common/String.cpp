@@ -14,17 +14,17 @@ std::vector<std::string> String::split(const std::string &data, char delim)
     + (size_t)std::count_if(
       std::begin(data),
       std::end(data),
-      [&](char c)
+      [&](char value)
       {
-        return c == delim;
+        return value == delim;
       }
     );
 
   result.reserve(segments);
 
-  std::stringstream ss(data);
+  std::stringstream sstream(data);
   std::string segment;
-  while (std::getline(ss, segment, delim))
+  while (std::getline(sstream, segment, delim))
   {
     result.push_back(segment);
   }

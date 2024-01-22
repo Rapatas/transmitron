@@ -42,7 +42,7 @@ public:
   };
 
   explicit Client();
-  size_t attachObserver(Observer *o);
+  size_t attachObserver(Observer *observer);
   void detachObserver(size_t id);
 
   // Actions.

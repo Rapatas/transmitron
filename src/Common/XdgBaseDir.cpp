@@ -32,20 +32,20 @@ XdgBaseDir::XdgBaseDir()
   logger->debug("XDG_DATA_DIRS:");
   for (const auto &dir : readDataDirs())
   {
-    Common::fs::path p{dir};
-    p.make_preferred();
+    Common::fs::path path{dir};
+    path.make_preferred();
 
-    logger->debug(" - {}", p.string());
-    mDataDirs.emplace_back(p);
+    logger->debug(" - {}", path.string());
+    mDataDirs.emplace_back(path);
   }
 
   logger->debug("XDG_CONFIG_DIRS:");
   for (const auto &dir : readConfigDirs())
   {
-    Common::fs::path p{dir};
-    p.make_preferred();
-    logger->debug(" - {}", p.string());
-    mConfigDirs.emplace_back(p);
+    Common::fs::path path{dir};
+    path.make_preferred();
+    logger->debug(" - {}", path.string());
+    mConfigDirs.emplace_back(path);
   }
 }
 

@@ -34,6 +34,7 @@ private:
   struct NotAllowedDropTarget :
     public wxDropTarget
   {
+    // NOLINTNEXTLINE(readability-identifier-length)
     wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult defResult) override;
   };
 
@@ -49,21 +50,21 @@ private:
   wxObjectDataPtr<Models::KnownTopics> mKnownTopicsModel;
   bool mPopupShow = false;
 
-  void onContextSelected(wxCommandEvent &e);
+  void onContextSelected(wxCommandEvent &event);
 
-  void onContext(wxContextMenuEvent &e);
-  void onDoubleClicked(wxMouseEvent &e);
-  void onKeyDown(wxKeyEvent &e);
-  void onKeyUp(wxKeyEvent &e);
-  void onChar(wxKeyEvent &e);
-  void onLeftDown(wxMouseEvent &e);
-  void onLeftUp(wxMouseEvent &e);
-  void onLostFocus(wxFocusEvent &e);
-  void onRight(wxMouseEvent &e);
-  void onRightClicked(wxMouseEvent &e);
-  void onValueChanged(wxCommandEvent &e);
-  void onCompletionDoubleClicked(wxDataViewEvent &e);
-  void onCompletionLeftUp(wxMouseEvent &e);
+  void onContext(wxContextMenuEvent &event);
+  void onDoubleClicked(wxMouseEvent &event);
+  void onKeyDown(wxKeyEvent &event);
+  void onKeyUp(wxKeyEvent &event);
+  void onChar(wxKeyEvent &event);
+  void onLeftDown(wxMouseEvent &event);
+  void onLeftUp(wxMouseEvent &event);
+  void onLostFocus(wxFocusEvent &event);
+  void onRight(wxMouseEvent &event);
+  void onRightClicked(wxMouseEvent &event);
+  void onValueChanged(wxCommandEvent &event);
+  void onCompletionDoubleClicked(wxDataViewEvent &event);
+  void onCompletionLeftUp(wxMouseEvent &event);
 
   void popupHide();
   void popupShow();

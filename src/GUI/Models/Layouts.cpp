@@ -243,9 +243,9 @@ unsigned Layouts::GetChildren(
         rhsv.begin(),
         rhsv.end(),
         rhsv.begin(),
-        [](unsigned char c)
+        [](unsigned char value)
         {
-          return std::tolower(c);
+          return std::tolower(value);
         }
       );
 
@@ -253,9 +253,9 @@ unsigned Layouts::GetChildren(
         lhsv.begin(),
         lhsv.end(),
         lhsv.begin(),
-        [](unsigned char c)
+        [](unsigned char value)
         {
-          return std::tolower(c);
+          return std::tolower(value);
         }
       );
 
@@ -393,12 +393,12 @@ wxDataViewItem Layouts::loadLayoutFile(const Common::fs::path &filepath)
     {
       decoded = Url::decode(filepath.stem().u8string());
     }
-    catch (std::runtime_error &e)
+    catch (std::runtime_error &error)
     {
       mLogger->error(
         "Could not decode '{}': {}",
         filepath.u8string(),
-        e.what()
+        error.what()
       );
       return wxDataViewItem(nullptr);
     }
@@ -418,10 +418,10 @@ wxDataViewItem Layouts::loadLayoutFile(const Common::fs::path &filepath)
       return wxDataViewItem(nullptr);
     }
 
-    const auto j = nlohmann::json::parse(buffer.str());
-    const auto perspectiveIt = j.find("perspective");
+    const auto data = nlohmann::json::parse(buffer.str());
+    const auto perspectiveIt = data.find("perspective");
     if (
-      perspectiveIt == std::end(j)
+      perspectiveIt == std::end(data)
       || perspectiveIt->type() != nlohmann::json::value_t::string
     ) {
       mLogger->warn("Could not parse '{}'", filepath.u8string());

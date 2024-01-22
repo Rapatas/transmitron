@@ -484,9 +484,9 @@ unsigned Profiles::GetChildren(
         rhsv.begin(),
         rhsv.end(),
         rhsv.begin(),
-        [](unsigned char c)
+        [](unsigned char value)
         {
-          return std::tolower(c);
+          return std::tolower(value);
         }
       );
 
@@ -494,9 +494,9 @@ unsigned Profiles::GetChildren(
         lhsv.begin(),
         lhsv.end(),
         lhsv.begin(),
-        [](unsigned char c)
+        [](unsigned char value)
         {
-          return std::tolower(c);
+          return std::tolower(value);
         }
       );
 
@@ -576,9 +576,9 @@ wxDataViewItem Profiles::loadProfile(const Common::fs::path &directory)
   {
     decoded = Url::decode(encoded);
   }
-  catch (std::runtime_error &e)
+  catch (std::runtime_error &error)
   {
-    mLogger->error("Could not decode '{}': {}", encoded, e.what());
+    mLogger->error("Could not decode '{}': {}", encoded, error.what());
     return wxDataViewItem(nullptr);
   }
   const std::string name{decoded.begin(), decoded.end()};
@@ -655,8 +655,8 @@ std::optional<MQTT::BrokerOptions> Profiles::loadProfileOptionsBroker(
     return std::nullopt;
   }
 
-  const auto j = nlohmann::json::parse(buffer.str());
-  auto brokerOptions = MQTT::BrokerOptions::fromJson(j);
+  const auto data = nlohmann::json::parse(buffer.str());
+  auto brokerOptions = MQTT::BrokerOptions::fromJson(data);
   return brokerOptions;
 }
 
@@ -684,8 +684,8 @@ std::optional<Types::ClientOptions> Profiles::loadProfileOptionsClient(
     return std::nullopt;
   }
 
-  const auto j = nlohmann::json::parse(buffer.str());
-  auto clientOptions = Types::ClientOptions::fromJson(j);
+  const auto data = nlohmann::json::parse(buffer.str());
+  auto clientOptions = Types::ClientOptions::fromJson(data);
   return clientOptions;
 
 }

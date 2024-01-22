@@ -18,15 +18,17 @@ wxColor Common::Helpers::colorFromNumber(size_t number)
   constexpr uint8_t ByteMask = 0xFF;
   constexpr uint8_t ByteSize = std::numeric_limits<uint8_t>::digits;
 
+  // NOLINTBEGIN(readability-identifier-length)
   uint8_t r = ((number >> (ByteSize * 0)) & ByteMask);
   uint8_t g = ((number >> (ByteSize * 1)) & ByteMask);
   uint8_t b = ((number >> (ByteSize * 2)) & ByteMask);
 
   if (r < MinColorChannel) { r = (uint8_t)(r + MinColorChannel); }
-  if (g < MinColorChannel) { g = (uint8_t)(r + MinColorChannel); }
-  if (b < MinColorChannel) { b = (uint8_t)(r + MinColorChannel); }
+  if (g < MinColorChannel) { g = (uint8_t)(g + MinColorChannel); }
+  if (b < MinColorChannel) { b = (uint8_t)(b + MinColorChannel); }
 
   return {r, g, b};
+  // NOLINTEND(readability-identifier-length)
 }
 
 std::string Common::Helpers::timeToString(
@@ -54,10 +56,10 @@ std::string Common::Helpers::timeToFilename(
 std::chrono::system_clock::time_point Common::Helpers::stringToTime(
   const std::string &line
 ) {
-  system_clock::time_point tp;
-  std::stringstream ss(line);
-  ss >> date::parse("%F %T", tp);
-  return tp;
+  system_clock::time_point timestamp;
+  std::stringstream sstream(line);
+  sstream >> date::parse("%F %T", timestamp);
+  return timestamp;
 }
 
 std::string Common::Helpers::hexDump(

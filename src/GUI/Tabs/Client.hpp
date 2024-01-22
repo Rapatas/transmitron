@@ -189,7 +189,7 @@ private:
   void onContextSelectedSubscriptionsUnmute(wxCommandEvent &event);
   void onContextSelectedSubscriptionsUnsubscribe(wxCommandEvent &event);
   void onHistoryContext(wxDataViewEvent &event);
-  void onMessagesContext(wxDataViewEvent &e);
+  void onMessagesContext(wxDataViewEvent &event);
   void onSubscriptionContext(wxDataViewEvent &event);
 
   // History.
@@ -201,11 +201,11 @@ private:
   void onHistorySearchButton(wxCommandEvent &event);
 
   // Preview.
-  void onPreviewSaveMessage(Events::Edit &e);
+  void onPreviewSaveMessage(Events::Edit &event);
 
   // Publish.
   void onPublishClicked(wxCommandEvent &event);
-  void onPublishSaveMessage(Events::Edit &e);
+  void onPublishSaveMessage(Events::Edit &event);
 
   // Setup.
   void setupPanels();
@@ -217,13 +217,13 @@ private:
   void setupPanelSubscriptions(wxWindow *parent);
 
   // Messages.
-  void onMessagesActivated(wxDataViewEvent &e);
-  void onMessagesDrag(wxDataViewEvent &e);
-  void onMessagesDrop(wxDataViewEvent &e);
-  void onMessagesDropPossible(wxDataViewEvent &e);
-  void onMessagesEdit(wxDataViewEvent &e);
-  void onMessagesChanged(wxDataViewEvent &e);
-  void onMessagesSelected(wxDataViewEvent &e);
+  void onMessagesActivated(wxDataViewEvent &event);
+  void onMessagesDrag(wxDataViewEvent &event);
+  void onMessagesDrop(wxDataViewEvent &event);
+  void onMessagesDropPossible(wxDataViewEvent &event);
+  void onMessagesEdit(wxDataViewEvent &event);
+  void onMessagesChanged(wxDataViewEvent &event);
+  void onMessagesSelected(wxDataViewEvent &event);
 
   // Subscriptions.
   void onSubscribeClicked(wxCommandEvent &event);
@@ -241,10 +241,10 @@ private:
   void onConnectionFailure() override;
 
   // MQTT::Client::Observer on GUI thread.
-  void onConnectedSync(Events::Connection &e);
-  void onDisconnectedSync(Events::Connection &e);
-  void onConnectionLostSync(Events::Connection &e);
-  void onConnectionFailureSync(Events::Connection &e);
+  void onConnectedSync(Events::Connection &event);
+  void onDisconnectedSync(Events::Connection &event);
+  void onConnectionLostSync(Events::Connection &event);
+  void onConnectionFailureSync(Events::Connection &event);
 
   // Models::History::Observer interface.
   void onMessage(wxDataViewItem item) override;

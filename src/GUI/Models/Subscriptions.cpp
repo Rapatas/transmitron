@@ -143,12 +143,12 @@ nlohmann::json Subscriptions::toJson() const
 {
   nlohmann::json result;
 
-  for (const auto &s : mSubscriptions)
+  for (const auto &[id, subscription] : mSubscriptions)
   {
     result.push_back({
-      {"id", s.first},
-      {"filter", s.second->getFilter()},
-      {"qos", s.second->getQos()},
+      {"id", id},
+      {"filter", subscription->getFilter()},
+      {"qos", subscription->getQos()},
     });
   }
 
@@ -189,9 +189,9 @@ void Subscriptions::setColor(wxDataViewItem item, const wxColor &color)
 {
   auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   sub->setColor(color);
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onColorSet(sub->getId(), color);
+    observer->onColorSet(sub->getId(), color);
   }
   ValueChanged(item, (unsigned)Column::Icon);
 }
@@ -200,9 +200,9 @@ void Subscriptions::unmute(wxDataViewItem item)
 {
   auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   sub->setMuted(false);
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onUnmuted(sub->getId());
+    observer->onUnmuted(sub->getId());
   }
   ItemChanged(item);
 }
@@ -210,9 +210,9 @@ void Subscriptions::unmute(wxDataViewItem item)
 void Subscriptions::clear(wxDataViewItem item)
 {
   auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onCleared(sub->getId());
+    observer->onCleared(sub->getId());
   }
   ItemChanged(item);
 }
@@ -221,9 +221,9 @@ void Subscriptions::mute(wxDataViewItem item)
 {
   auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   sub->setMuted(true);
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onMuted(sub->getId());
+    observer->onMuted(sub->getId());
   }
   ItemChanged(item);
 }
@@ -244,9 +244,9 @@ void Subscriptions::solo(wxDataViewItem item)
 
   auto &sub = mSubscriptions.at(mRemap.at(GetRow(item)));
   sub->setMuted(false);
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onSolo(sub->getId());
+    observer->onSolo(sub->getId());
   }
   ItemChanged(item);
 }
@@ -322,14 +322,14 @@ void Subscriptions::GetValueByRow(
   switch ((Column)col) {
     case Column::Icon: {
 
-      wxBitmap b(SubscriptionIconHeight, SubscriptionIconWidth);
+      wxBitmap bitmap(SubscriptionIconHeight, SubscriptionIconWidth);
       wxMemoryDC mem;
-      mem.SelectObject(b);
+      mem.SelectObject(bitmap);
       mem.SetBackground(wxBrush(sub->getColor()));
       mem.Clear();
       mem.SelectObject(wxNullBitmap);
 
-      variant << b;
+      variant << bitmap;
     } break;
     case Column::Topic: {
       const auto utf8 = sub->getFilter();
@@ -365,11 +365,11 @@ bool Subscriptions::SetValueByRow(
   return false;
 }
 
-void Subscriptions::onSubscribed(Events::Subscription &/* e */) {}
+void Subscriptions::onSubscribed(Events::Subscription &/* event */) {}
 
-void Subscriptions::onUnsubscribed(Events::Subscription &e)
+void Subscriptions::onUnsubscribed(Events::Subscription &event)
 {
-  const auto id = e.getSubscriptionId();
+  const auto id = event.getSubscriptionId();
   const auto it = std::find(
     std::begin(mRemap),
     std::end(mRemap),
@@ -381,19 +381,19 @@ void Subscriptions::onUnsubscribed(Events::Subscription &e)
     return;
   }
   const auto index = (size_t)std::distance(std::begin(mRemap), it);
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onUnsubscribed(id);
+    observer->onUnsubscribed(id);
   }
   mSubscriptions.erase(id);
   mRemap.erase(it);
   RowDeleted((unsigned)index);
 }
 
-void Subscriptions::onMessage(Events::Subscription &e)
+void Subscriptions::onMessage(Events::Subscription &event)
 {
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onMessage(e.getSubscriptionId(), e.getMessage());
+    observer->onMessage(event.getSubscriptionId(), event.getMessage());
   }
 }

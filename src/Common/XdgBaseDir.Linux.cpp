@@ -19,8 +19,8 @@ std::string XdgBaseDir::readHome()
   {
     return home;
   }
-  struct passwd *pw = getpwuid(getuid());
-  return pw->pw_dir;
+  struct passwd *pwd = getpwuid(getuid());
+  return pwd->pw_dir;
 }
 
 std::string XdgBaseDir::readConfigHome()

@@ -14,20 +14,20 @@ constexpr uint8_t MaxSingleDigit = 9;
 
 using namespace Rapatas::Transmitron::Common;
 
-bool Url::encodable(char c)
+bool Url::encodable(char value)
 {
   return !(false // NOLINT
-    || isalnum(c) != 0
-    || c == '-'
-    || c == '_'
-    || c == ','
-    || c == '.'
+    || isalnum(value) != 0
+    || value == '-'
+    || value == '_'
+    || value == ','
+    || value == '.'
   );
 }
 
-bool Url::isHexChar(char c)
+bool Url::isHexChar(char value)
 {
-  return isdigit(c) != 0 || (c >= 'A' && c <= 'F');
+  return isdigit(value) != 0 || (value >= 'A' && value <= 'F');
 }
 
 std::string Url::encode(const std::string &data)
@@ -35,9 +35,9 @@ std::string Url::encode(const std::string &data)
   const auto encodeCharCount = (size_t)std::count_if(
     std::begin(data),
     std::end(data),
-    [](char c)
+    [](char value)
     {
-      return encodable(c);
+      return encodable(value);
     }
   );
 
@@ -45,25 +45,25 @@ std::string Url::encode(const std::string &data)
   std::string result;
   result.resize(length);
 
-  size_t i = 0;
-  for (const auto &c : data)
+  size_t index = 0;
+  for (const auto &value : data)
   {
-    if (!encodable(c))
+    if (!encodable(value))
     {
-      result[i++] = c;
+      result[index++] = value;
       continue;
     }
 
-    const uint8_t a = (c & NibbleFirst) >> 4;
-    const uint8_t b = c & NibbleSeccond;
+    const uint8_t first = (value & NibbleFirst) >> 4;
+    const uint8_t second = value & NibbleSeccond;
 
-    result[i++] = '%';
-    result[i++] = a <= MaxSingleDigit
-      ? (char)(a + AsciiOffsetDigit)
-      : (char)(a + AsciiOffsetChar);
-    result[i++] = b <= MaxSingleDigit
-      ? (char)(b + AsciiOffsetDigit)
-      : (char)(b + AsciiOffsetChar);
+    result[index++] = '%';
+    result[index++] = first <= MaxSingleDigit
+      ? (char)(first + AsciiOffsetDigit)
+      : (char)(first + AsciiOffsetChar);
+    result[index++] = second <= MaxSingleDigit
+      ? (char)(second + AsciiOffsetDigit)
+      : (char)(second + AsciiOffsetChar);
   }
 
   return result;
@@ -81,35 +81,35 @@ std::string Url::decode(const std::string &data)
   std::string result;
   result.resize(length);
 
-  auto charToNibble = [](char c)
+  auto charToNibble = [](char value)
   {
-    if (!isHexChar(c))
+    if (!isHexChar(value))
     {
       const auto msg = fmt::format(
         "Unexpected non-printable ASCII char '0x{:X}' '{}'",
-        (uint8_t)c,
-        c
+        (uint8_t)value,
+        value
       );
       throw std::runtime_error(msg.c_str());
     }
-    return (c >= '0' && c <= '9')
-      ? (uint8_t)(c - AsciiOffsetDigit)
-      : (uint8_t)(c - AsciiOffsetChar);
+    return (value >= '0' && value <= '9')
+      ? (uint8_t)(value - AsciiOffsetDigit)
+      : (uint8_t)(value - AsciiOffsetChar);
   };
 
-  size_t i = 0;
+  size_t index = 0;
   for (auto it = data.begin(); it != data.end(); )
   {
     if (*it != '%')
     {
-      result[i++] = *it;
+      result[index++] = *it;
       it++;
       continue;
     }
     ++it;
-    const uint8_t a = charToNibble(*it++);
-    const uint8_t b = charToNibble(*it++);
-    result[i++] = (char)((a << 4) + b);
+    const uint8_t first = charToNibble(*it++);
+    const uint8_t second = charToNibble(*it++);
+    result[index++] = (char)((first << 4) + second);
   }
 
   return result;

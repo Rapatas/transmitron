@@ -127,8 +127,8 @@ private:
     {"Binary", Format::Binary},
   };
 
-  void onQosClicked(wxMouseEvent &e);
-  void onRetainedClicked(wxMouseEvent &e);
+  void onQosClicked(wxMouseEvent &event);
+  void onRetainedClicked(wxMouseEvent &event);
 
   void setupScintilla();
   void setStyle(Format format);

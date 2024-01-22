@@ -42,9 +42,9 @@ Arguments Arguments::handleArgs(int argc, char **argv)
   recordingFileOpt->option_text(".TMRC");
 
   try { args.parse(argc, argv); }
-  catch (const CLI::ParseError &e)
+  catch (const CLI::ParseError &event)
   {
-    args.exit(e);
+    args.exit(event);
     result.exit = true;
   }
 

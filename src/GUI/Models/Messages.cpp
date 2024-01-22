@@ -454,12 +454,12 @@ void Messages::loadDirectoryRecursive(
     {
       decoded = Url::decode(path.stem().string());
     }
-    catch (std::runtime_error &e)
+    catch (std::runtime_error &error)
     {
       mLogger->error(
         "Could not decode '{}': {}",
         path.string(),
-        e.what()
+        error.what()
       );
       return;
     }
@@ -513,12 +513,12 @@ void Messages::loadMessage(
   {
     decoded = Url::decode(path.stem().string());
   }
-  catch (std::runtime_error &e)
+  catch (std::runtime_error &error)
   {
     mLogger->error(
       "Could not decode '{}': {}",
       path.string(),
-      e.what()
+      error.what()
     );
     return;
   }
@@ -544,8 +544,8 @@ void Messages::loadMessage(
       return;
     }
 
-    auto j = nlohmann::json::parse(sbuffer);
-    message = MQTT::Message::fromJson(j);
+    auto data = nlohmann::json::parse(sbuffer);
+    message = MQTT::Message::fromJson(data);
   }
 
   Node newNode {
@@ -823,9 +823,9 @@ unsigned Messages::GetChildren(
 
   const auto &node = mNodes.at(id);
 
-  for (auto i : node.children)
+  for (auto childId : node.children)
   {
-    array.Add(toItem(i));
+    array.Add(toItem(childId));
   }
   return (unsigned)node.children.size();
 }

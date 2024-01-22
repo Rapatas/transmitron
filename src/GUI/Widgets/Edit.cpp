@@ -64,8 +64,8 @@ Edit::Edit(
   );
   mPublish->SetToolTip("Publish");
   mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
-    auto *e = new Events::Edit(Events::EDIT_PUBLISH);
-    wxQueueEvent(this, e);
+    auto *event = new Events::Edit(Events::EDIT_PUBLISH);
+    wxQueueEvent(this, event);
   });
 
   setupScintilla();
@@ -79,8 +79,8 @@ Edit::Edit(
   );
   mSaveMessage->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
   mSaveMessage->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
-    auto *e = new Events::Edit(Events::EDIT_SAVE_MESSAGE);
-    wxQueueEvent(this, e);
+    auto *event = new Events::Edit(Events::EDIT_SAVE_MESSAGE);
+    wxQueueEvent(this, event);
   });
 
   auto *formatLabel = new wxStaticText(
@@ -419,10 +419,10 @@ std::string Edit::formatTry(
   {
     try
     {
-      auto j = json::parse(text);
-      return j.dump(2);
+      auto data = json::parse(text);
+      return data.dump(2);
     }
-    catch (std::exception &e)
+    catch (std::exception &event)
     {}
   }
 
@@ -432,9 +432,9 @@ std::string Edit::formatTry(
     auto res = doc.Parse(text.c_str());
     if (res == tinyxml2::XMLError::XML_SUCCESS)
     {
-      tinyxml2::XMLPrinter p;
-      doc.Print(&p);
-      return p.CStr();
+      tinyxml2::XMLPrinter printer;
+      doc.Print(&printer);
+      return printer.CStr();
     }
   }
 
@@ -454,6 +454,7 @@ Edit::Format Edit::formatGuess(const std::string &text)
     return Format::Text;
   }
 
+  // NOLINTNEXTLINE(readability-identifier-length)
   const char c = text[0];
 
   if (c == '<')
@@ -488,8 +489,8 @@ void Edit::onFormatSelected(wxCommandEvent &/* event */)
 
 void Edit::onTopicCtrlReturn(Events::TopicCtrl &/* event */)
 {
-  auto *e = new Events::Edit(Events::EDIT_PUBLISH);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Edit(Events::EDIT_PUBLISH);
+  wxQueueEvent(this, event);
 }
 
 std::string Edit::getTopic() const
@@ -555,9 +556,9 @@ void Edit::setQos(MQTT::QoS qos)
   mQoS = qos;
 }
 
-void Edit::onQosClicked(wxMouseEvent &e)
+void Edit::onQosClicked(wxMouseEvent &event)
 {
-  e.Skip();
+  event.Skip();
   if (mReadOnly) { return; }
 
   switch (mQoS)
@@ -568,9 +569,9 @@ void Edit::onQosClicked(wxMouseEvent &e)
   }
 }
 
-void Edit::onRetainedClicked(wxMouseEvent &e)
+void Edit::onRetainedClicked(wxMouseEvent &event)
 {
-  e.Skip();
+  event.Skip();
   if (mReadOnly) { return; }
 
   setRetained(!mRetained);

@@ -345,14 +345,14 @@ void App::createHomepageTab(size_t index)
   homepage->Bind(Events::PROFILE_CREATE, &App::onProfileCreate, this);
   homepage->Bind(Events::PROFILE_EDIT, &App::onProfileEdit, this);
 
-  homepage->Bind(Events::CONNECTION_REQUESTED, [this](Events::Connection e){
-    if (e.GetSelection() == wxNOT_FOUND)
+  homepage->Bind(Events::CONNECTION_REQUESTED, [this](Events::Connection event){
+    if (event.GetSelection() == wxNOT_FOUND)
     {
-      e.Skip();
+      event.Skip();
       return;
     }
 
-    const auto profileItem = e.getProfile();
+    const auto profileItem = event.getProfile();
     openProfile(profileItem);
   });
 }
@@ -360,14 +360,14 @@ void App::createHomepageTab(size_t index)
 void App::createSettingsTab()
 {
   mSettingsTab = new Tabs::Settings(mNote, LabelFontInfo, mOptionsHeight, mProfilesModel, mLayoutsModel);
-  mSettingsTab->Bind(Events::CONNECTION_REQUESTED, [this](Events::Connection e){
-    if (e.GetSelection() == wxNOT_FOUND)
+  mSettingsTab->Bind(Events::CONNECTION_REQUESTED, [this](Events::Connection event){
+    if (event.GetSelection() == wxNOT_FOUND)
     {
-      e.Skip();
+      event.Skip();
       return;
     }
 
-    const auto profileItem = e.getProfile();
+    const auto profileItem = event.getProfile();
     openProfile(profileItem);
   });
   mNote->AddPage(mSettingsTab, "", false, *bin2cGear18x18());
@@ -414,13 +414,13 @@ Common::fs::path App::createCacheDir()
 
 void App::setupIcon()
 {
-  Common::fs::path p = fmt::format(
+  Common::fs::path path = fmt::format(
     "{}/share/transmitron/transmitron.ico",
     getInstallPrefix().string()
   );
-  p.make_preferred();
-  mLogger->debug("Loading icon from {}", p.string());
-  mFrame->SetIcons(wxIconBundle(p.string()));
+  path.make_preferred();
+  mLogger->debug("Loading icon from {}", path.string());
+  mFrame->SetIcons(wxIconBundle(path.string()));
 }
 
 Common::fs::path App::getExecutablePath()
@@ -441,9 +441,9 @@ Common::fs::path App::getExecutablePath()
 #endif
   };
 
-  static const Common::fs::path p = pathfinder();
-  mLogger->info("Executable path: {}", p.string());
-  return p;
+  static const Common::fs::path path = pathfinder();
+  mLogger->info("Executable path: {}", path.string());
+  return path;
 }
 
 Common::fs::path App::getInstallPrefix()

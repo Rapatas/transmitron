@@ -188,10 +188,10 @@ void Layouts::onLayoutSelected(const std::string &value)
   mCurrentSelection = item;
   const auto perspective = mLayoutsModel->getPerspective(item);
 
-  auto *e = new Events::Layout(Events::LAYOUT_SELECTED);
-  e->setPerspective(perspective);
-  e->setItem(item);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Layout(Events::LAYOUT_SELECTED);
+  event->setPerspective(perspective);
+  event->setItem(item);
+  wxQueueEvent(this, event);
 }
 
 void Layouts::onLayoutAdded(Events::Layout &event)
@@ -213,8 +213,8 @@ void Layouts::onLayoutAdded(Events::Layout &event)
     mLayoutsLocked->Hide();
     mLayoutsEdit->Show();
     mSizer->Layout();
-    auto *e = new Events::Layout(Events::LAYOUT_RESIZED);
-    wxQueueEvent(this, e);
+    auto *event = new Events::Layout(Events::LAYOUT_RESIZED);
+    wxQueueEvent(this, event);
 
     mLayoutsEdit->SelectAll();
     mLayoutsEdit->SetFocus();
@@ -281,6 +281,6 @@ void Layouts::resize()
 
   mSizer->Layout();
 
-  auto *e = new Events::Layout(Events::LAYOUT_RESIZED);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Layout(Events::LAYOUT_RESIZED);
+  wxQueueEvent(this, event);
 }

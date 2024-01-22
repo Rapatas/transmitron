@@ -32,24 +32,24 @@ Subscription::Subscription(
 
 void Subscription::onSubscribed()
 {
-  auto *e = new Events::Subscription(Events::SUBSCRIPTION_SUBSCRIBED);
-  e->setId(mId);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Subscription(Events::SUBSCRIPTION_SUBSCRIBED);
+  event->setId(mId);
+  wxQueueEvent(this, event);
 }
 
 void Subscription::onUnsubscribed()
 {
-  auto *e = new Events::Subscription(Events::SUBSCRIPTION_UNSUBSCRIBED);
-  e->setId(mId);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Subscription(Events::SUBSCRIPTION_UNSUBSCRIBED);
+  event->setId(mId);
+  wxQueueEvent(this, event);
 }
 
 void Subscription::onMessage(const MQTT::Message &message)
 {
-  auto *e = new Events::Subscription(Events::SUBSCRIPTION_RECEIVED);
-  e->setMessage(message);
-  e->setId(mId);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Subscription(Events::SUBSCRIPTION_RECEIVED);
+  event->setMessage(message);
+  event->setId(mId);
+  wxQueueEvent(this, event);
 }
 
 size_t Subscription::getId() const
@@ -95,6 +95,6 @@ bool Subscription::getMuted() const
 
 wxColor Subscription::colorFromString(const std::string &data)
 {
-  const size_t x = std::hash<std::string>{}(data);
-  return Common::Helpers::colorFromNumber(x);
+  const size_t hash = std::hash<std::string>{}(data);
+  return Common::Helpers::colorFromNumber(hash);
 }

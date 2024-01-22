@@ -23,14 +23,14 @@ Client::Client()
   mLogger = Common::Log::create("MQTT::Client");
 }
 
-size_t Client::attachObserver(Observer *o)
+size_t Client::attachObserver(Observer *observer)
 {
   size_t id = 0;
   do {
     id = (size_t)std::abs(rand());
   } while (mObservers.find(id) != std::end(mObservers));
 
-  return mObservers.insert(std::make_pair(id, o)).first->first;
+  return mObservers.insert(std::make_pair(id, observer)).first->first;
 }
 
 void Client::detachObserver(size_t id)
@@ -62,9 +62,9 @@ void Client::connect()
     mClient->set_callback(*this);
     mClient->connect(mConnectOptions, nullptr, *this);
   }
-  catch (const mqtt::exception& e)
+  catch (const mqtt::exception& event)
   {
-    mLogger->error("Connection failed: {}", e.what());
+    mLogger->error("Connection failed: {}", event.what());
     exit(1);
   }
 }
@@ -260,9 +260,9 @@ void Client::onSuccessConnect(const mqtt::token& /* tok */)
 
 void Client::onSuccessDisconnect(const mqtt::token& /* tok */)
 {
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onDisconnected();
+    observer->onDisconnected();
   }
 }
 
@@ -427,9 +427,9 @@ void Client::connected(const std::string& /* cause */)
   mLogger->info("Connected!");
   mRetries = 0;
   mShouldReconnect = true;
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onConnected();
+    observer->onConnected();
   }
 
   mLogger->info("Subscribing to topics:");
@@ -443,9 +443,9 @@ void Client::connected(const std::string& /* cause */)
 void Client::connection_lost(const std::string& cause)
 {
   mLogger->info("Connection lost: {}", cause);
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onConnectionLost();
+    observer->onConnectionLost();
   }
   cleanSubscriptions();
   reconnect();
@@ -477,9 +477,9 @@ void Client::reconnect()
     || !mBrokerOptions.getAutoReconnect()
     || ++mRetries > mBrokerOptions.getMaxReconnectRetries()
   ) {
-    for (const auto &o : mObservers)
+    for (const auto &[id, observer] : mObservers)
     {
-      o.second->onConnectionFailure();
+      observer->onConnectionFailure();
     }
     return;
   }
@@ -496,9 +496,9 @@ void Client::reconnect()
 
   if (mCanceled)
   {
-    for (const auto &o : mObservers)
+    for (const auto &[id, observer] : mObservers)
     {
-      o.second->onDisconnected();
+      observer->onDisconnected();
     }
     return;
   }

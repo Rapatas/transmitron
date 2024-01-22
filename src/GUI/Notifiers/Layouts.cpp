@@ -15,9 +15,9 @@ bool Layouts::Cleared()
 
 bool Layouts::ItemChanged(const wxDataViewItem &item)
 {
-  auto *e = new Events::Layout(Events::LAYOUT_CHANGED);
-  e->setItem(item);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Layout(Events::LAYOUT_CHANGED);
+  event->setItem(item);
+  wxQueueEvent(this, event);
   return true;
 }
 
@@ -35,9 +35,9 @@ bool Layouts::ItemAdded(
   const wxDataViewItem &/* parent */,
   const wxDataViewItem &item
 ) {
-  auto *e = new Events::Layout(Events::LAYOUT_ADDED);
-  e->setItem(item);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Layout(Events::LAYOUT_ADDED);
+  event->setItem(item);
+  wxQueueEvent(this, event);
   return true;
 }
 
@@ -45,8 +45,8 @@ bool Layouts::ItemDeleted(
   const wxDataViewItem &/* parent */,
   const wxDataViewItem &/* item */
 ) {
-  auto *e = new Events::Layout(Events::LAYOUT_REMOVED);
-  wxQueueEvent(this, e);
+  auto *event = new Events::Layout(Events::LAYOUT_REMOVED);
+  wxQueueEvent(this, event);
   return true;
 }
 
