@@ -78,7 +78,7 @@ void TopicCtrl::addKnownTopics(
 
 void TopicCtrl::onContextSelected(wxCommandEvent &event)
 {
-  switch ((ContextIDs)event.GetId())
+  switch (static_cast<ContextIDs>(event.GetId()))
   {
     case ContextIDs::Copy: {
       if (wxTheClipboard->Open())
@@ -86,8 +86,8 @@ void TopicCtrl::onContextSelected(wxCommandEvent &event)
         long fromIn = 0;
         long toIn = 0;
         GetSelection(&fromIn, &toIn);
-        const auto since = (size_t)fromIn;
-        const auto until   = (size_t)toIn;
+        const auto since = static_cast<size_t>(fromIn);
+        const auto until = static_cast<size_t>(toIn);
 
         auto topic = GetValue();
         if (since != until)
@@ -186,7 +186,7 @@ void TopicCtrl::onDoubleClicked(wxMouseEvent &event)
 void TopicCtrl::onContext(wxContextMenuEvent &event)
 {
   wxMenu menu;
-  auto *item = new wxMenuItem(nullptr, (unsigned)ContextIDs::Copy, "Copy");
+  auto *item = new wxMenuItem(nullptr, static_cast<unsigned>(ContextIDs::Copy), "Copy");
   item->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY));
   menu.Append(item);
   PopupMenu(&menu);
@@ -337,7 +337,7 @@ void TopicCtrl::popupShow()
   mAutoCompleteTopic = new wxDataViewColumn(
     L"topic",
     new wxDataViewTextRenderer(),
-    (unsigned)Models::KnownTopics::Column::Topic,
+    static_cast<unsigned>(Models::KnownTopics::Column::Topic),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );

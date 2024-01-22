@@ -32,14 +32,14 @@ bool Url::isHexChar(char value)
 
 std::string Url::encode(const std::string &data)
 {
-  const auto encodeCharCount = (size_t)std::count_if(
+  const auto encodeCharCount = static_cast<size_t>(std::count_if(
     std::begin(data),
     std::end(data),
     [](char value)
     {
       return encodable(value);
     }
-  );
+  ));
 
   const size_t length = (encodeCharCount * 3) + (data.length() - encodeCharCount);
   std::string result;
@@ -54,16 +54,18 @@ std::string Url::encode(const std::string &data)
       continue;
     }
 
+    // NOLINTBEGIN(hicpp-signed-bitwise)
     const uint8_t first = (value & NibbleFirst) >> 4;
     const uint8_t second = value & NibbleSeccond;
 
     result[index++] = '%';
     result[index++] = first <= MaxSingleDigit
-      ? (char)(first + AsciiOffsetDigit)
-      : (char)(first + AsciiOffsetChar);
+      ? static_cast<char>(first + AsciiOffsetDigit)
+      : static_cast<char>(first + AsciiOffsetChar);
     result[index++] = second <= MaxSingleDigit
-      ? (char)(second + AsciiOffsetDigit)
-      : (char)(second + AsciiOffsetChar);
+      ? static_cast<char>(second + AsciiOffsetDigit)
+      : static_cast<char>(second + AsciiOffsetChar);
+    // NOLINTEND(hicpp-signed-bitwise)
   }
 
   return result;
@@ -71,11 +73,11 @@ std::string Url::encode(const std::string &data)
 
 std::string Url::decode(const std::string &data)
 {
-  const auto encodeCharCount = (size_t)std::count(
+  const auto encodeCharCount = static_cast<size_t>(std::count(
     std::begin(data),
     std::end(data),
      '%'
-  );
+  ));
 
   const size_t length = (data.length() - encodeCharCount * 3) + encodeCharCount;
   std::string result;
@@ -87,14 +89,14 @@ std::string Url::decode(const std::string &data)
     {
       const auto msg = fmt::format(
         "Unexpected non-printable ASCII char '0x{:X}' '{}'",
-        (uint8_t)value,
+        value,
         value
       );
       throw std::runtime_error(msg.c_str());
     }
     return (value >= '0' && value <= '9')
-      ? (uint8_t)(value - AsciiOffsetDigit)
-      : (uint8_t)(value - AsciiOffsetChar);
+      ? static_cast<uint8_t>(value - AsciiOffsetDigit)
+      : static_cast<uint8_t>(value - AsciiOffsetChar);
   };
 
   size_t index = 0;
@@ -109,7 +111,7 @@ std::string Url::decode(const std::string &data)
     ++it;
     const uint8_t first = charToNibble(*it++);
     const uint8_t second = charToNibble(*it++);
-    result[index++] = (char)((first << 4) + second);
+    result[index++] = static_cast<char>((first << 4U) + second);
   }
 
   return result;

@@ -147,7 +147,12 @@ Edit::Edit(
   mBottom->Add(formatLabel, 0, wxALIGN_CENTER_VERTICAL);
   mBottom->Add(mFormatSelect, 0, wxEXPAND);
   mVsizer->Add(mTop, 0, wxEXPAND);
-  mVsizer->Add(mInfoLine, 0, (int)wxEXPAND | (int)wxLEFT, timestampBorderPx);
+  mVsizer->Add(
+    mInfoLine,
+    0,
+    static_cast<int>(wxEXPAND) | static_cast<int>(wxLEFT),
+    timestampBorderPx
+  );
   mVsizer->Add(mText, 1, wxEXPAND);
   mVsizer->Add(mBottom, 0, wxEXPAND);
 
@@ -169,7 +174,7 @@ void Edit::setupScintilla()
   constexpr int MarginFoldIndex = 1;
   constexpr int MarginFoldWidth = 20;
   mText->SetMarginType(MarginFoldIndex, wxSTC_MARGIN_SYMBOL);
-  mText->SetMarginMask(MarginFoldIndex, (int)wxSTC_MASK_FOLDERS);
+  mText->SetMarginMask(MarginFoldIndex, static_cast<int>(wxSTC_MASK_FOLDERS));
   mText->SetMarginWidth(MarginFoldIndex, MarginFoldWidth);
   mText->SetMarginSensitive(MarginFoldIndex, true);
   mText->SetAutomaticFold(wxSTC_AUTOMATICFOLD_CLICK);
@@ -462,7 +467,7 @@ Edit::Format Edit::formatGuess(const std::string &text)
   }
 
   if (
-    (bool)isdigit(c)
+    isdigit(c) != 0
     || c == '"'
     || c == '{'
     || c == '['
@@ -583,9 +588,9 @@ const std::map<Edit::Theme, Edit::ThemeStyles> &Edit::styles()
     auto color = [](uint8_t red, uint8_t green, uint8_t blue)
     {
       return 0
-        | (uint32_t)(red   << (ByteSize * 0))
-        | (uint32_t)(green << (ByteSize * 1))
-        | (uint32_t)(blue  << (ByteSize * 2))
+        | static_cast<uint32_t>(red   << (ByteSize * 0))
+        | static_cast<uint32_t>(green << (ByteSize * 1))
+        | static_cast<uint32_t>(blue  << (ByteSize * 2))
       ;
     };
 

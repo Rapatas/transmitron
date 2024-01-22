@@ -82,14 +82,14 @@ void Homepage::setupProfiles(wxPanel *parent)
   wxDataViewColumn* const name = new wxDataViewColumn(
     "Name",
     new wxDataViewTextRenderer(),
-    (unsigned)Models::Profiles::Column::Name,
+    static_cast<unsigned>(Models::Profiles::Column::Name),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
   wxDataViewColumn* const url = new wxDataViewColumn(
     "Address",
     new wxDataViewTextRenderer(),
-    (unsigned)Models::Profiles::Column::URL,
+    static_cast<unsigned>(Models::Profiles::Column::URL),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
@@ -314,7 +314,7 @@ void Homepage::onProfileContext(wxDataViewEvent &event)
 
     auto *connect = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::ProfilesConnect,
+      static_cast<unsigned>(ContextIDs::ProfilesConnect),
       "Connect"
     );
     connect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
@@ -322,7 +322,7 @@ void Homepage::onProfileContext(wxDataViewEvent &event)
 
     auto *edit = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::ProfilesEdit,
+      static_cast<unsigned>(ContextIDs::ProfilesEdit),
       "Edit"
     );
     edit->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
@@ -334,7 +334,7 @@ void Homepage::onProfileContext(wxDataViewEvent &event)
 
     auto *create = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::ProfilesCreate,
+      static_cast<unsigned>(ContextIDs::ProfilesCreate),
       "Create profile"
     );
     create->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
@@ -347,7 +347,7 @@ void Homepage::onProfileContext(wxDataViewEvent &event)
 
 void Homepage::onContextSelected(wxCommandEvent &event)
 {
-  switch ((ContextIDs)event.GetId())
+  switch (static_cast<ContextIDs>(event.GetId()))
   {
     case ContextIDs::ProfilesConnect: onProfileConnect(event); break;
     case ContextIDs::ProfilesCreate: onProfileCreate(event); break;

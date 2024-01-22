@@ -11,14 +11,14 @@ std::vector<std::string> String::split(const std::string &data, char delim)
 
   const size_t segments = 0U
     + (data.empty() ? 1U : 0U)
-    + (size_t)std::count_if(
+    + static_cast<size_t>(std::count_if(
       std::begin(data),
       std::end(data),
       [&](char value)
       {
         return value == delim;
       }
-    );
+    ));
 
   result.reserve(segments);
 

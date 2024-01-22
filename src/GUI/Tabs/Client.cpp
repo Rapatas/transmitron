@@ -255,21 +255,21 @@ void Client::setupPanelHistory(wxWindow *parent)
   wxDataViewColumn* const icon = new wxDataViewColumn(
     L"icon",
     new wxDataViewBitmapRenderer(),
-    (unsigned)Models::History::Column::Icon,
+    static_cast<unsigned>(Models::History::Column::Icon),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
   wxDataViewColumn* const topic = new wxDataViewColumn(
     L"topic",
     new wxDataViewIconTextRenderer(),
-    (unsigned)Models::History::Column::Topic,
+    static_cast<unsigned>(Models::History::Column::Topic),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
   wxDataViewColumn* const qos = new wxDataViewColumn(
     L"qos",
     new wxDataViewBitmapRenderer(),
-    (unsigned)Models::History::Column::Qos,
+    static_cast<unsigned>(Models::History::Column::Qos),
     wxCOL_WIDTH_AUTOSIZE
   );
 
@@ -528,20 +528,20 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   wxDataViewColumn* const icon = new wxDataViewColumn(
     "icon",
     new wxDataViewBitmapRenderer(),
-    (unsigned)Models::Subscriptions::Column::Icon,
+    static_cast<unsigned>(Models::Subscriptions::Column::Icon),
     wxCOL_WIDTH_AUTOSIZE
   );
   wxDataViewColumn* const topic = new wxDataViewColumn(
     "topic",
     new wxDataViewTextRenderer(),
-    (unsigned)Models::Subscriptions::Column::Topic,
+    static_cast<unsigned>(Models::Subscriptions::Column::Topic),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
   wxDataViewColumn* const qos = new wxDataViewColumn(
     "qos",
     new wxDataViewBitmapRenderer(),
-    (unsigned)Models::Subscriptions::Column::Qos,
+    static_cast<unsigned>(Models::Subscriptions::Column::Qos),
     wxCOL_WIDTH_AUTOSIZE
   );
 
@@ -639,7 +639,7 @@ void Client::setupPanelMessages(wxWindow *parent)
   mMessageColumns.at(Messages::Column::Name) = new wxDataViewColumn(
     L"name",
     renderer,
-    (unsigned)Models::Messages::Column::Name,
+    static_cast<unsigned>(Models::Messages::Column::Name),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
@@ -1008,18 +1008,18 @@ void Client::onSubscriptionContext(wxDataViewEvent& event)
   wxMenu menu;
   if (mClient != nullptr)
   {
-    menu.Append((unsigned)ContextIDs::SubscriptionsUnsubscribe, "Unsubscribe");
-    menu.Append((unsigned)ContextIDs::SubscriptionsClear, "Clear");
+    menu.Append(static_cast<unsigned>(ContextIDs::SubscriptionsUnsubscribe), "Unsubscribe");
+    menu.Append(static_cast<unsigned>(ContextIDs::SubscriptionsClear), "Clear");
   }
-  menu.Append((unsigned)ContextIDs::SubscriptionsChangeColor, "Color change");
-  menu.Append((unsigned)ContextIDs::SubscriptionsSolo, "Solo");
+  menu.Append(static_cast<unsigned>(ContextIDs::SubscriptionsChangeColor), "Color change");
+  menu.Append(static_cast<unsigned>(ContextIDs::SubscriptionsSolo), "Solo");
   if (muted)
   {
-    menu.Append((unsigned)ContextIDs::SubscriptionsUnmute, "Unmute");
+    menu.Append(static_cast<unsigned>(ContextIDs::SubscriptionsUnmute), "Unmute");
   }
   else
   {
-    menu.Append((unsigned)ContextIDs::SubscriptionsMute, "Mute");
+    menu.Append(static_cast<unsigned>(ContextIDs::SubscriptionsMute), "Mute");
   }
   PopupMenu(&menu);
 }
@@ -1034,7 +1034,7 @@ void Client::onHistoryContext(wxDataViewEvent& event)
 
   auto *copyTopic = new wxMenuItem(
     nullptr,
-    (unsigned)ContextIDs::HistoryCopyTopic,
+    static_cast<unsigned>(ContextIDs::HistoryCopyTopic),
     "Copy Topic"
   );
   copyTopic->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY));
@@ -1042,7 +1042,7 @@ void Client::onHistoryContext(wxDataViewEvent& event)
 
   auto *copyPayload = new wxMenuItem(
     nullptr,
-    (unsigned)ContextIDs::HistoryCopyPayload,
+    static_cast<unsigned>(ContextIDs::HistoryCopyPayload),
     "Copy Payload"
   );
   copyPayload->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY));
@@ -1052,7 +1052,7 @@ void Client::onHistoryContext(wxDataViewEvent& event)
   {
     auto *edit = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::HistoryEdit,
+      static_cast<unsigned>(ContextIDs::HistoryEdit),
       "Edit"
     );
     edit->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
@@ -1060,14 +1060,14 @@ void Client::onHistoryContext(wxDataViewEvent& event)
 
     auto *resend = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::HistoryResend,
+      static_cast<unsigned>(ContextIDs::HistoryResend),
       "Re-Send"
     );
     menu.Append(resend);
 
     auto *clearRetained = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::HistoryRetainedClear,
+      static_cast<unsigned>(ContextIDs::HistoryRetainedClear),
       "Clear retained"
     );
     clearRetained->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
@@ -1076,7 +1076,7 @@ void Client::onHistoryContext(wxDataViewEvent& event)
 
   auto *save = new wxMenuItem(
     nullptr,
-    (unsigned)ContextIDs::HistorySaveMessage,
+    static_cast<unsigned>(ContextIDs::HistorySaveMessage),
     "Save Message"
   );
   save->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
@@ -1101,7 +1101,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
     {
       auto *publish = new wxMenuItem(
         nullptr,
-        (unsigned)ContextIDs::MessagePublish,
+        static_cast<unsigned>(ContextIDs::MessagePublish),
         "Publish"
       );
       menu.Append(publish);
@@ -1111,7 +1111,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
     {
       auto *overwrite = new wxMenuItem(
         nullptr,
-        (unsigned)ContextIDs::MessageOverwrite,
+        static_cast<unsigned>(ContextIDs::MessageOverwrite),
         "Overwrite"
       );
       overwrite->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE_AS));
@@ -1120,7 +1120,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
 
     auto *rename = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::MessageRename,
+      static_cast<unsigned>(ContextIDs::MessageRename),
       "Rename"
     );
     rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
@@ -1128,7 +1128,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
 
     auto *del = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::MessageDelete,
+      static_cast<unsigned>(ContextIDs::MessageDelete),
       "Delete"
     );
     del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
@@ -1141,7 +1141,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
   ) {
     auto *newFolder = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::MessageNewFolder,
+      static_cast<unsigned>(ContextIDs::MessageNewFolder),
       "New Folder"
     );
     newFolder->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW_DIR));
@@ -1149,7 +1149,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
 
     auto *newMessage = new wxMenuItem(
       nullptr,
-      (unsigned)ContextIDs::MessageNewMessage,
+      static_cast<unsigned>(ContextIDs::MessageNewMessage),
       "New Message"
     );
     newMessage->SetBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE));
@@ -1245,7 +1245,7 @@ void Client::onContextSelectedSubscriptionsChangeColor(wxCommandEvent &/* event 
   const auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
-  const auto color = Common::Helpers::colorFromNumber((size_t)std::abs(rand()));
+  const auto color = Common::Helpers::colorFromNumber(static_cast<size_t>(std::abs(rand())));
   mSubscriptionsModel->setColor(item, color);
 
   mSubscriptionsCtrl->Refresh();
@@ -1745,7 +1745,7 @@ void Client::onHistorySearchKey(wxKeyEvent &event)
   const auto isBackspace = event.GetKeyCode() == WXK_BACK;
   const auto isEnter     = event.GetKeyCode() == WXK_RETURN;
 
-  const auto isAllSelected = (since == 0 && until == (long)filter.size());
+  const auto isAllSelected = (since == 0 && until == static_cast<long>(filter.size()));
   const auto willBeEmpty   = filter.empty() || filter.size() == 1 || isAllSelected;
 
   if (isBackspace && willBeEmpty)

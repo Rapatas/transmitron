@@ -48,7 +48,7 @@ public:
   );
   wxDataViewItem createProfile();
   bool remove(wxDataViewItem item);
-  void updateQuickConnect(std::string url);
+  void updateQuickConnect(const std::string &url);
   [[nodiscard]] std::string getUniqueName() const;
 
   [[nodiscard]] const MQTT::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;

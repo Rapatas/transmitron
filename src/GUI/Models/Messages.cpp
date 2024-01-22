@@ -668,7 +668,7 @@ unsigned Messages::GetColumnCount() const
 
 wxString Messages::GetColumnType(unsigned int col) const
 {
-  switch ((Column)col)
+  switch (static_cast<Column>(col))
   {
     case Column::Name: {
       return wxDataViewIconTextRenderer::GetDefaultType();
@@ -827,7 +827,7 @@ unsigned Messages::GetChildren(
   {
     array.Add(toItem(childId));
   }
-  return (unsigned)node.children.size();
+  return static_cast<unsigned>(node.children.size());
 }
 
 Messages::Node::Id_t Messages::toId(const wxDataViewItem &item)

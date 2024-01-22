@@ -165,6 +165,7 @@ wxArrayString Layouts::getLabelArray() const
 std::vector<std::string> Layouts::getLabelVector() const
 {
   std::vector<std::string> result;
+  result.reserve(mLayouts.size());
   for (const auto &layout : mLayouts)
   {
     result.push_back(layout.second->name);
@@ -263,12 +264,12 @@ unsigned Layouts::GetChildren(
     }
   );
 
-  return (unsigned)children.size();
+  return static_cast<unsigned>(children.size());
 }
 
 unsigned Layouts::GetColumnCount() const
 {
-  return (unsigned)Column::Max;
+  return static_cast<unsigned>(Column::Max);
 }
 
 wxString Layouts::GetColumnType(unsigned int /* col */) const
@@ -303,7 +304,8 @@ void Layouts::GetValue(
   const auto id = toId(item);
   const auto &node = mLayouts.at(id);
 
-  switch ((Column)col) {
+  switch (static_cast<Column>(col))
+  {
     case Column::Name: {
       const auto &name = node->name;
       const auto wxs = wxString::FromUTF8(name.data(), name.length());
@@ -319,7 +321,7 @@ bool Layouts::SetValue(
   unsigned int col
 ) {
   const auto id = toId(item);
-  if (col != (unsigned)Column::Name) { return false; }
+  if (static_cast<Column>(col) != Column::Name) { return false; }
   if (value.GetType() != "string") { return false; }
   if (value.GetString().empty())
   {
@@ -447,10 +449,11 @@ bool Layouts::save(size_t id)
   std::ofstream output(layout->path);
   if (!output.is_open())
   {
+    const auto ec = std::error_code(errno, std::system_category());
     mLogger->error(
       "Could not save '{}':",
       layout->path.string(),
-      std::strerror(errno)
+      ec.message()
     );
     return false;
   }

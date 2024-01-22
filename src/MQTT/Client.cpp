@@ -25,12 +25,8 @@ Client::Client()
 
 size_t Client::attachObserver(Observer *observer)
 {
-  size_t id = 0;
-  do {
-    id = (size_t)std::abs(rand());
-  } while (mObservers.find(id) != std::end(mObservers));
-
-  return mObservers.insert(std::make_pair(id, observer)).first->first;
+  static size_t id = 0;
+  return mObservers.insert(std::make_pair(id++, observer)).first->first;
 }
 
 void Client::detachObserver(size_t id)
@@ -165,7 +161,7 @@ void Client::publish(
     message.topic,
     message.payload.data(),
     message.payload.size(),
-    (int)message.qos,
+    static_cast<int>(message.qos),
     message.retained,
     nullptr,
     *this
@@ -492,11 +488,11 @@ void Client::doSubscribe(size_t id)
   mLogger->info(
     "Actually subscribing: {} ({})",
     it->second->getFilter(),
-    (unsigned)it->second->getQos()
+    static_cast<int>(it->second->getQos())
   );
   mClient->subscribe(
     it->second->getFilter(),
-    (int)it->second->getQos(),
+    static_cast<int>(it->second->getQos()),
     nullptr,
     *this
   );

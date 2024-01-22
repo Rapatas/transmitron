@@ -146,7 +146,7 @@ void Layouts::onLayoutEditEnter(wxCommandEvent &/* event */)
   const auto saved = mLayoutsModel->SetValue(
     value,
     mCurrentSelection,
-    (unsigned)Models::Layouts::Column::Name
+    static_cast<unsigned>(Models::Layouts::Column::Name)
   );
 
   if (!saved)
@@ -250,7 +250,7 @@ void Layouts::onLayoutChanged(Events::Layout &/* event */)
   mLayoutsLocked->Set(options);
 
   wxVariant value;
-  mLayoutsModel->GetValue(value, mCurrentSelection, (unsigned)Models::Layouts::Column::Name);
+  mLayoutsModel->GetValue(value, mCurrentSelection, static_cast<unsigned>(Models::Layouts::Column::Name));
 
   mLayoutsEdit->SetValue(value.GetString());
   mLayoutsLocked->SetValue(value.GetString());
@@ -266,7 +266,7 @@ wxArrayString Layouts::getNames() const
   for (const auto &child : children)
   {
     wxVariant value;
-    mLayoutsModel->GetValue(value, child, (unsigned)Models::Layouts::Column::Name);
+    mLayoutsModel->GetValue(value, child, static_cast<unsigned>(Models::Layouts::Column::Name));
     result.push_back(value.GetString());
   }
   return result;

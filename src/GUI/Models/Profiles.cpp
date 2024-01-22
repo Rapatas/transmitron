@@ -202,7 +202,7 @@ bool Profiles::remove(wxDataViewItem item)
   return true;
 }
 
-void Profiles::updateQuickConnect(std::string url)
+void Profiles::updateQuickConnect(const std::string &url)
 {
   const auto parts = String::split(url, ':');
 
@@ -309,7 +309,7 @@ wxDataViewItem Profiles::createProfile()
   if (!fs::exists(path) && !fs::create_directory(path))
   {
     mLogger->warn("Could not create profile '{}' directory", path);
-    return wxDataViewItem(0);
+    return wxDataViewItem(nullptr);
   }
 
   wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
@@ -396,7 +396,7 @@ wxObjectDataPtr<KnownTopics> Profiles::getTopicsPublished(wxDataViewItem item)
 
 unsigned Profiles::GetColumnCount() const
 {
-  return (unsigned)Column::Max;
+  return static_cast<unsigned>(Column::Max);
 }
 
 wxString Profiles::GetColumnType(unsigned int /* col */) const
@@ -411,7 +411,8 @@ void Profiles::GetValue(
 ) const {
   const auto &profile = mProfiles.at(toId(item));
 
-  switch ((Column)col) {
+  switch (static_cast<Column>(col))
+  {
     case Column::Name: {
       const auto &name = profile->name;
       const auto wxs = wxString::FromUTF8(name.data(), name.length());
@@ -504,7 +505,7 @@ unsigned Profiles::GetChildren(
     }
   );
 
-  return (unsigned)children.size();
+  return static_cast<unsigned>(children.size());
 }
 
 bool Profiles::save(size_t id)
@@ -530,10 +531,11 @@ bool Profiles::saveOptionsBroker(size_t id)
   std::ofstream output(brokerOptionsFilepath);
   if (!output.is_open())
   {
+    const auto ec = std::error_code(errno, std::system_category());
     mLogger->error(
       "Could not save '{}':",
       brokerOptionsFilepath,
-      std::strerror(errno)
+      ec.message()
     );
     return false;
   }
@@ -556,10 +558,11 @@ bool Profiles::saveOptionsClient(size_t id)
   std::ofstream output(clientOptionsFilepath);
   if (!output.is_open())
   {
+    const auto ec = std::error_code(errno, std::system_category());
     mLogger->error(
       "Could not save '{}':",
       clientOptionsFilepath,
-      std::strerror(errno)
+      ec.message()
     );
     return false;
   }

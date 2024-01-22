@@ -19,6 +19,8 @@ wxColor Common::Helpers::colorFromNumber(size_t number)
   constexpr uint8_t ByteSize = std::numeric_limits<uint8_t>::digits;
 
   // NOLINTBEGIN(readability-identifier-length)
+  // NOLINTBEGIN(google-readability-casting)
+  // NOLINTBEGIN(hicpp-signed-bitwise)
   uint8_t r = ((number >> (ByteSize * 0)) & ByteMask);
   uint8_t g = ((number >> (ByteSize * 1)) & ByteMask);
   uint8_t b = ((number >> (ByteSize * 2)) & ByteMask);
@@ -28,6 +30,8 @@ wxColor Common::Helpers::colorFromNumber(size_t number)
   if (b < MinColorChannel) { b = (uint8_t)(b + MinColorChannel); }
 
   return {r, g, b};
+  // NOLINTEND(hicpp-signed-bitwise)
+  // NOLINTEND(google-readability-casting)
   // NOLINTEND(readability-identifier-length)
 }
 
@@ -36,7 +40,8 @@ std::string Common::Helpers::timeToString(
 ) {
   const auto floored = floor<milliseconds>(timestamp);
   const std::time_t nowc = std::chrono::system_clock::to_time_t(floored);
-  std::tm nowtm = *std::localtime(&nowc);
+  std::tm nowtm{};
+  ::localtime_r(&nowc, &nowtm);
   std::stringstream sstream;
   sstream << std::put_time(&nowtm, "%Y-%m-%d %H:%M:%S");
   return sstream.str();
@@ -47,7 +52,8 @@ std::string Common::Helpers::timeToFilename(
 ) {
   const auto floored = floor<milliseconds>(timestamp);
   const std::time_t nowc = std::chrono::system_clock::to_time_t(floored);
-  std::tm nowtm = *std::localtime(&nowc);
+  std::tm nowtm{};
+  ::localtime_r(&nowc, &nowtm);
   std::stringstream sstream;
   sstream << std::put_time(&nowtm, "%Y%m%dT%H%M%S");
   return sstream.str();
@@ -84,7 +90,7 @@ std::string Common::Helpers::hexDump(
         line += "  ";
         for (const auto &byte : buff)
         {
-          line += (char)byte;
+          line += static_cast<char>(byte);
         }
         result += line + '\n';
         line.clear();
@@ -111,7 +117,7 @@ std::string Common::Helpers::hexDump(
   line += "  ";
   for (const auto &byte : buff)
   {
-    line += (char)byte;
+    line += static_cast<char>(byte);
   }
   result += line + '\n';
 

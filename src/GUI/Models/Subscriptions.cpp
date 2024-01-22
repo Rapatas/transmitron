@@ -34,12 +34,8 @@ Subscriptions::Subscriptions()
 
 size_t Subscriptions::attachObserver(Observer *observer)
 {
-  size_t id = 0;
-  do {
-    id = (size_t)std::abs(rand());
-  } while (mObservers.find(id) != std::end(mObservers));
-
-  return mObservers.insert(std::make_pair(id, observer)).first->first;
+  static size_t id = 0;
+  return mObservers.insert(std::make_pair(id++, observer)).first->first;
 }
 
 bool Subscriptions::detachObserver(size_t id)
@@ -72,7 +68,8 @@ bool Subscriptions::load(const std::string &recording)
   std::ifstream input(recording);
   if (!input.is_open())
   {
-    mLogger->warn("Could not open '{}': {}", recording, std::strerror(errno));
+    const auto ec = std::error_code(errno, std::system_category());
+    mLogger->warn("Could not open '{}': {}", recording, ec.message());
     return false;
   }
 
@@ -99,7 +96,7 @@ bool Subscriptions::load(const std::string &recording)
 
   for (const auto &sub : *subscriptionsIt)
   {
-    MQTT::Subscription::Id_t id;
+    MQTT::Subscription::Id_t id{};
     std::string filter;
     MQTT::QoS qos = MQTT::QoS::AtLeastOnce;
 
@@ -193,7 +190,7 @@ void Subscriptions::setColor(wxDataViewItem item, const wxColor &color)
   {
     observer->onColorSet(sub->getId(), color);
   }
-  ValueChanged(item, (unsigned)Column::Icon);
+  ValueChanged(item, static_cast<unsigned>(Column::Icon));
 }
 
 void Subscriptions::unmute(wxDataViewItem item)
@@ -236,9 +233,10 @@ void Subscriptions::solo(wxDataViewItem item)
   }
 
   wxDataViewItemArray array;
-  for (size_t i = 0; i != mRemap.size(); ++i)
+  array.reserve(mRemap.size());
+  for (uint32_t i = 0; i != mRemap.size(); ++i)
   {
-    array.push_back(GetItem((unsigned)i));
+    array.push_back(GetItem(i));
   }
   ItemsChanged(array);
 
@@ -290,17 +288,17 @@ void Subscriptions::unsubscribe(wxDataViewItem item)
 
 unsigned Subscriptions::GetColumnCount() const
 {
-  return (unsigned)Column::Max;
+  return static_cast<unsigned>(Column::Max);
 }
 
 unsigned Subscriptions::GetCount() const
 {
-  return (unsigned)mSubscriptions.size();
+  return static_cast<unsigned>(mSubscriptions.size());
 }
 
 wxString Subscriptions::GetColumnType(unsigned int col) const
 {
-  switch ((Column)col)
+  switch (static_cast<Column>(col))
   {
     case Column::Icon:  { return "wxColor";                                  } break;
     case Column::Qos:   { return wxDataViewBitmapRenderer::GetDefaultType(); } break;
@@ -319,7 +317,8 @@ void Subscriptions::GetValueByRow(
   constexpr size_t SubscriptionIconHeight = 10;
   constexpr size_t SubscriptionIconWidth = 20;
 
-  switch ((Column)col) {
+  switch (static_cast<Column>(col))
+  {
     case Column::Icon: {
 
       wxBitmap bitmap(SubscriptionIconHeight, SubscriptionIconWidth);
@@ -380,14 +379,14 @@ void Subscriptions::onUnsubscribed(Events::Subscription &event)
     mLogger->error("Could not find subscription");
     return;
   }
-  const auto index = (size_t)std::distance(std::begin(mRemap), it);
+  const auto index = static_cast<size_t>(std::distance(std::begin(mRemap), it));
   for (const auto &[id, observer] : mObservers)
   {
     observer->onUnsubscribed(id);
   }
   mSubscriptions.erase(id);
   mRemap.erase(it);
-  RowDeleted((unsigned)index);
+  RowDeleted(static_cast<unsigned>(index));
 }
 
 void Subscriptions::onMessage(Events::Subscription &event)

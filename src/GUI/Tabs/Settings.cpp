@@ -134,7 +134,7 @@ void Settings::setupLayouts(wxPanel *parent)
   mLayoutColumnName = new wxDataViewColumn(
     L"name",
     renderer,
-    (unsigned)Models::Layouts::Column::Name,
+    static_cast<unsigned>(Models::Layouts::Column::Name),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
@@ -208,7 +208,7 @@ void Settings::setupProfiles(wxPanel *parent)
   wxDataViewColumn* const name = new wxDataViewColumn(
     "Name",
     new wxDataViewTextRenderer(),
-    (unsigned)Models::Profiles::Column::Name,
+    static_cast<unsigned>(Models::Profiles::Column::Name),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
@@ -416,7 +416,7 @@ void Settings::onLayoutsContext(wxDataViewEvent &event)
 
   auto *rename = new wxMenuItem(
     nullptr,
-    (unsigned)ContextIDs::LayoutsRename,
+    static_cast<unsigned>(ContextIDs::LayoutsRename),
     "Rename"
   );
   rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
@@ -424,7 +424,7 @@ void Settings::onLayoutsContext(wxDataViewEvent &event)
 
   auto *del = new wxMenuItem(
     nullptr,
-    (unsigned)ContextIDs::LayoutsDelete,
+    static_cast<unsigned>(ContextIDs::LayoutsDelete),
     "Delete"
   );
   del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
@@ -435,7 +435,7 @@ void Settings::onLayoutsContext(wxDataViewEvent &event)
 
 void Settings::onContextSelected(wxCommandEvent &event)
 {
-  switch ((ContextIDs)event.GetId())
+  switch (static_cast<ContextIDs>(event.GetId()))
   {
     case ContextIDs::LayoutsDelete: onLayoutsDelete(event); break;
     case ContextIDs::LayoutsRename: onLayoutsRename(event); break;
@@ -488,7 +488,7 @@ void Settings::onProfileContext(wxDataViewEvent &event)
 
   auto *del = new wxMenuItem(
     nullptr,
-    (unsigned)ContextIDs::ProfilesDelete,
+    static_cast<unsigned>(ContextIDs::ProfilesDelete),
     "Delete"
   );
   del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
@@ -666,14 +666,14 @@ void Settings::propertyGridFill(
 
   pfp.at(Properties::AutoReconnect)->SetValue(brokerOptions.getAutoReconnect());
   pfp.at(Properties::ClientId)->SetValue(brokerOptions.getClientId());
-  pfp.at(Properties::ConnectTimeout)->SetValue((int)brokerOptions.getConnectTimeout().count());
-  pfp.at(Properties::DisconnectTimeout)->SetValue((int)brokerOptions.getDisconnectTimeout().count());
+  pfp.at(Properties::ConnectTimeout)->SetValue(brokerOptions.getConnectTimeout().count());
+  pfp.at(Properties::DisconnectTimeout)->SetValue(brokerOptions.getDisconnectTimeout().count());
   pfp.at(Properties::Hostname)->SetValue(brokerOptions.getHostname());
-  pfp.at(Properties::KeepAlive)->SetValue((int)brokerOptions.getKeepAliveInterval().count());
-  pfp.at(Properties::MaxInFlight)->SetValue((int)brokerOptions.getMaxInFlight());
-  pfp.at(Properties::MaxReconnectRetries)->SetValue((int)brokerOptions.getMaxReconnectRetries());
+  pfp.at(Properties::KeepAlive)->SetValue(brokerOptions.getKeepAliveInterval().count());
+  pfp.at(Properties::MaxInFlight)->SetValue(static_cast<int>(brokerOptions.getMaxInFlight()));
+  pfp.at(Properties::MaxReconnectRetries)->SetValue(static_cast<int>(brokerOptions.getMaxReconnectRetries()));
   pfp.at(Properties::Password)->SetValue(brokerOptions.getPassword());
-  pfp.at(Properties::Port)->SetValue((int)brokerOptions.getPort());
+  pfp.at(Properties::Port)->SetValue(static_cast<int>(brokerOptions.getPort()));
   pfp.at(Properties::Username)->SetValue(brokerOptions.getUsername());
 
   (void)clientOptions;
@@ -695,12 +695,12 @@ MQTT::BrokerOptions Settings::brokerOptionsFromPropertyGrid() const
   const auto &pfp = mProfileProperties;
 
   const bool autoReconnect       = pfp.at(Properties::AutoReconnect)->GetValue();
-  const auto maxInFlight         = (size_t)pfp.at(Properties::MaxInFlight)->GetValue().GetInteger();
-  const auto maxReconnectRetries = (size_t)pfp.at(Properties::MaxReconnectRetries)->GetValue().GetInteger();
-  const auto port                = (size_t)pfp.at(Properties::Port)->GetValue().GetInteger();
-  const auto connectTimeout      = (size_t)pfp.at(Properties::ConnectTimeout)->GetValue().GetInteger();
-  const auto disconnectTimeout   = (size_t)pfp.at(Properties::DisconnectTimeout)->GetValue().GetInteger();
-  const auto keepAliveInterval   = (size_t)pfp.at(Properties::KeepAlive)->GetValue().GetLong();
+  const auto maxInFlight         = static_cast<size_t>(pfp.at(Properties::MaxInFlight)->GetValue().GetInteger());
+  const auto maxReconnectRetries = static_cast<size_t>(pfp.at(Properties::MaxReconnectRetries)->GetValue().GetInteger());
+  const auto port                = static_cast<size_t>(pfp.at(Properties::Port)->GetValue().GetInteger());
+  const auto connectTimeout      = static_cast<size_t>(pfp.at(Properties::ConnectTimeout)->GetValue().GetInteger());
+  const auto disconnectTimeout   = static_cast<size_t>(pfp.at(Properties::DisconnectTimeout)->GetValue().GetInteger());
+  const auto keepAliveInterval   = static_cast<size_t>(pfp.at(Properties::KeepAlive)->GetValue().GetLong());
   const auto clientId            = pfp.at(Properties::ClientId)->GetValue();
   const auto hostname            = pfp.at(Properties::Hostname)->GetValue();
   const auto password            = pfp.at(Properties::Password)->GetValue();
@@ -727,7 +727,7 @@ Types::ClientOptions Settings::clientOptionsFromPropertyGrid() const
 
   const auto &pfpLayout = pfp.at(Properties::Layout);
   const auto layoutValue = pfpLayout->GetValue();
-  const auto layoutIndex = (size_t)layoutValue.GetInteger();
+  const auto layoutIndex = static_cast<size_t>(layoutValue.GetInteger());
   const auto layout = mLayoutsModel->getLabelArray()[layoutIndex];
 
   return Types::ClientOptions {

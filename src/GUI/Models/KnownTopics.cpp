@@ -2,6 +2,7 @@
 #include "KnownTopics.hpp"
 #include <cstring>
 #include <fstream>
+#include <system_error>
 
 using namespace Rapatas::Transmitron;
 using namespace Common;
@@ -32,10 +33,11 @@ bool KnownTopics::load(Common::fs::path filepath)
   std::ifstream file(mFilepath);
   if (!file.is_open())
   {
+    const auto ec = std::error_code(errno, std::system_category());
     mLogger->warn(
       "Could not load file '{}': {}",
       mFilepath.string(),
-      std::strerror(errno)
+      ec.message()
     );
     return false;
   }
@@ -119,9 +121,9 @@ void KnownTopics::remap()
   const size_t after = mRemap.size();
 
   const auto common = std::min(before, after);
-  for (size_t i = 0; i != common; ++i)
+  for (uint32_t i = 0; i != common; ++i)
   {
-    RowChanged((unsigned)i);
+    RowChanged(i);
   }
 
   if (after > before)
@@ -138,7 +140,7 @@ void KnownTopics::remap()
     size_t diff = before - common;
     for (size_t i = 0; i < diff; ++i)
     {
-      rows.Add((int)(after + i));
+      rows.Add(static_cast<int>(after + i));
     }
     RowsDeleted(rows);
   }
@@ -152,10 +154,11 @@ void KnownTopics::save()
   std::ofstream file(mFilepath);
   if (!file.is_open())
   {
+    const auto ec = std::error_code(errno, std::system_category());
     mLogger->warn(
       "Could not save file '{}': {}",
       mFilepath.string(),
-      std::strerror(errno)
+      ec.message()
     );
     return;
   }
@@ -170,7 +173,7 @@ void KnownTopics::save()
 
 unsigned KnownTopics::GetColumnCount() const
 {
-  return (unsigned)Column::Max;
+  return static_cast<unsigned>(Column::Max);
 }
 
 wxString KnownTopics::GetColumnType(unsigned int col) const
@@ -185,7 +188,7 @@ wxString KnownTopics::GetColumnType(unsigned int col) const
 
 unsigned KnownTopics::GetCount() const
 {
-  return (unsigned)mRemap.size();
+  return static_cast<unsigned>(mRemap.size());
 }
 
 void KnownTopics::GetValueByRow(

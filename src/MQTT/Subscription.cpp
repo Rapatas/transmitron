@@ -24,17 +24,14 @@ Subscription::Subscription(
 
 size_t Subscription::attachObserver(Observer *observer)
 {
-  size_t id = 0;
-  do {
-    id = (size_t)std::abs(rand());
-  } while (mObservers.find(id) != std::end(mObservers));
+  static size_t id = 0;
 
   if (mState == State::Subscribed)
   {
     onSubscribed();
   }
 
-  return mObservers.insert(std::make_pair(id, observer)).first->first;
+  return mObservers.insert(std::make_pair(id++, observer)).first->first;
 }
 
 void Subscription::unsubscribe()

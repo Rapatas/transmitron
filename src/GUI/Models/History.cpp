@@ -1,5 +1,6 @@
 #include "Common/Filesystem.hpp"
 #include <fstream>
+#include <future>
 #include <wx/dcmemory.h>
 #include "Common/Helpers.hpp"
 #include "History.hpp"
@@ -25,12 +26,8 @@ History::History(const wxObjectDataPtr<Subscriptions> &subscriptions) :
 
 size_t History::attachObserver(Observer *observer)
 {
-  size_t id = 0;
-  do {
-    id = (size_t)std::abs(rand());
-  } while (mObservers.find(id) != std::end(mObservers));
-
-  return mObservers.insert(std::make_pair(id, observer)).first->first;
+  static size_t id = 0;
+  return mObservers.insert(std::make_pair(id++, observer)).first->first;
 }
 
 bool History::detachObserver(size_t id)
@@ -69,7 +66,8 @@ bool History::load(const std::string &recording)
   std::ifstream input(recording);
   if (!input.is_open())
   {
-    mLogger->warn("Could not open '{}': {}", recording, std::strerror(errno));
+    const auto ec = std::error_code(errno, std::system_category());
+    mLogger->warn("Could not open '{}': {}", recording, ec.message());
     return false;
   }
 
@@ -197,7 +195,8 @@ void History::onMessage(
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
 
-    const auto item = GetItem((unsigned)mRemap.size() - 1);
+    const auto row = static_cast<uint32_t>(mRemap.size() - 1);
+    const auto item = GetItem(row);
     for (const auto &[id, observer] : mObservers)
     {
       observer->onMessage(item);
@@ -281,9 +280,9 @@ void History::remap()
   const size_t after = mRemap.size();
 
   const auto common = std::min(before, after);
-  for (size_t i = 0; i != common; ++i)
+  for (uint32_t i = 0; i != common; ++i)
   {
-    RowChanged((unsigned)i);
+    RowChanged(i);
   }
 
   if (after > before)
@@ -298,9 +297,9 @@ void History::remap()
   {
     wxArrayInt rows;
     size_t diff = before - common;
-    for (size_t i = 0; i < diff; ++i)
+    for (uint32_t i = 0; i < diff; ++i)
     {
-      rows.Add((int)(after + i));
+      rows.Add(static_cast<int>(after + i));
     }
     RowsDeleted(rows);
   }
@@ -308,11 +307,11 @@ void History::remap()
 
 void History::refresh(MQTT::Subscription::Id_t subscriptionId)
 {
-  for (size_t i = 0; i < mRemap.size(); ++i)
+  for (uint32_t i = 0; i < mRemap.size(); ++i)
   {
     if (mMessages[mRemap[i]].subscriptionId == subscriptionId)
     {
-      RowChanged((unsigned)i);
+      RowChanged(i);
     }
   }
 }
@@ -329,7 +328,7 @@ std::string History::getTopic(const wxDataViewItem &item) const
 
 MQTT::QoS History::getQos(const wxDataViewItem &item) const
 {
-  return (MQTT::QoS)mMessages.at(mRemap.at(GetRow(item))).message.qos;
+  return mMessages.at(mRemap.at(GetRow(item))).message.qos;
 }
 
 bool History::getRetained(const wxDataViewItem &item) const
@@ -355,17 +354,17 @@ std::string History::getFilter() const
 
 unsigned History::GetColumnCount() const
 {
-  return (unsigned)Column::Max;
+  return static_cast<uint32_t>(Column::Max);
 }
 
 unsigned History::GetCount() const
 {
-  return (unsigned)mRemap.size();
+  return static_cast<uint32_t>(mRemap.size());
 }
 
 wxString History::GetColumnType(unsigned int col) const
 {
-  switch ((Column)col)
+  switch (static_cast<Column>(col))
   {
     case Column::Icon:
     {
@@ -400,7 +399,8 @@ void History::GetValueByRow(
   constexpr size_t MessageIconWidth = 10;
   constexpr size_t MessageIconHeight = 20;
 
-  switch ((Column)col) {
+  switch (static_cast<Column>(col))
+  {
     case Column::Icon: {
 
       auto color = mSubscriptions->getColor(node.subscriptionId);
@@ -429,7 +429,7 @@ void History::GetValueByRow(
     } break;
     case Column::Qos: {
       const wxBitmap *result = nullptr;
-      switch ((MQTT::QoS)node.message.qos) {
+      switch (node.message.qos) {
         case MQTT::QoS::AtLeastOnce: { result = bin2cQos0(); } break;
         case MQTT::QoS::AtMostOnce:  { result = bin2cQos1(); } break;
         case MQTT::QoS::ExactlyOnce: { result = bin2cQos2(); } break;

@@ -76,7 +76,7 @@ bool App::OnInit()
 
   setupIcon();
 
-  const int noteStyle = wxAUI_NB_DEFAULT_STYLE & ~(0
+  const int noteStyle = wxAUI_NB_DEFAULT_STYLE & ~(0U
     | wxAUI_NB_TAB_MOVE
     | wxAUI_NB_TAB_EXTERNAL_MOVE
     | wxAUI_NB_TAB_SPLIT
@@ -156,13 +156,15 @@ bool App::openProfile(const std::string &profileName)
 
 void App::onPageSelected(wxBookCtrlEvent& event)
 {
+  const auto selection = static_cast<size_t>(event.GetSelection());
+
   if (event.GetSelection() == wxNOT_FOUND)
   {
     event.Skip();
     return;
   }
 
-  if ((size_t)event.GetSelection() == mCount - 1)
+  if (selection == mCount - 1)
   {
     createHomepageTab(mCount - 1);
     event.Veto();
@@ -170,11 +172,12 @@ void App::onPageSelected(wxBookCtrlEvent& event)
   }
 
   const auto style = mNote->GetWindowStyle();
-  constexpr int Closable = 0
+  constexpr int Closable = 0U
     | wxAUI_NB_CLOSE_BUTTON
     | wxAUI_NB_CLOSE_ON_ACTIVE_TAB;
 
-  if ((size_t)event.GetSelection() == 0)
+  // NOLINTBEGIN(hicpp-signed-bitwise)
+  if (selection == 0)
   {
     if ((style & Closable) != 0)
     {
@@ -188,10 +191,11 @@ void App::onPageSelected(wxBookCtrlEvent& event)
       mNote->SetWindowStyle(style | Closable);
     }
   }
+  // NOLINTEND(hicpp-signed-bitwise)
 
   const auto windowName = fmt::format(
     "{} - Transmitron",
-    mNote->GetPage((size_t)event.GetSelection())->GetName()
+    mNote->GetPage(selection)->GetName()
   );
   mFrame->SetTitle(windowName);
 
@@ -200,10 +204,11 @@ void App::onPageSelected(wxBookCtrlEvent& event)
 
 void App::onPageClosing(wxBookCtrlEvent& event)
 {
-  const auto closingIndex = (size_t)event.GetSelection();
+  const auto selection = static_cast<size_t>(event.GetSelection());
+  const auto previous = static_cast<size_t>(event.GetOldSelection());
 
   // Settings and Plus.
-  if (closingIndex == 0 || closingIndex == mCount - 1)
+  if (selection == 0 || selection == mCount - 1)
   {
     event.Veto();
     return;
@@ -216,7 +221,7 @@ void App::onPageClosing(wxBookCtrlEvent& event)
     createHomepageTab(mCount - 1);
   }
 
-  if ((size_t)event.GetOldSelection() == mCount - 1)
+  if (previous == mCount - 1)
   {
     mNote->ChangeSelection(mCount - 2);
   }
@@ -226,15 +231,15 @@ void App::onPageClosing(wxBookCtrlEvent& event)
 
 void App::onKeyDownControlW()
 {
-  const auto closingIndex = (size_t)mNote->GetSelection();
+  const auto selection = static_cast<size_t>(mNote->GetSelection());
 
   // Settings and Plus.
-  if (closingIndex == 0 || closingIndex == mCount - 1)
+  if (selection == 0 || selection == mCount - 1)
   {
     return;
   }
 
-  mNote->RemovePage(closingIndex);
+  mNote->RemovePage(selection);
 
   --mCount;
 
@@ -243,7 +248,7 @@ void App::onKeyDownControlW()
     createHomepageTab(mCount - 1);
   }
 
-  if (closingIndex == mCount - 1)
+  if (selection == mCount - 1)
   {
     mNote->ChangeSelection(mCount - 2);
   }
@@ -473,17 +478,17 @@ void App::openProfile(wxDataViewItem item)
 
   client->Bind(Events::RECORDING_SAVE, &App::onRecordingSave, this);
 
-  const size_t selected = (size_t)mNote->GetSelection();
-  const auto target = selected == 0
+  const auto selection = static_cast<size_t>(mNote->GetSelection());
+  const auto target = selection == 0
     ? mCount - 1
-    : selected;
+    : selection;
 
   mLogger->info("Target: {}", target);
 
-  if (selected != 0)
+  if (selection != 0)
   {
     // Remove homepage.
-    mNote->RemovePage(selected);
+    mNote->RemovePage(selection);
   }
   else
   {
@@ -527,11 +532,11 @@ void App::openRecording(const std::string &filename)
     mOptionsHeight
   );
 
-  const size_t selected = (size_t)mNote->GetSelection();
-  mNote->RemovePage(selected);
-  mNote->InsertPage(selected, client, "");
-  mNote->SetSelection(selected);
-  mNote->SetPageText(selected, decodedStr);
+  const auto selection = static_cast<size_t>(mNote->GetSelection());
+  mNote->RemovePage(selection);
+  mNote->InsertPage(selection, client, "");
+  mNote->SetSelection(selection);
+  mNote->SetPageText(selection, decodedStr);
 
   client->focus();
 }
