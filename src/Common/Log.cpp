@@ -3,6 +3,10 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+#ifdef _WIN32
+#include <spdlog/sinks/win_eventlog_sink.h>
+#endif // _WIN32
+
 #ifndef NDEBUG
   const bool DEBUG = true;
 #else
@@ -29,8 +33,16 @@ void Log::initialize(bool verbose)
       ? Level::trace
       : Level::info;
 
-  mSink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
-  mSink->set_level(level);
+  auto sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
+  sink->set_level(level);
+  mSinks.push_back(sink);
+
+#ifdef _WIN32
+  auto event = std::make_shared<spdlog::sinks::win_eventlog_sink_mt>("Transmitron");
+  event->set_level(Level::warn);
+  mSinks.push_back(event);
+#endif // _WIN32
+
   const std::string pattern {"[%Y-%m-%d %H:%M:%S.%e] %^[%l]%$ [%n] %v"};
   spdlog::set_pattern(pattern);
 }
@@ -45,7 +57,7 @@ std::shared_ptr<spdlog::logger> Log::createPrivate(const std::string &name)
   auto logger = spdlog::get(name);
   if (!logger)
   {
-    auto logger = std::make_shared<spdlog::logger>(name, mSink);
+    logger = std::make_shared<spdlog::logger>(name, mSinks.begin(), mSinks.end());
     spdlog::initialize_logger(logger);
     spdlog::cfg::load_env_levels();
   }

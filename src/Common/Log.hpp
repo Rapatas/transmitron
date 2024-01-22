@@ -27,7 +27,7 @@ private:
 
   Log() = default;
 
-  spdlog::sink_ptr mSink;
+  std::vector<spdlog::sink_ptr> mSinks;
 
   std::shared_ptr<spdlog::logger> createPrivate(const std::string &name);
 

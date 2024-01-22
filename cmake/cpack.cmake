@@ -78,11 +78,14 @@ set(CPACK_NSIS_EXTRA_PREINSTALL_COMMANDS "
 set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
   WriteRegStr SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe' '' '$INSTDIR\\\\bin\\\\transmitron.exe'\n\
   WriteRegStr SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe' 'Path' '$INSTDIR\\\\bin'\n\
+  WriteRegDWORD HKLM 'SYSTEM\\\\CurrentControlSet\\\\Services\\\\EventLog\\\\Application\\\\Transmitron' 'TypesSupported' 0x00000007\n\
+  WriteRegBin HKLM 'SYSTEM\\\\CurrentControlSet\\\\Services\\\\EventLog\\\\Application\\\\Transmitron' 'EventMessageFile' 2500730079007300740065006d0072006f006f00740025005c00530079007300740065006d00330032005c006d00730063006f007200650065002e0064006c006c000000\n\
   \\\${RegisterExtension} '$INSTDIR\\\\bin\\\\transmitron.exe' '.tmrc' 'History Recording'\n\
   \\\${RefreshShellIcons}
 ")
 set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
   DeleteRegKey SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe'\n\
+  DeleteRegKey HKLM 'SYSTEM\\\\CurrentControlSet\\\\Services\\\\EventLog\\\\Application\\\\Transmitron'\n\
   \\\${UnRegisterExtension} '.tmrc' 'History Recording'\n\
   \\\${RefreshShellIcons}
 ")
