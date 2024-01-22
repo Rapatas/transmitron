@@ -35,16 +35,16 @@ public:
 
   // Getters
   static wxDataViewItem getDefault();
-  wxDataViewItem findItemByName(const std::string &name) const;
-  std::string getUniqueName() const;
-  const Perspective &getPerspective(wxDataViewItem item) const;
-  const std::string &getName(wxDataViewItem item) const;
-  wxArrayString getLabelArray() const;
-  std::vector<std::string> getLabelVector() const;
+  [[nodiscard]] wxDataViewItem findItemByName(const std::string &name) const;
+  [[nodiscard]] std::string getUniqueName() const;
+  [[nodiscard]] const Perspective &getPerspective(wxDataViewItem item) const;
+  [[nodiscard]] const std::string &getName(wxDataViewItem item) const;
+  [[nodiscard]] wxArrayString getLabelArray() const;
+  [[nodiscard]] std::vector<std::string> getLabelVector() const;
 
   // wxDataViewModel interface.
-  unsigned GetColumnCount() const override;
-  wxString GetColumnType(unsigned int col) const override;
+  [[nodiscard]] unsigned GetColumnCount() const override;
+  [[nodiscard]] wxString GetColumnType(unsigned int col) const override;
   void GetValue(
     wxVariant &value,
     const wxDataViewItem &item,
@@ -55,14 +55,14 @@ public:
     const wxDataViewItem &item,
     unsigned int col
   ) override;
-  bool IsEnabled(
+  [[nodiscard]] bool IsEnabled(
     const wxDataViewItem &item,
     unsigned int col
   ) const override;
-  wxDataViewItem GetParent(
+  [[nodiscard]] wxDataViewItem GetParent(
     const wxDataViewItem &item
   ) const override;
-  bool IsContainer(
+  [[nodiscard]] bool IsContainer(
     const wxDataViewItem &item
   ) const override;
   unsigned int GetChildren(

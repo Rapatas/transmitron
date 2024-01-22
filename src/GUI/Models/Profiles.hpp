@@ -49,21 +49,21 @@ public:
   wxDataViewItem createProfile();
   bool remove(wxDataViewItem item);
   void updateQuickConnect(std::string url);
-  std::string getUniqueName() const;
+  [[nodiscard]] std::string getUniqueName() const;
 
-  const MQTT::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
-  const Types::ClientOptions &getClientOptions(wxDataViewItem item) const;
-  wxString getName(wxDataViewItem item) const;
-  wxDataViewItem getItemFromName(const std::string &profileName) const;
-  wxDataViewItem getQuickConnect() const;
+  [[nodiscard]] const MQTT::BrokerOptions &getBrokerOptions(wxDataViewItem item) const;
+  [[nodiscard]] const Types::ClientOptions &getClientOptions(wxDataViewItem item) const;
+  [[nodiscard]] wxString getName(wxDataViewItem item) const;
+  [[nodiscard]] wxDataViewItem getItemFromName(const std::string &profileName) const;
+  [[nodiscard]] wxDataViewItem getQuickConnect() const;
 
   wxObjectDataPtr<Messages> getMessagesModel(wxDataViewItem item);
   wxObjectDataPtr<KnownTopics> getTopicsSubscribed(wxDataViewItem item);
   wxObjectDataPtr<KnownTopics> getTopicsPublished(wxDataViewItem item);
 
   // wxDataViewModel interface.
-  unsigned GetColumnCount() const override;
-  wxString GetColumnType(unsigned int col) const override;
+  [[nodiscard]] unsigned GetColumnCount() const override;
+  [[nodiscard]] wxString GetColumnType(unsigned int col) const override;
   void GetValue(
     wxVariant &variant,
     const wxDataViewItem &item,
@@ -74,14 +74,14 @@ public:
     const wxDataViewItem &item,
     unsigned int col
   ) override;
-  bool IsEnabled(
+  [[nodiscard]] bool IsEnabled(
     const wxDataViewItem &item,
     unsigned int col
   ) const override;
-  wxDataViewItem GetParent(
+  [[nodiscard]] wxDataViewItem GetParent(
     const wxDataViewItem &item
   ) const override;
-  bool IsContainer(
+  [[nodiscard]] bool IsContainer(
     const wxDataViewItem &item
   ) const override;
   unsigned int GetChildren(
@@ -119,7 +119,7 @@ private:
   bool saveOptionsBroker(size_t id);
   bool saveOptionsClient(size_t id);
   void createQuickConnect();
-  bool ensureDirectoryExists(const std::string &dir) const;
+  [[nodiscard]] bool ensureDirectoryExists(const std::string &dir) const;
   wxDataViewItem loadProfile(const Common::fs::path &directory);
   std::optional<MQTT::BrokerOptions> loadProfileOptionsBroker(
     const Common::fs::path &directory

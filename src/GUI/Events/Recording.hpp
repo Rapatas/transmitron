@@ -27,12 +27,12 @@ public:
     this->setName(event.getName());
   }
 
-  wxEvent* Clone() const override
+  [[nodiscard]] wxEvent* Clone() const override
   {
     return new Recording(*this);
   }
 
-  std::string getContents() const
+  [[nodiscard]] std::string getContents() const
   {
     return mContents;
   }
@@ -42,7 +42,7 @@ public:
     mContents = contents;
   }
 
-  wxString getName() const
+  [[nodiscard]] wxString getName() const
   {
     return mName;
   }

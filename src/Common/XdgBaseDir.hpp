@@ -35,8 +35,9 @@ private:
   std::string readDataHome();
   std::string readCacheHome();
   std::string readStateHome();
-  std::vector<std::string> readDataDirs() const;
-  std::vector<std::string> readConfigDirs() const;
+
+  [[nodiscard]] std::vector<std::string> readDataDirs() const;
+  [[nodiscard]] std::vector<std::string> readConfigDirs() const;
 };
 
 } // namespace Rapatas::Transmitron::Common

@@ -44,15 +44,15 @@ public:
   bool detachObserver(size_t id);
   void clear();
   bool load(const std::string &recording);
-
-  std::string getPayload(const wxDataViewItem &item) const;
-  std::string getTopic(const wxDataViewItem &item) const;
-  MQTT::QoS getQos(const wxDataViewItem &item) const;
-  bool getRetained(const wxDataViewItem &item) const;
-  const MQTT::Message &getMessage(const wxDataViewItem &item) const;
   void setFilter(const std::string &filter);
-  std::string getFilter() const;
-  nlohmann::json toJson() const;
+
+  [[nodiscard]] std::string getPayload(const wxDataViewItem &item) const;
+  [[nodiscard]] std::string getTopic(const wxDataViewItem &item) const;
+  [[nodiscard]] MQTT::QoS getQos(const wxDataViewItem &item) const;
+  [[nodiscard]] bool getRetained(const wxDataViewItem &item) const;
+  [[nodiscard]] const MQTT::Message &getMessage(const wxDataViewItem &item) const;
+  [[nodiscard]] std::string getFilter() const;
+  [[nodiscard]] nlohmann::json toJson() const;
 
 private:
 
@@ -73,9 +73,9 @@ private:
   void refresh(MQTT::Subscription::Id_t subscriptionId);
 
   // wxDataViewVirtualListModel interface.
-  unsigned GetColumnCount() const override;
-  wxString GetColumnType(unsigned int col) const override;
-  unsigned GetCount() const override;
+  [[nodiscard]] unsigned GetColumnCount() const override;
+  [[nodiscard]] wxString GetColumnType(unsigned int col) const override;
+  [[nodiscard]] unsigned GetCount() const override;
   void GetValueByRow(
     wxVariant &variant,
     unsigned int row,

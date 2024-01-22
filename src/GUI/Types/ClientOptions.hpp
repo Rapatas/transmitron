@@ -17,9 +17,9 @@ public:
     explicit ClientOptions(std::string layout);
 
     static ClientOptions fromJson(const nlohmann::json &data);
-    nlohmann::json toJson() const;
+    [[nodiscard]] nlohmann::json toJson() const;
 
-    std::string getLayout() const;
+    [[nodiscard]] std::string getLayout() const;
 
 private:
 

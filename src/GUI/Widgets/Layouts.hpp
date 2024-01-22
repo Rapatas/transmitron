@@ -51,7 +51,7 @@ private:
   void onLayoutRemoved(Events::Layout &event);
   void onLayoutChanged(Events::Layout &event);
 
-  wxArrayString getNames() const;
+  [[nodiscard]] wxArrayString getNames() const;
   void resize();
 };
 

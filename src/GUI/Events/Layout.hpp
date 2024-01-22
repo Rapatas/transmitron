@@ -27,7 +27,7 @@ public:
     wxCommandEvent(event)
   {}
 
-  wxEvent* Clone() const override
+  [[nodiscard]] wxEvent* Clone() const override
   {
     return new Layout(*this);
   }
@@ -37,12 +37,12 @@ public:
     mPerspective = std::move(perspective);
   }
 
-  std::string getPerspective() const
+  [[nodiscard]] std::string getPerspective() const
   {
     return mPerspective;
   }
 
-  wxDataViewItem getItem() const
+  [[nodiscard]] wxDataViewItem getItem() const
   {
     return mItem;
   }

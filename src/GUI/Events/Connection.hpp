@@ -29,12 +29,12 @@ public:
     this->setProfile(event.getProfile());
   }
 
-  wxEvent* Clone() const override
+  [[nodiscard]] wxEvent* Clone() const override
   {
     return new Connection(*this);
   }
 
-  wxDataViewItem getProfile() const
+  [[nodiscard]] wxDataViewItem getProfile() const
   {
     return mProfile;
   }

@@ -101,8 +101,8 @@ private:
     const MQTT::BrokerOptions &brokerOptions,
     const Types::ClientOptions &clientOptions
   );
-  MQTT::BrokerOptions brokerOptionsFromPropertyGrid() const;
-  Types::ClientOptions clientOptionsFromPropertyGrid() const;
+  [[nodiscard]] MQTT::BrokerOptions brokerOptionsFromPropertyGrid() const;
+  [[nodiscard]] Types::ClientOptions clientOptionsFromPropertyGrid() const;
   void allowSave();
   void allowConnect();
   void refreshLayouts();

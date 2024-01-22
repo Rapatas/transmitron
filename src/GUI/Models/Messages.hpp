@@ -28,9 +28,9 @@ public:
 
   bool load(const std::string &profileDir);
 
-  MQTT::Message getMessage(wxDataViewItem item) const;
-  std::string getName(wxDataViewItem item) const;
-  std::set<std::string> getKnownTopics() const;
+  [[nodiscard]] MQTT::Message getMessage(wxDataViewItem item) const;
+  [[nodiscard]] std::string getName(wxDataViewItem item) const;
+  [[nodiscard]] std::set<std::string> getKnownTopics() const;
   static wxDataViewItem getRootItem() ;
   wxDataViewItem createFolder(
     wxDataViewItem parent
@@ -60,10 +60,10 @@ public:
     size_t index
   );
 
-  bool hasChildNamed(wxDataViewItem parent, const std::string &name) const;
+  [[nodiscard]] bool hasChildNamed(wxDataViewItem parent, const std::string &name) const;
 
-  unsigned GetColumnCount() const override;
-  wxString GetColumnType(unsigned int col) const override;
+  [[nodiscard]] unsigned GetColumnCount() const override;
+  [[nodiscard]] wxString GetColumnType(unsigned int col) const override;
   void GetValue(
     wxVariant &variant,
     const wxDataViewItem &item,
@@ -74,14 +74,14 @@ public:
     const wxDataViewItem &item,
     unsigned int col
   ) override;
-  bool IsEnabled(
+  [[nodiscard]] bool IsEnabled(
     const wxDataViewItem &item,
     unsigned int col
   ) const override;
-  wxDataViewItem GetParent(
+  [[nodiscard]] wxDataViewItem GetParent(
     const wxDataViewItem &item
   ) const override;
-  bool IsContainer(
+  [[nodiscard]] bool IsContainer(
     const wxDataViewItem &item
   ) const override;
   unsigned int GetChildren(
@@ -142,8 +142,9 @@ private:
     size_t index
   );
   Node::Id_t getNextId();
-  bool isRecursive(wxDataViewItem parent, wxDataViewItem item) const;
-  std::string getNodePath(Node::Id_t id) const;
+
+  [[nodiscard]] bool isRecursive(wxDataViewItem parent, wxDataViewItem item) const;
+  [[nodiscard]] std::string getNodePath(Node::Id_t id) const;
 
   static Node::Id_t toId(const wxDataViewItem &item);
   static wxDataViewItem toItem(Node::Id_t id);

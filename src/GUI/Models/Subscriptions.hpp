@@ -57,12 +57,12 @@ public:
   void unsubscribe(wxDataViewItem item);
   void clear(wxDataViewItem item);
 
-  bool getMuted(MQTT::Subscription::Id_t subscriptionId) const;
-  bool getMuted(wxDataViewItem item) const;
-  std::string getFilter(MQTT::Subscription::Id_t subscriptionId) const;
-  std::string getFilter(wxDataViewItem item) const;
-  wxColor getColor(MQTT::Subscription::Id_t subscriptionId) const;
-  nlohmann::json toJson() const;
+  [[nodiscard]] bool getMuted(MQTT::Subscription::Id_t subscriptionId) const;
+  [[nodiscard]] bool getMuted(wxDataViewItem item) const;
+  [[nodiscard]] std::string getFilter(MQTT::Subscription::Id_t subscriptionId) const;
+  [[nodiscard]] std::string getFilter(wxDataViewItem item) const;
+  [[nodiscard]] wxColor getColor(MQTT::Subscription::Id_t subscriptionId) const;
+  [[nodiscard]] nlohmann::json toJson() const;
 
 private:
 
@@ -73,9 +73,9 @@ private:
   std::map<size_t, Observer *> mObservers;
 
   // wxDataViewVirtualListModel interface.
-  unsigned GetColumnCount() const override;
-  wxString GetColumnType(unsigned int col) const override;
-  unsigned GetCount() const override;
+  [[nodiscard]] unsigned GetColumnCount() const override;
+  [[nodiscard]] wxString GetColumnType(unsigned int col) const override;
+  [[nodiscard]] unsigned GetCount() const override;
   void GetValueByRow(
     wxVariant &variant,
     unsigned int row,

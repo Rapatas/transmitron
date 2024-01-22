@@ -31,11 +31,11 @@ public:
   void setColor(const wxColor &color);
   void unsubscribe();
 
-  std::string getFilter() const;
-  wxColor getColor() const;
-  MQTT::QoS getQos() const;
-  bool getMuted() const;
-  size_t getId() const;
+  [[nodiscard]] std::string getFilter() const;
+  [[nodiscard]] wxColor getColor() const;
+  [[nodiscard]] MQTT::QoS getQos() const;
+  [[nodiscard]] bool getMuted() const;
+  [[nodiscard]] size_t getId() const;
 
 private:
 

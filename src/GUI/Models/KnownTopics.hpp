@@ -35,13 +35,13 @@ public:
   void append(std::string topic);
   void append(std::set<std::string> topics);
 
-  const std::string &getTopic(const wxDataViewItem &item) const;
-  const std::string &getFilter() const;
+  [[nodiscard]] const std::string &getTopic(const wxDataViewItem &item) const;
+  [[nodiscard]] const std::string &getFilter() const;
 
   // wxDataViewVirtualListModel interface.
-  unsigned GetColumnCount() const override;
-  wxString GetColumnType(unsigned int col) const override;
-  unsigned GetCount() const override;
+  [[nodiscard]] unsigned GetColumnCount() const override;
+  [[nodiscard]] wxString GetColumnType(unsigned int col) const override;
+  [[nodiscard]] unsigned GetCount() const override;
   void GetValueByRow(
     wxVariant &variant,
     unsigned int row,

@@ -30,12 +30,12 @@ public:
 
   void format();
 
-  MQTT::Message getMessage() const;
-  std::string getPayload() const;
-  bool getReadOnly() const;
-  std::string getTopic() const;
-  MQTT::QoS getQos() const;
-  bool getRetained() const;
+  [[nodiscard]] MQTT::Message getMessage() const;
+  [[nodiscard]] std::string getPayload() const;
+  [[nodiscard]] bool getReadOnly() const;
+  [[nodiscard]] std::string getTopic() const;
+  [[nodiscard]] MQTT::QoS getQos() const;
+  [[nodiscard]] bool getRetained() const;
 
   void setReadOnly(bool readonly);
   void clear();

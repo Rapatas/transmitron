@@ -23,7 +23,7 @@ public:
     wxCommandEvent(event)
   {}
 
-  wxEvent* Clone() const override
+  [[nodiscard]] wxEvent* Clone() const override
   {
     return new Edit(*this);
   }

@@ -29,17 +29,17 @@ public:
     this->setMessage(event.getMessage());
   }
 
-  wxEvent* Clone() const override
+  [[nodiscard]] wxEvent* Clone() const override
   {
     return new Subscription(*this);
   }
 
-  MQTT::Subscription::Id_t getSubscriptionId() const
+  [[nodiscard]] MQTT::Subscription::Id_t getSubscriptionId() const
   {
     return mId;
   }
 
-  MQTT::Message getMessage() const
+  [[nodiscard]] MQTT::Message getMessage() const
   {
     return mMsg;
   }
