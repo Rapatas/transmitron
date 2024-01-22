@@ -79,14 +79,14 @@ void Homepage::focus()
 
 void Homepage::setupProfiles(wxPanel *parent)
 {
-  wxDataViewColumn* const name = new wxDataViewColumn(
+  auto* const name = new wxDataViewColumn(
     "Name",
     new wxDataViewTextRenderer(),
     static_cast<unsigned>(Models::Profiles::Column::Name),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
-  wxDataViewColumn* const url = new wxDataViewColumn(
+  auto* const url = new wxDataViewColumn(
     "Address",
     new wxDataViewTextRenderer(),
     static_cast<unsigned>(Models::Profiles::Column::URL),

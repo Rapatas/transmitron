@@ -205,7 +205,7 @@ void Settings::setupProfiles(wxPanel *parent)
   mProfiles = new wxPanel(parent);
   mProfiles->SetMinSize(wxSize(200, 200));
 
-  wxDataViewColumn* const name = new wxDataViewColumn(
+  auto* const name = new wxDataViewColumn(
     "Name",
     new wxDataViewTextRenderer(),
     static_cast<unsigned>(Models::Profiles::Column::Name),

@@ -252,21 +252,21 @@ void Client::focus() const
 
 void Client::setupPanelHistory(wxWindow *parent)
 {
-  wxDataViewColumn* const icon = new wxDataViewColumn(
+  auto* const icon = new wxDataViewColumn(
     L"icon",
     new wxDataViewBitmapRenderer(),
     static_cast<unsigned>(Models::History::Column::Icon),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
-  wxDataViewColumn* const topic = new wxDataViewColumn(
+  auto* const topic = new wxDataViewColumn(
     L"topic",
     new wxDataViewIconTextRenderer(),
     static_cast<unsigned>(Models::History::Column::Topic),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
-  wxDataViewColumn* const qos = new wxDataViewColumn(
+  auto* const qos = new wxDataViewColumn(
     L"qos",
     new wxDataViewBitmapRenderer(),
     static_cast<unsigned>(Models::History::Column::Qos),
@@ -525,20 +525,20 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   );
   mSubscribe->SetToolTip("Subscribe");
 
-  wxDataViewColumn* const icon = new wxDataViewColumn(
+  auto* const icon = new wxDataViewColumn(
     "icon",
     new wxDataViewBitmapRenderer(),
     static_cast<unsigned>(Models::Subscriptions::Column::Icon),
     wxCOL_WIDTH_AUTOSIZE
   );
-  wxDataViewColumn* const topic = new wxDataViewColumn(
+  auto* const topic = new wxDataViewColumn(
     "topic",
     new wxDataViewTextRenderer(),
     static_cast<unsigned>(Models::Subscriptions::Column::Topic),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
-  wxDataViewColumn* const qos = new wxDataViewColumn(
+  auto* const qos = new wxDataViewColumn(
     "qos",
     new wxDataViewBitmapRenderer(),
     static_cast<unsigned>(Models::Subscriptions::Column::Qos),
@@ -564,8 +564,8 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
   mSubscriptionsCtrl->SetFont(mFont);
 
-  wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
-  wxBoxSizer *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
+  auto *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
+  auto *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   hsizer->SetMinSize(0, mOptionsHeight);
   hsizer->Add(mFilter, 1, wxEXPAND);
   hsizer->Add(mSubscribe, 0, wxEXPAND);
@@ -663,7 +663,7 @@ void Client::setupPanelMessages(wxWindow *parent)
 
   mMessagesCtrl->SetFont(mFont);
 
-  wxBoxSizer *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
+  auto *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(mMessagesCtrl, 1, wxEXPAND);
   panel->SetSizer(vsizer);
   mMessagesCtrl->Bind(
