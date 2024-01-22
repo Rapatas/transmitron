@@ -32,13 +32,23 @@ wxColor Common::Helpers::colorFromNumber(size_t number)
 std::string Common::Helpers::timeToString(
   const system_clock::time_point &timestamp
 ) {
-  return date::format("%F %T", floor<milliseconds>(timestamp));
+  const auto floored = floor<milliseconds>(timestamp);
+  const std::time_t nowc = std::chrono::system_clock::to_time_t(floored);
+  std::tm nowtm = *std::localtime(&nowc);
+  std::stringstream sstream;
+  sstream << std::put_time(&nowtm, "%Y-%m-%d %H:%M:%S");
+  return sstream.str();
 }
 
 std::string Common::Helpers::timeToFilename(
   const system_clock::time_point &timestamp
 ) {
-  return date::format("%Y%m%dT%H%M%S", floor<seconds>(timestamp));
+  const auto floored = floor<milliseconds>(timestamp);
+  const std::time_t nowc = std::chrono::system_clock::to_time_t(floored);
+  std::tm nowtm = *std::localtime(&nowc);
+  std::stringstream sstream;
+  sstream << std::put_time(&nowtm, "%Y%m%dT%H%M%S");
+  return sstream.str();
 }
 
 std::chrono::system_clock::time_point Common::Helpers::stringToTime(

@@ -85,12 +85,14 @@ void Subscription::onMessage(
       case 2: qos = MQTT::QoS::ExactlyOnce; break;
     }
 
+    const auto timestamp = std::chrono::system_clock::now();
+
     Message message {
       msg->get_topic(),
       payload,
       qos,
       msg->is_retained(),
-      std::chrono::system_clock::now()
+      timestamp,
     };
 
     o.second->onMessage(message);
