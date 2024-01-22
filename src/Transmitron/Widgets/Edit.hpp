@@ -103,6 +103,7 @@ private:
   wxBitmapButton *mPublish = nullptr;
 
   wxStyledTextCtrl *mText = nullptr;
+  std::string mPayload;
 
   wxStaticText *mInfoLine = nullptr;
 

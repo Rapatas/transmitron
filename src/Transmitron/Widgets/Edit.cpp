@@ -101,9 +101,9 @@ Edit::Edit(
     wxDefaultPosition,
     wxSize(FormatButtonWidth, mOptionsHeight)
   );
-  for (const auto &format : mFormats)
+  for (const auto &[name, format] : mFormats)
   {
-    mFormatSelect->Insert(format.first, 0);
+    mFormatSelect->Insert(name, 0);
   }
 
   mTop->SetMinSize(0, mOptionsHeight);
@@ -295,7 +295,7 @@ void Edit::setMessage(const MQTT::Message &message)
 void Edit::setPayload(const std::string &text)
 {
   auto format = mFormatSelect->GetValue().ToStdString();
-  if (mReadOnly)
+  if (mReadOnly || mCurrentFormat == Format::Binary)
   {
     mText->SetReadOnly(false);
   }
@@ -306,7 +306,7 @@ void Edit::setPayload(const std::string &text)
       payloadUtf8.length()
     )
   );
-  if (mReadOnly)
+  if (mReadOnly || mCurrentFormat == Format::Binary)
   {
     mText->SetReadOnly(true);
   }
@@ -358,6 +358,11 @@ MQTT::Message Edit::getMessage() const
 
 std::string Edit::getPayload() const
 {
+  if (mCurrentFormat == Format::Binary)
+  {
+    return mPayload;
+  }
+
   const auto wxs = mText->GetValue();
   const auto utf8 = wxs.ToUTF8();
   return {utf8.data(), utf8.length()};
@@ -370,9 +375,15 @@ bool Edit::getReadOnly() const
 
 void Edit::format()
 {
-  auto text = getPayload();
+  const auto text = getPayload();
+
+  if (mCurrentFormat != Format::Binary)
+  {
+    mPayload = getPayload();
+  }
+
   auto format = mFormatSelect->GetValue().ToStdString();
-  if (mReadOnly)
+  if (mReadOnly || mCurrentFormat == Format::Binary)
   {
     mText->SetReadOnly(false);
   }
@@ -383,7 +394,7 @@ void Edit::format()
       payloadUtf8.length())
   );
 
-  if (mReadOnly)
+  if (mReadOnly || mCurrentFormat == Format::Binary)
   {
     mText->SetReadOnly(true);
   }
