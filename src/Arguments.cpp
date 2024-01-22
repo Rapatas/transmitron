@@ -9,8 +9,8 @@ Arguments Arguments::handleArgs(int argc, char **argv)
 {
   const auto projectInfo = fmt::format(
     "{} {}",
-    Common::getProjectName(),
-    Common::getProjectVersion()
+    Common::Info::getProjectName(),
+    Common::Info::getProjectVersion()
   );
 
   CLI::App args;

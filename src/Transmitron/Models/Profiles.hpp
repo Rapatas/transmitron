@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_MODELS_PROFILES_HPP
-#define TRANSMITRON_MODELS_PROFILES_HPP
+#pragma once
 
 #include "Common/Filesystem.hpp"
 
@@ -139,4 +138,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_MODELS_PROFILES_HPP

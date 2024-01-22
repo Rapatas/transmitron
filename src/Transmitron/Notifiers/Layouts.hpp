@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_NOTIFIERS_LAYOUTS_HPP
-#define TRANSMITRON_NOTIFIERS_LAYOUTS_HPP
+#pragma once
 
 #include <wx/dataview.h>
 
@@ -32,4 +31,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_NOTIFIERS_LAYOUTS_HPP

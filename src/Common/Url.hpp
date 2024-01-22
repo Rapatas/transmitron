@@ -1,11 +1,8 @@
-#ifndef COMMON_URL_HPP
-#define COMMON_URL_HPP
+#pragma once
 
 #include <string>
 
-namespace Common
-{
-namespace Url
+namespace Common::Url
 {
 
 std::string encode(const std::string &data);
@@ -14,7 +11,4 @@ std::string decode(const std::string &data);
 inline bool encodable(char c);
 inline bool isHexChar(char c);
 
-}
-}
-
-#endif // COMMON_URL_HPP
+} // namespace Common::Url

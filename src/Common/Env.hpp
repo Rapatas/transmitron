@@ -1,5 +1,4 @@
-#ifndef COMMON_ENV_H
-#define COMMON_ENV_H
+#pragma once
 
 #include <string>
 
@@ -12,5 +11,3 @@ std::string get(const std::string &name);
 
 }
 }
-
-#endif // COMMON_ENV_H

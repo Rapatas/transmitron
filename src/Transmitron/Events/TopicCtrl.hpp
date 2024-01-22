@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_EVENTS_TOPICCTRL_HPP
-#define TRANSMITRON_EVENTS_TOPICCTRL_HPP
+#pragma once
 
 #include <wx/event.h>
 
@@ -31,4 +30,3 @@ public:
 
 }
 
-#endif // TRANSMITRON_EVENTS_TOPICCTRL_HPP

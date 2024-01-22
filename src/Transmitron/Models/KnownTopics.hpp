@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_MODELS_KNOWNTOPICS_HPP
-#define TRANSMITRON_MODELS_KNOWNTOPICS_HPP
+#pragma once
 
 #include "Common/Filesystem.hpp"
 #include <set>
@@ -76,4 +75,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_MODELS_KNOWNTOPICS_HPP

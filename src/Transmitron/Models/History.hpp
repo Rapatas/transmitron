@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_MODELS_HISTORY_HPP
-#define TRANSMITRON_MODELS_HISTORY_HPP
+#pragma once
 
 #include <spdlog/spdlog.h>
 #include <wx/dataview.h>
@@ -101,4 +100,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_MODELS_HISTORY_HPP

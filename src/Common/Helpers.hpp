@@ -1,5 +1,4 @@
-#ifndef COMMON_HELPERS_HPP
-#define COMMON_HELPERS_HPP
+#pragma once
 
 #include <chrono>
 
@@ -26,5 +25,3 @@ std::string hexDump(const std::vector<uint8_t>& bytes, size_t columns);
 
 }
 }
-
-#endif // COMMON_HELPERS_HPP

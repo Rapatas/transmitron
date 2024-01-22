@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_EVENTS_EDIT_HPP
-#define TRANSMITRON_EVENTS_EDIT_HPP
+#pragma once
 
 #include <wx/event.h>
 
@@ -32,4 +31,3 @@ public:
 
 }
 
-#endif // TRANSMITRON_EVENTS_EDIT_HPP

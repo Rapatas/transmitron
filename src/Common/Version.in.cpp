@@ -4,7 +4,7 @@
 #define PROJECT_VERSION "@PROJECT_VERSION@"
 #endif // PROJECT_VERSION
 
-const char *Common::getProjectVersion()
+const char *Common::Info::getProjectVersion()
 {
     return PROJECT_VERSION;
 }

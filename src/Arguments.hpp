@@ -1,5 +1,4 @@
-#ifndef ARGUMENTS_HPP
-#define ARGUMENTS_HPP
+#pragma once
 
 #include "Common/Log.hpp"
 #include <string>
@@ -17,6 +16,3 @@ struct Arguments
 
   static Arguments handleArgs(int argc, char **argv);
 };
-
-#endif // ARGUMENTS_HPP
-

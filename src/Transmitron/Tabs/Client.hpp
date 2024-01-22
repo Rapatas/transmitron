@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_TABS_CLIENT_HPP
-#define TRANSMITRON_TABS_CLIENT_HPP
+#pragma once
 
 #include <spdlog/spdlog.h>
 #include <wx/event.h>
@@ -256,4 +255,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_TABS_CLIENT_HPP

@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_WIDGETS_TOPICCTRL_HPP
-#define TRANSMITRON_WIDGETS_TOPICCTRL_HPP
+#pragma once
 
 #include <spdlog/spdlog.h>
 #include <wx/dnd.h>
@@ -77,4 +76,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_WIDGETS_TOPICCTRL_HPP

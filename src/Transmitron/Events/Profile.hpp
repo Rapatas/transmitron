@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_EVENTS_PROFILE_HPP
-#define TRANSMITRON_EVENTS_PROFILE_HPP
+#pragma once
 
 #include <wx/dataview.h>
 #include <wx/event.h>
@@ -49,4 +48,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_EVENTS_PROFILE_HPP

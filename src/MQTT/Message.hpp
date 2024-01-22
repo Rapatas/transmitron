@@ -1,5 +1,4 @@
-#ifndef MQTT_MESSAGE_HPP
-#define MQTT_MESSAGE_HPP
+#pragma once
 
 #include <chrono>
 #include <string>
@@ -21,6 +20,4 @@ struct Message
   static nlohmann::json toJson(const Message &message);
 };
 
-}
-
-#endif // MQTT_MESSAGE_HPP
+} // namespace MQTT

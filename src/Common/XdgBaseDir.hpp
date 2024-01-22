@@ -1,5 +1,4 @@
-#ifndef COMMON_XDGBASEDIR_H
-#define COMMON_XDGBASEDIR_H
+#pragma once
 
 #include <vector>
 #include "Common/Filesystem.hpp"
@@ -40,6 +39,4 @@ private:
   std::vector<std::string> readConfigDirs() const;
 };
 
-}
-
-#endif // COMMON_XDGBASEDIR_H
+} // namespace Common

@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_EVENTS_LAYOUT_HPP
-#define TRANSMITRON_EVENTS_LAYOUT_HPP
+#pragma once
 
 #include <wx/event.h>
 #include <wx/dataview.h>
@@ -62,4 +61,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_EVENTS_LAYOUT_HPP

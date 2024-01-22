@@ -377,7 +377,7 @@ void App::createSettingsTab()
 Common::fs::path App::createConfigDir()
 {
   const auto configHome = Common::XdgBaseDir::configHome();
-  const auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
+  const auto config = fmt::format("{}/{}", configHome.string(), Info::getProjectName());
 
   if (!fs::is_directory(config) || !fs::exists(config))
   {
@@ -396,7 +396,7 @@ Common::fs::path App::createConfigDir()
 Common::fs::path App::createCacheDir()
 {
   const auto configHome = Common::XdgBaseDir::cacheHome();
-  const auto config = fmt::format("{}/{}", configHome.string(), getProjectName());
+  const auto config = fmt::format("{}/{}", configHome.string(), Info::getProjectName());
 
   if (!fs::is_directory(config) || !fs::exists(config))
   {

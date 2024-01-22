@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_EVENTS_SUBSCRIPTION_HPP
-#define TRANSMITRON_EVENTS_SUBSCRIPTION_HPP
+#pragma once
 
 #include <wx/event.h>
 #include "MQTT/Subscription.hpp"
@@ -63,4 +62,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_EVENTS_SUBSCRIPTION_HPP

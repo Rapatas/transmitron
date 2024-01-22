@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_WIDGETS_LAYOUTS_HPP
-#define TRANSMITRON_WIDGETS_LAYOUTS_HPP
+#pragma once
 
 #include <spdlog/spdlog.h>
 #include <wx/wx.h>
@@ -58,4 +57,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_WIDGETS_LAYOUTS_HPP

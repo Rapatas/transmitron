@@ -1,5 +1,4 @@
-#ifndef MQTT_SUBSCRIPTION_HPP
-#define MQTT_SUBSCRIPTION_HPP
+#pragma once
 
 #include <functional>
 #include <string>
@@ -78,6 +77,4 @@ private:
   void setState(State newState);
 };
 
-}
-
-#endif // MQTT_SUBSCRIPTION_HPP
+} // namespace MQTT

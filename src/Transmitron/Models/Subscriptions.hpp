@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_MODELS_SUBSCRIPTIONS_HPP
-#define TRANSMITRON_MODELS_SUBSCRIPTIONS_HPP
+#pragma once
 
 #include <memory>
 
@@ -100,4 +99,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_MODELS_SUBSCRIPTIONS_HPP

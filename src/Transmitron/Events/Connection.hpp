@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_EVENTS_CONNECTION_HPP
-#define TRANSMITRON_EVENTS_CONNECTION_HPP
+#pragma once
 
 #include <wx/dataview.h>
 #include <wx/event.h>
@@ -51,5 +50,3 @@ private:
 };
 
 }
-
-#endif // TRANSMITRON_EVENTS_CONNECTION_HPP

@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_MODELS_MESSAGES_HPP
-#define TRANSMITRON_MODELS_MESSAGES_HPP
+#pragma once
 
 #include "Common/Filesystem.hpp"
 #include <list>
@@ -152,4 +151,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_MODELS_MESSAGES_HPP

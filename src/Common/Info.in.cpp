@@ -4,7 +4,7 @@
 #define PROJECT_NAME "@PROJECT_NAME@"
 #endif // PROJECT_NAME
 
-const char *Common::getProjectName()
+const char *Common::Info::getProjectName()
 {
     return PROJECT_NAME;
 }
@@ -13,7 +13,7 @@ const char *Common::getProjectName()
 #define PROJECT_DESCRIPTION "@PROJECT_DESCRIPTION@"
 #endif // PROJECT_DESCRIPTION
 
-const char *Common::getProjectDescription()
+const char *Common::Info::getProjectDescription()
 {
     return PROJECT_DESCRIPTION;
 }

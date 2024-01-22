@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_TABS_SETTINGS_HPP
-#define TRANSMITRON_TABS_SETTINGS_HPP
+#pragma once
 
 #include <spdlog/spdlog.h>
 #include <wx/panel.h>
@@ -137,4 +136,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_TABS_SETTINGS_HPP

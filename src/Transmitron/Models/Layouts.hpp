@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_MODELS_LAYOUTS_HPP
-#define TRANSMITRON_MODELS_LAYOUTS_HPP
+#pragma once
 
 #include "Common/Filesystem.hpp"
 #include <map>
@@ -98,4 +97,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_MODELS_LAYOUTS_HPP

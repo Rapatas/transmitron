@@ -1,17 +1,11 @@
-#ifndef COMMON_STRING_H
-#define COMMON_STRING_H
+#pragma once
 
 #include <string>
 #include <vector>
 
-namespace Common
-{
-namespace String
+namespace Common::String
 {
 
 std::vector<std::string> split(const std::string &data, char delim);
 
-}
-}
-
-#endif // COMMON_STRING_H
+} // namespace Common::String

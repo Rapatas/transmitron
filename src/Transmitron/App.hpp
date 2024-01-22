@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_APP_HPP
-#define TRANSMITRON_APP_HPP
+#pragma once
 
 #include <spdlog/spdlog.h>
 #include <wx/wx.h>
@@ -66,8 +65,6 @@ private:
   int calculateOptionHeight();
 };
 
-}
+} // namespace Transmitron
 
 DECLARE_APP(Transmitron::App)
-
-#endif // TRANSMITRON_APP_HPP

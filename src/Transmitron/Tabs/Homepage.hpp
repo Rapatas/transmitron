@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_TABS_HOMEPAGE_HPP
-#define TRANSMITRON_TABS_HOMEPAGE_HPP
+#pragma once
 
 #include <spdlog/spdlog.h>
 #include <wx/propgrid/property.h>
@@ -92,4 +91,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_TABS_HOMEPAGE_HPP

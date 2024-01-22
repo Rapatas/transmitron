@@ -1,5 +1,4 @@
-#ifndef MQTT_BROKEROPTIONS_HPP
-#define MQTT_BROKEROPTIONS_HPP
+#pragma once
 
 #include <chrono>
 #include <string>
@@ -72,6 +71,4 @@ private:
 
 };
 
-}
-
-#endif // MQTT_BROKEROPTIONS_HPP
+} // namespace MQTT

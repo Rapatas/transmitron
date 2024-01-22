@@ -1,5 +1,4 @@
-#ifndef COMMON_LOG_H
-#define COMMON_LOG_H
+#pragma once
 
 #include <string>
 #include <memory>
@@ -33,6 +32,4 @@ private:
 
 };
 
-}
-
-#endif // COMMON_LOG_H
+} // namespace Common

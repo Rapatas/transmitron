@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_TYPES_SUBSCRIPTION_HPP
-#define TRANSMITRON_TYPES_SUBSCRIPTION_HPP
+#pragma once
 
 #include <map>
 #include <wx/colour.h>
@@ -52,4 +51,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_TYPES_SUBSCRIPTION_HPP

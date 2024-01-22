@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_TYPES_CLIENTOPTIONS_H
-#define TRANSMITRON_TYPES_CLIENTOPTIONS_H
+#pragma once
 
 #include <string>
 
@@ -28,5 +27,3 @@ private:
 };
 
 }
-
-#endif // TRANSMITRON_TYPES_CLIENTOPTIONS_H

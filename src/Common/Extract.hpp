@@ -1,5 +1,4 @@
-#ifndef COMMON_EXTRACT_HPP
-#define COMMON_EXTRACT_HPP
+#pragma once
 
 #include <nlohmann/json.hpp>
 #include <optional>
@@ -32,5 +31,3 @@ std::optional<bool> extract<bool>(
 );
 
 }
-
-#endif // COMMON_EXTRACT_HPP

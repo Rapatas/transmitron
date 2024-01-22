@@ -1,5 +1,4 @@
-#ifndef MQTT_CLIENT_HPP
-#define MQTT_CLIENT_HPP
+#pragma once
 
 #include <list>
 #include <map>
@@ -130,6 +129,4 @@ private:
   static bool match(const std::string &filter, const std::string &topic);
 };
 
-}
-
-#endif // MQTT_CLIENT_HPP
+} // namespace MQTT

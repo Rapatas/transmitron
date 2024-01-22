@@ -1,5 +1,4 @@
-#ifndef COMMON_CONSOLE_HPP
-#define COMMON_CONSOLE_HPP
+#pragma once
 
 namespace Common::Console
 {
@@ -15,5 +14,3 @@ bool attachToParent(int16_t minLength);
 #endif // _WIN32
 
 } // namespace Common::Console
-
-#endif // COMMON_CONSOLE_HPP

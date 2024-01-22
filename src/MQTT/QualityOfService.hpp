@@ -1,5 +1,4 @@
-#ifndef MQTT_QOS_HPP
-#define MQTT_QOS_HPP
+#pragma once
 
 #include <cstdint>
 
@@ -13,6 +12,4 @@ enum class QoS : uint8_t
   ExactlyOnce = 2
 };
 
-}
-
-#endif // MQTT_QOS_HPP
+} // namespace MQTT

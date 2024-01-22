@@ -1,5 +1,4 @@
-#ifndef TRANSMITRON_WIDGETS_EDIT_HPP
-#define TRANSMITRON_WIDGETS_EDIT_HPP
+#pragma once
 
 #include <chrono>
 
@@ -147,4 +146,3 @@ private:
 
 }
 
-#endif // TRANSMITRON_WIDGETS_EDIT_HPP
