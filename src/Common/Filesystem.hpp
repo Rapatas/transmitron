@@ -3,6 +3,8 @@
   Modified to use Common::fs instead of std::filesystem.
 */
 
+// NOLINTBEGIN(cppcoreguidelines-macro-usage)
+
 // We haven't checked which filesystem to include yet
 #ifndef INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
 
@@ -76,3 +78,4 @@ namespace Rapatas::Transmitron::Common {
 
 #endif // #ifndef INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
 
+// NOLINTEND(cppcoreguidelines-macro-usage)

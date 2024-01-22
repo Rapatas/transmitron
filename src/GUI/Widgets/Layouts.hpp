@@ -20,7 +20,7 @@ public:
     wxWindow* parent,
     wxWindowID id,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
-    wxAuiManager &auiMan,
+    wxAuiManager *auiMan,
     int optionsHeight
   );
 
@@ -28,12 +28,12 @@ public:
 
 private:
 
-  const int mOptionsHeight;
+  int mOptionsHeight;
 
   std::shared_ptr<spdlog::logger> mLogger;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
   wxDataViewItem mCurrentSelection;
-  wxAuiManager &mAuiMan;
+  wxAuiManager *mAuiMan;
   wxFont mFont;
 
   wxBoxSizer *mSizer = nullptr;

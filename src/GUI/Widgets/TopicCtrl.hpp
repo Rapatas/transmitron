@@ -38,7 +38,7 @@ private:
     wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult defResult) override;
   };
 
-  const wxFont mFont;
+  wxFont mFont;
   bool mFakeSelection = false;
   bool mFirstClick = true;
   bool mReadOnly = false;

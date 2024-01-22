@@ -20,6 +20,13 @@ public:
 
   struct Observer
   {
+    Observer() = default;
+    virtual ~Observer() = default;
+    Observer(const Observer &) = default;
+    Observer(Observer &&) = default;
+    Observer &operator=(const Observer &) = default;
+    Observer &operator=(Observer &&) = default;
+
     virtual void onMessage(wxDataViewItem item) = 0;
   };
 

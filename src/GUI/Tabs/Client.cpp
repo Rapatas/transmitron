@@ -418,7 +418,7 @@ void Client::setupPanelConnect(wxWindow *parent)
   );
   mCancel->SetToolTip("Stop connection attempt");
 
-  mLayouts = new Widgets::Layouts(mProfileBar, -1, mLayoutsModel, mAuiMan, mOptionsHeight);
+  mLayouts = new Widgets::Layouts(mProfileBar, -1, mLayoutsModel, &mAuiMan, mOptionsHeight);
   mLayouts->Bind(Events::LAYOUT_SELECTED, &Client::onLayoutSelected, this);
   mLayouts->Bind(Events::LAYOUT_RESIZED,  &Client::onLayoutResized,  this);
 

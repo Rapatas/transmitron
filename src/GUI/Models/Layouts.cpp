@@ -26,7 +26,7 @@ Layouts::Layouts()
   const auto id = mAvailableId++;
   auto layout = std::make_unique<Node>();
   layout->name = DefaultName;
-  layout->perspective = DefaultPerspective;
+  layout->perspective = Perspective(DefaultPerspective);
   layout->path = "";
   layout->saved = true;
   mLayouts.insert({id, std::move(layout)});
@@ -103,7 +103,7 @@ bool Layouts::remove(wxDataViewItem item)
   return true;
 }
 
-wxDataViewItem Layouts::create(const Perspective_t &perspective)
+wxDataViewItem Layouts::create(const Perspective &perspective)
 {
   const std::string name = getUniqueName();
   const std::string encoded = Url::encode(name);
@@ -138,7 +138,7 @@ wxDataViewItem Layouts::getDefault()
   return toItem(1);
 }
 
-const Layouts::Perspective_t &Layouts::getPerspective(wxDataViewItem item) const
+const Layouts::Perspective &Layouts::getPerspective(wxDataViewItem item) const
 {
   const auto id = toId(item);
   const auto &node = mLayouts.at(id);

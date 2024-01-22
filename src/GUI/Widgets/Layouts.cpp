@@ -18,7 +18,7 @@ Layouts::Layouts(
   wxWindow* parent,
   wxWindowID id,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
-  wxAuiManager &auiMan,
+  wxAuiManager *auiMan,
   int optionsHeight
 ) :
   wxPanel(parent, id),
@@ -126,7 +126,7 @@ bool Layouts::setSelectedLayout(const std::string &layoutName)
 
 void Layouts::onLayoutSaveClicked(wxCommandEvent &/* event */)
 {
-  const auto perspective = mAuiMan.SavePerspective().ToStdString();
+  const auto perspective = mAuiMan->SavePerspective().ToStdString();
   const auto item = mLayoutsModel->create(perspective);
 
   if (!item.IsOk())

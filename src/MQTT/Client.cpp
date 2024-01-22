@@ -326,44 +326,20 @@ void Client::onSuccessUnsubscribe(const mqtt::token& tok)
 void Client::onFailureConnect(const mqtt::token& tok)
 {
   const auto code = tok.get_return_code();
-  const auto codeIt = mReturnCodes.find(code);
-  if (codeIt != std::end(mReturnCodes))
-  {
-    mLogger->warn("Connection attempt failed: {}", codeIt->second);
-  }
-  else
-  {
-    mLogger->warn("Connection attempt failed: {}", code);
-  }
+  mLogger->warn("Connection attempt failed: {}", codeToStr(code));
   reconnect();
 }
 
 void Client::onFailureDisconnect(const mqtt::token& tok)
 {
   const auto code = tok.get_return_code();
-  const auto codeIt = mReturnCodes.find(code);
-  if (codeIt != std::end(mReturnCodes))
-  {
-    mLogger->warn("Disconnection attempt failed: {}", codeIt->second);
-  }
-  else
-  {
-    mLogger->warn("Disconnection attempt failed: {}", code);
-  }
+  mLogger->warn("Disconnection attempt failed: {}", codeToStr(code));
 }
 
 void Client::onFailurePublish(const mqtt::token& tok)
 {
   const auto code = tok.get_return_code();
-  const auto codeIt = mReturnCodes.find(code);
-  if (codeIt != std::end(mReturnCodes))
-  {
-    mLogger->warn("Publishing attempt failed: {}", codeIt->second);
-  }
-  else
-  {
-    mLogger->warn("Publishing attempt failed: {}", code);
-  }
+  mLogger->warn("Publishing attempt failed: {}", codeToStr(code));
 }
 
 void Client::onFailureSubscribe(const mqtt::token& tok)
@@ -392,30 +368,13 @@ void Client::onFailureSubscribe(const mqtt::token& tok)
   }
 
   const auto code = tok.get_return_code();
-  const auto codeIt = mReturnCodes.find(code);
-
-  if (codeIt != std::end(mReturnCodes))
-  {
-    mLogger->warn("Subscription attempt failed: {}", codeIt->second);
-  }
-  else
-  {
-    mLogger->warn("Subscription attempt failed: {}", code);
-  }
+  mLogger->warn("Subscription attempt failed: {}", codeToStr(code));
 }
 
 void Client::onFailureUnsubscribe(const mqtt::token& tok)
 {
   const auto code = tok.get_return_code();
-  const auto codeIt = mReturnCodes.find(code);
-  if (codeIt != std::end(mReturnCodes))
-  {
-    mLogger->warn("Unsubscription attempt failed: {}", codeIt->second);
-  }
-  else
-  {
-    mLogger->warn("Unsubscription attempt failed: {}", code);
-  }
+  mLogger->warn("Unsubscription attempt failed: {}", codeToStr(code));
 }
 
 // mqtt::iaction_listener interface }
@@ -618,6 +577,49 @@ bool Client::match(const std::string &filter, const std::string &topic)
   }
 
   return true;
+}
+
+const std::map<int, std::string> &Client::codeDescriptions()
+{
+  static const std::map<int, std::string> result
+  {
+    { 0,   "Connection accepted" },
+    { 1,   "Unacceptable protocol version" },
+    { 2,   "Identifier rejected" },
+    { 3,   "Service unavailable" },
+    { 4,   "Bad user name or password" },
+    { 5,   "Not authorized" },
+    { -1,  "Connection timeout" },
+    { -2,  "Persistence error" },
+    { -3,  "Disconnected" },
+    { -4,  "Max messages inflight" },
+    { -5,  "Bad utf8 string" },
+    { -6,  "Null parameter" },
+    { -7,  "Topicname truncated" },
+    { -8,  "Bad structure" },
+    { -9,  "Bad QOS" },
+    { -10, "No more MsgIds" },
+    { -11, "Operation incomplete" },
+    { -12, "Max buffered messages" },
+    { -13, "Ssl not supported" },
+    { -14, "Bad protocol" },
+    { -15, "Bad MQTT option" },
+    { -16, "Wrong MQTT version" },
+    { -17, "Zero length will topic" },
+    { -18, "Command ignored" },
+  };
+
+  return result;
+}
+
+std::string Client::codeToStr(int code)
+{
+  const auto it = codeDescriptions().find(code);
+  if (it == codeDescriptions().end())
+  {
+    return std::to_string(code);
+  }
+  return it->second;
 }
 
 // Static }

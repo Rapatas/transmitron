@@ -111,11 +111,11 @@ private:
 
   std::shared_ptr<spdlog::logger> mLogger;
   std::map<Panes, Pane> mPanes;
-  const wxString mName;
-  const Types::ClientOptions mClientOptions;
-  const wxFont mFont;
-  const bool mDarkMode;
-  const int mOptionsHeight;
+  wxString mName;
+  Types::ClientOptions mClientOptions;
+  wxFont mFont;
+  bool mDarkMode;
+  int mOptionsHeight;
   wxObjectDataPtr<Models::KnownTopics> mTopicsSubscribed;
   wxObjectDataPtr<Models::KnownTopics> mTopicsPublished;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;

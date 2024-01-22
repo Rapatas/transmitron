@@ -10,8 +10,8 @@ struct Arguments
 {
   bool exit = false;
 
-  int argc;
-  char **argv;
+  int argc{};
+  char **argv = nullptr;
 
   std::string profileName;
   std::string recordingFile;

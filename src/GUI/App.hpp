@@ -40,7 +40,7 @@ private:
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
 
-  const wxFontInfo LabelFontInfo;
+  wxFontInfo LabelFontInfo;
 
   void onPageClosing(wxBookCtrlEvent &event);
   void onPageSelected(wxBookCtrlEvent &event);

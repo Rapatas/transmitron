@@ -35,7 +35,6 @@ Edit::Edit(
   bool darkMode
 ) :
   wxPanel(parent, id),
-  mStyles(initThemes()),
   mTheme(darkMode ? Theme::Dark : Theme::Light),
   mOptionsHeight(optionsHeight),
   mTop(new wxBoxSizer(wxOrientation::wxHORIZONTAL)),
@@ -95,11 +94,11 @@ Edit::Edit(
   mFormatSelect = new wxComboBox(
     this,
     -1,
-    mFormats.begin()->first,
+    formats().begin()->first,
     wxDefaultPosition,
     wxSize(FormatButtonWidth, mOptionsHeight)
   );
-  for (const auto &[name, format] : mFormats)
+  for (const auto &[name, format] : formats())
   {
     mFormatSelect->Insert(name, 0);
   }
@@ -192,9 +191,9 @@ void Edit::setupScintilla()
   mText->MarkerDefine(wxSTC_MARKNUM_FOLDERTAIL,    wxSTC_MARK_EMPTY);
 
   // Constant styles.
-  mText->SetCaretForeground(mStyles.at(mTheme).at(Style::Normal).first);
-  mText->StyleSetForeground(wxSTC_STYLE_DEFAULT, mStyles.at(mTheme).at(Style::Normal).first);
-  mText->StyleSetBackground(wxSTC_STYLE_DEFAULT, mStyles.at(mTheme).at(Style::Editor).second);
+  mText->SetCaretForeground(styles().at(mTheme).at(Style::Normal).first);
+  mText->StyleSetForeground(wxSTC_STYLE_DEFAULT, styles().at(mTheme).at(Style::Normal).first);
+  mText->StyleSetBackground(wxSTC_STYLE_DEFAULT, styles().at(mTheme).at(Style::Editor).second);
   mText->StyleClearAll();
 }
 
@@ -205,7 +204,7 @@ void Edit::setStyle(Format format)
     return;
   }
 
-  const auto &style = mStyles.at(mTheme);
+  const auto &style = styles().at(mTheme);
 
   switch (format)
   {
@@ -297,7 +296,7 @@ void Edit::setPayload(const std::string &text)
   {
     mText->SetReadOnly(false);
   }
-  auto payloadUtf8 = formatTry(text, mFormats.at(format));
+  auto payloadUtf8 = formatTry(text, formats().at(format));
   mText->SetText(
     wxString::FromUTF8(
       payloadUtf8.data(),
@@ -385,7 +384,7 @@ void Edit::format()
   {
     mText->SetReadOnly(false);
   }
-  auto payloadUtf8 = formatTry(text, mFormats.at(format));
+  auto payloadUtf8 = formatTry(text, formats().at(format));
   mText->SetText(
     wxString::FromUTF8(
       payloadUtf8.data(),
@@ -577,50 +576,66 @@ void Edit::onRetainedClicked(wxMouseEvent &event)
   setRetained(!mRetained);
 }
 
-std::map<Edit::Theme, Edit::ThemeStyles> Edit::initThemes()
+const std::map<Edit::Theme, Edit::ThemeStyles> &Edit::styles()
 {
-  auto color = [](uint8_t red, uint8_t green, uint8_t blue)
+  static auto result = []()
   {
-    return 0
-      | (uint32_t)(red   << (ByteSize * 0))
-      | (uint32_t)(green << (ByteSize * 1))
-      | (uint32_t)(blue  << (ByteSize * 2))
-    ;
-  };
+    auto color = [](uint8_t red, uint8_t green, uint8_t blue)
+    {
+      return 0
+        | (uint32_t)(red   << (ByteSize * 0))
+        | (uint32_t)(green << (ByteSize * 1))
+        | (uint32_t)(blue  << (ByteSize * 2))
+      ;
+    };
 
-  constexpr uint32_t BrightnessBump = color(80, 80, 80); // NOLINT
-  constexpr uint32_t Black  = color(30,  30,  30);  // NOLINT
-  constexpr uint32_t White  = color(250, 250, 250); // NOLINT
-  constexpr uint32_t Red    = color(180, 0,   0);   // NOLINT
-  constexpr uint32_t Orange = color(150, 120, 0);   // NOLINT
-  constexpr uint32_t Green  = color(0,   150, 0);   // NOLINT
-  constexpr uint32_t Pink   = color(200, 0,   150); // NOLINT
-  constexpr uint32_t Cyan   = color(0,   120, 150); // NOLINT
+    constexpr uint32_t BrightnessBump = color(80, 80, 80); // NOLINT
+    constexpr uint32_t Black  = color(30,  30,  30);  // NOLINT
+    constexpr uint32_t White  = color(250, 250, 250); // NOLINT
+    constexpr uint32_t Red    = color(180, 0,   0);   // NOLINT
+    constexpr uint32_t Orange = color(150, 120, 0);   // NOLINT
+    constexpr uint32_t Green  = color(0,   150, 0);   // NOLINT
+    constexpr uint32_t Pink   = color(200, 0,   150); // NOLINT
+    constexpr uint32_t Cyan   = color(0,   120, 150); // NOLINT
 
-  return {
-    {Theme::Light, {
-      {Style::Comment, {Black,  Black}},
-      {Style::Editor,  {Black,  White}},
-      {Style::Error,   {Black,  Red}},
-      {Style::Normal,  {Black,  White}},
-      {Style::Key,     {Green,  White}},
-      {Style::Keyword, {Cyan,   White}},
-      {Style::Number,  {Orange, White}},
-      {Style::String,  {Orange, White}},
-      {Style::Uri,     {Cyan,   White}},
-      {Style::Special, {Pink,   White}},
-    }},
-    {Theme::Dark, {
-      {Style::Comment, {White, Black}},
-      {Style::Editor,  {White, Black}},
-      {Style::Error,   {Black, Red}},
-      {Style::Normal,  {White, Black}},
-      {Style::Key,     {Green  | BrightnessBump, Black}},
-      {Style::Keyword, {Cyan   | BrightnessBump, Black}},
-      {Style::Number,  {Orange | BrightnessBump, Black}},
-      {Style::String,  {Orange | BrightnessBump, Black}},
-      {Style::Uri,     {Cyan   | BrightnessBump, Black}},
-      {Style::Special, {Pink   | BrightnessBump, Black}},
-    }}
+    return std::map<Edit::Theme, Edit::ThemeStyles>{
+      {Theme::Light, {
+        {Style::Comment, {Black,  Black}},
+        {Style::Editor,  {Black,  White}},
+        {Style::Error,   {Black,  Red}},
+        {Style::Normal,  {Black,  White}},
+        {Style::Key,     {Green,  White}},
+        {Style::Keyword, {Cyan,   White}},
+        {Style::Number,  {Orange, White}},
+        {Style::String,  {Orange, White}},
+        {Style::Uri,     {Cyan,   White}},
+        {Style::Special, {Pink,   White}},
+      }},
+      {Theme::Dark, {
+        {Style::Comment, {White, Black}},
+        {Style::Editor,  {White, Black}},
+        {Style::Error,   {Black, Red}},
+        {Style::Normal,  {White, Black}},
+        {Style::Key,     {Green  | BrightnessBump, Black}},
+        {Style::Keyword, {Cyan   | BrightnessBump, Black}},
+        {Style::Number,  {Orange | BrightnessBump, Black}},
+        {Style::String,  {Orange | BrightnessBump, Black}},
+        {Style::Uri,     {Cyan   | BrightnessBump, Black}},
+        {Style::Special, {Pink   | BrightnessBump, Black}},
+      }}
+    };
+  }();
+  return result;
+}
+
+const std::map<std::string, Edit::Format> &Edit::formats()
+{
+  static const std::map<std::string, Format> result{
+    {"Auto", Format::Auto},
+    {"Text", Format::Text},
+    {"Json", Format::Json},
+    {"Xml", Format::Xml},
+    {"Binary", Format::Binary},
   };
+  return result;
 }

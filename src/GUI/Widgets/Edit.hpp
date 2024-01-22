@@ -76,13 +76,12 @@ private:
   using ThemeStyles = std::map<Style, std::pair<uint32_t, uint32_t>>;
 
   std::shared_ptr<spdlog::logger> mLogger;
-  const std::map<Theme, ThemeStyles> mStyles;
 
   Theme mTheme;
   wxFont mFont;
 
   bool mReadOnly = false;
-  const int mOptionsHeight;
+  int mOptionsHeight;
 
   wxBoxSizer *mTop = nullptr;
   wxBoxSizer *mVsizer = nullptr;
@@ -119,14 +118,6 @@ private:
   };
   Format mCurrentFormat = Format::Auto;
 
-  const std::map<std::string, Format> mFormats{
-    {"Auto", Format::Auto},
-    {"Text", Format::Text},
-    {"Json", Format::Json},
-    {"Xml", Format::Xml},
-    {"Binary", Format::Binary},
-  };
-
   void onQosClicked(wxMouseEvent &event);
   void onRetainedClicked(wxMouseEvent &event);
 
@@ -135,13 +126,15 @@ private:
   void onFormatSelected(wxCommandEvent &event);
   void onTopicCtrlReturn(Events::TopicCtrl &event);
 
+
   std::string formatTry(
     const std::string &text,
     Format format
   );
 
   static Format formatGuess(const std::string &text);
-  static std::map<Theme, ThemeStyles> initThemes();
+  static const std::map<std::string, Format> &formats();
+  static const std::map<Theme, ThemeStyles> &styles();
 };
 
 } // namespace Rapatas::Transmitron::GUI::Widgets
