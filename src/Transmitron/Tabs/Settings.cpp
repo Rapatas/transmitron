@@ -99,28 +99,15 @@ Settings::Settings(
 void Settings::createProfile()
 {
   const auto item = mProfilesModel->createProfile();
-  mProfilesCtrl->Select(item);
-  mProfilesCtrl->EnsureVisible(item);
-  mProfileDelete->Enable();
-  mProfileOptionsSizer->Show(mProfileOptions);
-  mProfileOptionsSizer->Layout();
-  propertyGridFill(
-    mProfilesModel->getName(item),
-    mProfilesModel->getBrokerOptions(item),
-    mProfilesModel->getClientOptions(item)
-  );
-
-  const auto *namePtr = mProfileProperties.at(Properties::Name);
-  const bool focus = true;
-  mProfileGrid->SelectProperty(namePtr, focus);
-
-  allowSave();
+  selectProfile(item);
 }
 
 void Settings::selectProfile(wxDataViewItem profile)
 {
   mSections->SetItemState(1, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+  mProfileDelete->Enable();
   mProfilesCtrl->Select(profile);
+  mProfilesCtrl->EnsureVisible(profile);
   mProfileOptionsSizer->Show(mProfileOptions);
   mProfileOptionsSizer->Layout();
   propertyGridFill(
@@ -128,6 +115,12 @@ void Settings::selectProfile(wxDataViewItem profile)
     mProfilesModel->getBrokerOptions(profile),
     mProfilesModel->getClientOptions(profile)
   );
+
+  const auto *namePtr = mProfileProperties.at(Properties::Name);
+  const bool focus = true;
+  mProfileGrid->SelectProperty(namePtr, focus);
+
+  allowSave();
 }
 
 void Settings::setupLayouts(wxPanel *parent)

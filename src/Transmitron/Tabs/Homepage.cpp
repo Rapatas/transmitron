@@ -75,6 +75,8 @@ void Homepage::focus()
   if (children.empty()) { return; }
 
   const auto first = children.front();
+  mProfileEdit->Enable();
+  mProfileConnect->Enable();
   mProfilesCtrl->Select(first);
   mProfilesCtrl->SetFocus();
 }
@@ -151,6 +153,7 @@ void Homepage::setupProfiles(wxPanel *parent)
   mProfileEdit->SetToolTip("Edit selected profile");
   mProfileEdit->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
   mProfileEdit->Bind(wxEVT_BUTTON, &Homepage::onProfileEdit, this);
+  mProfileEdit->Disable();
 
   mProfileConnect = new wxButton(
     row,
@@ -162,6 +165,7 @@ void Homepage::setupProfiles(wxPanel *parent)
   mProfileConnect->SetToolTip("Connect to selected profile");
   mProfileConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
   mProfileConnect->Bind(wxEVT_BUTTON, &Homepage::onProfileConnect, this);
+  mProfileConnect->Disable();
 
   auto *rsizer = new wxBoxSizer(wxHORIZONTAL);
   rsizer->Add(label, 0);
@@ -258,9 +262,14 @@ void Homepage::onProfileSelected(wxDataViewEvent &event)
   const auto item = event.GetItem();
   if (!item.IsOk())
   {
+    mProfileEdit->Disable();
+    mProfileConnect->Disable();
     event.Skip();
     return;
   }
+
+  mProfileEdit->Enable();
+  mProfileConnect->Enable();
 
   event.Skip();
 }
