@@ -2,6 +2,7 @@
 set(
   ${TRANSMITRON_BIN_NAME}_SOURCE
 
+  Arguments.cpp
   Common/Env.Linux.cpp
   Common/Env.Windows.cpp
   Common/Extract.cpp
@@ -20,13 +21,15 @@ set(
   Transmitron/Models/History.cpp
   Transmitron/Models/KnownTopics.cpp
   Transmitron/Models/Layouts.cpp
-  Transmitron/Models/Profiles.cpp
   Transmitron/Models/Messages.cpp
+  Transmitron/Models/Profiles.cpp
   Transmitron/Models/Subscriptions.cpp
   Transmitron/Notifiers/Layouts.cpp
   Transmitron/Resources/gear/gear-18x18.cpp
   Transmitron/Resources/history/history-18x14.cpp
   Transmitron/Resources/history/history-18x18.cpp
+  Transmitron/Resources/messages/messages-18x14.cpp
+  Transmitron/Resources/messages/messages-18x18.cpp
   Transmitron/Resources/pin/not-pinned-18x18.cpp
   Transmitron/Resources/pin/pinned-18x18.cpp
   Transmitron/Resources/plus/plus-18x18.cpp
@@ -37,8 +40,6 @@ set(
   Transmitron/Resources/qos/qos-2.cpp
   Transmitron/Resources/send/send-18x14.cpp
   Transmitron/Resources/send/send-18x18.cpp
-  Transmitron/Resources/messages/messages-18x14.cpp
-  Transmitron/Resources/messages/messages-18x18.cpp
   Transmitron/Resources/subscription/subscription-18x14.cpp
   Transmitron/Resources/subscription/subscription-18x18.cpp
   Transmitron/Tabs/Client.cpp

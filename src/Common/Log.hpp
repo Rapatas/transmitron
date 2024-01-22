@@ -21,7 +21,7 @@ public:
   Log &operator=(const Log &other) = delete;
   Log &operator=(Log &&other) = delete;
 
-  bool initialize();
+  void initialize(bool verbose);
 
   static Log &instance();
   static std::shared_ptr<spdlog::logger> create(const std::string &name);

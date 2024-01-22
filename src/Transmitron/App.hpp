@@ -5,6 +5,7 @@
 #include <wx/wx.h>
 #include <wx/aui/auibook.h>
 
+#include "Common/Log.hpp"
 #include "Transmitron/Events/Profile.hpp"
 #include "Transmitron/Events/Recording.hpp"
 #include "Transmitron/Models/Profiles.hpp"
@@ -19,7 +20,7 @@ class App :
 {
 public:
 
-  explicit App();
+  explicit App(bool verbose);
 
   bool openProfile(const std::string &profileName);
   void openRecording(const std::string &filename);

@@ -15,8 +15,10 @@ Log::~Log()
   spdlog::shutdown();
 }
 
-bool Log::initialize()
+void Log::initialize(bool verbose)
 {
+  (void)verbose;
+
   mSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
   mSink->set_pattern("[%Y-%m-%d %H:%M:%S.%e] %^[%l]%$ [%n] %v");
 #ifndef NDEBUG
@@ -24,7 +26,6 @@ bool Log::initialize()
 #else
   mSink->set_level(spdlog::level::level_enum::critical);
 #endif
-  return true;
 }
 
 std::shared_ptr<spdlog::logger> Log::create(const std::string &name)

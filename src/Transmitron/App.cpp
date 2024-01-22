@@ -52,10 +52,10 @@ constexpr size_t MinWindowWidth = 550;
 constexpr size_t MinWindowHeight = 400;
 constexpr size_t LabelFontSize = 15;
 
-App::App() :
+App::App(bool verbose) :
   LabelFontInfo(LabelFontSize)
 {
-  Common::Log::instance().initialize();
+  Common::Log::instance().initialize(verbose);
   mLogger = Common::Log::create("Transmitron::App");
 }
 
