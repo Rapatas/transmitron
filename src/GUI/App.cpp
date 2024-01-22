@@ -345,7 +345,7 @@ void App::createHomepageTab(size_t index)
   homepage->Bind(Events::PROFILE_CREATE, &App::onProfileCreate, this);
   homepage->Bind(Events::PROFILE_EDIT, &App::onProfileEdit, this);
 
-  homepage->Bind(Events::CONNECTION, [this](Events::Connection e){
+  homepage->Bind(Events::CONNECTION_REQUESTED, [this](Events::Connection e){
     if (e.GetSelection() == wxNOT_FOUND)
     {
       e.Skip();
@@ -360,7 +360,7 @@ void App::createHomepageTab(size_t index)
 void App::createSettingsTab()
 {
   mSettingsTab = new Tabs::Settings(mNote, LabelFontInfo, mOptionsHeight, mProfilesModel, mLayoutsModel);
-  mSettingsTab->Bind(Events::CONNECTION, [this](Events::Connection e){
+  mSettingsTab->Bind(Events::CONNECTION_REQUESTED, [this](Events::Connection e){
     if (e.GetSelection() == wxNOT_FOUND)
     {
       e.Skip();

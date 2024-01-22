@@ -8,9 +8,9 @@ namespace Rapatas::Transmitron::GUI::Events
 {
 
 class Subscription;
-wxDECLARE_EVENT(SUBSCRIBED, Subscription);
-wxDECLARE_EVENT(UNSUBSCRIBED, Subscription);
-wxDECLARE_EVENT(RECEIVED, Subscription);
+wxDECLARE_EVENT(SUBSCRIPTION_SUBSCRIBED, Subscription);
+wxDECLARE_EVENT(SUBSCRIPTION_UNSUBSCRIBED, Subscription);
+wxDECLARE_EVENT(SUBSCRIPTION_RECEIVED, Subscription);
 
 // NOLINTNEXTLINE
 class Subscription :

@@ -3,6 +3,7 @@ set(
   ${TRANSMITRON_BIN_NAME}_SOURCE
 
   Arguments.cpp
+  Common/Console.cpp
   Common/Env.Linux.cpp
   Common/Env.Windows.cpp
   Common/Extract.cpp
@@ -13,12 +14,14 @@ set(
   Common/XdgBaseDir.Linux.cpp
   Common/XdgBaseDir.Windows.cpp
   Common/XdgBaseDir.cpp
-  Common/Console.cpp
-  MQTT/BrokerOptions.cpp
-  MQTT/Client.cpp
-  MQTT/Message.cpp
-  MQTT/Subscription.cpp
   GUI/App.cpp
+  GUI/Events/Connection.cpp
+  GUI/Events/Edit.cpp
+  GUI/Events/Layout.cpp
+  GUI/Events/Profile.cpp
+  GUI/Events/Recording.cpp
+  GUI/Events/Subscription.cpp
+  GUI/Events/TopicCtrl.cpp
   GUI/Models/History.cpp
   GUI/Models/KnownTopics.cpp
   GUI/Models/Layouts.cpp
@@ -51,6 +54,10 @@ set(
   GUI/Widgets/Edit.cpp
   GUI/Widgets/Layouts.cpp
   GUI/Widgets/TopicCtrl.cpp
+  MQTT/BrokerOptions.cpp
+  MQTT/Client.cpp
+  MQTT/Message.cpp
+  MQTT/Subscription.cpp
   main.cpp
 
 )

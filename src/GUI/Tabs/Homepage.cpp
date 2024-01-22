@@ -18,11 +18,6 @@ using namespace GUI::Tabs;
 using namespace GUI;
 using namespace GUI::Events;
 
-wxDEFINE_EVENT(Events::CONNECTION, Events::Connection); // NOLINT
-wxDEFINE_EVENT(Events::RECORDING_OPEN, Events::Recording); // NOLINT
-wxDEFINE_EVENT(Events::PROFILE_EDIT, Events::Profile); // NOLINT
-wxDEFINE_EVENT(Events::PROFILE_CREATE, Events::Profile); // NOLINT
-
 Homepage::Homepage(
   wxWindow *parent,
   wxFontInfo labelFont,

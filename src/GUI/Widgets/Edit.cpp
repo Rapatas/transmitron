@@ -26,9 +26,6 @@ using namespace GUI;
 using namespace Common;
 using namespace GUI::Widgets;
 
-wxDEFINE_EVENT(Events::EDIT_PUBLISH, Events::Edit); // NOLINT
-wxDEFINE_EVENT(Events::EDIT_SAVE_MESSAGE, Events::Edit); // NOLINT
-
 constexpr uint8_t ByteSize = std::numeric_limits<uint8_t>::digits;
 
 Edit::Edit(

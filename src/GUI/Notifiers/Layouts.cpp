@@ -6,10 +6,6 @@ using namespace Rapatas::Transmitron;
 using namespace GUI::Notifiers;
 using namespace GUI;
 
-wxDEFINE_EVENT(Events::LAYOUT_ADDED,   Events::Layout); // NOLINT
-wxDEFINE_EVENT(Events::LAYOUT_REMOVED, Events::Layout); // NOLINT
-wxDEFINE_EVENT(Events::LAYOUT_CHANGED, Events::Layout); // NOLINT
-
 // wxDataViewModelNotifier interface {
 
 bool Layouts::Cleared()

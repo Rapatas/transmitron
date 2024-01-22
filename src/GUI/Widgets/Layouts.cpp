@@ -14,9 +14,6 @@ using namespace Rapatas::Transmitron;
 using namespace GUI::Widgets;
 using namespace GUI;
 
-wxDEFINE_EVENT(Events::LAYOUT_SELECTED, Events::Layout); // NOLINT
-wxDEFINE_EVENT(Events::LAYOUT_RESIZED,  Events::Layout); // NOLINT
-
 Layouts::Layouts(
   wxWindow* parent,
   wxWindowID id,

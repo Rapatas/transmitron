@@ -33,12 +33,6 @@ using namespace Common;
 
 constexpr size_t FontSize = 9;
 
-wxDEFINE_EVENT(Events::CONNECTED, Events::Connection); // NOLINT
-wxDEFINE_EVENT(Events::DISCONNECTED, Events::Connection); // NOLINT
-wxDEFINE_EVENT(Events::LOST, Events::Connection); // NOLINT
-wxDEFINE_EVENT(Events::FAILURE, Events::Connection); // NOLINT
-wxDEFINE_EVENT(Events::RECORDING_SAVE, Events::Recording); // NOLINT
-
 Client::Client(
   wxWindow* parent,
   const MQTT::BrokerOptions &brokerOptions,
@@ -72,10 +66,10 @@ Client::Client(
   mClient(std::make_shared<MQTT::Client>()),
   mMqttObserverId(mClient->attachObserver(this))
 {
-  Bind(Events::CONNECTED, &Client::onConnectedSync, this);
-  Bind(Events::DISCONNECTED, &Client::onDisconnectedSync, this);
-  Bind(Events::LOST, &Client::onConnectionLostSync, this);
-  Bind(Events::FAILURE, &Client::onConnectionFailureSync, this);
+  Bind(Events::CONNECTION_CONNECTED, &Client::onConnectedSync, this);
+  Bind(Events::CONNECTION_DISCONNECTED, &Client::onDisconnectedSync, this);
+  Bind(Events::CONNECTION_LOST, &Client::onConnectionLostSync, this);
+  Bind(Events::CONNECTION_FAILURE, &Client::onConnectionFailureSync, this);
 
   mClient->setBrokerOptions(brokerOptions);
   setupPanels();
@@ -1495,25 +1489,25 @@ void Client::onContextSelectedMessageNewFolder(wxCommandEvent &/* event */)
 
 void Client::onConnected()
 {
-  auto *e = new Events::Connection(Events::CONNECTED);
+  auto *e = new Events::Connection(Events::CONNECTION_CONNECTED);
   wxQueueEvent(this, e);
 }
 
 void Client::onDisconnected()
 {
-  auto *e = new Events::Connection(Events::DISCONNECTED);
+  auto *e = new Events::Connection(Events::CONNECTION_DISCONNECTED);
   wxQueueEvent(this, e);
 }
 
 void Client::onConnectionLost()
 {
-  auto *e = new Events::Connection(Events::LOST);
+  auto *e = new Events::Connection(Events::CONNECTION_LOST);
   wxQueueEvent(this, e);
 }
 
 void Client::onConnectionFailure()
 {
-  auto *e = new Events::Connection(Events::FAILURE);
+  auto *e = new Events::Connection(Events::CONNECTION_FAILURE);
   wxQueueEvent(this, e);
 }
 

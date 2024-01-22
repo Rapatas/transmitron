@@ -7,11 +7,11 @@ namespace Rapatas::Transmitron::GUI::Events
 {
 
 class Connection;
-wxDECLARE_EVENT(CONNECTION, Connection);
-wxDECLARE_EVENT(CONNECTED, Connection);
-wxDECLARE_EVENT(DISCONNECTED, Connection);
-wxDECLARE_EVENT(FAILURE, Connection);
-wxDECLARE_EVENT(LOST, Connection);
+wxDECLARE_EVENT(CONNECTION_REQUESTED, Connection);
+wxDECLARE_EVENT(CONNECTION_CONNECTED, Connection);
+wxDECLARE_EVENT(CONNECTION_DISCONNECTED, Connection);
+wxDECLARE_EVENT(CONNECTION_FAILURE, Connection);
+wxDECLARE_EVENT(CONNECTION_LOST, Connection);
 
 // NOLINTNEXTLINE
 class Connection :
@@ -19,7 +19,7 @@ class Connection :
 {
 public:
 
-  Connection(wxEventType commandType = CONNECTION, int id = 0) :
+  Connection(wxEventType commandType = CONNECTION_REQUESTED, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
 

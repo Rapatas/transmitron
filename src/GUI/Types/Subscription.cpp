@@ -6,10 +6,6 @@ using namespace Rapatas::Transmitron;
 using namespace GUI::Types;
 using namespace GUI;
 
-wxDEFINE_EVENT(Events::SUBSCRIBED, Events::Subscription); // NOLINT
-wxDEFINE_EVENT(Events::UNSUBSCRIBED, Events::Subscription); // NOLINT
-wxDEFINE_EVENT(Events::RECEIVED, Events::Subscription); // NOLINT
-
 Subscription::Subscription(const std::shared_ptr<MQTT::Subscription> &sub) :
   mSub(sub),
   mMuted(false),
@@ -36,21 +32,21 @@ Subscription::Subscription(
 
 void Subscription::onSubscribed()
 {
-  auto *e = new Events::Subscription(Events::SUBSCRIBED);
+  auto *e = new Events::Subscription(Events::SUBSCRIPTION_SUBSCRIBED);
   e->setId(mId);
   wxQueueEvent(this, e);
 }
 
 void Subscription::onUnsubscribed()
 {
-  auto *e = new Events::Subscription(Events::UNSUBSCRIBED);
+  auto *e = new Events::Subscription(Events::SUBSCRIPTION_UNSUBSCRIBED);
   e->setId(mId);
   wxQueueEvent(this, e);
 }
 
 void Subscription::onMessage(const MQTT::Message &message)
 {
-  auto *e = new Events::Subscription(Events::RECEIVED);
+  auto *e = new Events::Subscription(Events::SUBSCRIPTION_RECEIVED);
   e->setMessage(message);
   e->setId(mId);
   wxQueueEvent(this, e);

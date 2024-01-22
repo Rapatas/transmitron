@@ -19,8 +19,6 @@ using namespace Rapatas::Transmitron;
 using namespace GUI;
 using namespace GUI::Widgets;
 
-wxDEFINE_EVENT(Events::TOPICCTRL_RETURN, Events::TopicCtrl); // NOLINT
-
 constexpr size_t FontSize = 9;
 
 TopicCtrl::TopicCtrl(

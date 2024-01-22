@@ -7,6 +7,7 @@
 
 #include <wx/dcmemory.h>
 
+#include "GUI/Events/Subscription.hpp"
 #include "MQTT/Subscription.hpp"
 #include "Subscriptions.hpp"
 #include "Common/Log.hpp"
@@ -272,9 +273,9 @@ void Subscriptions::subscribe(const std::string &topic, MQTT::QoS /* qos */)
   auto mqttSubscription = mClient->subscribe(topic);
   auto sub = std::make_unique<Types::Subscription>(mqttSubscription);
   const auto id = sub->getId();
-  sub->Bind(Events::SUBSCRIBED, &Subscriptions::onSubscribed, this);
-  sub->Bind(Events::UNSUBSCRIBED, &Subscriptions::onUnsubscribed, this);
-  sub->Bind(Events::RECEIVED, &Subscriptions::onMessage, this);
+  sub->Bind(Events::SUBSCRIPTION_SUBSCRIBED, &Subscriptions::onSubscribed, this);
+  sub->Bind(Events::SUBSCRIPTION_UNSUBSCRIBED, &Subscriptions::onUnsubscribed, this);
+  sub->Bind(Events::SUBSCRIPTION_RECEIVED, &Subscriptions::onMessage, this);
   mSubscriptions.insert({id, std::move(sub)});
   mRemap.push_back(id);
   mLogger->info("RowAppended");
