@@ -5,6 +5,7 @@
 
 #ifdef _WIN32
 #include <spdlog/sinks/win_eventlog_sink.h>
+#include "Common/Console.hpp"
 #endif // _WIN32
 
 #ifndef NDEBUG
@@ -23,10 +24,23 @@ Log &Log::instance()
   return log;
 }
 
-Log::~Log() = default;
+Log::~Log()
+{
+#ifdef _WIN32
+  Console::release();
+#endif // _WIN32
+}
 
 void Log::initialize(bool verbose)
 {
+
+#ifdef _WIN32
+  if (verbose)
+  {
+    Console::attachToParent(1024);
+  }
+#endif // _WIN32
+
   const Level level = !verbose
     ? Level::off
     : DEBUG

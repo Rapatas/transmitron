@@ -13,6 +13,7 @@ set(
   Common/XdgBaseDir.Linux.cpp
   Common/XdgBaseDir.Windows.cpp
   Common/XdgBaseDir.cpp
+  Common/Console.cpp
   MQTT/BrokerOptions.cpp
   MQTT/Client.cpp
   MQTT/Message.cpp
