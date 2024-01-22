@@ -1,8 +1,8 @@
 #pragma once
 
-namespace Common::Info
+namespace Rapatas::Transmitron::Common::Info
 {
 
 const char *getProjectVersion();
 
-} // namespace Common::Info
+} // namespace Rapatas::Transmitron::Common::Info

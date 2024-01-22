@@ -4,7 +4,7 @@
 #define PROJECT_VERSION "@PROJECT_VERSION@"
 #endif // PROJECT_VERSION
 
-const char *Common::Info::getProjectVersion()
+const char *Rapatas::Transmitron::Common::Info::getProjectVersion()
 {
     return PROJECT_VERSION;
 }

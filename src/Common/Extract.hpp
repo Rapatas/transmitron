@@ -3,7 +3,7 @@
 #include <nlohmann/json.hpp>
 #include <optional>
 
-namespace Common
+namespace Rapatas::Transmitron::Common
 {
 
 template<typename T>
@@ -30,4 +30,4 @@ std::optional<bool> extract<bool>(
   const std::string &key
 );
 
-}
+} // namespace Rapatas::Transmitron::Common

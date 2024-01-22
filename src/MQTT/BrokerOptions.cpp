@@ -5,6 +5,7 @@
 #include <string_view>
 #include "Common/Extract.hpp"
 
+using namespace Rapatas::Transmitron;
 using namespace MQTT;
 
 BrokerOptions::BrokerOptions() :

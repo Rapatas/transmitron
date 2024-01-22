@@ -4,7 +4,8 @@
 #include "XdgBaseDir.hpp"
 #include "Log.hpp"
 
-using namespace Common;
+using namespace Rapatas::Transmitron;
+using namespace Rapatas::Transmitron::Common;
 
 XdgBaseDir::XdgBaseDir()
 {

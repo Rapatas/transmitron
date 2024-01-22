@@ -5,7 +5,7 @@
 #include <nlohmann/json.hpp>
 #include "QualityOfService.hpp"
 
-namespace MQTT
+namespace Rapatas::Transmitron::MQTT
 {
 
 struct Message
@@ -20,4 +20,4 @@ struct Message
   static nlohmann::json toJson(const Message &message);
 };
 
-} // namespace MQTT
+} // namespace Rapatas::Transmitron::MQTT

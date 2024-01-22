@@ -18,39 +18,39 @@ set(
   MQTT/Client.cpp
   MQTT/Message.cpp
   MQTT/Subscription.cpp
-  Transmitron/App.cpp
-  Transmitron/Models/History.cpp
-  Transmitron/Models/KnownTopics.cpp
-  Transmitron/Models/Layouts.cpp
-  Transmitron/Models/Messages.cpp
-  Transmitron/Models/Profiles.cpp
-  Transmitron/Models/Subscriptions.cpp
-  Transmitron/Notifiers/Layouts.cpp
-  Transmitron/Resources/gear/gear-18x18.cpp
-  Transmitron/Resources/history/history-18x14.cpp
-  Transmitron/Resources/history/history-18x18.cpp
-  Transmitron/Resources/messages/messages-18x14.cpp
-  Transmitron/Resources/messages/messages-18x18.cpp
-  Transmitron/Resources/pin/not-pinned-18x18.cpp
-  Transmitron/Resources/pin/pinned-18x18.cpp
-  Transmitron/Resources/plus/plus-18x18.cpp
-  Transmitron/Resources/preview/preview-18x14.cpp
-  Transmitron/Resources/preview/preview-18x18.cpp
-  Transmitron/Resources/qos/qos-0.cpp
-  Transmitron/Resources/qos/qos-1.cpp
-  Transmitron/Resources/qos/qos-2.cpp
-  Transmitron/Resources/send/send-18x14.cpp
-  Transmitron/Resources/send/send-18x18.cpp
-  Transmitron/Resources/subscription/subscription-18x14.cpp
-  Transmitron/Resources/subscription/subscription-18x18.cpp
-  Transmitron/Tabs/Client.cpp
-  Transmitron/Tabs/Homepage.cpp
-  Transmitron/Tabs/Settings.cpp
-  Transmitron/Types/ClientOptions.cpp
-  Transmitron/Types/Subscription.cpp
-  Transmitron/Widgets/Edit.cpp
-  Transmitron/Widgets/Layouts.cpp
-  Transmitron/Widgets/TopicCtrl.cpp
+  GUI/App.cpp
+  GUI/Models/History.cpp
+  GUI/Models/KnownTopics.cpp
+  GUI/Models/Layouts.cpp
+  GUI/Models/Messages.cpp
+  GUI/Models/Profiles.cpp
+  GUI/Models/Subscriptions.cpp
+  GUI/Notifiers/Layouts.cpp
+  GUI/Resources/gear/gear-18x18.cpp
+  GUI/Resources/history/history-18x14.cpp
+  GUI/Resources/history/history-18x18.cpp
+  GUI/Resources/messages/messages-18x14.cpp
+  GUI/Resources/messages/messages-18x18.cpp
+  GUI/Resources/pin/not-pinned-18x18.cpp
+  GUI/Resources/pin/pinned-18x18.cpp
+  GUI/Resources/plus/plus-18x18.cpp
+  GUI/Resources/preview/preview-18x14.cpp
+  GUI/Resources/preview/preview-18x18.cpp
+  GUI/Resources/qos/qos-0.cpp
+  GUI/Resources/qos/qos-1.cpp
+  GUI/Resources/qos/qos-2.cpp
+  GUI/Resources/send/send-18x14.cpp
+  GUI/Resources/send/send-18x18.cpp
+  GUI/Resources/subscription/subscription-18x14.cpp
+  GUI/Resources/subscription/subscription-18x18.cpp
+  GUI/Tabs/Client.cpp
+  GUI/Tabs/Homepage.cpp
+  GUI/Tabs/Settings.cpp
+  GUI/Types/ClientOptions.cpp
+  GUI/Types/Subscription.cpp
+  GUI/Widgets/Edit.cpp
+  GUI/Widgets/Layouts.cpp
+  GUI/Widgets/TopicCtrl.cpp
   main.cpp
 
 )

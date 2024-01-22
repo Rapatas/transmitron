@@ -4,9 +4,7 @@
 
 #include <wx/colour.h>
 
-namespace Common
-{
-namespace Helpers
+namespace Rapatas::Transmitron::Common::Helpers
 {
 
 wxColor colorFromNumber(size_t number);
@@ -23,5 +21,4 @@ std::chrono::system_clock::time_point stringToTime(const std::string &line);
 
 std::string hexDump(const std::vector<uint8_t>& bytes, size_t columns);
 
-}
-}
+} // namespace Rapatas::Transmitron::Common::Helpers

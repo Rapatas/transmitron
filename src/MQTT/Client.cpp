@@ -9,7 +9,7 @@
 #include "Client.hpp"
 #include "Common/Log.hpp"
 
-using namespace MQTT;
+using namespace Rapatas::Transmitron::MQTT;
 
 constexpr size_t CancelCheckIntervalMs = 50;
 constexpr size_t ReconnectAfterMs = 2500;

@@ -12,7 +12,7 @@ constexpr uint8_t AsciiOffsetDigit = 48;
 constexpr uint8_t AsciiOffsetChar = 55;
 constexpr uint8_t MaxSingleDigit = 9;
 
-using namespace Common;
+using namespace Rapatas::Transmitron::Common;
 
 bool Url::encodable(char c)
 {

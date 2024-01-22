@@ -3,7 +3,7 @@
 
 #include "String.hpp"
 
-using namespace Common;
+using namespace Rapatas::Transmitron::Common;
 
 std::vector<std::string> String::split(const std::string &data, char delim)
 {

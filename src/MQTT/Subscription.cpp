@@ -5,6 +5,7 @@
 #include "Message.hpp"
 #include "Common/Log.hpp"
 
+using namespace Rapatas::Transmitron;
 using namespace MQTT;
 
 Subscription::Subscription(

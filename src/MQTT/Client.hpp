@@ -12,7 +12,7 @@
 #include "BrokerOptions.hpp"
 #include "Message.hpp"
 
-namespace MQTT
+namespace Rapatas::Transmitron::MQTT
 {
 
 class Subscription;
@@ -129,4 +129,4 @@ private:
   static bool match(const std::string &filter, const std::string &topic);
 };
 
-} // namespace MQTT
+} // namespace Rapatas::Transmitron::MQTT

@@ -10,7 +10,7 @@
 #include "String.hpp"
 #include "Env.hpp"
 
-using namespace Common;
+using namespace Rapatas::Transmitron::Common;
 
 std::string XdgBaseDir::readHome()
 {

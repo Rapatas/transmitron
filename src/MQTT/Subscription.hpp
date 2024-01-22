@@ -9,7 +9,7 @@
 
 #include "Client.hpp"
 
-namespace MQTT
+namespace Rapatas::Transmitron::MQTT
 {
 
 struct Message;
@@ -77,4 +77,4 @@ private:
   void setState(State newState);
 };
 
-} // namespace MQTT
+} // namespace Rapatas::Transmitron::MQTT

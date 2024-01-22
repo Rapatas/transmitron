@@ -10,6 +10,7 @@
 #include "Helpers.hpp"
 
 using namespace std::chrono;
+using namespace Rapatas::Transmitron;
 
 wxColor Common::Helpers::colorFromNumber(size_t number)
 {

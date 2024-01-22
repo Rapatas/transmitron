@@ -5,6 +5,8 @@
 #include "Common/Info.hpp"
 #include "Common/Version.hpp"
 
+using namespace Rapatas::Transmitron;
+
 Arguments Arguments::handleArgs(int argc, char **argv)
 {
   const auto projectInfo = fmt::format(

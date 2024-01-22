@@ -4,6 +4,8 @@
 #define PROJECT_NAME "@PROJECT_NAME@"
 #endif // PROJECT_NAME
 
+using namespace Rapatas::Transmitron;
+
 const char *Common::Info::getProjectName()
 {
     return PROJECT_NAME;

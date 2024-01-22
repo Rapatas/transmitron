@@ -1,9 +1,9 @@
 #pragma once
 
-namespace Common::Info
+namespace Rapatas::Transmitron::Common::Info
 {
 
 const char *getProjectName();
 const char *getProjectDescription();
 
-} // namespace Common::Info
+} // namespace Rapatas::Transmitron::Common::Info

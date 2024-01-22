@@ -3,7 +3,7 @@
 #include <vector>
 #include "Common/Filesystem.hpp"
 
-namespace Common
+namespace Rapatas::Transmitron::Common
 {
 
 class XdgBaseDir
@@ -39,4 +39,4 @@ private:
   std::vector<std::string> readConfigDirs() const;
 };
 
-} // namespace Common
+} // namespace Rapatas::Transmitron::Common

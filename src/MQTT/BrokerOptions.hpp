@@ -5,7 +5,7 @@
 #include <optional>
 #include <nlohmann/json.hpp>
 
-namespace MQTT
+namespace Rapatas::Transmitron::MQTT
 {
 
 class BrokerOptions
@@ -71,4 +71,4 @@ private:
 
 };
 
-} // namespace MQTT
+} // namespace Rapatas::Transmitron::MQTT

@@ -14,7 +14,7 @@
   const bool DEBUG = false;
 #endif
 
-using namespace Common;
+using namespace Rapatas::Transmitron::Common;
 
 using Level = spdlog::level::level_enum;
 

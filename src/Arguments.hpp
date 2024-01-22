@@ -3,6 +3,9 @@
 #include "Common/Log.hpp"
 #include <string>
 
+namespace Rapatas::Transmitron
+{
+
 struct Arguments
 {
   bool exit = false;
@@ -16,3 +19,5 @@ struct Arguments
 
   static Arguments handleArgs(int argc, char **argv);
 };
+
+} // namespace Rapatas::Transmitron

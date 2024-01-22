@@ -4,7 +4,7 @@
 #include <memory>
 #include <spdlog/logger.h>
 
-namespace Common
+namespace Rapatas::Transmitron::Common
 {
 
 class Log
@@ -32,4 +32,4 @@ private:
 
 };
 
-} // namespace Common
+} // namespace Rapatas::Transmitron::Common

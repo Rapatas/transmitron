@@ -61,7 +61,7 @@
 #       include <experimental/filesystem>
 
 // We need the alias from std::experimental::filesystem to Common::fs
-namespace Common {
+namespace Rapatas::Transmitron::Common {
     namespace fs = std::experimental::filesystem;
 }
 
@@ -69,7 +69,7 @@ namespace Common {
 #   else
 // Include it
 #       include <filesystem>
-namespace Common {
+namespace Rapatas::Transmitron::Common {
     namespace fs = std::filesystem;
 }
 #   endif
