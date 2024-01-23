@@ -19,9 +19,7 @@ public:
     wxCommandEvent(commandType, id)
   {}
 
-  Edit(const Edit& event) :
-    wxCommandEvent(event)
-  {}
+  Edit(const Edit& event) = default;
 
   [[nodiscard]] wxEvent* Clone() const override
   {

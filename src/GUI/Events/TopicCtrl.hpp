@@ -18,9 +18,7 @@ public:
     wxCommandEvent(commandType, id)
   {}
 
-  TopicCtrl(const TopicCtrl& event) :
-    wxCommandEvent(event)
-  {}
+  TopicCtrl(const TopicCtrl& event) = default;
 
   [[nodiscard]] wxEvent* Clone() const override
   {

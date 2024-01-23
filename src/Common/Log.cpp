@@ -28,6 +28,8 @@ Log::~Log()
 {
 #ifdef _WIN32
   Console::release();
+#else
+  (void)this;
 #endif // _WIN32
 }
 
