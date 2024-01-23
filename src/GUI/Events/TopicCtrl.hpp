@@ -14,7 +14,7 @@ class TopicCtrl :
 {
 public:
 
-  TopicCtrl(wxEventType commandType, int id = 0) :
+  explicit TopicCtrl(wxEventType commandType, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
 

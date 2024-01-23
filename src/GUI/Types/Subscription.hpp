@@ -15,7 +15,7 @@ class Subscription :
 {
 public:
 
-  Subscription(const std::shared_ptr<MQTT::Subscription> &sub);
+  explicit Subscription(const std::shared_ptr<MQTT::Subscription> &sub);
   Subscription(
     MQTT::Subscription::Id_t id,
     std::string filter,

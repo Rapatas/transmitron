@@ -5,6 +5,7 @@
 #include <wx/artprov.h>
 #include <wx/propgrid/propgrid.h>
 
+#include "GUI/Events/Connection.hpp"
 #include "Homepage.hpp"
 #include "Common/Log.hpp"
 #include "GUI/Events/Edit.hpp"
@@ -293,7 +294,7 @@ void Homepage::onConnectClicked(wxCommandEvent &/* event */)
     brokerOptions.getPort()
   );
 
-  auto *connectionEvent = new Events::Connection();
+  auto *connectionEvent = new Events::Connection(Events::CONNECTION_REQUESTED);
   connectionEvent->setProfile(item);
   wxQueueEvent(this, connectionEvent);
 }
@@ -394,7 +395,7 @@ void Homepage::onQuickConnect()
     brokerOptions.getPort()
   );
 
-  auto *connectionEvent = new Events::Connection();
+  auto *connectionEvent = new Events::Connection(Events::CONNECTION_REQUESTED);
   connectionEvent->setProfile(profileItem);
   wxQueueEvent(this, connectionEvent);
 }
@@ -408,7 +409,7 @@ void Homepage::connectTo(wxDataViewItem profile)
     brokerOptions.getPort()
   );
 
-  auto *connectionEvent = new Events::Connection();
+  auto *connectionEvent = new Events::Connection(Events::CONNECTION_REQUESTED);
   connectionEvent->setProfile(profile);
   wxQueueEvent(this, connectionEvent);
 }

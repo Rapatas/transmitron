@@ -16,7 +16,7 @@ class Profile :
 {
 public:
 
-  Profile(wxEventType commandType, int id = 0) :
+  explicit Profile(wxEventType commandType, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
 

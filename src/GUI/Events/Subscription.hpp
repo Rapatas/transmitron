@@ -18,7 +18,7 @@ class Subscription :
 {
 public:
 
-  Subscription(wxEventType commandType, int id = 0) :
+  explicit Subscription(wxEventType commandType, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
 

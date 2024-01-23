@@ -601,7 +601,7 @@ void Settings::onButtonClickedConnect(wxCommandEvent &event)
     brokerOptions.getPort()
   );
 
-  auto *connectionEvent = new Events::Connection();
+  auto *connectionEvent = new Events::Connection(Events::CONNECTION_REQUESTED);
   connectionEvent->setProfile(item);
   wxQueueEvent(this, connectionEvent);
 }

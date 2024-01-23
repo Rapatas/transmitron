@@ -16,7 +16,7 @@ class Recording :
 {
 public:
 
-  Recording(wxEventType commandType = RECORDING_SAVE, int id = 0) :
+  explicit Recording(wxEventType commandType, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
 

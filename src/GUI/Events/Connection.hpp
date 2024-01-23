@@ -19,7 +19,7 @@ class Connection :
 {
 public:
 
-  Connection(wxEventType commandType = CONNECTION_REQUESTED, int id = 0) :
+  explicit Connection(wxEventType commandType, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
 

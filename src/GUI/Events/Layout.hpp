@@ -19,7 +19,7 @@ class Layout :
 {
 public:
 
-  Layout(wxEventType commandType, int id = 0) :
+  explicit Layout(wxEventType commandType, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
 

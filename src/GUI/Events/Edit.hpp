@@ -15,7 +15,7 @@ class Edit :
 {
 public:
 
-  Edit(wxEventType commandType, int id = 0) :
+  explicit Edit(wxEventType commandType, int id = 0) :
     wxCommandEvent(commandType, id)
   {}
 
