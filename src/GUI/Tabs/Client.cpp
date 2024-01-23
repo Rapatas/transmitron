@@ -36,7 +36,7 @@ constexpr size_t FontSize = 9;
 Client::Client(
   wxWindow* parent,
   const MQTT::BrokerOptions &brokerOptions,
-  const Types::ClientOptions &clientOptions,
+  Types::ClientOptions clientOptions,
   const wxObjectDataPtr<Models::Messages> &messages,
   const wxObjectDataPtr<Models::KnownTopics> &topicsSubscribed,
   const wxObjectDataPtr<Models::KnownTopics> &topicsPublished,
@@ -54,13 +54,15 @@ Client::Client(
     name
   ),
   mName(name),
-  mClientOptions(clientOptions),
+  mClientOptions(std::move(clientOptions)),
   mFont(wxFontInfo(FontSize).FaceName("Consolas")),
   mDarkMode(darkMode),
   mOptionsHeight(optionsHeight),
   mTopicsSubscribed(topicsSubscribed),
   mTopicsPublished(topicsPublished),
   mLayoutsModel(layoutsModel),
+  mRandomGenerator(mRandomDev()),
+  mRandomColor(0, 9999), // NOLINT
   mMasterSizer(new wxBoxSizer(wxVERTICAL)),
   mMessagesModel(messages),
   mClient(std::make_shared<MQTT::Client>()),
@@ -98,6 +100,8 @@ Client::Client(
   mDarkMode(darkMode),
   mOptionsHeight(optionsHeight),
   mLayoutsModel(layoutsModel),
+  mRandomGenerator(mRandomDev()),
+  mRandomColor(0, 9999), // NOLINT
   mMasterSizer(new wxBoxSizer(wxVERTICAL)),
   mHistoryModel(historyModel),
   mSubscriptionsModel(subscriptionsModel)
@@ -478,7 +482,7 @@ void Client::setupPanelConnect(wxWindow *parent)
     button->SetBitmap(*bitmap);
     button->Bind(
       wxEVT_BUTTON,
-      std::bind(callback, pane.first, std::placeholders::_1)
+      [&callback, &pane](wxCommandEvent &event) { callback(pane.first, event); }
     );
     mProfileSizer->Add(button, 0, wxEXPAND);
 
@@ -1245,7 +1249,9 @@ void Client::onContextSelectedSubscriptionsChangeColor(wxCommandEvent &/* event 
   const auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
-  const auto color = Common::Helpers::colorFromNumber(static_cast<size_t>(std::abs(rand())));
+  const auto color = Common::Helpers::colorFromNumber(
+    static_cast<size_t>(mRandomColor(mRandomGenerator))
+  );
   mSubscriptionsModel->setColor(item, color);
 
   mSubscriptionsCtrl->Refresh();

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <random>
 #include <spdlog/spdlog.h>
 #include <wx/event.h>
 #include <wx/listctrl.h>
@@ -34,7 +35,7 @@ public:
   Client(
     wxWindow* parent,
     const MQTT::BrokerOptions &brokerOptions,
-    const Types::ClientOptions &clientOptions,
+    Types::ClientOptions clientOptions,
     const wxObjectDataPtr<Models::Messages> &messages,
     const wxObjectDataPtr<Models::KnownTopics> &topicsSubscribed,
     const wxObjectDataPtr<Models::KnownTopics> &topicsPublished,
@@ -119,6 +120,9 @@ private:
   wxObjectDataPtr<Models::KnownTopics> mTopicsSubscribed;
   wxObjectDataPtr<Models::KnownTopics> mTopicsPublished;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
+  std::random_device mRandomDev;
+  std::mt19937 mRandomGenerator;
+  std::uniform_int_distribution<std::mt19937::result_type> mRandomColor;
 
   wxBoxSizer *mMasterSizer = nullptr;
 

@@ -89,11 +89,11 @@ private:
 
   TopicCtrl *mTopic = nullptr;
 
-  bool mRetained;
+  bool mRetained = false;
   wxStaticBitmap *mRetainedTrue = nullptr;
   wxStaticBitmap *mRetainedFalse = nullptr;
 
-  MQTT::QoS mQoS;
+  MQTT::QoS mQoS = MQTT::QoS::AtLeastOnce;
   wxStaticBitmap *mQos0 = nullptr;
   wxStaticBitmap *mQos1 = nullptr;
   wxStaticBitmap *mQos2 = nullptr;

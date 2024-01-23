@@ -21,7 +21,9 @@ Arguments Arguments::handleArgs(int argc, char **argv)
   result.argc = argc;
   result.argv = argv;
 
-  args.set_version_flag("--version", projectInfo);
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
+  auto *versionOpt = args.set_version_flag("--version", projectInfo);
+  (void)versionOpt;
 
   auto *verboseOpt = args.add_flag(
     "--verbose",

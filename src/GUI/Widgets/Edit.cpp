@@ -41,9 +41,7 @@ Edit::Edit(
   mTop(new wxBoxSizer(wxOrientation::wxHORIZONTAL)),
   mVsizer(new wxBoxSizer(wxOrientation::wxVERTICAL)),
   mBottom(new wxBoxSizer(wxOrientation::wxHORIZONTAL)),
-  mTopic(new TopicCtrl(this, -1)),
-  mRetained(false),
-  mQoS(MQTT::QoS::AtLeastOnce)
+  mTopic(new TopicCtrl(this, -1))
 {
   mLogger = Common::Log::create("Widgets::Edit");
   constexpr size_t FontSize = 9;
@@ -66,6 +64,7 @@ Edit::Edit(
   mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
     auto *event = new Events::Edit(Events::EDIT_PUBLISH);
     wxQueueEvent(this, event);
+    // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
   });
 
   setupScintilla();
@@ -81,6 +80,7 @@ Edit::Edit(
   mSaveMessage->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
     auto *event = new Events::Edit(Events::EDIT_SAVE_MESSAGE);
     wxQueueEvent(this, event);
+    // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
   });
 
   auto *formatLabel = new wxStaticText(

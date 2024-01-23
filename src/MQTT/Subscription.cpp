@@ -10,14 +10,13 @@ using namespace MQTT;
 
 Subscription::Subscription(
   Id_t id,
-  const std::string &filter,
+  std::string filter,
   QoS qos,
   std::shared_ptr<Client> client
 ) :
   mId(id),
-  mFilter(filter),
+  mFilter(std::move(filter)),
   mQos(qos),
-  mState(State::Unsubscribed),
   mClient(std::move(client)),
   mLogger(Common::Log::create("MQTT::Subscription"))
 {}

@@ -45,7 +45,7 @@ public:
 
   explicit Subscription(
     Id_t id,
-    const std::string &filter,
+    std::string filter,
     QoS qos,
     std::shared_ptr<Client> client
   );
@@ -68,7 +68,7 @@ private:
   Id_t mId;
   std::string mFilter;
   QoS mQos;
-  State mState;
+  State mState = State::Unsubscribed;
   std::shared_ptr<Client> mClient;
   std::map<size_t, MQTT::Subscription::Observer*> mObservers;
   std::shared_ptr<spdlog::logger> mLogger;

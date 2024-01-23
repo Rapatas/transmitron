@@ -16,6 +16,7 @@ BrokerOptions::BrokerOptions() :
   mConnectTimeout(DefaultTimeout),
   mDisconnectTimeout(DefaultTimeout),
   mKeepAliveInterval(DefaultKeepAliveInterval),
+  // NOLINTNEXTLINE(concurrency-mt-unsafe, cert-msc50-cpp, cert-msc30-c)
   mClientId(fmt::format("{}_{}", wxGetHostName(), rand())),
   mHostname(DefaultHostname),
   mPassword(DefaultPassword),
@@ -49,6 +50,7 @@ BrokerOptions::BrokerOptions(
 {
   if (mClientId.empty())
   {
+    // NOLINTNEXTLINE(concurrency-mt-unsafe, cert-msc50-cpp, cert-msc30-c)
     mClientId = fmt::format("{}_{}", wxGetHostName(), rand());
   }
 }
@@ -61,6 +63,7 @@ BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data)
     .value_or(DefaultAutoReconnect);
 
   const std::string clientId = extract<std::string>(data, "clientId")
+    // NOLINTNEXTLINE(concurrency-mt-unsafe, cert-msc50-cpp, cert-msc30-c)
     .value_or(std::string(fmt::format("{}_{}", wxGetHostName(), rand())));
 
   const std::string hostname = extract<std::string>(data, "hostname")

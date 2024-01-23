@@ -12,7 +12,6 @@
 #include "Common/Log.hpp"
 #include "TopicCtrl.hpp"
 #include "GUI/Events/TopicCtrl.hpp"
-#include "GUI/Events/TopicCtrl.hpp"
 #include "GUI/Models/KnownTopics.hpp"
 
 using namespace Rapatas::Transmitron;
@@ -227,6 +226,8 @@ void TopicCtrl::onKeyUp(wxKeyEvent &event)
 
 void TopicCtrl::onChar(wxKeyEvent &event)
 {
+  (void)this;
+
   // Don't skip if Enter.
   if (event.GetKeyCode() == WXK_RETURN)
   {
