@@ -260,7 +260,7 @@ void Layouts::onLayoutChanged(Events::Layout &/* event */)
 wxArrayString Layouts::getNames() const
 {
   wxArrayString result;
-  wxDataViewItem parent(nullptr);
+  const wxDataViewItem parent(nullptr);
   wxDataViewItemArray children;
   mLayoutsModel->GetChildren(parent, children);
   for (const auto &child : children)

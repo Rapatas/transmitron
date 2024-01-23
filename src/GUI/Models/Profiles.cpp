@@ -167,7 +167,7 @@ bool Profiles::rename(
     return false;
   }
 
-  wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
   messages->load(pathNew);
 
   profile->name = name;
@@ -271,11 +271,11 @@ void Profiles::createQuickConnect()
     canSave = false;
   }
 
-  wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
   messages->load(path);
 
-  wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
-  wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
+  const wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
+  const wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
 
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>();
@@ -312,11 +312,11 @@ wxDataViewItem Profiles::createProfile()
     return wxDataViewItem(nullptr);
   }
 
-  wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
   messages->load(path);
 
-  wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
-  wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
+  const wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
+  const wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
 
   const auto id = mAvailableId++;
   auto profile = std::make_unique<Node>();
@@ -600,11 +600,11 @@ wxDataViewItem Profiles::loadProfile(const Common::fs::path &directory)
     return opt.value();
   }();
 
-  wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
   messages->load(directory.string());
 
-  wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
-  wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
+  const wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
+  const wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
 
   const auto cacheProfile = fmt::format("{}/{}", mCacheProfilesDir, encoded);
   const auto topics = cacheProfile + "/topics";

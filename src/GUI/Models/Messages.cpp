@@ -84,8 +84,8 @@ bool Messages::load(const std::string &profileDir)
 
   mMessagesDir = profileDir + "/messages";
 
-  bool exists = fs::exists(mMessagesDir);
-  bool isDir = fs::is_directory(mMessagesDir);
+  const bool exists = fs::exists(mMessagesDir);
+  const bool isDir = fs::is_directory(mMessagesDir);
 
   if (exists && !isDir && !fs::remove(mMessagesDir))
   {
@@ -115,7 +115,7 @@ wxDataViewItem Messages::createFolder(
   const constexpr std::string_view NewName{"New Folder"};
 
   auto parentId = toId(parentItem);
-  Node &parentNode = mNodes.at(parentId);
+  const auto &parentNode = mNodes.at(parentId);
   if (parentNode.type != Node::Type::Folder)
   {
     return wxDataViewItem(nullptr);
@@ -173,7 +173,7 @@ wxDataViewItem Messages::createMessage(
   const constexpr std::string_view NewName{"New Message"};
 
   auto parentId = toId(parentItem);
-  Node &parentNode = mNodes.at(parentId);
+  const auto &parentNode = mNodes.at(parentId);
   if (parentNode.type != Node::Type::Folder)
   {
     return wxDataViewItem(nullptr);

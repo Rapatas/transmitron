@@ -504,7 +504,7 @@ void App::openProfile(wxDataViewItem item)
 
 void App::openRecording(const std::string &filename)
 {
-  Common::fs::path path(filename);
+  const Common::fs::path path(filename);
   const auto filenameStr = path.stem().string();
   const std::string decodedStr = Url::decode(filenameStr);
 

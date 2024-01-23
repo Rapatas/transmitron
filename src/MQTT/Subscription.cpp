@@ -84,7 +84,7 @@ void Subscription::onMessage(
 
     const auto timestamp = std::chrono::system_clock::now();
 
-    Message message {
+    const Message message {
       msg->get_topic(),
       payload,
       qos,

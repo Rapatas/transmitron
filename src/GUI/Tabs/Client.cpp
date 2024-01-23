@@ -1000,10 +1000,10 @@ void Client::onSubscriptionContext(wxDataViewEvent& event)
 {
   if (!event.GetItem().IsOk()) { return; }
 
-  auto item = event.GetItem();
+  const auto item = event.GetItem();
 
   mSubscriptionsCtrl->Select(item);
-  bool muted = mSubscriptionsModel->getMuted(item);
+  const bool muted = mSubscriptionsModel->getMuted(item);
 
   wxMenu menu;
   if (mClient != nullptr)
@@ -1287,7 +1287,7 @@ void Client::onContextSelectedHistoryRetainedClear(wxCommandEvent &/* event */)
 
   const auto topic = mHistoryModel->getTopic(item);
   const auto qos = mHistoryModel->getQos(item);
-  MQTT::Message message {topic, {}, qos, true, {}};
+  const MQTT::Message message {topic, {}, qos, true, {}};
   mClient->publish(message);
 }
 

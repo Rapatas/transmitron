@@ -287,7 +287,7 @@ void History::remap()
 
   if (after > before)
   {
-    size_t diff = after - common;
+    const size_t diff = after - common;
     for (size_t i = 0; i < diff; ++i)
     {
       RowAppended();
@@ -296,7 +296,7 @@ void History::remap()
   else if (after < before)
   {
     wxArrayInt rows;
-    size_t diff = before - common;
+    const size_t diff = before - common;
     for (uint32_t i = 0; i < diff; ++i)
     {
       rows.Add(static_cast<int>(after + i));

@@ -778,7 +778,7 @@ void Settings::onLayoutChanged(Events::Layout &/* event */)
   auto &pfg = mProfileGrid;
 
   auto &pfpLayout = pfp.at(Properties::Layout);
-  wxVariant layoutValue = pfpLayout->GetValue();
+  const wxVariant layoutValue = pfpLayout->GetValue();
 
   pfg->RemoveProperty(pfpLayout);
 

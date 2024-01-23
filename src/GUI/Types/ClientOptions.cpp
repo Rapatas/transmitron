@@ -13,7 +13,7 @@ ClientOptions ClientOptions::fromJson(const nlohmann::json &data)
 {
     using namespace Common;
 
-    std::string layout = extract<std::string>(data, "layout")
+    const auto layout = extract<std::string>(data, "layout")
       .value_or(std::string(Models::Layouts::DefaultName));
 
     return ClientOptions {
