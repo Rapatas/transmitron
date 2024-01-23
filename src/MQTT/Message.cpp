@@ -1,6 +1,7 @@
 #include "Message.hpp"
 #include "Common/Extract.hpp"
 
+using namespace Rapatas::Transmitron;
 using namespace MQTT;
 
 Message Message::fromJson(const nlohmann::json &data)

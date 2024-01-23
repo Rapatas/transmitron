@@ -1,15 +1,17 @@
-#ifndef ARGUMENTS_HPP
-#define ARGUMENTS_HPP
+#pragma once
 
 #include "Common/Log.hpp"
 #include <string>
+
+namespace Rapatas::Transmitron
+{
 
 struct Arguments
 {
   bool exit = false;
 
-  int argc;
-  char **argv;
+  int argc{};
+  char **argv = nullptr;
 
   std::string profileName;
   std::string recordingFile;
@@ -18,5 +20,4 @@ struct Arguments
   static Arguments handleArgs(int argc, char **argv);
 };
 
-#endif // ARGUMENTS_HPP
-
+} // namespace Rapatas::Transmitron

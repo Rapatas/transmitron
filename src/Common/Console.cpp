@@ -9,7 +9,7 @@
 
 #include "Common/Console.hpp"
 
-using namespace Common;
+using namespace Rapatas::Transmitron::Common;
 
 bool Console::release()
 {

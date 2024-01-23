@@ -1,12 +1,11 @@
-#ifndef MQTT_MESSAGE_HPP
-#define MQTT_MESSAGE_HPP
+#pragma once
 
 #include <chrono>
 #include <string>
 #include <nlohmann/json.hpp>
 #include "QualityOfService.hpp"
 
-namespace MQTT
+namespace Rapatas::Transmitron::MQTT
 {
 
 struct Message
@@ -21,6 +20,4 @@ struct Message
   static nlohmann::json toJson(const Message &message);
 };
 
-}
-
-#endif // MQTT_MESSAGE_HPP
+} // namespace Rapatas::Transmitron::MQTT

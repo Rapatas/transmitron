@@ -1,5 +1,7 @@
 #include "Extract.hpp"
 
+using namespace Rapatas::Transmitron;
+
 template<>
 std::optional<unsigned> Common::extract<unsigned>(
   const nlohmann::json &data,

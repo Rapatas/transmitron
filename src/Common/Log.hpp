@@ -1,11 +1,10 @@
-#ifndef COMMON_LOG_H
-#define COMMON_LOG_H
+#pragma once
 
 #include <string>
 #include <memory>
 #include <spdlog/logger.h>
 
-namespace Common
+namespace Rapatas::Transmitron::Common
 {
 
 class Log
@@ -33,6 +32,4 @@ private:
 
 };
 
-}
-
-#endif // COMMON_LOG_H
+} // namespace Rapatas::Transmitron::Common

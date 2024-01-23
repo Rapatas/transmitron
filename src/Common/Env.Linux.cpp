@@ -2,7 +2,7 @@
 
 #include "Env.hpp"
 
-using namespace Common;
+using namespace Rapatas::Transmitron::Common;
 
 std::string Env::get(const std::string &name)
 {

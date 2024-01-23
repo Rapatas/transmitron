@@ -3,6 +3,8 @@
   Modified to use Common::fs instead of std::filesystem.
 */
 
+// NOLINTBEGIN(cppcoreguidelines-macro-usage)
+
 // We haven't checked which filesystem to include yet
 #ifndef INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
 
@@ -61,7 +63,7 @@
 #       include <experimental/filesystem>
 
 // We need the alias from std::experimental::filesystem to Common::fs
-namespace Common {
+namespace Rapatas::Transmitron::Common {
     namespace fs = std::experimental::filesystem;
 }
 
@@ -69,10 +71,12 @@ namespace Common {
 #   else
 // Include it
 #       include <filesystem>
-namespace Common {
+namespace Rapatas::Transmitron::Common
+{
     namespace fs = std::filesystem;
-}
+} // namespace Rapatas::Transmitron::Common
 #   endif
 
 #endif // #ifndef INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
 
+// NOLINTEND(cppcoreguidelines-macro-usage)

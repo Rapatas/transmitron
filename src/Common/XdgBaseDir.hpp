@@ -1,10 +1,9 @@
-#ifndef COMMON_XDGBASEDIR_H
-#define COMMON_XDGBASEDIR_H
+#pragma once
 
 #include <vector>
 #include "Common/Filesystem.hpp"
 
-namespace Common
+namespace Rapatas::Transmitron::Common
 {
 
 class XdgBaseDir
@@ -36,10 +35,9 @@ private:
   std::string readDataHome();
   std::string readCacheHome();
   std::string readStateHome();
-  std::vector<std::string> readDataDirs() const;
-  std::vector<std::string> readConfigDirs() const;
+
+  [[nodiscard]] std::vector<std::string> readDataDirs() const;
+  [[nodiscard]] std::vector<std::string> readConfigDirs() const;
 };
 
-}
-
-#endif // COMMON_XDGBASEDIR_H
+} // namespace Rapatas::Transmitron::Common

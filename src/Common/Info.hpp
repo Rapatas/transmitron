@@ -1,12 +1,9 @@
-#ifndef TRANSMITRON_INFO_H
-#define TRANSMITRON_INFO_H
+#pragma once
 
-namespace Common
+namespace Rapatas::Transmitron::Common::Info
 {
 
 const char *getProjectName();
 const char *getProjectDescription();
 
-}
-
-#endif // TRANSMITRON_INFO_H
+} // namespace Rapatas::Transmitron::Common::Info

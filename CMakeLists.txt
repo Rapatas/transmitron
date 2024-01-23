@@ -40,6 +40,8 @@ find_package(CLI11 REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(date REQUIRED)
 
+include(${CMAKE_SOURCE_DIR}/cmake/clang-tidy.cmake)
+
 add_subdirectory(src)
 
 include(${CMAKE_SOURCE_DIR}/cmake/install.cmake)

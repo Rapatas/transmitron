@@ -1,7 +1,9 @@
 #include <wx/app.h>
 #include <wx/init.h>
-#include "Transmitron/App.hpp"
+#include "GUI/App.hpp"
 #include "Arguments.hpp"
+
+using namespace Rapatas::Transmitron;
 
 int main(int argc, char **argv)
 {
@@ -10,7 +12,7 @@ int main(int argc, char **argv)
     const auto args = Arguments::handleArgs(argc, argv);
     if (args.exit) { return 0; }
 
-    auto *app = new Transmitron::App(args.verbose);
+    auto *app = new GUI::App(args.verbose);
     wxApp::SetInstance(app);
     wxEntryStart(argc, argv);
     app->CallOnInit();

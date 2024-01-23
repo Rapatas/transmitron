@@ -10,7 +10,7 @@
 #include "String.hpp"
 #include "Env.hpp"
 
-using namespace Common;
+using namespace Rapatas::Transmitron::Common;
 
 std::string XdgBaseDir::readHome()
 {
@@ -19,8 +19,19 @@ std::string XdgBaseDir::readHome()
   {
     return home;
   }
-  struct passwd *pw = getpwuid(getuid());
-  return pw->pw_dir;
+
+  const auto initlen = sysconf(_SC_GETPW_R_SIZE_MAX);
+  constexpr size_t DefaultLen = 1024;
+  const size_t len = (initlen == -1)
+    ? DefaultLen
+    : static_cast<size_t>(initlen);
+
+  struct passwd pwd{};
+  struct passwd *resultp = nullptr;
+  std::string buffer;
+  buffer.resize(len);
+  getpwuid_r(getuid(), &pwd, buffer.data(), buffer.size(), &resultp);
+  return pwd.pw_dir;
 }
 
 std::string XdgBaseDir::readConfigHome()

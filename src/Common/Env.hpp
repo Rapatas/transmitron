@@ -1,16 +1,10 @@
-#ifndef COMMON_ENV_H
-#define COMMON_ENV_H
+#pragma once
 
 #include <string>
 
-namespace Common
-{
-namespace Env
+namespace Rapatas::Transmitron::Common::Env
 {
 
 std::string get(const std::string &name);
 
-}
-}
-
-#endif // COMMON_ENV_H
+} // namespace Rapatas::Transmitron::Common::Env

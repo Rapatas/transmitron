@@ -5,12 +5,14 @@
 #include "Common/Info.hpp"
 #include "Common/Version.hpp"
 
+using namespace Rapatas::Transmitron;
+
 Arguments Arguments::handleArgs(int argc, char **argv)
 {
   const auto projectInfo = fmt::format(
     "{} {}",
-    Common::getProjectName(),
-    Common::getProjectVersion()
+    Common::Info::getProjectName(),
+    Common::Info::getProjectVersion()
   );
 
   CLI::App args;
@@ -19,7 +21,9 @@ Arguments Arguments::handleArgs(int argc, char **argv)
   result.argc = argc;
   result.argv = argv;
 
-  args.set_version_flag("--version", projectInfo);
+  // NOLINTNEXTLINE(clang-analyzer-cplusplus.NewDeleteLeaks)
+  auto *versionOpt = args.set_version_flag("--version", projectInfo);
+  (void)versionOpt;
 
   auto *verboseOpt = args.add_flag(
     "--verbose",
@@ -40,9 +44,9 @@ Arguments Arguments::handleArgs(int argc, char **argv)
   recordingFileOpt->option_text(".TMRC");
 
   try { args.parse(argc, argv); }
-  catch (const CLI::ParseError &e)
+  catch (const CLI::ParseError &event)
   {
-    args.exit(e);
+    args.exit(event);
     result.exit = true;
   }
 
