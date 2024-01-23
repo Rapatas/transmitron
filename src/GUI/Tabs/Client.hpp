@@ -58,7 +58,7 @@ public:
   Client(Client &&other) = delete;
   Client &operator=(const Client &other) = delete;
   Client &operator=(Client &&other) = delete;
-  ~Client();
+  ~Client() override;
 
   void focus() const;
 

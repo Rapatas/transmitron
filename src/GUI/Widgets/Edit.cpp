@@ -26,6 +26,7 @@ using namespace GUI;
 using namespace Common;
 using namespace GUI::Widgets;
 
+constexpr size_t BinaryFormatWidth = 10;
 constexpr uint8_t ByteSize = std::numeric_limits<uint8_t>::digits;
 
 Edit::Edit(
@@ -150,7 +151,7 @@ Edit::Edit(
   mVsizer->Add(
     mInfoLine,
     0,
-    static_cast<int>(wxEXPAND) | static_cast<int>(wxLEFT),
+    static_cast<uint64_t>(wxEXPAND) | static_cast<uint64_t>(wxLEFT),
     timestampBorderPx
   );
   mVsizer->Add(mText, 1, wxEXPAND);
@@ -445,7 +446,7 @@ std::string Edit::formatTry(
   if (format == Format::Binary)
   {
     const std::vector<uint8_t> bytes{std::begin(text), std::end(text)};
-    return Helpers::hexDump(bytes, 10);
+    return Helpers::hexDump(bytes, BinaryFormatWidth);
   }
 
   return text;
@@ -587,10 +588,10 @@ const std::map<Edit::Theme, Edit::ThemeStyles> &Edit::styles()
   {
     auto color = [](uint8_t red, uint8_t green, uint8_t blue)
     {
-      return 0
-        | static_cast<uint32_t>(red   << (ByteSize * 0))
-        | static_cast<uint32_t>(green << (ByteSize * 1))
-        | static_cast<uint32_t>(blue  << (ByteSize * 2))
+      return 0U
+        | static_cast<uint32_t>(red   << (ByteSize * 0U))
+        | static_cast<uint32_t>(green << (ByteSize * 1U))
+        | static_cast<uint32_t>(blue  << (ByteSize * 2U))
       ;
     };
 

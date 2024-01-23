@@ -61,7 +61,6 @@ void Client::connect()
   catch (const mqtt::exception& event)
   {
     mLogger->error("Connection failed: {}", event.what());
-    exit(1);
   }
 }
 
@@ -84,7 +83,6 @@ void Client::disconnect()
   catch (const mqtt::exception& exc)
   {
     mLogger->error("Disconnection failed: {}", exc.what());
-    exit(1);
   }
 }
 
@@ -278,17 +276,22 @@ void Client::onSuccessSubscribe(const mqtt::token& tok)
   if (it == std::end(mSubscriptions))
   {
     mLogger->error("Unknown subscription ACK!");
-    exit(1);
+    return;
   }
 
   it->second->setState(Subscription::State::Subscribed);
   it->second->onSubscribed();
 
   mLogger->info("Subscribed to topics:");
-  const auto size = tok.get_topics()->size();
-  for (size_t i = 0; i != size; ++i)
+  std::vector<const char *> topics;
+  topics.assign(
+    tok.get_topics()->c_arr(),
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    tok.get_topics()->c_arr() + tok.get_topics()->size()
+  );
+  for (const auto &topic : topics)
   {
-    mLogger->info("  - {}", tok.get_topics()->c_arr()[i]);
+    mLogger->info("  - {}", topic);
   }
 }
 
@@ -306,7 +309,7 @@ void Client::onSuccessUnsubscribe(const mqtt::token& tok)
   if (it == std::end(mSubscriptions))
   {
     mLogger->error("Unknown unsubscription ACK!");
-    exit(1);
+    return;
   }
 
   mLogger->info(
@@ -472,7 +475,6 @@ void Client::reconnect()
   catch (const mqtt::exception& exc)
   {
     mLogger->error("Error: {}", exc.what());
-    exit(1);
   }
 }
 

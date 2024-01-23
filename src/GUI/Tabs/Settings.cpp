@@ -15,6 +15,12 @@ using namespace Rapatas::Transmitron;
 using namespace GUI::Tabs;
 using namespace GUI;
 
+constexpr size_t SettingsWidth = 600;
+constexpr size_t SettingsHeight = 600;
+constexpr size_t Margin = 10;
+constexpr size_t SectionsWidth = 90;
+constexpr size_t SubSectionWidth = 200;
+
 Settings::Settings(
   wxWindow *parent,
   wxFontInfo labelFont,
@@ -45,10 +51,10 @@ Settings::Settings(
   notifier->Bind(Events::LAYOUT_CHANGED, &Settings::onLayoutChanged, this);
 
   auto *master = new wxPanel(this);
-  master->SetMinSize(wxSize(600, 500));
+  master->SetMinSize(wxSize(SettingsWidth, SettingsHeight));
 
   auto *left = new wxPanel(master);
-  left->SetMinSize(wxSize(90, 0));
+  left->SetMinSize(wxSize(SectionsWidth, 0));
 
   mSections = new wxListCtrl(
     left,
@@ -74,6 +80,7 @@ Settings::Settings(
   setupLayouts(right);
   setupProfiles(right);
 
+  // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
   mSectionSizer = new wxBoxSizer(wxVERTICAL);
   mSectionSizer->Add(mLayouts, 1, wxEXPAND);
   mSectionSizer->Add(mProfiles, 1, wxEXPAND);
@@ -84,7 +91,7 @@ Settings::Settings(
 
   auto *msizer = new wxBoxSizer(wxHORIZONTAL);
   msizer->Add(left, 0, wxEXPAND);
-  msizer->AddSpacer(10);
+  msizer->AddSpacer(Margin);
   msizer->Add(right, 1, wxEXPAND);
   master->SetSizer(msizer);
 
@@ -142,7 +149,7 @@ void Settings::setupLayouts(wxPanel *parent)
   mLayouts = new wxPanel(parent);
 
   auto *base = new wxPanel(mLayouts);
-  base->SetMinSize(wxSize(200, 0));
+  base->SetMinSize(wxSize(SubSectionWidth, 0));
 
   auto *label = new wxStaticText(base, wxID_ANY, "Layouts");
   label->SetFont(mLabelFont);
@@ -203,7 +210,6 @@ void Settings::setupLayouts(wxPanel *parent)
 void Settings::setupProfiles(wxPanel *parent)
 {
   mProfiles = new wxPanel(parent);
-  mProfiles->SetMinSize(wxSize(200, 200));
 
   auto* const name = new wxDataViewColumn(
     "Name",
@@ -217,7 +223,7 @@ void Settings::setupProfiles(wxPanel *parent)
     mProfiles,
     -1,
     wxDefaultPosition,
-    wxSize(200, 0),
+    wxSize(SubSectionWidth, 0),
     wxDV_NO_HEADER
   );
   mProfilesCtrl->AssociateModel(mProfilesModel.get());

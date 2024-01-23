@@ -19,6 +19,10 @@ using namespace GUI::Tabs;
 using namespace GUI;
 using namespace GUI::Events;
 
+constexpr size_t HomepageWidth = 400;
+constexpr size_t HomepageHeight = 400;
+constexpr size_t Margin = 10;
+
 Homepage::Homepage(
   wxWindow *parent,
   wxFontInfo labelFont,
@@ -42,7 +46,7 @@ Homepage::Homepage(
   mLogger = Common::Log::create("GUI::Homepage");
 
   auto *master = new wxPanel(this);
-  master->SetMinSize(wxSize(400, 400));
+  master->SetMinSize(wxSize(HomepageWidth, HomepageHeight));
 
   setupQuickConnect(master);
   setupProfiles(master);
@@ -50,9 +54,9 @@ Homepage::Homepage(
 
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
   vsizer->Add(mQuickConnect, 0, wxEXPAND);
-  vsizer->AddSpacer(10);
+  vsizer->AddSpacer(Margin);
   vsizer->Add(mProfiles, 1, wxEXPAND);
-  vsizer->AddSpacer(10);
+  vsizer->AddSpacer(Margin);
   vsizer->Add(mRecordings, 0, wxEXPAND);
   master->SetSizer(vsizer);
 
@@ -96,7 +100,7 @@ void Homepage::setupProfiles(wxPanel *parent)
   );
 
   mProfiles = new wxPanel(parent, -1);
-  mProfiles->SetMinSize(wxSize(0, 400));
+  mProfiles->SetMinSize(wxSize(0, HomepageHeight));
 
   mProfilesCtrl = new wxDataViewCtrl(
     mProfiles,

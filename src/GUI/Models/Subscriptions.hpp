@@ -19,6 +19,13 @@ public:
 
   struct Observer
   {
+    Observer() = default;
+    virtual ~Observer() = default;
+    Observer(const Observer &) = default;
+    Observer(Observer &&) = default;
+    Observer &operator=(const Observer &) = default;
+    Observer &operator=(Observer &&) = default;
+
     virtual void onColorSet(
       MQTT::Subscription::Id_t subscriptionId,
       wxColor color
