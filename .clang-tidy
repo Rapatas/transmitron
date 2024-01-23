@@ -1,17 +1,42 @@
 Checks: "
-    -*,
-    bugprone-*,
-    readability-*,
-    cert-*,
-    performance-*,
-    cppcoreguidelines-*,
-    -cert-msc50-cpp,
-    -cert-msc30-c,
-    -cppcoreguidelines-owning-memory,
-    -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
-    -cppcoreguidelines-pro-bounds-pointer-arithmetic,
-    -bugprone-easily-swappable-parameters,
+  -*,
+
+  bugprone-*,
+  cert-*,
+  clang-*,
+  concurrency-*,
+  cppcoreguidelines-*,
+  fuchsia-*,
+  google-*,
+  hicpp-*,
+  llvm-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -bugprone-easily-swappable-parameters,
+  -cppcoreguidelines-owning-memory,
+  -fuchsia-default-arguments-calls,
+  -fuchsia-default-arguments-declarations,
+  -fuchsia-multiple-inheritance,
+  -fuchsia-overloaded-operator,
+  -fuchsia-trailing-return,
+  -google-build-using-namespace,
+  -google-readability-todo,
+  -google-runtime-int,
+  -llvm-header-guard,
+  -llvm-include-order,
+  -misc-no-recursion,
+  -misc-non-private-member-variables-in-classes,
+  -modernize-use-trailing-return-type,
+  -readability-suspicious-call-argument,
+  -cppcoreguidelines-avoid-const-or-ref-data-members,
+  -cppcoreguidelines-avoid-reference-coroutine-parameters,
+  -misc-include-cleaner,
+  -llvm-header-guard,
+
 "
+
 WarningsAsErrors: true
 HeaderFilterRegex: '.*'
 UseColor: true
@@ -38,3 +63,7 @@ CheckOptions:
     value: UPPER_CASE
   - key: readability-identifier-naming.ClassMemberPrefix
     value: m
+  - key: readability-identifier-length.IgnoredVariableNames
+    value: '^id$|^ec$|^it$'
+  - key: readability-identifier-length.IgnoredParameterNames
+    value: '^id$|^ec$|^it$'
