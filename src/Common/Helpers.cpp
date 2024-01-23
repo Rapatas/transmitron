@@ -41,7 +41,11 @@ std::string Common::Helpers::timeToString(
   const auto floored = floor<milliseconds>(timestamp);
   const std::time_t nowc = std::chrono::system_clock::to_time_t(floored);
   std::tm nowtm{};
+#ifndef _WIN32
   ::localtime_r(&nowc, &nowtm);
+#else
+  ::localtime_s(&nowtm, &nowc);
+#endif // _WIN32
   std::stringstream sstream;
   sstream << std::put_time(&nowtm, "%Y-%m-%d %H:%M:%S");
   return sstream.str();
@@ -53,7 +57,11 @@ std::string Common::Helpers::timeToFilename(
   const auto floored = floor<milliseconds>(timestamp);
   const std::time_t nowc = std::chrono::system_clock::to_time_t(floored);
   std::tm nowtm{};
+#ifndef _WIN32
   ::localtime_r(&nowc, &nowtm);
+#else
+  ::localtime_s(&nowtm, &nowc);
+#endif // _WIN32
   std::stringstream sstream;
   sstream << std::put_time(&nowtm, "%Y%m%dT%H%M%S");
   return sstream.str();

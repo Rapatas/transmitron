@@ -666,10 +666,10 @@ void Settings::propertyGridFill(
 
   pfp.at(Properties::AutoReconnect)->SetValue(brokerOptions.getAutoReconnect());
   pfp.at(Properties::ClientId)->SetValue(brokerOptions.getClientId());
-  pfp.at(Properties::ConnectTimeout)->SetValue(brokerOptions.getConnectTimeout().count());
-  pfp.at(Properties::DisconnectTimeout)->SetValue(brokerOptions.getDisconnectTimeout().count());
+  pfp.at(Properties::ConnectTimeout)->SetValue(static_cast<int>(brokerOptions.getConnectTimeout().count()));
+  pfp.at(Properties::DisconnectTimeout)->SetValue(static_cast<int>(brokerOptions.getDisconnectTimeout().count()));
   pfp.at(Properties::Hostname)->SetValue(brokerOptions.getHostname());
-  pfp.at(Properties::KeepAlive)->SetValue(brokerOptions.getKeepAliveInterval().count());
+  pfp.at(Properties::KeepAlive)->SetValue(static_cast<int>(brokerOptions.getKeepAliveInterval().count()));
   pfp.at(Properties::MaxInFlight)->SetValue(static_cast<int>(brokerOptions.getMaxInFlight()));
   pfp.at(Properties::MaxReconnectRetries)->SetValue(static_cast<int>(brokerOptions.getMaxReconnectRetries()));
   pfp.at(Properties::Password)->SetValue(brokerOptions.getPassword());
