@@ -71,9 +71,10 @@ namespace Rapatas::Transmitron::Common {
 #   else
 // Include it
 #       include <filesystem>
-namespace Rapatas::Transmitron::Common {
+namespace Rapatas::Transmitron::Common
+{
     namespace fs = std::filesystem;
-}
+} // namespace Rapatas::Transmitron::Common
 #   endif
 
 #endif // #ifndef INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
