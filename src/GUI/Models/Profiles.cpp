@@ -23,7 +23,11 @@ using namespace Common;
 
 constexpr size_t DefaultMqttPort = 1883;
 
-Profiles::Profiles(const wxObjectDataPtr<Layouts> &layouts) :
+Profiles::Profiles(
+  const wxObjectDataPtr<Layouts> &layouts,
+  const ArtProvider &artProvider
+) :
+  mArtProvider(artProvider),
   mLayoutsModel(layouts)
 {
   mLogger = Common::Log::create("Models::Profiles");
@@ -167,7 +171,7 @@ bool Profiles::rename(
     return false;
   }
 
-  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages(mArtProvider)};
   messages->load(pathNew);
 
   profile->name = name;
@@ -271,7 +275,7 @@ void Profiles::createQuickConnect()
     canSave = false;
   }
 
-  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages(mArtProvider)};
   messages->load(path);
 
   const wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
@@ -312,7 +316,7 @@ wxDataViewItem Profiles::createProfile()
     return wxDataViewItem(nullptr);
   }
 
-  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages(mArtProvider)};
   messages->load(path);
 
   const wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
@@ -600,7 +604,7 @@ wxDataViewItem Profiles::loadProfile(const Common::fs::path &directory)
     return opt.value();
   }();
 
-  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages};
+  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages(mArtProvider)};
   messages->load(directory.string());
 
   const wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};

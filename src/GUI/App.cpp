@@ -1,7 +1,9 @@
 #include "Common/Filesystem.hpp"
+#include <wx/window.h>
 #include <fstream>
 #include <stdexcept>
 
+#include <wx/artprov.h>
 #include <fmt/core.h>
 #include <wx/aui/auibook.h>
 #include <wx/image.h>
@@ -16,23 +18,16 @@
 #include "Events/Connection.hpp"
 #include "Common/Info.hpp"
 #include "MQTT/Client.hpp"
-#include "Resources/gear/gear-18x18.hpp"
 #include "Resources/history/history-18x14.hpp"
-#include "Resources/history/history-18x18.hpp"
 #include "Resources/pin/not-pinned-18x18.hpp"
 #include "Resources/pin/pinned-18x18.hpp"
-#include "Resources/plus/plus-18x18.hpp"
 #include "Resources/preview/preview-18x14.hpp"
-#include "Resources/preview/preview-18x18.hpp"
 #include "Resources/qos/qos-0.hpp"
 #include "Resources/qos/qos-1.hpp"
 #include "Resources/qos/qos-2.hpp"
 #include "Resources/send/send-18x14.hpp"
-#include "Resources/send/send-18x18.hpp"
 #include "Resources/messages/messages-18x14.hpp"
-#include "Resources/messages/messages-18x18.hpp"
 #include "Resources/subscription/subscription-18x14.hpp"
-#include "Resources/subscription/subscription-18x18.hpp"
 #include "Tabs/Client.hpp"
 #include "Tabs/Homepage.hpp"
 #include "Tabs/Settings.hpp"
@@ -72,7 +67,15 @@ bool App::OnInit()
     wxSize(DefaultWindowWidth, DefaultWindowHeight)
   );
   mFrame->SetMinSize(wxSize(MinWindowWidth, MinWindowHeight));
-  mOptionsHeight = calculateOptionHeight();
+  calculateOptions();
+
+  auto prefix = getInstallPrefix();
+  const auto base = prefix.append("share/transmitron");
+  mArtProvider.initialize(
+    base,
+    {mIconHeight, mIconHeight},
+    mDarkMode
+  );
 
   setupIcon();
 
@@ -96,18 +99,15 @@ bool App::OnInit()
   mLayoutsModel = new Models::Layouts();
   mLayoutsModel->load(configDir);
 
-  mProfilesModel = new Models::Profiles(mLayoutsModel);
+  mProfilesModel = new Models::Profiles(mLayoutsModel, mArtProvider);
   mProfilesModel->load(configDir, cacheDir);
-
-  const auto appearance = wxSystemSettings::GetAppearance();
-  mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();
 
   createSettingsTab();
 
   createHomepageTab(1);
 
   auto *newProfilesTab = new wxPanel(mNote);
-  mNote->AddPage(newProfilesTab, "", false, *bin2cPlus18x18());
+  mNote->AddPage(newProfilesTab, "", false, mArtProvider.bitmap(Icon::Add));
   ++mCount;
 
   mNote->Bind(wxEVT_AUINOTEBOOK_PAGE_CHANGING, &App::onPageSelected, this);
@@ -336,6 +336,7 @@ void App::createHomepageTab(size_t index)
 {
   auto *homepage = new Tabs::Homepage(
     mNote,
+    mArtProvider,
     LabelFontInfo,
     mOptionsHeight,
     mProfilesModel,
@@ -364,7 +365,14 @@ void App::createHomepageTab(size_t index)
 
 void App::createSettingsTab()
 {
-  mSettingsTab = new Tabs::Settings(mNote, LabelFontInfo, mOptionsHeight, mProfilesModel, mLayoutsModel);
+  mSettingsTab = new Tabs::Settings(
+    mNote,
+    mArtProvider,
+    LabelFontInfo,
+    mOptionsHeight,
+    mProfilesModel,
+    mLayoutsModel
+  );
   mSettingsTab->Bind(Events::CONNECTION_REQUESTED, [this](Events::Connection event){
     if (event.GetSelection() == wxNOT_FOUND)
     {
@@ -375,7 +383,7 @@ void App::createSettingsTab()
     const auto profileItem = event.getProfile();
     openProfile(profileItem);
   });
-  mNote->AddPage(mSettingsTab, "", false, *bin2cGear18x18());
+  mNote->AddPage(mSettingsTab, "", false, mArtProvider.bitmap(Icon::Settings));
   ++mCount;
 }
 
@@ -472,6 +480,7 @@ void App::openProfile(wxDataViewItem item)
     mProfilesModel->getTopicsPublished(item),
     mLayoutsModel,
     mProfilesModel->getName(item),
+    mArtProvider,
     mDarkMode,
     mOptionsHeight
   );
@@ -528,6 +537,7 @@ void App::openRecording(const std::string &filename)
     subscriptions,
     mLayoutsModel,
     decodedStr,
+    mArtProvider,
     mDarkMode,
     mOptionsHeight
   );
@@ -541,11 +551,27 @@ void App::openRecording(const std::string &filename)
   client->focus();
 }
 
-int App::calculateOptionHeight()
+void App::calculateOptions()
 {
-  auto *button = new wxBitmapButton(mFrame, -1, *bin2cPlus18x18());
-  const auto bestSize = button->GetBestSize();
+  auto *button = new wxButton(mFrame, wxID_ANY, "Hello");
+
+  mOptionsHeight = button->GetBestSize().y;
+  // mOptionsHeight = mFrame->FromDIP(wxSize(26, 26)).y;
+
+#ifdef _WIN32
+  // NOLINTNEXTLINE
+  mIconHeight = mOptionsHeight - mFrame->FromDIP(wxSize(4, 4)).y;
+#else
+  // NOLINTNEXTLINE
+  mIconHeight = mOptionsHeight - mFrame->FromDIP(wxSize(6, 6)).y;
+#endif // _WIN32
+
+  mLogger->info("button={} icon={}", mOptionsHeight, mIconHeight);
+
   mFrame->RemoveChild(button);
   button->Destroy();
-  return bestSize.y;
+
+  const auto appearance = wxSystemSettings::GetAppearance();
+  mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();
+
 }

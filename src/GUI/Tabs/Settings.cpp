@@ -1,4 +1,3 @@
-#include <wx/artprov.h>
 #include <wx/colour.h>
 #include <wx/button.h>
 #include <wx/listctrl.h>
@@ -23,6 +22,7 @@ constexpr size_t SubSectionWidth = 200;
 
 Settings::Settings(
   wxWindow *parent,
+  const ArtProvider &artProvider,
   wxFontInfo labelFont,
   int optionsHeight,
   const wxObjectDataPtr<Models::Profiles> &profilesModel,
@@ -38,6 +38,7 @@ Settings::Settings(
   ),
   mLabelFont(std::move(labelFont)),
   mOptionsHeight(optionsHeight),
+  mArtProvider(artProvider),
   mProfilesModel(profilesModel),
   mLayoutsModel(layoutsModel)
 {
@@ -182,7 +183,7 @@ void Settings::setupLayouts(wxPanel *parent)
     wxSize(mOptionsHeight, mOptionsHeight)
   );
   mLayoutDelete->SetToolTip("Delete selected layout");
-  mLayoutDelete->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+  mLayoutDelete->SetBitmap(mArtProvider.bitmap(Icon::Delete));
   mLayoutDelete->Disable();
   mLayoutDelete->Bind(wxEVT_BUTTON, &Settings::onLayoutsDelete, this);
 
@@ -247,7 +248,7 @@ void Settings::setupProfiles(wxPanel *parent)
     wxSize(mOptionsHeight, mOptionsHeight)
   );
   profileCreate->SetToolTip("Create a new profile");
-  profileCreate->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW));
+  profileCreate->SetBitmap(mArtProvider.bitmap(Icon::NewProfile));
   profileCreate->Bind(wxEVT_BUTTON, &Settings::onButtonClickedNewProfile, this);
 
   mProfileDelete = new wxButton(
@@ -258,7 +259,7 @@ void Settings::setupProfiles(wxPanel *parent)
     wxSize(mOptionsHeight, mOptionsHeight)
   );
   mProfileDelete->SetToolTip("Delete selected profile");
-  mProfileDelete->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+  mProfileDelete->SetBitmap(mArtProvider.bitmap(Icon::Delete));
   mProfileDelete->Bind(wxEVT_BUTTON, &Settings::onProfileDelete, this);
   mProfileDelete->Disable();
 
@@ -358,7 +359,7 @@ void Settings::setupProfileOptions(wxPanel *parent)
     wxSize(-1, mOptionsHeight)
   );
   mSave->SetToolTip("Save changes to this profile");
-  mSave->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
+  mSave->SetBitmap(mArtProvider.bitmap(Icon::Save));
   mSave->Enable(false);
   mSave->Bind(wxEVT_BUTTON, &Settings::onButtonClickedSave, this);
 
@@ -370,7 +371,7 @@ void Settings::setupProfileOptions(wxPanel *parent)
     wxSize(-1, mOptionsHeight)
   );
   mCancel->SetToolTip("Reset this profile to last saved state");
-  mCancel->SetBitmap(wxArtProvider::GetBitmap(wxART_UNDO));
+  mCancel->SetBitmap(mArtProvider.bitmap(Icon::Cancel));
   mCancel->Enable(false);
   mCancel->Bind(wxEVT_BUTTON, &Settings::onButtonClickedCancel, this);
 
@@ -384,7 +385,7 @@ void Settings::setupProfileOptions(wxPanel *parent)
   mConnect->SetToolTip("Connect to this profile");
   mConnect->Enable(false);
   mConnect->Bind(wxEVT_BUTTON, &Settings::onButtonClickedConnect, this);
-  mConnect->SetBitmap(wxArtProvider::GetBitmap(wxART_TICK_MARK));
+  mConnect->SetBitmap(mArtProvider.bitmap(Icon::Connect));
 
   mProfileButtonsSizer = new wxBoxSizer(wxHORIZONTAL);
   mProfileButtonsSizer->SetMinSize(0, mOptionsHeight);
@@ -425,7 +426,7 @@ void Settings::onLayoutsContext(wxDataViewEvent &event)
     static_cast<unsigned>(ContextIDs::LayoutsRename),
     "Rename"
   );
-  rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
+  rename->SetBitmap(mArtProvider.bitmap(Icon::Edit));
   menu.Append(rename);
 
   auto *del = new wxMenuItem(
@@ -433,7 +434,7 @@ void Settings::onLayoutsContext(wxDataViewEvent &event)
     static_cast<unsigned>(ContextIDs::LayoutsDelete),
     "Delete"
   );
-  del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+  del->SetBitmap(mArtProvider.bitmap(Icon::Delete));
   menu.Append(del);
 
   PopupMenu(&menu);
@@ -497,7 +498,7 @@ void Settings::onProfileContext(wxDataViewEvent &event)
     static_cast<unsigned>(ContextIDs::ProfilesDelete),
     "Delete"
   );
-  del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+  del->SetBitmap(mArtProvider.bitmap(Icon::Delete));
   menu.Append(del);
 
   PopupMenu(&menu);

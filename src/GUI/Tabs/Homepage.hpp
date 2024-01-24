@@ -14,6 +14,7 @@
 #include "GUI/Models/Layouts.hpp"
 #include "GUI/Models/Profiles.hpp"
 #include "GUI/Types/ClientOptions.hpp"
+#include "GUI/ArtProvider.hpp"
 
 namespace Rapatas::Transmitron::GUI::Tabs
 {
@@ -25,6 +26,7 @@ public:
 
   explicit Homepage(
     wxWindow *parent,
+    const ArtProvider &artProvider,
     wxFontInfo labelFont,
     int optionsHeight,
     const wxObjectDataPtr<Models::Profiles> &profilesModel,
@@ -45,6 +47,7 @@ private:
 
   wxFontInfo mLabelFont;
   int mOptionsHeight;
+  const ArtProvider &mArtProvider;
 
   std::shared_ptr<spdlog::logger> mLogger;
 

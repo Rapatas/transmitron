@@ -10,6 +10,7 @@
 #include "GUI/Models/Profiles.hpp"
 #include "GUI/Models/Layouts.hpp"
 #include "GUI/Tabs/Settings.hpp"
+#include "GUI/ArtProvider.hpp"
 
 namespace Rapatas::Transmitron::GUI
 {
@@ -33,8 +34,10 @@ private:
   size_t mCount = 0;
   wxFrame *mFrame = nullptr;
   wxAuiNotebook *mNote = nullptr;
+  ArtProvider mArtProvider;
   bool mDarkMode = false;
   int mOptionsHeight = 0;
+  int mIconHeight = 0;
   Tabs::Settings *mSettingsTab = nullptr;
 
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
@@ -62,7 +65,7 @@ private:
 
   void openProfile(wxDataViewItem item);
 
-  int calculateOptionHeight();
+  void calculateOptions();
 };
 
 } // namespace Rapatas::Transmitron::GUI

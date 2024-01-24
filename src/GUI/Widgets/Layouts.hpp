@@ -7,6 +7,7 @@
 #include "GUI/Notifiers/Layouts.hpp"
 #include "GUI/Models/Layouts.hpp"
 #include "GUI/Events/Layout.hpp"
+#include "GUI/ArtProvider.hpp"
 
 namespace Rapatas::Transmitron::GUI::Widgets
 {
@@ -21,6 +22,7 @@ public:
     wxWindowID id,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
     wxAuiManager *auiMan,
+    const ArtProvider &artProvider,
     int optionsHeight
   );
 
@@ -35,6 +37,7 @@ private:
   wxDataViewItem mCurrentSelection;
   wxAuiManager *mAuiMan;
   wxFont mFont;
+  const ArtProvider &mArtProvider;
 
   wxBoxSizer *mSizer = nullptr;
   wxButton *mSave = nullptr;

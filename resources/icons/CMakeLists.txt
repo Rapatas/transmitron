@@ -1,0 +1,7 @@
+
+file(GLOB svgs ${CMAKE_CURRENT_LIST_DIR}/*.svg)
+
+install(
+  FILES ${svgs}
+  DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/${PROJECT_NAME}
+)

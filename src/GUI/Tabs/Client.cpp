@@ -14,16 +14,10 @@
 #include "GUI/Events/Layout.hpp"
 #include "GUI/Events/Recording.hpp"
 #include "GUI/Resources/history/history-18x14.hpp"
-#include "GUI/Resources/history/history-18x18.hpp"
-#include "GUI/Resources/plus/plus-18x18.hpp"
 #include "GUI/Resources/preview/preview-18x14.hpp"
-#include "GUI/Resources/preview/preview-18x18.hpp"
 #include "GUI/Resources/send/send-18x14.hpp"
-#include "GUI/Resources/send/send-18x18.hpp"
 #include "GUI/Resources/messages/messages-18x14.hpp"
-#include "GUI/Resources/messages/messages-18x18.hpp"
 #include "GUI/Resources/subscription/subscription-18x14.hpp"
-#include "GUI/Resources/subscription/subscription-18x18.hpp"
 
 using namespace Rapatas::Transmitron;
 using namespace GUI::Tabs;
@@ -42,6 +36,7 @@ Client::Client(
   const wxObjectDataPtr<Models::KnownTopics> &topicsPublished,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
   const wxString &name,
+  const ArtProvider &artProvider,
   bool darkMode,
   int optionsHeight
 ) :
@@ -56,6 +51,7 @@ Client::Client(
   mName(name),
   mClientOptions(std::move(clientOptions)),
   mFont(wxFontInfo(FontSize).FaceName("Consolas")),
+  mArtProvider(artProvider),
   mDarkMode(darkMode),
   mOptionsHeight(optionsHeight),
   mTopicsSubscribed(topicsSubscribed),
@@ -84,6 +80,7 @@ Client::Client(
   const wxObjectDataPtr<Models::Subscriptions> &subscriptionsModel,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
   const wxString &name,
+  const ArtProvider &artProvider,
   bool darkMode,
   int optionsHeight
 ) :
@@ -97,6 +94,7 @@ Client::Client(
   ),
   mName(name),
   mFont(wxFontInfo(FontSize).FaceName("Consolas")),
+  mArtProvider(artProvider),
   mDarkMode(darkMode),
   mOptionsHeight(optionsHeight),
   mLayoutsModel(layoutsModel),
@@ -122,7 +120,7 @@ void Client::setupPanels()
       "History",
       {},
       nullptr,
-      bin2cHistory18x18(),
+      mArtProvider.bitmap(Icon::History),
       bin2cHistory18x14(),
       nullptr
     }},
@@ -130,7 +128,7 @@ void Client::setupPanels()
       "Preview",
       {},
       nullptr,
-      bin2cPreview18x18(),
+      mArtProvider.bitmap(Icon::Preview),
       bin2cPreview18x14(),
       nullptr
     }},
@@ -138,7 +136,7 @@ void Client::setupPanels()
       "Subscriptions",
       {},
       nullptr,
-      bin2cSubscription18x18(),
+      mArtProvider.bitmap(Icon::Subscriptions),
       bin2cSubscription18x14(),
       nullptr
     }},
@@ -154,23 +152,23 @@ void Client::setupPanels()
 
   if (mClient != nullptr)
   {
-    mPanes[Panes::Messages] = {
+    mPanes.insert({Panes::Messages, {
       "Messages",
       {},
       nullptr,
-      bin2cMessages18x18(),
+      mArtProvider.bitmap(Icon::Archive),
       bin2cMessages18x14(),
       nullptr
-    };
+    }});
 
-    mPanes[Panes::Publish] = {
+    mPanes.insert({Panes::Publish, {
       "Publish",
       {},
       nullptr,
-      bin2cSend18x18(),
+      mArtProvider.bitmap(Icon::Publish),
       bin2cSend18x14(),
       nullptr
-    };
+    }});
 
     mPanes.at(Panes::Messages).info.Left();
     mPanes.at(Panes::Publish).info.Bottom();
@@ -316,7 +314,7 @@ void Client::setupPanelHistory(wxWindow *parent)
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
-  mHistorySearchButton->SetBitmap(wxArtProvider::GetBitmap(wxART_FIND));
+  mHistorySearchButton->SetBitmap(mArtProvider.bitmap(Icon::Search));
   mHistorySearchButton->Bind(
     wxEVT_BUTTON,
     &Client::onHistorySearchButton,
@@ -331,20 +329,20 @@ void Client::setupPanelHistory(wxWindow *parent)
     -1,
     "",
     wxDefaultPosition,
-    wxSize(-1, mOptionsHeight)
+    wxSize(mOptionsHeight, mOptionsHeight)
   );
   mHistoryClear->SetToolTip("Clear history");
-  mHistoryClear->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+  mHistoryClear->SetBitmap(mArtProvider.bitmap(Icon::Delete));
 
   mHistoryRecord = new wxButton(
     panel,
     -1,
     "",
     wxDefaultPosition,
-    wxSize(-1, mOptionsHeight)
+    wxSize(mOptionsHeight-1, mOptionsHeight)
   );
   mHistoryRecord->SetToolTip("Store history recording");
-  mHistoryRecord->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
+  mHistoryRecord->SetBitmap(mArtProvider.bitmap(Icon::Save));
 
   auto *topSizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   topSizer->Add(mHistorySearchFilter, 1, wxEXPAND);
@@ -422,7 +420,14 @@ void Client::setupPanelConnect(wxWindow *parent)
   );
   mCancel->SetToolTip("Stop connection attempt");
 
-  mLayouts = new Widgets::Layouts(mProfileBar, -1, mLayoutsModel, &mAuiMan, mOptionsHeight);
+  mLayouts = new Widgets::Layouts(
+    mProfileBar,
+    -1,
+    mLayoutsModel,
+    &mAuiMan,
+    mArtProvider,
+    mOptionsHeight
+  );
   mLayouts->Bind(Events::LAYOUT_SELECTED, &Client::onLayoutSelected, this);
   mLayouts->Bind(Events::LAYOUT_RESIZED,  &Client::onLayoutResized,  this);
 
@@ -470,7 +475,7 @@ void Client::setupPanelConnect(wxWindow *parent)
       continue;
     }
 
-    const auto *bitmap = mPanes.at(pane.first).icon18x18;
+    const auto &bitmap = mPanes.at(pane.first).icon18x18;
     auto *button = new wxButton(
       mProfileBar,
       -1,
@@ -479,7 +484,7 @@ void Client::setupPanelConnect(wxWindow *parent)
       wxSize(mOptionsHeight, mOptionsHeight)
     );
     button->SetToolTip(pane.second.name);
-    button->SetBitmap(*bitmap);
+    button->SetBitmap(bitmap);
     button->Bind(
       wxEVT_BUTTON,
       [&callback, &pane](wxCommandEvent &event) { callback(pane.first, event); }
@@ -520,13 +525,14 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mFilter->addKnownTopics(mTopicsSubscribed);
   mFilter->SetFont(mFont);
 
-  mSubscribe = new wxBitmapButton(
+  mSubscribe = new wxButton(
     panel,
     -1,
-    *bin2cPlus18x18(),
+    "",
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
+  mSubscribe->SetBitmap(mArtProvider.bitmap(Icon::Subscribe));
   mSubscribe->SetToolTip("Subscribe");
 
   auto* const icon = new wxDataViewColumn(
@@ -601,7 +607,13 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
 
 void Client::setupPanelPreview(wxWindow *parent)
 {
-  auto *panel = new Widgets::Edit(parent, -1, mOptionsHeight, mDarkMode);
+  auto *panel = new Widgets::Edit(
+    parent,
+    -1,
+    mArtProvider,
+    mOptionsHeight,
+    mDarkMode
+  );
   mPanes.at(Panes::Preview).panel = panel;
   panel->setReadOnly(true);
   panel->Bind(
@@ -616,6 +628,7 @@ void Client::setupPanelPublish(wxWindow *parent)
   auto *panel = new Widgets::Edit(
     parent,
     -1,
+    mArtProvider,
     mOptionsHeight,
     mDarkMode
   );
@@ -1012,18 +1025,58 @@ void Client::onSubscriptionContext(wxDataViewEvent& event)
   wxMenu menu;
   if (mClient != nullptr)
   {
-    menu.Append(static_cast<unsigned>(ContextIDs::SubscriptionsUnsubscribe), "Unsubscribe");
-    menu.Append(static_cast<unsigned>(ContextIDs::SubscriptionsClear), "Clear");
+    auto *unsubscribe = new wxMenuItem(
+      nullptr,
+      static_cast<unsigned>(ContextIDs::SubscriptionsUnsubscribe),
+      "Unsubscribe"
+    );
+    unsubscribe->SetBitmap(mArtProvider.bitmap(Icon::Unsubscribe));
+    menu.Append(unsubscribe);
+
+    auto *clear = new wxMenuItem(
+      nullptr,
+      static_cast<unsigned>(ContextIDs::SubscriptionsClear),
+      "Clear"
+    );
+    clear->SetBitmap(mArtProvider.bitmap(Icon::Clear));
+    menu.Append(clear);
   }
-  menu.Append(static_cast<unsigned>(ContextIDs::SubscriptionsChangeColor), "Color change");
-  menu.Append(static_cast<unsigned>(ContextIDs::SubscriptionsSolo), "Solo");
+
+  auto *color = new wxMenuItem(
+    nullptr,
+    static_cast<unsigned>(ContextIDs::SubscriptionsChangeColor),
+    "Color change"
+  );
+  color->SetBitmap(mArtProvider.bitmap(Icon::NewColor));
+  menu.Append(color);
+
+  auto *solo = new wxMenuItem(
+    nullptr,
+    static_cast<unsigned>(ContextIDs::SubscriptionsSolo),
+    "Solo"
+  );
+  solo->SetBitmap(mArtProvider.bitmap(Icon::Solo));
+  menu.Append(solo);
+
   if (muted)
   {
-    menu.Append(static_cast<unsigned>(ContextIDs::SubscriptionsUnmute), "Unmute");
+    auto *unmute = new wxMenuItem(
+      nullptr,
+      static_cast<unsigned>(ContextIDs::SubscriptionsUnmute),
+      "Unmute"
+    );
+    unmute->SetBitmap(mArtProvider.bitmap(Icon::Unmute));
+    menu.Append(unmute);
   }
   else
   {
-    menu.Append(static_cast<unsigned>(ContextIDs::SubscriptionsMute), "Mute");
+    auto *mute = new wxMenuItem(
+      nullptr,
+      static_cast<unsigned>(ContextIDs::SubscriptionsMute),
+      "Mute"
+    );
+    mute->SetBitmap(mArtProvider.bitmap(Icon::Mute));
+    menu.Append(mute);
   }
   PopupMenu(&menu);
 }
@@ -1041,7 +1094,7 @@ void Client::onHistoryContext(wxDataViewEvent& event)
     static_cast<unsigned>(ContextIDs::HistoryCopyTopic),
     "Copy Topic"
   );
-  copyTopic->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY));
+  copyTopic->SetBitmap(mArtProvider.bitmap(Icon::Copy));
   menu.Append(copyTopic);
 
   auto *copyPayload = new wxMenuItem(
@@ -1049,7 +1102,7 @@ void Client::onHistoryContext(wxDataViewEvent& event)
     static_cast<unsigned>(ContextIDs::HistoryCopyPayload),
     "Copy Payload"
   );
-  copyPayload->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY));
+  copyPayload->SetBitmap(mArtProvider.bitmap(Icon::Copy));
   menu.Append(copyPayload);
 
   if (mClient != nullptr)
@@ -1059,22 +1112,23 @@ void Client::onHistoryContext(wxDataViewEvent& event)
       static_cast<unsigned>(ContextIDs::HistoryEdit),
       "Edit"
     );
-    edit->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
+    edit->SetBitmap(mArtProvider.bitmap(Icon::Edit));
     menu.Append(edit);
 
-    auto *resend = new wxMenuItem(
+    auto *publish = new wxMenuItem(
       nullptr,
       static_cast<unsigned>(ContextIDs::HistoryResend),
-      "Re-Send"
+      "Publish"
     );
-    menu.Append(resend);
+    publish->SetBitmap(mArtProvider.bitmap(Icon::Publish));
+    menu.Append(publish);
 
     auto *clearRetained = new wxMenuItem(
       nullptr,
       static_cast<unsigned>(ContextIDs::HistoryRetainedClear),
       "Clear retained"
     );
-    clearRetained->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+    clearRetained->SetBitmap(mArtProvider.bitmap(Icon::Delete));
     menu.Append(clearRetained);
   }
 
@@ -1083,7 +1137,7 @@ void Client::onHistoryContext(wxDataViewEvent& event)
     static_cast<unsigned>(ContextIDs::HistorySaveMessage),
     "Save Message"
   );
-  save->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
+  save->SetBitmap(mArtProvider.bitmap(Icon::Save));
   menu.Append(save);
 
   PopupMenu(&menu);
@@ -1108,6 +1162,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
         static_cast<unsigned>(ContextIDs::MessagePublish),
         "Publish"
       );
+      publish->SetBitmap(mArtProvider.bitmap(Icon::Publish));
       menu.Append(publish);
     }
 
@@ -1118,7 +1173,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
         static_cast<unsigned>(ContextIDs::MessageOverwrite),
         "Overwrite"
       );
-      overwrite->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE_AS));
+      overwrite->SetBitmap(mArtProvider.bitmap(Icon::SaveAs));
       menu.Append(overwrite);
     }
 
@@ -1127,7 +1182,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
       static_cast<unsigned>(ContextIDs::MessageRename),
       "Rename"
     );
-    rename->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT));
+    rename->SetBitmap(mArtProvider.bitmap(Icon::Edit));
     menu.Append(rename);
 
     auto *del = new wxMenuItem(
@@ -1135,7 +1190,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
       static_cast<unsigned>(ContextIDs::MessageDelete),
       "Delete"
     );
-    del->SetBitmap(wxArtProvider::GetBitmap(wxART_DELETE));
+    del->SetBitmap(mArtProvider.bitmap(Icon::Delete));
     menu.Append(del);
   }
 
@@ -1148,7 +1203,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
       static_cast<unsigned>(ContextIDs::MessageNewFolder),
       "New Folder"
     );
-    newFolder->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW_DIR));
+    newFolder->SetBitmap(mArtProvider.bitmap(Icon::NewDir));
     menu.Append(newFolder);
 
     auto *newMessage = new wxMenuItem(
@@ -1156,7 +1211,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
       static_cast<unsigned>(ContextIDs::MessageNewMessage),
       "New Message"
     );
-    newMessage->SetBitmap(wxArtProvider::GetBitmap(wxART_NORMAL_FILE));
+    newMessage->SetBitmap(mArtProvider.bitmap(Icon::NewFile));
     menu.Append(newMessage);
   }
 

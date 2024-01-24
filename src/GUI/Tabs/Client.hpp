@@ -21,6 +21,7 @@
 #include "GUI/Models/Subscriptions.hpp"
 #include "GUI/Models/Messages.hpp"
 #include "GUI/Widgets/Edit.hpp"
+#include "GUI/ArtProvider.hpp"
 
 namespace Rapatas::Transmitron::GUI::Tabs
 {
@@ -41,6 +42,7 @@ public:
     const wxObjectDataPtr<Models::KnownTopics> &topicsPublished,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
     const wxString &name,
+    const ArtProvider &artProvider,
     bool darkMode,
     int optionsHeight
   );
@@ -51,6 +53,7 @@ public:
     const wxObjectDataPtr<Models::Subscriptions> &subscriptionsModel,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
     const wxString &name,
+    const ArtProvider &artProvider,
     bool darkMode,
     int optionsHeight
   );
@@ -101,7 +104,7 @@ private:
     std::string name;
     wxAuiPaneInfo info;
     wxPanel *panel = nullptr;
-    const wxBitmap *icon18x18 = nullptr;
+    const wxBitmap &icon18x18;
     const wxBitmap *icon18x14 = nullptr;
     wxButton *toggle = nullptr;
   };
@@ -115,6 +118,7 @@ private:
   wxString mName;
   Types::ClientOptions mClientOptions;
   wxFont mFont;
+  const ArtProvider &mArtProvider;
   bool mDarkMode;
   int mOptionsHeight;
   wxObjectDataPtr<Models::KnownTopics> mTopicsSubscribed;
@@ -145,7 +149,7 @@ private:
   wxButton *mHistorySearchButton = nullptr;
 
   // Subscriptions:
-  wxBitmapButton *mSubscribe = nullptr;
+  wxButton *mSubscribe = nullptr;
   Widgets::TopicCtrl *mFilter = nullptr;
   wxObjectDataPtr<Models::Subscriptions> mSubscriptionsModel;
   wxDataViewCtrl *mSubscriptionsCtrl = nullptr;

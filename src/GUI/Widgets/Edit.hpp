@@ -12,6 +12,7 @@
 #include "TopicCtrl.hpp"
 #include "GUI/Events/Edit.hpp"
 #include "GUI/Events/TopicCtrl.hpp"
+#include "GUI/ArtProvider.hpp"
 
 namespace Rapatas::Transmitron::GUI::Widgets
 {
@@ -24,6 +25,7 @@ public:
   explicit Edit(
     wxWindow* parent,
     wxWindowID id,
+    const ArtProvider &artProvider,
     int optionsHeight,
     bool darkMode
   );
@@ -79,6 +81,7 @@ private:
 
   Theme mTheme;
   wxFont mFont;
+  const ArtProvider &mArtProvider;
 
   bool mReadOnly = false;
   int mOptionsHeight;
@@ -98,7 +101,7 @@ private:
   wxStaticBitmap *mQos1 = nullptr;
   wxStaticBitmap *mQos2 = nullptr;
 
-  wxBitmapButton *mPublish = nullptr;
+  wxButton *mPublish = nullptr;
 
   wxStyledTextCtrl *mText = nullptr;
   std::string mPayload;

@@ -1,6 +1,5 @@
 #include <iterator>
 
-#include <wx/artprov.h>
 #include <wx/button.h>
 #include <wx/event.h>
 
@@ -19,12 +18,14 @@ Layouts::Layouts(
   wxWindowID id,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
   wxAuiManager *auiMan,
+  const ArtProvider &artProvider,
   int optionsHeight
 ) :
   wxPanel(parent, id),
   mOptionsHeight(optionsHeight),
   mLayoutsModel(layoutsModel),
   mAuiMan(auiMan),
+  mArtProvider(artProvider),
   mSizer(new wxBoxSizer(wxHORIZONTAL))
 {
   mLogger = Common::Log::create("Widgets::Layouts");
@@ -70,7 +71,7 @@ Layouts::Layouts(
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
-  mSave->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
+  mSave->SetBitmap(mArtProvider.bitmap(Icon::Save));
 
   mSizer->Add(label, 0, wxALIGN_CENTER_VERTICAL);
   mSizer->Add(mLayoutsLocked, 0, wxEXPAND);

@@ -7,7 +7,6 @@
 
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
-#include <wx/artprov.h>
 
 #include "Common/Url.hpp"
 #include "Common/Log.hpp"
@@ -17,7 +16,8 @@ using namespace Rapatas::Transmitron;
 using namespace GUI::Models;
 using namespace Common;
 
-Messages::Messages()
+Messages::Messages(const ArtProvider &artProvider) :
+  mArtProvider(artProvider)
 {
   mLogger = Common::Log::create("Models::Messages");
 
@@ -687,15 +687,24 @@ void Messages::GetValue(
   wxDataViewIconText value;
   const auto wxs = wxString::FromUTF8(node.name.data(), node.name.length());
   value.SetText(wxs);
+  wxIcon icon;
   switch (node.type)
   {
     case Node::Type::Folder: {
-      value.SetIcon(wxArtProvider::GetIcon(wxART_FOLDER));
+      icon.CopyFromBitmap(mArtProvider.bitmap(Icon::Folder));
     } break;
     case Node::Type::Message: {
-      value.SetIcon(wxArtProvider::GetIcon(wxART_NORMAL_FILE));
+      if (node.message.payload.empty())
+      {
+        icon.CopyFromBitmap(mArtProvider.bitmap(Icon::File));
+      }
+      else
+      {
+        icon.CopyFromBitmap(mArtProvider.bitmap(Icon::FileFull));
+      }
     } break;
   }
+  value.SetIcon(icon);
   variant << value;
 }
 

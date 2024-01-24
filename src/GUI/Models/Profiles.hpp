@@ -27,7 +27,10 @@ public:
     Max
   };
 
-  explicit Profiles(const wxObjectDataPtr<Layouts> &layouts);
+  explicit Profiles(
+    const wxObjectDataPtr<Layouts> &layouts,
+    const ArtProvider &artProvider
+  );
 
   bool load(
     const std::string &configDir,
@@ -108,6 +111,7 @@ private:
   static constexpr std::string_view ClientOptionsFilename = "client-options.json";
 
   std::shared_ptr<spdlog::logger> mLogger;
+  const ArtProvider &mArtProvider;
   Node::Id_t mAvailableId = 1;
   std::map<Node::Id_t, std::unique_ptr<Node>> mProfiles;
   std::string mConfigProfilesDir;

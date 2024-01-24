@@ -15,6 +15,7 @@ set(
   Common/XdgBaseDir.Windows.cpp
   Common/XdgBaseDir.cpp
   GUI/App.cpp
+  GUI/ArtProvider.cpp
   GUI/Events/Connection.cpp
   GUI/Events/Edit.cpp
   GUI/Events/Layout.cpp
@@ -29,23 +30,16 @@ set(
   GUI/Models/Profiles.cpp
   GUI/Models/Subscriptions.cpp
   GUI/Notifiers/Layouts.cpp
-  GUI/Resources/gear/gear-18x18.cpp
   GUI/Resources/history/history-18x14.cpp
-  GUI/Resources/history/history-18x18.cpp
   GUI/Resources/messages/messages-18x14.cpp
-  GUI/Resources/messages/messages-18x18.cpp
   GUI/Resources/pin/not-pinned-18x18.cpp
   GUI/Resources/pin/pinned-18x18.cpp
-  GUI/Resources/plus/plus-18x18.cpp
   GUI/Resources/preview/preview-18x14.cpp
-  GUI/Resources/preview/preview-18x18.cpp
   GUI/Resources/qos/qos-0.cpp
   GUI/Resources/qos/qos-1.cpp
   GUI/Resources/qos/qos-2.cpp
   GUI/Resources/send/send-18x14.cpp
-  GUI/Resources/send/send-18x18.cpp
   GUI/Resources/subscription/subscription-18x14.cpp
-  GUI/Resources/subscription/subscription-18x18.cpp
   GUI/Tabs/Client.cpp
   GUI/Tabs/Homepage.cpp
   GUI/Tabs/Settings.cpp
@@ -136,14 +130,15 @@ target_link_options(
 target_link_libraries(
   ${TRANSMITRON_BIN_NAME}
   PRIVATE
-    Threads::Threads
-    PahoMqttCpp::PahoMqttCpp
-    wxwidgets::wxwidgets
-    nlohmann_json::nlohmann_json
-    tinyxml2::tinyxml2
-    fmt::fmt
-    spdlog::spdlog
     CLI11::CLI11
+    PahoMqttCpp::PahoMqttCpp
+    Threads::Threads
     date::date
+    fmt::fmt
+    nanosvg::nanosvg
+    nlohmann_json::nlohmann_json
+    spdlog::spdlog
     stdc++fs
+    tinyxml2::tinyxml2
+    wxwidgets::wxwidgets
 )

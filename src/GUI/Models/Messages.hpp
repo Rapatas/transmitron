@@ -9,6 +9,7 @@
 #include <wx/dataview.h>
 
 #include "MQTT/Message.hpp"
+#include "GUI/ArtProvider.hpp"
 
 namespace Rapatas::Transmitron::GUI::Models
 {
@@ -24,7 +25,9 @@ public:
     Max
   };
 
-  explicit Messages();
+  explicit Messages(
+    const ArtProvider &artProvider
+  );
 
   bool load(const std::string &profileDir);
 
@@ -114,6 +117,7 @@ private:
   Node::Id_t mNextAvailableId = 0;
   std::map<Node::Id_t, Node> mNodes;
   std::string mMessagesDir;
+  const ArtProvider &mArtProvider;
 
   void loadDirectoryRecursive(
     const Common::fs::path &path,

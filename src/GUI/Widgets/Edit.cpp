@@ -5,7 +5,6 @@
 #include <nlohmann/json.hpp>
 #include <tinyxml2.h>
 #include <wx/clipbrd.h>
-#include <wx/artprov.h>
 #include <wx/sizer.h>
 #include <wx/stc/stc.h>
 
@@ -13,7 +12,6 @@
 #include "Common/Helpers.hpp"
 #include "Edit.hpp"
 #include "GUI/Events/Edit.hpp"
-#include "GUI/Resources/send/send-18x18.hpp"
 #include "GUI/Resources/pin/pinned-18x18.hpp"
 #include "GUI/Resources/pin/not-pinned-18x18.hpp"
 #include "GUI/Resources/qos/qos-0.hpp"
@@ -32,11 +30,13 @@ constexpr uint8_t ByteSize = std::numeric_limits<uint8_t>::digits;
 Edit::Edit(
   wxWindow* parent,
   wxWindowID id,
+  const ArtProvider &artProvider,
   int optionsHeight,
   bool darkMode
 ) :
   wxPanel(parent, id),
   mTheme(darkMode ? Theme::Dark : Theme::Light),
+  mArtProvider(artProvider),
   mOptionsHeight(optionsHeight),
   mTop(new wxBoxSizer(wxOrientation::wxHORIZONTAL)),
   mVsizer(new wxBoxSizer(wxOrientation::wxVERTICAL)),
@@ -53,13 +53,14 @@ Edit::Edit(
 
   mTopic->Bind(Events::TOPICCTRL_RETURN, &Edit::onTopicCtrlReturn, this);
 
-  mPublish = new wxBitmapButton(
+  mPublish = new wxButton(
     this,
     -1,
-    *bin2cSend18x18(),
+    "",
     wxDefaultPosition,
     wxSize(mOptionsHeight, mOptionsHeight)
   );
+  mPublish->SetBitmap(mArtProvider.bitmap(Icon::Publish));
   mPublish->SetToolTip("Publish");
   mPublish->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
     auto *event = new Events::Edit(Events::EDIT_PUBLISH);
@@ -76,7 +77,7 @@ Edit::Edit(
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
-  mSaveMessage->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_SAVE));
+  mSaveMessage->SetBitmap(mArtProvider.bitmap(Icon::Save));
   mSaveMessage->Bind(wxEVT_BUTTON, [this](wxCommandEvent &/* event */){
     auto *event = new Events::Edit(Events::EDIT_SAVE_MESSAGE);
     wxQueueEvent(this, event);
