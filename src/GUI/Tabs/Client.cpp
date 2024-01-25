@@ -486,7 +486,7 @@ void Client::setupPanelConnect(wxWindow *parent)
     button->SetBitmap(bitmap);
     button->Bind(
       wxEVT_BUTTON,
-      [&callback, &pane](wxCommandEvent &event) { callback(pane.first, event); }
+      [callback, pane](wxCommandEvent &event) { callback(pane.first, event); }
     );
     mProfileSizer->Add(button, 0, wxEXPAND);
 
