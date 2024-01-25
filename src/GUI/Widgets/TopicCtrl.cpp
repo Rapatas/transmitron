@@ -328,13 +328,6 @@ void TopicCtrl::popupShow()
   mAutoComplete->SetSize(popupSize);
   mAutoComplete->Move(popupPoint);
 
-  auto *wrapper = new wxPanel(
-    mAutoComplete,
-    wxID_ANY,
-    wxDefaultPosition,
-    wxDefaultSize
-  );
-
   mAutoCompleteTopic = new wxDataViewColumn(
     L"topic",
     new wxDataViewTextRenderer(),
@@ -344,7 +337,7 @@ void TopicCtrl::popupShow()
   );
 
   mAutoCompleteList = new wxDataViewCtrl(
-    wrapper,
+    mAutoComplete,
     -1,
     wxDefaultPosition,
     wxDefaultSize,
@@ -373,15 +366,9 @@ void TopicCtrl::popupShow()
     this
   );
 
-  auto *windowSizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
-  windowSizer->Add(wrapper, 1, wxEXPAND);
-  mAutoComplete->SetSizer(windowSizer);
-
   auto *wrapperSizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   wrapperSizer->Add(mAutoCompleteList, 1, wxEXPAND);
-  wrapper->SetSizer(wrapperSizer);
-
-  wrapper->SetSize(popupSize);
+  mAutoComplete->SetSizer(wrapperSizer);
 
   mAutoComplete->Show();
 }

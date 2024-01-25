@@ -15,7 +15,7 @@ using namespace GUI::Tabs;
 using namespace GUI;
 
 constexpr size_t SettingsWidth = 600;
-constexpr size_t SettingsHeight = 600;
+constexpr size_t SettingsHeight = 500;
 constexpr size_t Margin = 10;
 constexpr size_t SectionsWidth = 90;
 constexpr size_t SubSectionWidth = 200;
@@ -54,46 +54,41 @@ Settings::Settings(
   auto *master = new wxPanel(this);
   master->SetMinSize(wxSize(SettingsWidth, SettingsHeight));
 
-  auto *left = new wxPanel(master);
-  left->SetMinSize(wxSize(SectionsWidth, 0));
-
   mSections = new wxListCtrl(
-    left,
+    master,
     wxID_ANY,
     wxDefaultPosition,
-    wxDefaultSize,
+    wxSize(SectionsWidth, -1),
     wxLC_LIST | wxLC_SINGLE_SEL
   );
   mSections->InsertItem(0, "Layouts");
   mSections->InsertItem(1, "Profiles");
   mSections->Bind(wxEVT_LIST_ITEM_SELECTED, &Settings::onSectionSelected, this);
 
-  auto *labelSections = new wxStaticText(left, wxID_ANY, "Settings");
+  auto *labelSections = new wxStaticText(master, wxID_ANY, "Settings");
+  labelSections->SetMinSize(wxSize(-1, mOptionsHeight));
   labelSections->SetFont(mLabelFont);
 
   auto *lsizer = new wxBoxSizer(wxVERTICAL);
   lsizer->Add(labelSections, 0, wxEXPAND);
   lsizer->Add(mSections, 1, wxEXPAND);
-  left->SetSizer(lsizer);
 
-  auto *right = new wxPanel(master);
-
-  setupLayouts(right);
-  setupProfiles(right);
+  setupLayouts(master);
+  setupProfiles(master);
 
   // NOLINTNEXTLINE(cppcoreguidelines-prefer-member-initializer)
   mSectionSizer = new wxBoxSizer(wxVERTICAL);
   mSectionSizer->Add(mLayouts, 1, wxEXPAND);
   mSectionSizer->Add(mProfiles, 1, wxEXPAND);
-  right->SetSizer(mSectionSizer);
+  mSectionSizer->AddSpacer(0);
 
   mSectionSizer->Hide(mProfiles);
   mSectionSizer->Hide(mLayouts);
 
   auto *msizer = new wxBoxSizer(wxHORIZONTAL);
-  msizer->Add(left, 0, wxEXPAND);
+  msizer->Add(lsizer, 0, wxEXPAND);
   msizer->AddSpacer(Margin);
-  msizer->Add(right, 1, wxEXPAND);
+  msizer->Add(mSectionSizer, 1, wxEXPAND);
   master->SetSizer(msizer);
 
   auto *sizer = new wxBoxSizer(wxHORIZONTAL);
@@ -149,14 +144,11 @@ void Settings::setupLayouts(wxPanel *parent)
 
   mLayouts = new wxPanel(parent);
 
-  auto *base = new wxPanel(mLayouts);
-  base->SetMinSize(wxSize(SubSectionWidth, 0));
-
-  auto *label = new wxStaticText(base, wxID_ANY, "Layouts");
+  auto *label = new wxStaticText(mLayouts, wxID_ANY, "Layouts");
   label->SetFont(mLabelFont);
 
   mLayoutsCtrl = new wxDataViewListCtrl(
-    base,
+    mLayouts,
     -1,
     wxDefaultPosition,
     wxDefaultSize,
@@ -176,7 +168,7 @@ void Settings::setupLayouts(wxPanel *parent)
   );
 
   mLayoutDelete = new wxButton(
-    base,
+    mLayouts,
     wxID_ANY,
     "",
     wxDefaultPosition,
@@ -195,10 +187,10 @@ void Settings::setupLayouts(wxPanel *parent)
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
   vsizer->Add(hsizer, 0, wxEXPAND);
   vsizer->Add(mLayoutsCtrl, 1, wxEXPAND);
-  base->SetSizer(vsizer);
+  vsizer->SetMinSize(SubSectionWidth, -1);
 
   auto *sizer = new wxBoxSizer(wxHORIZONTAL);
-  sizer->Add(base, 0, wxEXPAND);
+  sizer->Add(vsizer, 0, wxEXPAND);
   mLayouts->SetSizer(sizer);
 
   mLayoutsCtrl->Bind(

@@ -19,8 +19,8 @@ using namespace GUI::Tabs;
 using namespace GUI;
 using namespace GUI::Events;
 
-constexpr size_t HomepageWidth = 400;
-constexpr size_t HomepageHeight = 400;
+constexpr size_t HomepageWidth = 600;
+constexpr size_t HomepageHeight = 500;
 constexpr size_t Margin = 10;
 
 Homepage::Homepage(
@@ -50,17 +50,20 @@ Homepage::Homepage(
   auto *master = new wxPanel(this);
   master->SetMinSize(wxSize(HomepageWidth, HomepageHeight));
 
-  setupQuickConnect(master);
   setupProfiles(master);
+  setupQuickConnect(master);
   setupRecordings(master);
 
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
   vsizer->Add(mQuickConnect, 0, wxEXPAND);
   vsizer->AddSpacer(Margin);
-  vsizer->Add(mProfiles, 1, wxEXPAND);
-  vsizer->AddSpacer(Margin);
   vsizer->Add(mRecordings, 0, wxEXPAND);
-  master->SetSizer(vsizer);
+
+  auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
+  hsizer->Add(mProfiles, 1, wxEXPAND);
+  hsizer->AddSpacer(Margin);
+  hsizer->Add(vsizer, 1, wxEXPAND);
+  master->SetSizer(hsizer);
 
   auto *sizer = new wxBoxSizer(wxHORIZONTAL);
   sizer->AddStretchSpacer(1);
@@ -130,13 +133,11 @@ void Homepage::setupProfiles(wxPanel *parent)
     this
   );
 
-  auto *row = new wxPanel(mProfiles);
-
-  auto *label = new wxStaticText(row, -1, "Profiles");
+  auto *label = new wxStaticText(mProfiles, -1, "Profiles");
   label->SetFont(mLabelFont);
 
-  mProfileCreate  = new wxButton(
-    row,
+  mProfileCreate = new wxButton(
+    mProfiles,
     wxID_ANY,
     "",
     wxDefaultPosition,
@@ -146,8 +147,8 @@ void Homepage::setupProfiles(wxPanel *parent)
   mProfileCreate->SetBitmap(mArtProvider.bitmap(Icon::NewProfile));
   mProfileCreate->Bind(wxEVT_BUTTON, &Homepage::onProfileCreate, this);
 
-  mProfileEdit    = new wxButton(
-    row,
+  mProfileEdit = new wxButton(
+    mProfiles,
     wxID_ANY,
     "",
     wxDefaultPosition,
@@ -159,7 +160,7 @@ void Homepage::setupProfiles(wxPanel *parent)
   mProfileEdit->Disable();
 
   mProfileConnect = new wxButton(
-    row,
+    mProfiles,
     wxID_ANY,
     "",
     wxDefaultPosition,
@@ -176,10 +177,9 @@ void Homepage::setupProfiles(wxPanel *parent)
   rsizer->Add(mProfileCreate, 0);
   rsizer->Add(mProfileEdit, 0);
   rsizer->Add(mProfileConnect, 0);
-  row->SetSizer(rsizer);
 
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
-  vsizer->Add(row,         0, wxEXPAND);
+  vsizer->Add(rsizer,        0, wxEXPAND);
   vsizer->Add(mProfilesCtrl, 1, wxEXPAND);
   mProfiles->SetSizer(vsizer);
 }
@@ -187,8 +187,6 @@ void Homepage::setupProfiles(wxPanel *parent)
 void Homepage::setupQuickConnect(wxPanel *parent)
 {
   mQuickConnect = new wxPanel(parent);
-
-  auto *panel = new wxPanel(mQuickConnect);
 
   auto item = mProfilesModel->getQuickConnect();
   const auto &options = mProfilesModel->getBrokerOptions(item);
@@ -198,7 +196,7 @@ void Homepage::setupQuickConnect(wxPanel *parent)
     options.getPort()
   );
 
-  mQuickConnectUrl = new wxTextCtrl(panel, wxID_ANY);
+  mQuickConnectUrl = new wxTextCtrl(mQuickConnect, wxID_ANY);
   mQuickConnectUrl->SetHint(hint);
   mQuickConnectUrl->Bind(wxEVT_KEY_DOWN, [&](wxKeyEvent &event){
     const auto isEnter = event.GetKeyCode() == WXK_RETURN;
@@ -209,7 +207,7 @@ void Homepage::setupQuickConnect(wxPanel *parent)
     event.Skip();
   });
   mQuickConnectBtn = new wxButton(
-    panel,
+    mQuickConnect,
     wxID_ANY,
     "Connect",
     wxDefaultPosition,
@@ -224,15 +222,15 @@ void Homepage::setupQuickConnect(wxPanel *parent)
 
   auto *label = new wxStaticText(mQuickConnect, -1, "Quick Connect");
   label->SetFont(mLabelFont);
+  label->SetMinSize(wxSize(-1, mOptionsHeight));
 
   auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
   hsizer->Add(mQuickConnectBtn, 0, wxEXPAND);
   hsizer->Add(mQuickConnectUrl, 1, wxEXPAND);
-  panel->SetSizer(hsizer);
 
   auto *vsizer = new wxBoxSizer(wxVERTICAL);
   vsizer->Add(label, 0, wxEXPAND);
-  vsizer->Add(panel, 0, wxEXPAND);
+  vsizer->Add(hsizer, 0, wxEXPAND);
   mQuickConnect->SetSizer(vsizer);
 }
 

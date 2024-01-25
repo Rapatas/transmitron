@@ -29,7 +29,7 @@ void ArtProvider::initialize(const fs::path &base, wxSize size, bool dark)
   {
 
     {Icon::Add,           "add.svg"},
-    {Icon::Archive,       "archive.svg"},
+    {Icon::Archive,       "inventory_2.svg"},
     {Icon::Clear,         "clear_all.svg"},
     {Icon::File,          "draft.svg"},
     {Icon::Folder,        "folder.svg"},
@@ -37,7 +37,7 @@ void ArtProvider::initialize(const fs::path &base, wxSize size, bool dark)
     {Icon::Profile,       "person.svg"},
     {Icon::NewProfile,    "person_add.svg"},
     {Icon::Cancel,        "cancel.svg"},
-    {Icon::Connect,       "cable.svg"},
+    {Icon::Connect,       "arrow_forward.svg"},
     {Icon::Copy,          "content_copy.svg"},
     {Icon::Delete,        "delete.svg"},
     {Icon::Edit,          "edit.svg"},
@@ -84,7 +84,7 @@ std::optional<wxBitmap> ArtProvider::parseSVG(
   wxSize size,
   bool dark
 ) {
-  if (!std::filesystem::exists(filename))
+  if (!fs::exists(filename))
   {
     mLogger->warn("Could not load Icon {}: not found", filename.string());
     return std::nullopt;

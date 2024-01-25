@@ -59,7 +59,6 @@ Client::Client(
   mLayoutsModel(layoutsModel),
   mRandomGenerator(mRandomDev()),
   mRandomColor(0, 9999), // NOLINT
-  mMasterSizer(new wxBoxSizer(wxVERTICAL)),
   mMessagesModel(messages),
   mClient(std::make_shared<MQTT::Client>()),
   mMqttObserverId(mClient->attachObserver(this))
@@ -100,7 +99,6 @@ Client::Client(
   mLayoutsModel(layoutsModel),
   mRandomGenerator(mRandomDev()),
   mRandomColor(0, 9999), // NOLINT
-  mMasterSizer(new wxBoxSizer(wxVERTICAL)),
   mHistoryModel(historyModel),
   mSubscriptionsModel(subscriptionsModel)
 {
@@ -207,23 +205,24 @@ void Client::setupPanels()
     }
   }
 
-  auto *wrapper = new wxPanel(this, -1);
+  auto *managed = new wxPanel(this);
 
   if (mClient != nullptr)
   {
-    setupPanelMessages(wrapper);
-    setupPanelPublish(wrapper);
+    setupPanelMessages(managed);
+    setupPanelPublish(managed);
   }
-  setupPanelSubscriptions(wrapper);
-  setupPanelPreview(wrapper);
-  setupPanelHistory(wrapper);
+  setupPanelSubscriptions(managed);
+  setupPanelPreview(managed);
+  setupPanelHistory(managed);
   setupPanelConnect(this);
 
-  mMasterSizer->Add(mProfileBar, 0, wxEXPAND);
-  mMasterSizer->Add(wrapper, 1, wxEXPAND);
-  SetSizer(mMasterSizer);
+  auto *sizer = new wxBoxSizer(wxVERTICAL);
+  sizer->Add(mProfileBar, 0, wxEXPAND);
+  sizer->Add(managed, 1, wxEXPAND);
+  SetSizer(sizer);
 
-  mAuiMan.SetManagedWindow(wrapper);
+  mAuiMan.SetManagedWindow(managed);
   for (const auto &pane : mPanes)
   {
     mAuiMan.AddPane(pane.second.panel, pane.second.info);
@@ -275,7 +274,7 @@ void Client::setupPanelHistory(wxWindow *parent)
     wxCOL_WIDTH_AUTOSIZE
   );
 
-  auto *panel = new wxPanel(parent, -1, wxDefaultPosition);
+  auto *panel = new wxPanel(parent);
   mPanes.at(Panes::History).panel = panel;
 
   mHistoryCtrl = new wxDataViewCtrl(
@@ -394,7 +393,7 @@ void Client::setupPanelHistory(wxWindow *parent)
 
 void Client::setupPanelConnect(wxWindow *parent)
 {
-  mProfileBar = new wxPanel(parent, -1);
+  mProfileBar = new wxPanel(parent);
 
   mConnect    = new wxButton(
     mProfileBar,
@@ -518,7 +517,7 @@ void Client::setupPanelConnect(wxWindow *parent)
 
 void Client::setupPanelSubscriptions(wxWindow *parent)
 {
-  auto *panel = new wxPanel(parent, -1, wxDefaultPosition);
+  auto *panel = new wxPanel(parent);
   mPanes.at(Panes::Subscriptions).panel = panel;
 
   mFilter = new Widgets::TopicCtrl(panel, -1);
@@ -661,7 +660,7 @@ void Client::setupPanelMessages(wxWindow *parent)
     wxALIGN_LEFT
   );
 
-  auto *panel = new wxPanel(parent, -1);
+  auto *panel = new wxPanel(parent);
   mPanes.at(Panes::Messages).panel = panel;
 
   mMessagesCtrl = new wxDataViewListCtrl(
