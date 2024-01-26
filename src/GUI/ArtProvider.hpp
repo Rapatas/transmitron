@@ -30,7 +30,6 @@ enum class Icon
   NewColor,
   NewDir,
   NewFile,
-  Preview,
   Publish,
   Save,
   SaveAs,

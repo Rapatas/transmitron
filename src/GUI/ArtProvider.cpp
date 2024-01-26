@@ -41,7 +41,6 @@ void ArtProvider::initialize(const fs::path &base, wxSize size, bool dark)
     {Icon::NewColor,      "palette.svg"},
     {Icon::NewDir,        "create_new_folder.svg"},
     {Icon::NewFile,       "note_add.svg"},
-    {Icon::Preview,       "note_add.svg"},
     {Icon::Publish,       "send.svg"},
     {Icon::Save,          "save.svg"},
     {Icon::SaveAs,        "save_as.svg"},

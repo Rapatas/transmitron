@@ -128,7 +128,7 @@ void Client::setupPanels()
       "Preview",
       {},
       nullptr,
-      mArtProvider.bitmap(Icon::Preview),
+      mArtProvider.bitmap(Icon::FileFull),
       bin2cPreview18x14(),
       nullptr
     }},
