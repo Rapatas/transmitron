@@ -14,24 +14,28 @@ using namespace Rapatas::Transmitron;
 
 wxColor Common::Helpers::colorFromNumber(size_t number)
 {
-  constexpr uint8_t MinColorChannel = 100;
+  // NOLINTBEGIN(readability-identifier-length)
+  // NOLINTBEGIN(hicpp-signed-bitwise)
+
   constexpr uint8_t ByteMask = 0xFF;
   constexpr uint8_t ByteSize = std::numeric_limits<uint8_t>::digits;
+  constexpr uint8_t MinValue = 150;
+  constexpr uint8_t Offset = 100;
 
-  // NOLINTBEGIN(readability-identifier-length)
-  // NOLINTBEGIN(google-readability-casting)
-  // NOLINTBEGIN(hicpp-signed-bitwise)
   uint8_t r = ((number >> (ByteSize * 0)) & ByteMask);
   uint8_t g = ((number >> (ByteSize * 1)) & ByteMask);
   uint8_t b = ((number >> (ByteSize * 2)) & ByteMask);
 
-  if (r < MinColorChannel) { r = (uint8_t)(r + MinColorChannel); }
-  if (g < MinColorChannel) { g = (uint8_t)(g + MinColorChannel); }
-  if (b < MinColorChannel) { b = (uint8_t)(b + MinColorChannel); }
+  if (r < MinValue && g < MinValue && b < MinValue)
+  {
+    r += Offset;
+    g += Offset;
+    b += Offset;
+  }
 
   return {r, g, b};
+
   // NOLINTEND(hicpp-signed-bitwise)
-  // NOLINTEND(google-readability-casting)
   // NOLINTEND(readability-identifier-length)
 }
 

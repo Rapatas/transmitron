@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Common/Filesystem.hpp"
 #include <set>
 #include <vector>
 #include <wx/dataview.h>
+#include "Common/Filesystem.hpp"
 #include "GUI/Models/Subscriptions.hpp"
 
 namespace Rapatas::Transmitron::GUI::Models

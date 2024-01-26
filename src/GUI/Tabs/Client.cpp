@@ -57,8 +57,9 @@ Client::Client(
   mTopicsSubscribed(topicsSubscribed),
   mTopicsPublished(topicsPublished),
   mLayoutsModel(layoutsModel),
+  mRandomDev(),
   mRandomGenerator(mRandomDev()),
-  mRandomColor(0, 9999), // NOLINT
+  mRandomColor(0, 255 * 255 * 255), // NOLINT
   mMessagesModel(messages),
   mClient(std::make_shared<MQTT::Client>()),
   mMqttObserverId(mClient->attachObserver(this))
@@ -97,8 +98,9 @@ Client::Client(
   mDarkMode(darkMode),
   mOptionsHeight(optionsHeight),
   mLayoutsModel(layoutsModel),
+  mRandomDev(),
   mRandomGenerator(mRandomDev()),
-  mRandomColor(0, 9999), // NOLINT
+  mRandomColor(0, 255 * 255 * 255), // NOLINT
   mHistoryModel(historyModel),
   mSubscriptionsModel(subscriptionsModel)
 {

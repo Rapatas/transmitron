@@ -63,9 +63,10 @@
 #       include <experimental/filesystem>
 
 // We need the alias from std::experimental::filesystem to Common::fs
-namespace Rapatas::Transmitron::Common {
+namespace Rapatas::Transmitron::Common
+{
     namespace fs = std::experimental::filesystem;
-}
+} // namespace Rapatas::Transmitron::Common
 
 // We have a decent compiler and can use the normal version
 #   else
