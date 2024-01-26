@@ -1,8 +1,6 @@
-#!/bin/bash
+#!/bin/sh -eu
 
-set -eu
-
-build_dir="build_$(cat /etc/compilername)"
+build_dir="build-$(cat /etc/compilername)"
 
 mkdir -p "/workspace/$build_dir"
 cd "/workspace/$build_dir"
@@ -10,14 +8,13 @@ cd "/workspace/$build_dir"
 conan \
   install ../conan \
   --build=missing \
-  --update \
   --profile:build=default \
   --profile:host=windows
 
 cmake \
-  -DCMAKE_MODULE_PATH=$PWD \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_TOOLCHAIN_FILE=/opt/cmake-toolchains/linux-x86_64-to-windows-x86_64.cmake \
+  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake \
+  -DCMAKE_PREFIX_PATH=/usr/x86_64-w64-mingw32 \
   ..
 
 make -j $(nproc)

@@ -796,7 +796,7 @@ void Settings::refreshLayouts()
 
     wxVariant layoutValue = pfpLayout->GetValue();
     const auto layoutName = pfpLayout->ValueToString(layoutValue);
-    mLogger->debug("Previous layout was: {}", layoutName);
+    mLogger->debug("Previous layout was: {}", layoutName.ToStdString());
 
     return layoutName;
   }();

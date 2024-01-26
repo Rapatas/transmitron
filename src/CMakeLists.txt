@@ -69,6 +69,9 @@ configure_file(${VERSION_PRE_CONF} ${VERSION_POST_CONF} @ONLY)
 
 if (WIN32)
 
+  set(CMAKE_CXX_LINK_FLAGS "${CMAKE_CXX_LINK_FLAGS} -static -static-libstdc++")
+  set(CMAKE_C_LINK_FLAGS   "${CMAKE_C_LINK_FLAGS}   -static -static-libgcc")
+
   set(RESOURCE_PRE_CONF "${CMAKE_CURRENT_SOURCE_DIR}/transmitron.in.rc")
   set(RESOURCE_POST_CONF "${CMAKE_BINARY_DIR}/transmitron.rc")
   list(APPEND ${PROJECT_NAME}_SOURCE ${RESOURCE_POST_CONF})
@@ -131,14 +134,13 @@ target_link_libraries(
   ${TRANSMITRON_BIN_NAME}
   PRIVATE
     CLI11::CLI11
-    PahoMqttCpp::PahoMqttCpp
+    PahoMqttCpp::paho-mqttpp3-static
     Threads::Threads
     date::date
     fmt::fmt
-    nanosvg::nanosvg
     nlohmann_json::nlohmann_json
     spdlog::spdlog
     stdc++fs
     tinyxml2::tinyxml2
-    wxwidgets::wxwidgets
+    wxWidgets::wxWidgets
 )

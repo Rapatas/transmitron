@@ -58,12 +58,6 @@ private:
   std::map<Icon, wxBitmap> mIcons;
   wxBitmap mPlaceholder;
 
-  std::optional<wxBitmap> parseSVG(
-    const Common::fs::path &filename,
-    wxSize size,
-    bool dark
-  );
-
 };
 
 } // namespace Rapatas::Transmitron::GUI

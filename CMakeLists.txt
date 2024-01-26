@@ -33,13 +33,19 @@ endif()
 find_package(Threads REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
-find_package(wxwidgets REQUIRED)
-find_package(nanosvg REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(fmt REQUIRED)
 find_package(CLI11 REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(date REQUIRED)
+find_package(wxWidgets REQUIRED
+  COMPONENTS
+    aui
+    core
+    propgrid
+    richtext
+    stc
+)
 
 include(${CMAKE_SOURCE_DIR}/cmake/clang-tidy.cmake)
 

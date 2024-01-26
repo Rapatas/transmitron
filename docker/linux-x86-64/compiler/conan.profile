@@ -5,7 +5,7 @@ arch=x86_64
 compiler.cppstd=gnu17
 compiler.libcxx=libstdc++11
 compiler.version=13
-build_type=Release
+build_type=Debug
 
 [options]
 
@@ -15,4 +15,3 @@ build_type=Release
 
 [conf]
 tools.system.package_manager:mode=install
-

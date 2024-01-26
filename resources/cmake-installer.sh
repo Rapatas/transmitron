@@ -4,7 +4,7 @@ set -e
 
 [ $(id -u) -ne 0 ] && SUDO=sudo
 
-version=3.26.3
+version=3.28.1
 
 $SUDO apt-get install -y openssl libssl-dev build-essential wget
 

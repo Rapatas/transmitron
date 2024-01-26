@@ -195,7 +195,7 @@ void App::onPageSelected(wxBookCtrlEvent& event)
 
   const auto windowName = fmt::format(
     "{} - Transmitron",
-    mNote->GetPage(selection)->GetName()
+    mNote->GetPage(selection)->GetName().ToStdString()
   );
   mFrame->SetTitle(windowName);
 
