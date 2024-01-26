@@ -432,8 +432,14 @@ void App::setupIcon()
     getInstallPrefix().string()
   );
   path.make_preferred();
-  mLogger->debug("Loading icon from {}", path.string());
-  mFrame->SetIcons(wxIconBundle(path.string()));
+
+  const auto bundle = wxIconBundle(path.string());
+  if (!bundle.IsOk())
+  {
+    mLogger->debug("Could not load icon: {}", path.string());
+    return;
+  }
+  mFrame->SetIcons(bundle);
 }
 
 Common::fs::path App::getExecutablePath()

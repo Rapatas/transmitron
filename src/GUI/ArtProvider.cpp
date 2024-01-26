@@ -3,6 +3,7 @@
 
 #include "GUI/ArtProvider.hpp"
 #include "Common/Log.hpp"
+#include "Common/Filesystem.hpp"
 
 using namespace Rapatas::Transmitron::GUI;
 using namespace Rapatas::Transmitron::Common;
@@ -13,7 +14,7 @@ ArtProvider::ArtProvider() = default;
 
 void ArtProvider::initialize(const fs::path &base, wxSize size, bool dark)
 {
-  mPlaceholder = wxArtProvider::GetBitmap(wxART_EDIT);
+  mPlaceholder = wxArtProvider::GetBitmap(wxART_PLUS);
   mLogger = Log::create("ArtProvider");
 
   mLogger->info("Loading icons with dimensions: {}x{}", size.x, size.y);
@@ -56,7 +57,17 @@ void ArtProvider::initialize(const fs::path &base, wxSize size, bool dark)
   for (const auto &[icon, relative] : paths)
   {
     const auto fullpath = base / relative;
+    if (!fs::exists(fullpath))
+    {
+      mLogger->warn("Could not load icon: {}", fullpath.string());
+      continue;
+    }
     auto bundle = wxBitmapBundle::FromSVGFile(fullpath.string(), size);
+    if (!bundle.IsOk())
+    {
+      mLogger->warn("Could not load icon: {}", fullpath.string());
+      continue;
+    }
     auto bitmap = bundle.GetBitmap(size);
 
     if (dark)
