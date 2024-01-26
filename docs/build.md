@@ -1,38 +1,23 @@
 # Build
 
-The recommended build method is to use the provided docker images.
+The recommended build method is to use the provided docker images for [linux](../docker/linux-x86-64) and [windows](../docker/windows-x86-64).
+The debug and release variants will bake the dependencies in the docker image.
 
-## Ubuntu 20.04 (and later)
+## Linux
 
 ```bash
 git clone https://github.com/Rapatas/transmitron.git
 cd transmitron
-./docker/ubuntu-2004/build-image.sh
-docker run --rm -it -v $PWD:/workspace rapatas_transmitron_linux_compiler bash
+./docker/linux-x86-64/compiler/build-image.sh
+./docker/linux-x86-64/release/build-image.sh
+docker run --rm -it -v $PWD:/workspace rapatas-transmitron-linux-x86-64-release bash
 ```
 
 Then, in the container:
 
 ```bash
 macro-make
-cd build_rapatas_transmitron_ubuntu-2004_compiler
-cpack
-```
-
-## Ubuntu 18.04
-
-```bash
-git clone https://github.com/Rapatas/transmitron.git
-cd transmitron
-./docker/ubuntu-1804/build-image.sh
-docker run --rm -it -v $PWD:/workspace rapatas_transmitron_linux_compiler bash
-```
-
-Then, in the container:
-
-```bash
-macro-make
-cd build_rapatas_transmitron_ubuntu-1804_compiler
+cd build-rapatas-transmitron-linux-x86-64-release
 cpack
 ```
 
@@ -44,14 +29,15 @@ host to run this image.**
 ```bash
 git clone https://github.com/Rapatas/transmitron.git
 cd transmitron
-./docker/windows/build-image.sh
-docker run --rm -it -v $PWD:/workspace rapatas_transmitron_windows_compiler bash
+./docker/windows-x86-64/compiler/build-image.sh
+./docker/windows-x86-64/release/build-image.sh
+docker run --rm -it -v $PWD:/workspace rapatas-transmitron-windows-x86-64-release bash
 ```
 
 Then, in the container:
 
 ```bash
 macro-make
-cd build_rapatas_transmitron_windows_compiler
+cd build-rapatas-transmitron-windows-x86-64-release
 cpack
 ```
