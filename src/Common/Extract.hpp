@@ -19,6 +19,12 @@ std::optional<unsigned> extract<unsigned>(
 );
 
 template<>
+std::optional<uint16_t> extract<uint16_t>(
+  const nlohmann::json &data,
+  const std::string &key
+);
+
+template<>
 std::optional<std::string> extract<std::string>(
   const nlohmann::json &data,
   const std::string &key

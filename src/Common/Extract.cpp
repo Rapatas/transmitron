@@ -18,6 +18,21 @@ std::optional<unsigned> Common::extract<unsigned>(
 }
 
 template<>
+std::optional<uint16_t> Common::extract<uint16_t>(
+  const nlohmann::json &data,
+  const std::string &key
+) {
+  auto it = data.find(key);
+  if (
+    it == std::end(data)
+    || it->type() != nlohmann::json::value_t::number_unsigned
+  ) {
+    return std::nullopt;
+  }
+  return it->get<uint16_t>();
+}
+
+template<>
 std::optional<std::string> Common::extract<std::string>(
   const nlohmann::json &data,
   const std::string &key

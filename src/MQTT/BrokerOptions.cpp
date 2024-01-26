@@ -27,7 +27,7 @@ BrokerOptions::BrokerOptions(
   bool autoReconnect,
   size_t maxInFlight,
   size_t maxReconnectRetries,
-  size_t port,
+  Port port,
   std::chrono::seconds connectTimeout,
   std::chrono::seconds disconnectTimeout,
   std::chrono::seconds keepAliveInterval,
@@ -81,7 +81,7 @@ BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data)
   const unsigned maxInFlight = extract<unsigned>(data, "maxInFlight")
     .value_or(DefaultMaxInFlight);
 
-  const unsigned port = extract<unsigned>(data, "port")
+  const Port port = extract<Port>(data, "port")
     .value_or(DefaultPort);
 
   const unsigned connectTimeout = extract<unsigned>(data, "connectTimeout")
@@ -130,7 +130,7 @@ bool BrokerOptions::getAutoReconnect() const
   return mAutoReconnect;
 }
 
-size_t BrokerOptions::getPort() const
+BrokerOptions::Port BrokerOptions::getPort() const
 {
   return mPort;
 }
@@ -185,7 +185,7 @@ void BrokerOptions::setHostname(std::string hostname)
   mHostname = std::move(hostname);
 }
 
-void BrokerOptions::setPort(size_t port)
+void BrokerOptions::setPort(Port port)
 {
   mPort = port;
 }

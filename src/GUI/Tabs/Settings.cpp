@@ -672,7 +672,7 @@ void Settings::propertyGridFill(
   pfp.at(Properties::MaxInFlight)->SetValue(static_cast<int>(brokerOptions.getMaxInFlight()));
   pfp.at(Properties::MaxReconnectRetries)->SetValue(static_cast<int>(brokerOptions.getMaxReconnectRetries()));
   pfp.at(Properties::Password)->SetValue(brokerOptions.getPassword());
-  pfp.at(Properties::Port)->SetValue(static_cast<int>(brokerOptions.getPort()));
+  pfp.at(Properties::Port)->SetValue(static_cast<uint16_t>(brokerOptions.getPort()));
   pfp.at(Properties::Username)->SetValue(brokerOptions.getUsername());
 
   (void)clientOptions;
@@ -696,7 +696,7 @@ MQTT::BrokerOptions Settings::brokerOptionsFromPropertyGrid() const
   const bool autoReconnect       = pfp.at(Properties::AutoReconnect)->GetValue();
   const auto maxInFlight         = static_cast<size_t>(pfp.at(Properties::MaxInFlight)->GetValue().GetInteger());
   const auto maxReconnectRetries = static_cast<size_t>(pfp.at(Properties::MaxReconnectRetries)->GetValue().GetInteger());
-  const auto port                = static_cast<size_t>(pfp.at(Properties::Port)->GetValue().GetInteger());
+  const auto port                = static_cast<uint16_t>(pfp.at(Properties::Port)->GetValue().GetInteger());
   const auto connectTimeout      = static_cast<size_t>(pfp.at(Properties::ConnectTimeout)->GetValue().GetInteger());
   const auto disconnectTimeout   = static_cast<size_t>(pfp.at(Properties::DisconnectTimeout)->GetValue().GetInteger());
   const auto keepAliveInterval   = static_cast<size_t>(pfp.at(Properties::KeepAlive)->GetValue().GetLong());

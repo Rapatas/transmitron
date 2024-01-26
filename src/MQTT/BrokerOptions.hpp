@@ -13,6 +13,8 @@ class BrokerOptions
 {
 public:
 
+  using Port = uint16_t;
+
   static constexpr bool DefaultAutoReconnect = false;
   static constexpr const std::string_view DefaultHostname = "127.0.0.1";
   static constexpr const std::string_view DefaultPassword {};
@@ -21,14 +23,14 @@ public:
   static constexpr std::chrono::seconds DefaultKeepAliveInterval { 60 };
   static constexpr size_t DefaultMaxReconnectRetries = 10;
   static constexpr size_t DefaultMaxInFlight = 10;
-  static constexpr size_t DefaultPort = 1883;
+  static constexpr Port DefaultPort = 1883;
 
   explicit BrokerOptions();
   explicit BrokerOptions(
     bool autoReconnect,
     size_t maxInFlight,
     size_t maxReconnectRetries,
-    size_t port,
+    Port port,
     std::chrono::seconds connectTimeout,
     std::chrono::seconds disconnectTimeout,
     std::chrono::seconds keepAliveInterval,
@@ -51,17 +53,17 @@ public:
   [[nodiscard]] std::string getUsername() const;
   [[nodiscard]] size_t getMaxInFlight() const;
   [[nodiscard]] size_t getMaxReconnectRetries() const;
-  [[nodiscard]] size_t getPort() const;
+  [[nodiscard]] Port getPort() const;
 
   void setHostname(std::string hostname);
-  void setPort(size_t port);
+  void setPort(Port port);
 
 private:
 
   bool mAutoReconnect;
   size_t mMaxInFlight;
   size_t mMaxReconnectRetries;
-  size_t mPort;
+  Port mPort;
   std::chrono::seconds mConnectTimeout;
   std::chrono::seconds mDisconnectTimeout;
   std::chrono::seconds mKeepAliveInterval;

@@ -21,7 +21,8 @@ using namespace GUI::Models;
 using namespace GUI;
 using namespace Common;
 
-constexpr size_t DefaultMqttPort = 1883;
+using Port = MQTT::BrokerOptions::Port;
+constexpr Port DefaultMqttPort = 1883;
 
 Profiles::Profiles(
   const wxObjectDataPtr<Layouts> &layouts,
@@ -210,7 +211,7 @@ void Profiles::updateQuickConnect(const std::string &url)
 {
   const auto parts = String::split(url, ':');
 
-  const auto port = [&]() -> size_t
+  const auto port = [&]() -> Port
   {
     if (parts.size() != 2) { return DefaultMqttPort; }
     const auto &portStr = parts[1];
@@ -220,7 +221,7 @@ void Profiles::updateQuickConnect(const std::string &url)
       [](char value){ return std::isdigit(value) != 0; }
     );
     if (!isNumeric) { return DefaultMqttPort; }
-    return std::stoul(portStr);
+    return static_cast<Port>(std::stoul(portStr));
   }();
 
   const auto domain = [&]()
