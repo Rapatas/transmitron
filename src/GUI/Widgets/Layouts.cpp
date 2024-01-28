@@ -62,8 +62,6 @@ Layouts::Layouts(
   );
   mLayoutsEdit->Hide();
 
-  auto *label = new wxStaticText(this, wxID_ANY, "Layout:");
-
   mSave = new wxButton(
     this,
     -1,
@@ -73,7 +71,6 @@ Layouts::Layouts(
   );
   mSave->SetBitmap(mArtProvider.bitmap(Icon::Save));
 
-  mSizer->Add(label, 0, wxALIGN_CENTER_VERTICAL);
   mSizer->Add(mLayoutsLocked, 0, wxEXPAND);
   mSizer->Add(mLayoutsEdit, 0, wxEXPAND);
   mSizer->Add(mSave, 0, wxEXPAND);

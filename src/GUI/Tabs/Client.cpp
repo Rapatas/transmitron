@@ -57,7 +57,6 @@ Client::Client(
   mTopicsSubscribed(topicsSubscribed),
   mTopicsPublished(topicsPublished),
   mLayoutsModel(layoutsModel),
-  mRandomDev(),
   mRandomGenerator(mRandomDev()),
   mRandomColor(0, 255 * 255 * 255), // NOLINT
   mMessagesModel(messages),
@@ -98,7 +97,6 @@ Client::Client(
   mDarkMode(darkMode),
   mOptionsHeight(optionsHeight),
   mLayoutsModel(layoutsModel),
-  mRandomDev(),
   mRandomGenerator(mRandomDev()),
   mRandomColor(0, 255 * 255 * 255), // NOLINT
   mHistoryModel(historyModel),
@@ -473,6 +471,7 @@ void Client::setupPanelConnect(wxWindow *parent)
   mProfileSizer->Add(mCancel, 0, wxEXPAND);
   allowCancel();
 
+  auto *panelSelector = new wxBoxSizer(wxHORIZONTAL);
   for (auto &pane : mPanes)
   {
     if (pane.first == Panes::History)
@@ -494,12 +493,13 @@ void Client::setupPanelConnect(wxWindow *parent)
       wxEVT_BUTTON,
       [callback, pane](wxCommandEvent &event) { callback(pane.first, event); }
     );
-    mProfileSizer->Add(button, 0, wxEXPAND);
+    panelSelector->Add(button, 0, wxEXPAND);
 
     pane.second.toggle = button;
   }
 
   mProfileSizer->AddStretchSpacer(1);
+  mProfileSizer->Add(panelSelector, 0, wxEXPAND);
   mProfileSizer->Add(mLayouts, 0, wxEXPAND);
 
   mProfileBar->SetSizer(mProfileSizer);
