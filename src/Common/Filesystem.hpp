@@ -1,8 +1,10 @@
+#pragma once
 /*
   https://stackoverflow.com/a/53365539
   Modified to use Common::fs instead of std::filesystem.
 */
 
+// NOLINTBEGIN(misc-unused-alias-decls)
 // NOLINTBEGIN(cppcoreguidelines-macro-usage)
 
 // We haven't checked which filesystem to include yet
@@ -57,6 +59,8 @@
 #       error Could not find system header "<filesystem>" or "<experimental/filesystem>"
 #   endif
 
+#endif // #ifndef INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
+
 // We priously determined that we need the exprimental version
 #   if INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
 // Include it
@@ -78,6 +82,5 @@ namespace Rapatas::Transmitron::Common
 } // namespace Rapatas::Transmitron::Common
 #   endif
 
-#endif // #ifndef INCLUDE_STD_FILESYSTEM_EXPERIMENTAL
-
 // NOLINTEND(cppcoreguidelines-macro-usage)
+// NOLINTEND(misc-unused-alias-decls)
