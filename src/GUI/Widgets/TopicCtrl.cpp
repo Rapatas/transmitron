@@ -42,7 +42,7 @@ TopicCtrl::TopicCtrl(
   Bind(wxEVT_KEY_DOWN,    &TopicCtrl::onKeyDown,       this);
   Bind(wxEVT_KEY_UP,      &TopicCtrl::onKeyUp,         this);
 
-#ifdef WIN32
+#ifdef _WIN32
 
   // Required until stop Ctrl-A and Return since causing a wxBell on Windows.
   Bind(wxEVT_CHAR, &TopicCtrl::onChar, this);
@@ -210,7 +210,7 @@ void TopicCtrl::onKeyUp(wxKeyEvent &event)
     return;
   }
 
-#ifdef WIN32
+#ifdef _WIN32
 
   if (event.ControlDown() && event.GetKeyCode() == 'A')
   {
@@ -394,6 +394,11 @@ void TopicCtrl::popupRefresh()
 
   const auto filter = GetValue().ToStdString();
 
+  if (mPopupShow)
+  {
+    mAutoCompleteList->UnselectAll();
+  }
+
   mKnownTopicsModel->setFilter(filter);
   if (mKnownTopicsModel->GetCount() == 0)
   {
@@ -402,6 +407,15 @@ void TopicCtrl::popupRefresh()
   else if (mPopupShow && mAutoComplete == nullptr)
   {
     popupShow();
+  }
+  else
+  {
+    // Re-select the top result
+    if (mKnownTopicsModel->GetCount() != 0)
+    {
+      const auto firstItem = mKnownTopicsModel->GetItem(0);
+      mAutoCompleteList->Select(firstItem);
+    }
   }
 }
 
