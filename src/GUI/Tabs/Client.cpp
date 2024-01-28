@@ -397,6 +397,9 @@ void Client::setupPanelConnect(wxWindow *parent)
 {
   mProfileBar = new wxPanel(parent);
 
+  mIndicator = new wxStaticBitmap(mProfileBar, wxID_ANY, mArtProvider.bitmap(Icon::Connecting));
+  mIndicator->SetMinSize(wxSize(mOptionsHeight, mOptionsHeight));
+
   mConnect    = new wxButton(
     mProfileBar,
     -1,
@@ -464,6 +467,7 @@ void Client::setupPanelConnect(wxWindow *parent)
 
   mProfileSizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   mProfileSizer->SetMinSize(0, mOptionsHeight);
+  mProfileSizer->Add(mIndicator, 0, wxEXPAND);
   mProfileSizer->Add(mConnect, 0, wxEXPAND);
   mProfileSizer->Add(mDisconnect, 0, wxEXPAND);
   mProfileSizer->Add(mCancel, 0, wxEXPAND);
@@ -973,6 +977,11 @@ void Client::allowConnect()
   mProfileSizer->Show(mConnect);
   mProfileSizer->Hide(mDisconnect);
   mProfileSizer->Hide(mCancel);
+  mIndicator->SetBitmap(mArtProvider.bitmap(Icon::Disconnected));
+  const uint8_t brightness = mDarkMode
+    ? 150
+    : 250;
+  mIndicator->SetBackgroundColour(wxColor(brightness, 0, 0));
   mProfileSizer->Layout();
 }
 
@@ -986,6 +995,11 @@ void Client::allowDisconnect()
   mProfileSizer->Hide(mConnect);
   mProfileSizer->Show(mDisconnect);
   mProfileSizer->Hide(mCancel);
+  mIndicator->SetBitmap(mArtProvider.bitmap(Icon::Connected));
+  const uint8_t brightness = mDarkMode
+    ? 150
+    : 250;
+  mIndicator->SetBackgroundColour(wxColor(0, brightness, 0));
   mProfileSizer->Layout();
 }
 
@@ -999,6 +1013,11 @@ void Client::allowCancel()
   mProfileSizer->Hide(mConnect);
   mProfileSizer->Hide(mDisconnect);
   mProfileSizer->Show(mCancel);
+  mIndicator->SetBitmap(mArtProvider.bitmap(Icon::Connecting));
+  const uint8_t brightness = mDarkMode
+    ? 150
+    : 250;
+  mIndicator->SetBackgroundColour(wxColor(brightness, brightness, 0));
   mProfileSizer->Layout();
 }
 
@@ -1007,6 +1026,8 @@ void Client::allowNothing()
   mProfileSizer->Hide(mConnect);
   mProfileSizer->Hide(mDisconnect);
   mProfileSizer->Hide(mCancel);
+  mIndicator->SetBitmap(mArtProvider.bitmap(Icon::Connecting));
+  mIndicator->SetBackgroundColour(wxColor(0, 0, 0));
   mProfileSizer->Layout();
 }
 

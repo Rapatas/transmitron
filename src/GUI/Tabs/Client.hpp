@@ -136,6 +136,7 @@ private:
   wxButton *mConnect = nullptr;
   wxButton *mDisconnect = nullptr;
   wxButton *mCancel = nullptr;
+  wxStaticBitmap *mIndicator = nullptr;
 
   // History:
   wxObjectDataPtr<Models::History> mHistoryModel;
