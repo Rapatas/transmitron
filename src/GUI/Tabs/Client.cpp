@@ -1026,8 +1026,7 @@ void Client::allowNothing()
   mProfileSizer->Hide(mConnect);
   mProfileSizer->Hide(mDisconnect);
   mProfileSizer->Hide(mCancel);
-  mIndicator->SetBitmap(mArtProvider.bitmap(Icon::Connecting));
-  mIndicator->SetBackgroundColour(wxColor(0, 0, 0));
+  mProfileSizer->Hide(mIndicator);
   mProfileSizer->Layout();
 }
 
