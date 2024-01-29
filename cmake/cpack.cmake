@@ -1,6 +1,3 @@
-# TODO:
-# - No readme as welcome
-
 if (WIN32)
   set(CPACK_GENERATOR "NSIS")
   set(CPACK_SOURCE_GENERATOR "ZIP")
@@ -81,11 +78,14 @@ set(CPACK_NSIS_EXTRA_PREINSTALL_COMMANDS "
 set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
   WriteRegStr SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe' '' '$INSTDIR\\\\bin\\\\transmitron.exe'\n\
   WriteRegStr SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe' 'Path' '$INSTDIR\\\\bin'\n\
+  WriteRegDWORD HKLM 'SYSTEM\\\\CurrentControlSet\\\\Services\\\\EventLog\\\\Application\\\\Transmitron' 'TypesSupported' 0x00000007\n\
+  WriteRegBin HKLM 'SYSTEM\\\\CurrentControlSet\\\\Services\\\\EventLog\\\\Application\\\\Transmitron' 'EventMessageFile' 2500730079007300740065006d0072006f006f00740025005c00530079007300740065006d00330032005c006d00730063006f007200650065002e0064006c006c000000\n\
   \\\${RegisterExtension} '$INSTDIR\\\\bin\\\\transmitron.exe' '.tmrc' 'History Recording'\n\
   \\\${RefreshShellIcons}
 ")
 set(CPACK_NSIS_EXTRA_UNINSTALL_COMMANDS "
   DeleteRegKey SHCTX 'SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\transmitron.exe'\n\
+  DeleteRegKey HKLM 'SYSTEM\\\\CurrentControlSet\\\\Services\\\\EventLog\\\\Application\\\\Transmitron'\n\
   \\\${UnRegisterExtension} '.tmrc' 'History Recording'\n\
   \\\${RefreshShellIcons}
 ")
@@ -97,7 +97,6 @@ set(CPACK_NSIS_DELETE_ICONS_EXTRA "
 ")
 
 # DEB (Linux .deb bundle)
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "libgtk2.0-dev")
 set(CPACK_DEBIAN_PACKAGE_SECTION "internet")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER ${CPACK_PACKAGE_CONTACT})
 SET(CPACK_DEBIAN_PACKAGE_CONTROL_EXTRA ${DEB_POSTINST_POST_CONF})
@@ -105,7 +104,7 @@ set(CPACK_DEBIAN_PACKAGE_DESCRIPTION "## Features:
 
  Profiles: Store connections to brokers.
  Multiple Connections: Connect to multiple Profiles at the same time using tabs.
- Snippets: Store messages in a nested folder structure, ready to publish.
+ Archive: Store messages in a nested folder structure.
  Record History: Record received messages and play them back later.
  Folding: For messages with nested data.
  Syntax highlight, detection & formatting: Supports JSON, XML & binary.

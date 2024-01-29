@@ -9,7 +9,7 @@
 #include "Client.hpp"
 #include "Common/Log.hpp"
 
-using namespace MQTT;
+using namespace Rapatas::Transmitron::MQTT;
 
 constexpr size_t CancelCheckIntervalMs = 50;
 constexpr size_t ReconnectAfterMs = 2500;
@@ -23,14 +23,10 @@ Client::Client()
   mLogger = Common::Log::create("MQTT::Client");
 }
 
-size_t Client::attachObserver(Observer *o)
+size_t Client::attachObserver(Observer *observer)
 {
-  size_t id = 0;
-  do {
-    id = (size_t)std::abs(rand());
-  } while (mObservers.find(id) != std::end(mObservers));
-
-  return mObservers.insert(std::make_pair(id, o)).first->first;
+  static size_t id = 0;
+  return mObservers.insert(std::make_pair(id++, observer)).first->first;
 }
 
 void Client::detachObserver(size_t id)
@@ -62,10 +58,9 @@ void Client::connect()
     mClient->set_callback(*this);
     mClient->connect(mConnectOptions, nullptr, *this);
   }
-  catch (const mqtt::exception& e)
+  catch (const mqtt::exception& event)
   {
-    mLogger->error("Connection failed: {}", e.what());
-    exit(1);
+    mLogger->error("Connection failed: {}", event.what());
   }
 }
 
@@ -88,7 +83,6 @@ void Client::disconnect()
   catch (const mqtt::exception& exc)
   {
     mLogger->error("Disconnection failed: {}", exc.what());
-    exit(1);
   }
 }
 
@@ -165,7 +159,7 @@ void Client::publish(
     message.topic,
     message.payload.data(),
     message.payload.size(),
-    (int)message.qos,
+    static_cast<int>(message.qos),
     message.retained,
     nullptr,
     *this
@@ -260,9 +254,9 @@ void Client::onSuccessConnect(const mqtt::token& /* tok */)
 
 void Client::onSuccessDisconnect(const mqtt::token& /* tok */)
 {
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onDisconnected();
+    observer->onDisconnected();
   }
 }
 
@@ -282,17 +276,22 @@ void Client::onSuccessSubscribe(const mqtt::token& tok)
   if (it == std::end(mSubscriptions))
   {
     mLogger->error("Unknown subscription ACK!");
-    exit(1);
+    return;
   }
 
   it->second->setState(Subscription::State::Subscribed);
   it->second->onSubscribed();
 
   mLogger->info("Subscribed to topics:");
-  const auto size = tok.get_topics()->size();
-  for (size_t i = 0; i != size; ++i)
+  std::vector<const char *> topics;
+  topics.assign(
+    tok.get_topics()->c_arr(),
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
+    tok.get_topics()->c_arr() + tok.get_topics()->size()
+  );
+  for (const auto &topic : topics)
   {
-    mLogger->info("  - {}", tok.get_topics()->c_arr()[i]);
+    mLogger->info("  - {}", topic);
   }
 }
 
@@ -310,7 +309,7 @@ void Client::onSuccessUnsubscribe(const mqtt::token& tok)
   if (it == std::end(mSubscriptions))
   {
     mLogger->error("Unknown unsubscription ACK!");
-    exit(1);
+    return;
   }
 
   mLogger->info(
@@ -326,44 +325,20 @@ void Client::onSuccessUnsubscribe(const mqtt::token& tok)
 void Client::onFailureConnect(const mqtt::token& tok)
 {
   const auto code = tok.get_return_code();
-  const auto codeIt = mReturnCodes.find(code);
-  if (codeIt != std::end(mReturnCodes))
-  {
-    mLogger->warn("Connection attempt failed: {}", codeIt->second);
-  }
-  else
-  {
-    mLogger->warn("Connection attempt failed: {}", code);
-  }
+  mLogger->warn("Connection attempt failed: {}", codeToStr(code));
   reconnect();
 }
 
 void Client::onFailureDisconnect(const mqtt::token& tok)
 {
   const auto code = tok.get_return_code();
-  const auto codeIt = mReturnCodes.find(code);
-  if (codeIt != std::end(mReturnCodes))
-  {
-    mLogger->warn("Disconnection attempt failed: {}", codeIt->second);
-  }
-  else
-  {
-    mLogger->warn("Disconnection attempt failed: {}", code);
-  }
+  mLogger->warn("Disconnection attempt failed: {}", codeToStr(code));
 }
 
 void Client::onFailurePublish(const mqtt::token& tok)
 {
   const auto code = tok.get_return_code();
-  const auto codeIt = mReturnCodes.find(code);
-  if (codeIt != std::end(mReturnCodes))
-  {
-    mLogger->warn("Publishing attempt failed: {}", codeIt->second);
-  }
-  else
-  {
-    mLogger->warn("Publishing attempt failed: {}", code);
-  }
+  mLogger->warn("Publishing attempt failed: {}", codeToStr(code));
 }
 
 void Client::onFailureSubscribe(const mqtt::token& tok)
@@ -392,30 +367,13 @@ void Client::onFailureSubscribe(const mqtt::token& tok)
   }
 
   const auto code = tok.get_return_code();
-  const auto codeIt = mReturnCodes.find(code);
-
-  if (codeIt != std::end(mReturnCodes))
-  {
-    mLogger->warn("Subscription attempt failed: {}", codeIt->second);
-  }
-  else
-  {
-    mLogger->warn("Subscription attempt failed: {}", code);
-  }
+  mLogger->warn("Subscription attempt failed: {}", codeToStr(code));
 }
 
 void Client::onFailureUnsubscribe(const mqtt::token& tok)
 {
   const auto code = tok.get_return_code();
-  const auto codeIt = mReturnCodes.find(code);
-  if (codeIt != std::end(mReturnCodes))
-  {
-    mLogger->warn("Unsubscription attempt failed: {}", codeIt->second);
-  }
-  else
-  {
-    mLogger->warn("Unsubscription attempt failed: {}", code);
-  }
+  mLogger->warn("Unsubscription attempt failed: {}", codeToStr(code));
 }
 
 // mqtt::iaction_listener interface }
@@ -427,9 +385,9 @@ void Client::connected(const std::string& /* cause */)
   mLogger->info("Connected!");
   mRetries = 0;
   mShouldReconnect = true;
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onConnected();
+    observer->onConnected();
   }
 
   mLogger->info("Subscribing to topics:");
@@ -443,9 +401,9 @@ void Client::connected(const std::string& /* cause */)
 void Client::connection_lost(const std::string& cause)
 {
   mLogger->info("Connection lost: {}", cause);
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onConnectionLost();
+    observer->onConnectionLost();
   }
   cleanSubscriptions();
   reconnect();
@@ -477,9 +435,9 @@ void Client::reconnect()
     || !mBrokerOptions.getAutoReconnect()
     || ++mRetries > mBrokerOptions.getMaxReconnectRetries()
   ) {
-    for (const auto &o : mObservers)
+    for (const auto &[id, observer] : mObservers)
     {
-      o.second->onConnectionFailure();
+      observer->onConnectionFailure();
     }
     return;
   }
@@ -496,9 +454,9 @@ void Client::reconnect()
 
   if (mCanceled)
   {
-    for (const auto &o : mObservers)
+    for (const auto &[id, observer] : mObservers)
     {
-      o.second->onDisconnected();
+      observer->onDisconnected();
     }
     return;
   }
@@ -517,7 +475,6 @@ void Client::reconnect()
   catch (const mqtt::exception& exc)
   {
     mLogger->error("Error: {}", exc.what());
-    exit(1);
   }
 }
 
@@ -533,11 +490,11 @@ void Client::doSubscribe(size_t id)
   mLogger->info(
     "Actually subscribing: {} ({})",
     it->second->getFilter(),
-    (unsigned)it->second->getQos()
+    static_cast<int>(it->second->getQos())
   );
   mClient->subscribe(
     it->second->getFilter(),
-    (int)it->second->getQos(),
+    static_cast<int>(it->second->getQos()),
     nullptr,
     *this
   );
@@ -618,6 +575,49 @@ bool Client::match(const std::string &filter, const std::string &topic)
   }
 
   return true;
+}
+
+const std::map<int, std::string> &Client::codeDescriptions()
+{
+  static const std::map<int, std::string> result
+  {
+    { 0,   "Connection accepted" },
+    { 1,   "Unacceptable protocol version" },
+    { 2,   "Identifier rejected" },
+    { 3,   "Service unavailable" },
+    { 4,   "Bad user name or password" },
+    { 5,   "Not authorized" },
+    { -1,  "Connection timeout" },
+    { -2,  "Persistence error" },
+    { -3,  "Disconnected" },
+    { -4,  "Max messages inflight" },
+    { -5,  "Bad utf8 string" },
+    { -6,  "Null parameter" },
+    { -7,  "Topicname truncated" },
+    { -8,  "Bad structure" },
+    { -9,  "Bad QOS" },
+    { -10, "No more MsgIds" },
+    { -11, "Operation incomplete" },
+    { -12, "Max buffered messages" },
+    { -13, "Ssl not supported" },
+    { -14, "Bad protocol" },
+    { -15, "Bad MQTT option" },
+    { -16, "Wrong MQTT version" },
+    { -17, "Zero length will topic" },
+    { -18, "Command ignored" },
+  };
+
+  return result;
+}
+
+std::string Client::codeToStr(int code)
+{
+  const auto it = codeDescriptions().find(code);
+  if (it == codeDescriptions().end())
+  {
+    return std::to_string(code);
+  }
+  return it->second;
 }
 
 // Static }

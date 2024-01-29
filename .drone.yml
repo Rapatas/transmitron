@@ -1,5 +1,5 @@
 kind: pipeline
-name: all-in-one
+name: default
 platform:
   os: linux
   arch: amd64
@@ -15,32 +15,32 @@ steps:
       - git clone https://github.com/rapatas/transmitron.git .
       - git checkout ${DRONE_COMMIT}
 
-  - name: Build Linux
-    image: rapatas_transmitron_linux_compiler
+  - name: Build Linux x86_64
+    image: rapatas-transmitron-linux-x86-64-release
     pull: if-not-exists
     user: 0
     commands:
-      - mkdir build-release-linux-amd64
-      - cd    build-release-linux-amd64
-      - conan install ../conan/ --build=missing
-      - cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_BUILD_TYPE=Release ..
-      - make -j $(nproc)
+      - mkdir build-rapatas-transmitron-linux-x86-64-release
+      - cd    build-rapatas-transmitron-linux-x86-64-release
+      - conan install --build=missing --profile:build=default --profile:host=default ../conan
+      - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake ..
+      - make -j 6
       - make package
 
-  - name: Build Windows
-    image: rapatas_transmitron_windows_compiler
+  - name: Build Windows x86_64
+    image: rapatas-transmitron-windows-x86-64-release
     pull: if-not-exists
     user: 0
     commands:
-      - mkdir build-release-windows-amd64
-      - cd    build-release-windows-amd64
-      - conan install ../conan/ --profile=windows --build=missing
-      - cmake -DCMAKE_MODULE_PATH=$PWD -DCMAKE_TOOLCHAIN_FILE=/opt/cmake-toolchains/linux-x86_64-to-windows-x86_64.cmake -DCMAKE_BUILD_TYPE=Release ..
-      - make -j $(nproc)
+      - mkdir build-rapatas-transmitron-windows-x86-64-release
+      - cd    build-rapatas-transmitron-windows-x86-64-release
+      - conan install ../conan --build=missing --profile:build=default --profile:host=windows
+      - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_PREFIX_PATH=/usr/x86_64-w64-mingw32 ..
+      - make -j 6
       - make package
 
   - name: Release Notes
-    image: ubuntu:20.04
+    image: ubuntu:22.04
     pull: if-not-exists
     commands:
       - echo "$(awk -v section=[${DRONE_TAG}] '$2==section{ f=1; next }; /^## /{ f=0; next }; f==1{ print $0 };' ./CHANGELOG.md)" > release_notes_${DRONE_TAG}.md
@@ -56,8 +56,8 @@ steps:
       api_key:
         from_secret: drone.io-release
       files:
-        - build-release-*-*/transmitron_*_*.deb
-        - build-release-*-*/transmitron_*_*.exe
+        - build-*/transmitron_*_*.deb
+        - build-*/transmitron_*_*.exe
     checksum:
       - md5
       - sha1

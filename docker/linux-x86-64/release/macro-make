@@ -1,0 +1,19 @@
+#!/bin/sh -eu
+
+build_dir="build-$(cat /etc/compilername)"
+
+mkdir -p "/workspace/$build_dir"
+cd "/workspace/$build_dir"
+
+conan install \
+  --build=missing \
+  --profile:build=default \
+  --profile:host=default \
+  ../conan
+
+cmake \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake \
+  ..
+
+make -j $(nproc)

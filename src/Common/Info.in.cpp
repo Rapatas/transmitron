@@ -1,19 +1,16 @@
 #include "Common/Info.hpp"
 
-#ifndef PROJECT_NAME
-#define PROJECT_NAME "@PROJECT_NAME@"
-#endif // PROJECT_NAME
+constexpr const char *ProjectName = "@PROJECT_NAME@";
+constexpr const char *ProjectDescription = "@PROJECT_DESCRIPTION@";
 
-const char *Common::getProjectName()
+using namespace Rapatas::Transmitron;
+
+const char *Common::Info::getProjectName()
 {
-    return PROJECT_NAME;
+  return ProjectName;
 }
 
-#ifndef PROJECT_DESCRIPTION
-#define PROJECT_DESCRIPTION "@PROJECT_DESCRIPTION@"
-#endif // PROJECT_DESCRIPTION
-
-const char *Common::getProjectDescription()
+const char *Common::Info::getProjectDescription()
 {
-    return PROJECT_DESCRIPTION;
+  return ProjectDescription;
 }

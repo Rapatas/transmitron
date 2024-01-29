@@ -9,19 +9,7 @@
 		alt="Transmitron Name"
 		src="https://i.imgur.com/ur5ftjH.png">
 </p>
-<hr>
-<h3 align="center">
-    Open source MQTT Client for desktop. Flexible, native, and cross-platform.
-</h3>
-<p align="center">
-	<strong>
-		<a href="#features">Features</a>
-		•
-		<a href="https://github.com/Rapatas/transmitron/releases/latest">Install</a>
-		•
-		<a href="./docs/build.md">Build</a>
-	</strong>
-</p>
+<h3 align="center">Open source MQTT Client for desktop. Flexible, native, and cross-platform.</h3>
 <p align="center">
 	<a
         href="https://github.com/Rapatas/transmitron/releases"><img
@@ -49,7 +37,7 @@
 
 - **Profiles.** Store connections to brokers.
 - **Multiple Connections.** Connect to multiple `Profiles` at the same time using tabs.
-- **Snippets.** Store messages in a nested folder structure, ready to publish.
+- **Archive.** Store messages in a nested folder structure, ready to publish.
 - **Record History.** Record received messages and play them back later.
 - **Text Folding.** For messages with nested data.
 - **Syntax highlight, detection & formatting.** Supports JSON, XML & binary.
@@ -62,6 +50,7 @@
 - **History Filter.** Limit history using search terms.
 - **Cross-Platform.** Built for Windows and Linux.
 
-## Acknowledgements
+## Documentation
 
-- Icons made by [DinosoftLabs](https://www.flaticon.com/authors/DinosoftLabs), [Google](https://www.flaticon.com/authors/google), [Freepik](https://www.freepik.com), [Kiranshastry](https://www.flaticon.com/authors/kiranshastry) from [Flaticon](https://www.flaticon.com/).
+- [Install](https://github.com/Rapatas/transmitron/releases/latest)
+- [Build](./docs/build.md)

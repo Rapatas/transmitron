@@ -5,35 +5,32 @@
 #include "Message.hpp"
 #include "Common/Log.hpp"
 
+using namespace Rapatas::Transmitron;
 using namespace MQTT;
 
 Subscription::Subscription(
   Id_t id,
-  const std::string &filter,
+  std::string filter,
   QoS qos,
   std::shared_ptr<Client> client
 ) :
   mId(id),
-  mFilter(filter),
+  mFilter(std::move(filter)),
   mQos(qos),
-  mState(State::Unsubscribed),
   mClient(std::move(client)),
   mLogger(Common::Log::create("MQTT::Subscription"))
 {}
 
-size_t Subscription::attachObserver(Observer *o)
+size_t Subscription::attachObserver(Observer *observer)
 {
-  size_t id = 0;
-  do {
-    id = (size_t)std::abs(rand());
-  } while (mObservers.find(id) != std::end(mObservers));
+  static size_t id = 0;
 
   if (mState == State::Subscribed)
   {
     onSubscribed();
   }
 
-  return mObservers.insert(std::make_pair(id, o)).first->first;
+  return mObservers.insert(std::make_pair(id++, observer)).first->first;
 }
 
 void Subscription::unsubscribe()
@@ -52,24 +49,24 @@ void Subscription::unsubscribe()
 
 void Subscription::onSubscribed()
 {
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onSubscribed();
+    observer->onSubscribed();
   }
 }
 
 void Subscription::onUnsubscribed()
 {
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
-    o.second->onUnsubscribed();
+    observer->onUnsubscribed();
   }
 }
 
 void Subscription::onMessage(
   const mqtt::const_message_ptr &msg
 ) {
-  for (const auto &o : mObservers)
+  for (const auto &[id, observer] : mObservers)
   {
     const std::string payload {
       std::begin(msg->get_payload()),
@@ -84,15 +81,17 @@ void Subscription::onMessage(
       case 2: qos = MQTT::QoS::ExactlyOnce; break;
     }
 
-    Message message {
+    const auto timestamp = std::chrono::system_clock::now();
+
+    const Message message {
       msg->get_topic(),
       payload,
       qos,
       msg->is_retained(),
-      std::chrono::system_clock::now()
+      timestamp,
     };
 
-    o.second->onMessage(message);
+    observer->onMessage(message);
   }
 }
 

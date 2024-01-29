@@ -1,15 +1,10 @@
-#ifndef COMMON_LOG_H
-#define COMMON_LOG_H
+#pragma once
 
-#include <filesystem>
-#include <spdlog/common.h>
 #include <string>
 #include <memory>
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/basic_file_sink.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
+#include <spdlog/logger.h>
 
-namespace Common
+namespace Rapatas::Transmitron::Common
 {
 
 class Log
@@ -22,7 +17,7 @@ public:
   Log &operator=(const Log &other) = delete;
   Log &operator=(Log &&other) = delete;
 
-  bool initialize();
+  void initialize(bool verbose);
 
   static Log &instance();
   static std::shared_ptr<spdlog::logger> create(const std::string &name);
@@ -31,12 +26,10 @@ private:
 
   Log() = default;
 
-  spdlog::sink_ptr mSink;
+  std::vector<spdlog::sink_ptr> mSinks;
 
   std::shared_ptr<spdlog::logger> createPrivate(const std::string &name);
 
 };
 
-}
-
-#endif // COMMON_LOG_H
+} // namespace Rapatas::Transmitron::Common

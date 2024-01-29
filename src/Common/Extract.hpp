@@ -1,10 +1,9 @@
-#ifndef COMMON_EXTRACT_HPP
-#define COMMON_EXTRACT_HPP
+#pragma once
 
 #include <nlohmann/json.hpp>
 #include <optional>
 
-namespace Common
+namespace Rapatas::Transmitron::Common
 {
 
 template<typename T>
@@ -15,6 +14,12 @@ std::optional<T> extract(
 
 template<>
 std::optional<unsigned> extract<unsigned>(
+  const nlohmann::json &data,
+  const std::string &key
+);
+
+template<>
+std::optional<uint16_t> extract<uint16_t>(
   const nlohmann::json &data,
   const std::string &key
 );
@@ -31,6 +36,4 @@ std::optional<bool> extract<bool>(
   const std::string &key
 );
 
-}
-
-#endif // COMMON_EXTRACT_HPP
+} // namespace Rapatas::Transmitron::Common

@@ -3,7 +3,7 @@
 
 #include "String.hpp"
 
-using namespace Common;
+using namespace Rapatas::Transmitron::Common;
 
 std::vector<std::string> String::split(const std::string &data, char delim)
 {
@@ -11,20 +11,20 @@ std::vector<std::string> String::split(const std::string &data, char delim)
 
   const size_t segments = 0U
     + (data.empty() ? 1U : 0U)
-    + (size_t)std::count_if(
+    + static_cast<size_t>(std::count_if(
       std::begin(data),
       std::end(data),
-      [&](char c)
+      [&](char value)
       {
-        return c == delim;
+        return value == delim;
       }
-    );
+    ));
 
   result.reserve(segments);
 
-  std::stringstream ss(data);
+  std::stringstream sstream(data);
   std::string segment;
-  while (std::getline(ss, segment, delim))
+  while (std::getline(sstream, segment, delim))
   {
     result.push_back(segment);
   }

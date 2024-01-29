@@ -1,11 +1,11 @@
-#include <filesystem>
 #include <fmt/core.h>
 #include <streambuf>
 
 #include "XdgBaseDir.hpp"
 #include "Log.hpp"
 
-using namespace Common;
+using namespace Rapatas::Transmitron;
+using namespace Rapatas::Transmitron::Common;
 
 XdgBaseDir::XdgBaseDir()
 {
@@ -32,20 +32,20 @@ XdgBaseDir::XdgBaseDir()
   logger->debug("XDG_DATA_DIRS:");
   for (const auto &dir : readDataDirs())
   {
-    std::filesystem::path p{dir};
-    p.make_preferred();
+    Common::fs::path path{dir};
+    path.make_preferred();
 
-    logger->debug(" - {}", p.string());
-    mDataDirs.emplace_back(p);
+    logger->debug(" - {}", path.string());
+    mDataDirs.emplace_back(path);
   }
 
   logger->debug("XDG_CONFIG_DIRS:");
   for (const auto &dir : readConfigDirs())
   {
-    std::filesystem::path p{dir};
-    p.make_preferred();
-    logger->debug(" - {}", p.string());
-    mConfigDirs.emplace_back(p);
+    Common::fs::path path{dir};
+    path.make_preferred();
+    logger->debug(" - {}", path.string());
+    mConfigDirs.emplace_back(path);
   }
 }
 
@@ -55,32 +55,32 @@ XdgBaseDir &XdgBaseDir::instance()
   return result;
 }
 
-std::filesystem::path XdgBaseDir::configHome()
+Common::fs::path XdgBaseDir::configHome()
 {
   return instance().mConfigHome;
 }
 
-std::filesystem::path XdgBaseDir::cacheHome()
+Common::fs::path XdgBaseDir::cacheHome()
 {
   return instance().mCacheHome;
 }
 
-std::filesystem::path XdgBaseDir::dataHome()
+Common::fs::path XdgBaseDir::dataHome()
 {
   return instance().mDataHome;
 }
 
-std::filesystem::path XdgBaseDir::stateHome()
+Common::fs::path XdgBaseDir::stateHome()
 {
   return instance().mStateHome;
 }
 
-std::vector<std::filesystem::path> XdgBaseDir::dataDirs()
+std::vector<Common::fs::path> XdgBaseDir::dataDirs()
 {
   return instance().mDataDirs;
 }
 
-std::vector<std::filesystem::path> XdgBaseDir::configDirs()
+std::vector<Common::fs::path> XdgBaseDir::configDirs()
 {
   return instance().mConfigDirs;
 }

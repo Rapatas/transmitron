@@ -1,11 +1,8 @@
-#ifndef TRANSMITRON_VERSION_H
-#define TRANSMITRON_VERSION_H
+#pragma once
 
-namespace Common
+namespace Rapatas::Transmitron::Common::Info
 {
 
 const char *getProjectVersion();
 
-}
-
-#endif // TRANSMITRON_VERSION_H
+} // namespace Rapatas::Transmitron::Common::Info

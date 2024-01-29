@@ -5,7 +5,7 @@
 #include <processenv.h>
 #include <vector>
 
-using namespace Common;
+using namespace Rapatas::Transmitron::Common;
 
 std::string Env::get(const std::string &name)
 {

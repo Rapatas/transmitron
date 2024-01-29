@@ -5,6 +5,7 @@
 #include <string_view>
 #include "Common/Extract.hpp"
 
+using namespace Rapatas::Transmitron;
 using namespace MQTT;
 
 BrokerOptions::BrokerOptions() :
@@ -15,7 +16,8 @@ BrokerOptions::BrokerOptions() :
   mConnectTimeout(DefaultTimeout),
   mDisconnectTimeout(DefaultTimeout),
   mKeepAliveInterval(DefaultKeepAliveInterval),
-  mClientId(fmt::format("{}_{}", wxGetHostName(), rand())),
+  // NOLINTNEXTLINE(concurrency-mt-unsafe, cert-msc50-cpp, cert-msc30-c)
+  mClientId(fmt::format("{}_{}", wxGetHostName().ToStdString(), rand())),
   mHostname(DefaultHostname),
   mPassword(DefaultPassword),
   mUsername(DefaultUsername)
@@ -25,7 +27,7 @@ BrokerOptions::BrokerOptions(
   bool autoReconnect,
   size_t maxInFlight,
   size_t maxReconnectRetries,
-  size_t port,
+  Port port,
   std::chrono::seconds connectTimeout,
   std::chrono::seconds disconnectTimeout,
   std::chrono::seconds keepAliveInterval,
@@ -48,7 +50,8 @@ BrokerOptions::BrokerOptions(
 {
   if (mClientId.empty())
   {
-    mClientId = fmt::format("{}_{}", wxGetHostName(), rand());
+    // NOLINTNEXTLINE(concurrency-mt-unsafe, cert-msc50-cpp, cert-msc30-c)
+    mClientId = fmt::format("{}_{}", wxGetHostName().ToStdString(), rand());
   }
 }
 
@@ -56,37 +59,38 @@ BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data)
 {
   using namespace Common;
 
-  bool autoReconnect = extract<bool>(data, "autoReconnect")
+  const bool autoReconnect = extract<bool>(data, "autoReconnect")
     .value_or(DefaultAutoReconnect);
 
-  std::string clientId = extract<std::string>(data, "clientId")
-    .value_or(std::string(fmt::format("{}_{}", wxGetHostName(), rand())));
+  const std::string clientId = extract<std::string>(data, "clientId")
+    // NOLINTNEXTLINE(concurrency-mt-unsafe, cert-msc50-cpp, cert-msc30-c)
+    .value_or(std::string(fmt::format("{}_{}", wxGetHostName().ToStdString(), rand())));
 
-  std::string hostname = extract<std::string>(data, "hostname")
+  const std::string hostname = extract<std::string>(data, "hostname")
     .value_or(std::string(DefaultHostname));
 
-  std::string password = extract<std::string>(data, "password")
+  const std::string password = extract<std::string>(data, "password")
     .value_or(std::string(DefaultPassword));
 
-  std::string username = extract<std::string>(data, "username")
+  const std::string username = extract<std::string>(data, "username")
     .value_or(std::string(DefaultUsername));
 
-  unsigned keepAliveInterval = extract<unsigned>(data, "keepAliveInterval")
+  const unsigned keepAliveInterval = extract<unsigned>(data, "keepAliveInterval")
     .value_or(DefaultKeepAliveInterval.count());
 
-  unsigned maxInFlight = extract<unsigned>(data, "maxInFlight")
+  const unsigned maxInFlight = extract<unsigned>(data, "maxInFlight")
     .value_or(DefaultMaxInFlight);
 
-  unsigned port = extract<unsigned>(data, "port")
+  const Port port = extract<Port>(data, "port")
     .value_or(DefaultPort);
 
-  unsigned connectTimeout = extract<unsigned>(data, "connectTimeout")
+  const unsigned connectTimeout = extract<unsigned>(data, "connectTimeout")
     .value_or(DefaultTimeout.count());
 
-  unsigned disconnectTimeout = extract<unsigned>(data, "disconnectTimeout")
+  const unsigned disconnectTimeout = extract<unsigned>(data, "disconnectTimeout")
     .value_or(DefaultTimeout.count());
 
-  unsigned maxReconnectRetries = extract<unsigned>(data, "maxReconnectRetries")
+  const unsigned maxReconnectRetries = extract<unsigned>(data, "maxReconnectRetries")
     .value_or(DefaultMaxReconnectRetries);
 
   return BrokerOptions {
@@ -126,7 +130,7 @@ bool BrokerOptions::getAutoReconnect() const
   return mAutoReconnect;
 }
 
-size_t BrokerOptions::getPort() const
+BrokerOptions::Port BrokerOptions::getPort() const
 {
   return mPort;
 }
@@ -174,4 +178,14 @@ std::string BrokerOptions::getPassword() const
 size_t BrokerOptions::getMaxReconnectRetries() const
 {
   return mMaxReconnectRetries;
+}
+
+void BrokerOptions::setHostname(std::string hostname)
+{
+  mHostname = std::move(hostname);
+}
+
+void BrokerOptions::setPort(Port port)
+{
+  mPort = port;
 }

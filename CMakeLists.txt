@@ -6,7 +6,7 @@ set(PROGRAM_DESCRIPTION "Transmitron MQTT desktop client")
 
 set(TRANSMITRON_VERSION_MAJOR 0)
 set(TRANSMITRON_VERSION_MINOR 0)
-set(TRANSMITRON_VERSION_PATCH 4)
+set(TRANSMITRON_VERSION_PATCH 5)
 set(TRANSMITRON_VERSION_POSTFIX "")
 
 string(CONCAT TRANSMITRON_VERSION
@@ -33,12 +33,21 @@ endif()
 find_package(Threads REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(PahoMqttCpp REQUIRED)
-find_package(wxwidgets REQUIRED)
 find_package(tinyxml2 REQUIRED)
 find_package(fmt REQUIRED)
 find_package(CLI11 REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(date REQUIRED)
+find_package(wxWidgets REQUIRED
+  COMPONENTS
+    aui
+    core
+    propgrid
+    richtext
+    stc
+)
+
+include(${CMAKE_SOURCE_DIR}/cmake/clang-tidy.cmake)
 
 add_subdirectory(src)
 

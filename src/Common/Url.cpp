@@ -1,6 +1,7 @@
 #include "Url.hpp"
 
 #include <algorithm>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 
 #include <fmt/format.h>
@@ -11,58 +12,60 @@ constexpr uint8_t AsciiOffsetDigit = 48;
 constexpr uint8_t AsciiOffsetChar = 55;
 constexpr uint8_t MaxSingleDigit = 9;
 
-using namespace Common;
+using namespace Rapatas::Transmitron::Common;
 
-bool Url::encodable(char c)
+bool Url::encodable(char value)
 {
   return !(false // NOLINT
-    || isalnum(c) != 0
-    || c == '-'
-    || c == '_'
-    || c == ','
-    || c == '.'
+    || isalnum(value) != 0
+    || value == '-'
+    || value == '_'
+    || value == ','
+    || value == '.'
   );
 }
 
-bool Url::isHexChar(char c)
+bool Url::isHexChar(char value)
 {
-  return isdigit(c) == 1 || (c >= 'A' && c <= 'F');
+  return isdigit(value) != 0 || (value >= 'A' && value <= 'F');
 }
 
 std::string Url::encode(const std::string &data)
 {
-  const auto encodeCharCount = (size_t)std::count_if(
+  const auto encodeCharCount = static_cast<size_t>(std::count_if(
     std::begin(data),
     std::end(data),
-    [](char c)
+    [](char value)
     {
-      return encodable(c);
+      return encodable(value);
     }
-  );
+  ));
 
   const size_t length = (encodeCharCount * 3) + (data.length() - encodeCharCount);
   std::string result;
   result.resize(length);
 
-  size_t i = 0;
-  for (const auto &c : data)
+  size_t index = 0;
+  for (const auto &value : data)
   {
-    if (!encodable(c))
+    if (!encodable(value))
     {
-      result[i++] = c;
+      result[index++] = value;
       continue;
     }
 
-    const uint8_t a = (c & NibbleFirst) >> 4;
-    const uint8_t b = c & NibbleSeccond;
+    // NOLINTBEGIN(hicpp-signed-bitwise)
+    const uint8_t first = (value & NibbleFirst) >> 4;
+    const uint8_t second = value & NibbleSeccond;
 
-    result[i++] = '%';
-    result[i++] = a <= MaxSingleDigit
-      ? (char)(a + AsciiOffsetDigit)
-      : (char)(a + AsciiOffsetChar);
-    result[i++] = b <= MaxSingleDigit
-      ? (char)(b + AsciiOffsetDigit)
-      : (char)(b + AsciiOffsetChar);
+    result[index++] = '%';
+    result[index++] = first <= MaxSingleDigit
+      ? static_cast<char>(first + AsciiOffsetDigit)
+      : static_cast<char>(first + AsciiOffsetChar);
+    result[index++] = second <= MaxSingleDigit
+      ? static_cast<char>(second + AsciiOffsetDigit)
+      : static_cast<char>(second + AsciiOffsetChar);
+    // NOLINTEND(hicpp-signed-bitwise)
   }
 
   return result;
@@ -70,44 +73,45 @@ std::string Url::encode(const std::string &data)
 
 std::string Url::decode(const std::string &data)
 {
-  const auto encodeCharCount = (size_t)std::count(
+  const auto encodeCharCount = static_cast<size_t>(std::count(
     std::begin(data),
     std::end(data),
      '%'
-  );
+  ));
 
   const size_t length = (data.length() - encodeCharCount * 3) + encodeCharCount;
   std::string result;
   result.resize(length);
 
-  auto charToNibble = [](char c)
+  auto charToNibble = [](char value)
   {
-    if (!isHexChar(c))
+    if (!isHexChar(value))
     {
       const auto msg = fmt::format(
-        "Unexpected printable ASCII char '0x{:X}'",
-        (uint8_t)c
+        "Unexpected non-printable ASCII char '0x{:X}' '{}'",
+        value,
+        value
       );
       throw std::runtime_error(msg.c_str());
     }
-    return (c >= '0' && c <= '9')
-      ? (uint8_t)(c - AsciiOffsetDigit)
-      : (uint8_t)(c - AsciiOffsetChar);
+    return (value >= '0' && value <= '9')
+      ? static_cast<uint8_t>(value - AsciiOffsetDigit)
+      : static_cast<uint8_t>(value - AsciiOffsetChar);
   };
 
-  size_t i = 0;
+  size_t index = 0;
   for (auto it = data.begin(); it != data.end(); )
   {
     if (*it != '%')
     {
-      result[i++] = *it;
+      result[index++] = *it;
       it++;
       continue;
     }
     ++it;
-    const uint8_t a = charToNibble(*it++);
-    const uint8_t b = charToNibble(*it++);
-    result[i++] = (char)((a << 4) + b);
+    const uint8_t first = charToNibble(*it++);
+    const uint8_t second = charToNibble(*it++);
+    result[index++] = static_cast<char>((first << 4U) + second);
   }
 
   return result;
