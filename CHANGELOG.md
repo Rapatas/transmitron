@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.0.5] - 2024-01-29
+
+### Added
+
+- Discrete buttons for profile settings
+- Forwarding of errors to Windows Event Viewer
+- Organized settings into sections
+- Quick connect field
+- Support for building on ubuntu 18.04
+- Support for dark mode icons
+- Tooltips to buttons
+- Upgrade wxWidgets to latest version (v3.2.4)
+- Visual connection status indicator
+- `--verbose` command line argument
+
+### Fixed
+
+- Crash on first publish of new profile
+- Binary formatter corrupts payload
+- Message timestamp displaying in UTC instead of local time
+- Using legacy UI framework on windows
+- Visual artifact when hovering settings tab on windows
+
 ## [0.0.4] - 2022-07-02
 
 ### Added

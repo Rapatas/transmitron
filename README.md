@@ -9,19 +9,7 @@
 		alt="Transmitron Name"
 		src="https://i.imgur.com/ur5ftjH.png">
 </p>
-<hr>
-<h3 align="center">
-    Open source MQTT Client for desktop. Flexible, native, and cross-platform.
-</h3>
-<p align="center">
-	<strong>
-		<a href="#features">Features</a>
-		•
-		<a href="https://github.com/Rapatas/transmitron/releases/latest">Install</a>
-		•
-		<a href="./docs/build.md">Build</a>
-	</strong>
-</p>
+<h3 align="center">Open source MQTT Client for desktop. Flexible, native, and cross-platform.</h3>
 <p align="center">
 	<a
         href="https://github.com/Rapatas/transmitron/releases"><img
@@ -62,6 +50,7 @@
 - **History Filter.** Limit history using search terms.
 - **Cross-Platform.** Built for Windows and Linux.
 
-## Acknowledgements
+## Documentation
 
-- Icons made by [DinosoftLabs](https://www.flaticon.com/authors/DinosoftLabs), [Google](https://www.flaticon.com/authors/google), [Freepik](https://www.freepik.com), [Kiranshastry](https://www.flaticon.com/authors/kiranshastry) from [Flaticon](https://www.flaticon.com/).
+- [Install](https://github.com/Rapatas/transmitron/releases/latest)
+- [Build](./docs/build.md)
