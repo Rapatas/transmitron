@@ -408,7 +408,7 @@ void TopicCtrl::popupRefresh()
   {
     popupShow();
   }
-  else
+  else if (mPopupShow)
   {
     // Re-select the top result
     if (mKnownTopicsModel->GetCount() != 0)
