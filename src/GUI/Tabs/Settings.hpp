@@ -39,6 +39,9 @@ private:
     LayoutsDelete,
     LayoutsRename,
     ProfilesDelete,
+    ProfilesNewFolder,
+    ProfilesNewProfile,
+    ProfilesRename,
   };
 
   enum Properties : size_t
@@ -51,7 +54,6 @@ private:
     KeepAlive,
     MaxInFlight,
     MaxReconnectRetries,
-    Name,
     Password,
     Port,
     Username,
@@ -69,17 +71,21 @@ private:
   wxPanel *mProfiles = nullptr;
   wxDataViewCtrl *mProfilesCtrl = nullptr;
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
-  wxPropertyGrid *mProfileGrid = nullptr;
-  wxPropertyCategory *mGridCategoryBroker = nullptr;
-  wxPropertyCategory *mGridCategoryClient = nullptr;
-  std::vector<wxPGProperty*> mProfileProperties;
-  wxPanel *mProfileOptions = nullptr;
-  wxBoxSizer *mProfileButtonsSizer = nullptr;
   wxBoxSizer *mProfileOptionsSizer = nullptr;
   wxButton *mProfileDelete = nullptr;
   wxButton *mConnect = nullptr;
   wxButton *mSave = nullptr;
   wxButton *mCancel = nullptr;
+  bool mProfilesWasExpanded = false;
+  std::pair<bool, wxDataViewItem> mProfilesPossible;
+  wxDataViewColumn *mProfileColumnName = nullptr;
+
+  std::vector<wxPGProperty*> mProfileProperties;
+  wxBoxSizer *mProfileButtonsSizer = nullptr;
+  wxPanel *mProfileOptions = nullptr;
+  wxPropertyCategory *mGridCategoryBroker = nullptr;
+  wxPropertyCategory *mGridCategoryClient = nullptr;
+  wxPropertyGrid *mProfileGrid = nullptr;
 
   // Layouts.
   wxPanel *mLayouts = nullptr;
@@ -87,7 +93,6 @@ private:
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
   wxDataViewColumn *mLayoutColumnName = nullptr;
   wxButton *mLayoutDelete = nullptr;
-
 
   // Navigation.
   wxListCtrl *mSections = nullptr;
@@ -100,18 +105,18 @@ private:
 
   void propertyGridClear();
   void propertyGridFill(
-    const wxString &name,
     const MQTT::BrokerOptions &brokerOptions,
     const Types::ClientOptions &clientOptions
   );
   [[nodiscard]] MQTT::BrokerOptions brokerOptionsFromPropertyGrid() const;
   [[nodiscard]] Types::ClientOptions clientOptionsFromPropertyGrid() const;
-  void allowSave();
+  void allowSaveProfile();
   void allowConnect();
   void refreshLayouts();
 
-  void onLayoutsContext(wxDataViewEvent &event);
   void onContextSelected(wxCommandEvent &event);
+
+  void onLayoutsContext(wxDataViewEvent &event);
   void onLayoutsDelete(wxCommandEvent &event);
   void onLayoutsRename(wxCommandEvent &event);
   void onLayoutsEdit(wxDataViewEvent &event);
@@ -123,9 +128,15 @@ private:
 
   void onProfileContext(wxDataViewEvent &event);
   void onProfileDelete(wxCommandEvent &event);
+  void onProfileRename(wxCommandEvent &event);
   void onProfileSelected(wxDataViewEvent &event);
+  void onProfileDrag(wxDataViewEvent &event);
+  void onProfileDrop(wxDataViewEvent &event);
+  void onProfileDropPossible(wxDataViewEvent &event);
+  void onProfileNewFolder(wxCommandEvent &event);
+  void onProfileNewProfile(wxCommandEvent &event);
 
-  void onGridChanged(wxPropertyGridEvent& event);
+  void onProfileGridChanged(wxPropertyGridEvent& event);
 
   void onButtonClickedNewProfile(wxCommandEvent &event);
   void onButtonClickedProfileDelete(wxCommandEvent &event);

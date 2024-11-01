@@ -91,14 +91,14 @@ void Homepage::setupProfiles(wxPanel *parent)
 {
   auto* const name = new wxDataViewColumn(
     "Name",
-    new wxDataViewTextRenderer(),
+    new wxDataViewIconTextRenderer(),
     static_cast<unsigned>(Models::Profiles::Column::Name),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
   auto* const url = new wxDataViewColumn(
     "Address",
-    new wxDataViewTextRenderer(),
+    new wxDataViewIconTextRenderer(),
     static_cast<unsigned>(Models::Profiles::Column::URL),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
@@ -312,7 +312,8 @@ void Homepage::onConnectClicked(wxCommandEvent &/* event */)
 
 void Homepage::onNewProfileClicked(wxCommandEvent &/* event */)
 {
-  const auto item = mProfilesModel->createProfile();
+  const auto parent = wxDataViewItem(nullptr);
+  const auto item = mProfilesModel->createProfile(parent);
   mProfilesCtrl->Select(item);
   mProfilesCtrl->EnsureVisible(item);
 }

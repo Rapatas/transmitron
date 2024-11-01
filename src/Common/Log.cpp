@@ -48,9 +48,10 @@ void Log::initialize(bool verbose)
     : DEBUG
       ? Level::trace
       : Level::info;
+  (void)level;
 
   auto sink = std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
-  sink->set_level(level);
+  sink->set_level(Level::trace);
   mSinks.push_back(sink);
 
 #ifdef _WIN32

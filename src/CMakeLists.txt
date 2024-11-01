@@ -23,6 +23,7 @@ set(
   GUI/Events/Recording.cpp
   GUI/Events/Subscription.cpp
   GUI/Events/TopicCtrl.cpp
+  GUI/Models/FsTree.cpp
   GUI/Models/History.cpp
   GUI/Models/KnownTopics.cpp
   GUI/Models/Layouts.cpp

@@ -7,6 +7,7 @@
 #include "Common/Log.hpp"
 #include "Settings.hpp"
 #include "GUI/Models/Layouts.hpp"
+#include "GUI/Models/Profiles.hpp"
 #include "GUI/Notifiers/Layouts.hpp"
 #include "GUI/Events/Connection.hpp"
 
@@ -102,7 +103,8 @@ Settings::Settings(
 
 void Settings::createProfile()
 {
-  const auto item = mProfilesModel->createProfile();
+  const auto parent = wxDataViewItem(nullptr);
+  const auto item = mProfilesModel->createProfile(parent);
   selectProfile(item);
 }
 
@@ -115,16 +117,11 @@ void Settings::selectProfile(wxDataViewItem profile)
   mProfileOptionsSizer->Show(mProfileOptions);
   mProfileOptionsSizer->Layout();
   propertyGridFill(
-    mProfilesModel->getName(profile),
     mProfilesModel->getBrokerOptions(profile),
     mProfilesModel->getClientOptions(profile)
   );
 
-  const auto *namePtr = mProfileProperties.at(Properties::Name);
-  const bool focus = true;
-  mProfileGrid->SelectProperty(namePtr, focus);
-
-  allowSave();
+  allowSaveProfile();
 }
 
 void Settings::setupLayouts(wxPanel *parent)
@@ -204,9 +201,14 @@ void Settings::setupProfiles(wxPanel *parent)
 {
   mProfiles = new wxPanel(parent);
 
-  auto* const name = new wxDataViewColumn(
-    "Name",
-    new wxDataViewTextRenderer(),
+  auto *renderer = new wxDataViewIconTextRenderer(
+    wxDataViewIconTextRenderer::GetDefaultType(),
+    wxDATAVIEW_CELL_EDITABLE
+  );
+
+  mProfileColumnName = new wxDataViewColumn(
+    L"Name",
+    renderer,
     static_cast<unsigned>(Models::Profiles::Column::Name),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
@@ -220,7 +222,7 @@ void Settings::setupProfiles(wxPanel *parent)
     wxDV_NO_HEADER
   );
   mProfilesCtrl->AssociateModel(mProfilesModel.get());
-  mProfilesCtrl->AppendColumn(name);
+  mProfilesCtrl->AppendColumn(mProfileColumnName);
   mProfilesCtrl->Bind(
     wxEVT_DATAVIEW_SELECTION_CHANGED,
     &Settings::onProfileSelected,
@@ -231,6 +233,24 @@ void Settings::setupProfiles(wxPanel *parent)
     &Settings::onProfileContext,
     this
   );
+  mProfilesCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_BEGIN_DRAG,
+    &Settings::onProfileDrag,
+    this
+  );
+  mProfilesCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_DROP,
+    &Settings::onProfileDrop,
+    this
+  );
+  mProfilesCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE,
+    &Settings::onProfileDropPossible,
+    this
+  );
+
+  mProfilesCtrl->EnableDropTarget(wxDF_UNICODETEXT);
+  mProfilesCtrl->EnableDragSource(wxDF_UNICODETEXT);
 
   auto *profileCreate = new wxButton(
     mProfiles,
@@ -302,9 +322,6 @@ void Settings::setupProfileOptions(wxPanel *parent)
 
   pfp.resize(Properties::Max);
 
-  pfp.at(Properties::Name) =
-    pfg->Append(new wxStringProperty("Name", "", {}));
-
   mGridCategoryBroker = new wxPropertyCategory("Broker");
   mProfileGrid->Append(mGridCategoryBroker);
 
@@ -338,10 +355,10 @@ void Settings::setupProfileOptions(wxPanel *parent)
   auto *layoutPtr = new wxEnumProperty("Layout", "", layoutLabels);
   pfp.at(Properties::Layout) = pfg->AppendIn(mGridCategoryClient, layoutPtr);
 
-  mProfileGrid->Bind(wxEVT_PG_CHANGED, &Settings::onGridChanged, this);
-  mProfileGrid->Bind(wxEVT_PG_CHANGING, &Settings::onGridChanged, this);
-  mProfileGrid->Bind(wxEVT_PG_LABEL_EDIT_BEGIN, &Settings::onGridChanged, this);
-  mProfileGrid->Bind(wxEVT_PG_SELECTED, &Settings::onGridChanged, this);
+  mProfileGrid->Bind(wxEVT_PG_CHANGED, &Settings::onProfileGridChanged, this);
+  mProfileGrid->Bind(wxEVT_PG_CHANGING, &Settings::onProfileGridChanged, this);
+  mProfileGrid->Bind(wxEVT_PG_LABEL_EDIT_BEGIN, &Settings::onProfileGridChanged, this);
+  mProfileGrid->Bind(wxEVT_PG_SELECTED, &Settings::onProfileGridChanged, this);
 
   mSave = new wxButton(
     mProfileOptions,
@@ -439,6 +456,9 @@ void Settings::onContextSelected(wxCommandEvent &event)
     case ContextIDs::LayoutsDelete: onLayoutsDelete(event); break;
     case ContextIDs::LayoutsRename: onLayoutsRename(event); break;
     case ContextIDs::ProfilesDelete: onProfileDelete(event); break;
+    case ContextIDs::ProfilesNewFolder: onProfileNewFolder(event); break;
+    case ContextIDs::ProfilesNewProfile: onProfileNewProfile(event); break;
+    case ContextIDs::ProfilesRename: onProfileRename(event); break;
   }
   event.Skip();
 }
@@ -477,21 +497,47 @@ void Settings::onLayoutsEdit(wxDataViewEvent &event)
 
 void Settings::onProfileContext(wxDataViewEvent &event)
 {
-  if (!event.GetItem().IsOk())
-  {
-    event.Skip();
-    return;
-  }
-
   wxMenu menu;
 
-  auto *del = new wxMenuItem(
-    nullptr,
-    static_cast<unsigned>(ContextIDs::ProfilesDelete),
-    "Delete"
-  );
-  del->SetBitmap(mArtProvider.bitmap(Icon::Delete));
-  menu.Append(del);
+  if (event.GetItem().IsOk())
+  {
+    auto *del = new wxMenuItem(
+      nullptr,
+      static_cast<unsigned>(ContextIDs::ProfilesDelete),
+      "Delete"
+    );
+    del->SetBitmap(mArtProvider.bitmap(Icon::Delete));
+    menu.Append(del);
+
+    auto *rename = new wxMenuItem(
+      nullptr,
+      static_cast<unsigned>(ContextIDs::ProfilesRename),
+      "Rename"
+    );
+    rename->SetBitmap(mArtProvider.bitmap(Icon::Edit));
+    menu.Append(rename);
+  }
+
+  if (
+    !event.GetItem().IsOk()
+    || mProfilesModel->IsContainer(event.GetItem())
+  ) {
+    auto *newProfile = new wxMenuItem(
+      nullptr,
+      static_cast<unsigned>(ContextIDs::ProfilesNewProfile),
+      "New Profile"
+    );
+    newProfile->SetBitmap(mArtProvider.bitmap(Icon::NewFile));
+    menu.Append(newProfile);
+
+    auto *newFolder = new wxMenuItem(
+      nullptr,
+      static_cast<unsigned>(ContextIDs::ProfilesNewFolder),
+      "New Folder"
+    );
+    newFolder->SetBitmap(mArtProvider.bitmap(Icon::NewDir));
+    menu.Append(newFolder);
+  }
 
   PopupMenu(&menu);
 }
@@ -501,6 +547,47 @@ void Settings::onProfileDelete(wxCommandEvent & /* event */)
   const auto item = mProfilesCtrl->GetSelection();
   mProfilesModel->remove(item);
   propertyGridClear();
+}
+
+void Settings::onProfileNewFolder(wxCommandEvent &/* event */)
+{
+  auto parent = mProfilesCtrl->GetSelection();
+  if (!mProfilesModel->IsContainer(parent))
+  {
+    parent = mProfilesModel->GetParent(parent);
+  }
+
+  const auto item = mProfilesModel->createFolder(parent);
+  if (!item.IsOk()) { return; }
+
+  mProfilesCtrl->Select(item);
+  mProfilesCtrl->EnsureVisible(item);
+  mProfilesCtrl->EditItem(item, mProfileColumnName);
+}
+
+void Settings::onProfileNewProfile(wxCommandEvent &/* event */)
+{
+  auto parent = mProfilesCtrl->GetSelection();
+  if (!mProfilesModel->IsContainer(parent))
+  {
+    parent = mProfilesModel->GetParent(parent);
+  }
+
+  const auto item = mProfilesModel->createProfile(parent);
+  if (!item.IsOk()) { return; }
+
+  mProfilesCtrl->Select(item);
+  mProfilesCtrl->EnsureVisible(item);
+  mProfilesCtrl->EditItem(item, mProfileColumnName);
+}
+
+void Settings::onProfileRename(wxCommandEvent &/* event */)
+{
+  mLogger->info("Requesting rename");
+  const auto item = mProfilesCtrl->GetSelection();
+  if (!item.IsOk()) { return; }
+
+  mProfilesCtrl->EditItem(item, mProfileColumnName);
 }
 
 void Settings::onProfileSelected(wxDataViewEvent &event)
@@ -515,21 +602,157 @@ void Settings::onProfileSelected(wxDataViewEvent &event)
     return;
   }
 
+  if (mProfilesModel->IsContainer(item))
+  {
+    mProfileDelete->Enable();
+    mProfileOptionsSizer->Hide(mProfileOptions);
+    mProfileOptionsSizer->Layout();
+    event.Skip();
+    return;
+  }
+
   mProfileDelete->Enable();
   mProfileOptionsSizer->Show(mProfileOptions);
   mProfileOptionsSizer->Layout();
 
   propertyGridFill(
-    mProfilesModel->getName(item),
     mProfilesModel->getBrokerOptions(item),
     mProfilesModel->getClientOptions(item)
   );
   event.Skip();
 }
 
-void Settings::onGridChanged(wxPropertyGridEvent& event)
+void Settings::onProfileDrag(wxDataViewEvent &event)
 {
-  allowSave();
+  auto item = event.GetItem();
+  mProfilesWasExpanded = mProfilesCtrl->IsExpanded(item);
+
+  const void *id = item.GetID();
+  uintptr_t message = 0;
+  std::memcpy(&message, &id, sizeof(uintptr_t));
+  auto *object = new wxTextDataObject(std::to_string(message));
+
+  event.SetDataFormat(object->GetFormat());
+  event.SetDataSize(object->GetDataSize());
+  event.SetDataObject(object);
+
+  // Required for windows, ignored on all else.
+  event.SetDragFlags(wxDrag_AllowMove);
+
+  event.Skip(false);
+}
+
+void Settings::onProfileDrop(wxDataViewEvent &event)
+{
+  const auto target = event.GetItem();
+
+  wxTextDataObject object;
+  object.SetData(event.GetDataFormat(), event.GetDataSize(), event.GetDataBuffer());
+  const uintptr_t message = std::stoul(object.GetText().ToStdString());
+  void *id = nullptr;
+  std::memcpy(&id, &message, sizeof(uintptr_t));
+  auto item = wxDataViewItem(id);
+
+  wxDataViewItem moved;
+
+#ifdef WIN32
+
+  const auto pIndex = event.GetProposedDropIndex();
+
+  if (pIndex == -1)
+  {
+    if (!mProfilesModel->IsContainer(target))
+    {
+      moved = mProfilesModel->moveAfter(item, target);
+    }
+    else
+    {
+      if (target.IsOk())
+      {
+        moved = mProfilesModel->moveInsideFirst(item, target);
+      }
+      else
+      {
+        moved = mProfilesModel->moveInsideLast(item, target);
+      }
+    }
+  }
+  else
+  {
+    const auto index = (size_t)pIndex;
+    moved = mProfilesModel->moveInsideAtIndex(item, target, index);
+  }
+
+#else
+
+  if (mProfilesPossible.first)
+  {
+    if (mProfilesModel->IsContainer(target))
+    {
+      moved = mProfilesModel->moveInsideFirst(item, target);
+    }
+    else
+    {
+      moved = mProfilesModel->moveAfter(item, target);
+    }
+  }
+  else
+  {
+    if (target.IsOk())
+    {
+      moved = mProfilesModel->moveBefore(item, target);
+    }
+    else
+    {
+      moved = mProfilesModel->moveInsideLast(item, target);
+    }
+  }
+
+#endif // WIN32
+
+  mProfilesPossible = {false, wxDataViewItem(nullptr)};
+
+  if (!moved.IsOk())
+  {
+    return;
+  }
+
+  mProfilesCtrl->Refresh();
+  mProfilesCtrl->EnsureVisible(moved);
+  if (mProfilesWasExpanded)
+  {
+    mProfilesCtrl->Expand(moved);
+  }
+  mProfilesCtrl->Select(moved);
+
+}
+
+void Settings::onProfileDropPossible(wxDataViewEvent &event)
+{
+  const auto item = event.GetItem();
+  mProfilesPossible = {true, item};
+
+#ifdef WIN32
+
+  event.Skip(false);
+
+#else
+
+  // On Linux:
+  // - This event contains the first element of the target directory.
+  // - If this skips, the drop event target is the hovered item.
+  // - If this does not skip, the drop event target is this event's target.
+
+  event.Skip(true);
+
+#endif // WIN32
+
+}
+
+
+void Settings::onProfileGridChanged(wxPropertyGridEvent& event)
+{
+  allowSaveProfile();
   event.Skip();
 }
 
@@ -549,7 +772,6 @@ void Settings::onButtonClickedCancel(wxCommandEvent &event)
   if (!item.IsOk()) { return; }
 
   propertyGridFill(
-    mProfilesModel->getName(item),
     mProfilesModel->getBrokerOptions(item),
     mProfilesModel->getClientOptions(item)
   );
@@ -567,11 +789,6 @@ void Settings::onButtonClickedSave(wxCommandEvent &event)
   {
     return;
   }
-
-  const auto wxs = mProfileProperties.at(Properties::Name)->GetValue().GetString();
-  const auto utf8 = wxs.ToUTF8();
-  const std::string name(utf8.data(), utf8.length());
-  mProfilesModel->rename(item, name);
 
   const auto brokerOptions = brokerOptionsFromPropertyGrid();
   mProfilesModel->updateBrokerOptions(item, brokerOptions);
@@ -605,7 +822,7 @@ void Settings::onButtonClickedConnect(wxCommandEvent &event)
   wxQueueEvent(this, connectionEvent);
 }
 
-void Settings::allowSave()
+void Settings::allowSaveProfile()
 {
   mSave->Enable(true);
   mCancel->Enable(true);
@@ -639,7 +856,6 @@ void Settings::propertyGridClear()
 
   auto &pfp = mProfileProperties;
 
-  pfp.at(Properties::Name)->SetValue({});
   pfp.at(Properties::AutoReconnect)->SetValue({});
   pfp.at(Properties::ClientId)->SetValue({});
   pfp.at(Properties::ConnectTimeout)->SetValue({});
@@ -655,13 +871,10 @@ void Settings::propertyGridClear()
 }
 
 void Settings::propertyGridFill(
-  const wxString &name,
   const MQTT::BrokerOptions &brokerOptions,
   const Types::ClientOptions &clientOptions
 ) {
   auto &pfp = mProfileProperties;
-
-  pfp.at(Properties::Name)->SetValue(name);
 
   pfp.at(Properties::AutoReconnect)->SetValue(brokerOptions.getAutoReconnect());
   pfp.at(Properties::ClientId)->SetValue(brokerOptions.getClientId());
@@ -795,7 +1008,7 @@ void Settings::refreshLayouts()
     if (!mProfileOptions->IsShown()) { return std::nullopt; }
 
     wxVariant layoutValue = pfpLayout->GetValue();
-    const auto layoutName = pfpLayout->ValueToString(layoutValue);
+    auto layoutName = pfpLayout->ValueToString(layoutValue);
     mLogger->debug("Previous layout was: {}", layoutName.ToStdString());
 
     return layoutName;

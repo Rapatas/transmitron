@@ -31,3 +31,19 @@ std::vector<std::string> String::split(const std::string &data, char delim)
 
   return result;
 }
+
+std::string String::replace(
+  const std::string& str,
+  const std::string& what,
+  const std::string& with
+) {
+  if (what.empty()) { return str; }
+  auto result = str;
+  size_t start = 0;
+  while((start = result.find(what, start)) != std::string::npos)
+  {
+    result.replace(start, what.length(), with);
+    start += with.length();
+  }
+  return result;
+}

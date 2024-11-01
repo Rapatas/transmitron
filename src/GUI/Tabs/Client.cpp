@@ -1,5 +1,6 @@
 #include <fstream>
 #include <iterator>
+#include <memory>
 #include <thread>
 
 #include <nlohmann/json.hpp>
@@ -1489,7 +1490,6 @@ void Client::onContextSelectedMessageOverwrite(wxCommandEvent &/* event */)
     mPanes.at(Panes::Publish).panel
   );
   const auto message = publish->getMessage();
-
   mMessagesModel->replace(item, message);
 }
 

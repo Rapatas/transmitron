@@ -19,14 +19,15 @@ KnownTopics::~KnownTopics()
   save();
 }
 
-bool KnownTopics::load(Common::fs::path filepath)
+bool KnownTopics::load(const Common::fs::path &filepath)
 {
   mLogger->info("Loading {}", filepath.string());
-  mFilepath = std::move(filepath);
+  mFilepath = filepath;
   const bool exists = fs::exists(mFilepath);
   if (!exists)
   {
-    mLogger->warn("Could not load file '{}': Not found", mFilepath.string());
+    mLogger->debug("Could not load file '{}': Not found. Creating new cache", mFilepath.string());
+    save();
     return false;
   }
 
@@ -146,9 +147,20 @@ void KnownTopics::remap()
   }
 }
 
+bool KnownTopics::save(const Common::fs::path &filepath)
+{
+  if (filepath.empty()) { return true; }
+  mFilepath = filepath;
+  save();
+  return true;
+}
+
 void KnownTopics::save()
 {
   if (mFilepath.empty()) { return; }
+
+  auto dir = mFilepath.parent_path();
+  fs::create_directories(dir);
 
   mLogger->info("Saving to {}", mFilepath.string());
   std::ofstream file(mFilepath);
