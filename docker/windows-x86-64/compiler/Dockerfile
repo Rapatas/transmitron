@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 
 USER root
 WORKDIR /workspace
@@ -16,13 +16,11 @@ RUN true \
     git \
     nsis
 
+ENV PATH="${PATH}:/root/.local/bin"
 RUN true \
-  && apt-get install -y python3 python3-pip \
-  && pip3 install conan==1.62.0 \
-  && conan profile new --force default --detect
-
-RUN mkdir -p /root/.conan/profiles
-COPY ./conan.profile /root/.conan/profiles/windows
+  && apt-get install -y python3 pipx \
+  && pipx ensurepath \
+  && pipx install conan
 
 RUN true \
   && apt-get update \
@@ -32,5 +30,9 @@ RUN true \
     vim \
     tree \
     unzip
+
+RUN mkdir -p /root/.conan2/profiles
+COPY ./default.ini /root/.conan2/profiles/default
+COPY ./windows.ini /root/.conan2/profiles/windows
 
 RUN echo "rapatas-transmitron-windows-x86-64" > /etc/compilername

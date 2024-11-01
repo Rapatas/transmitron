@@ -3,7 +3,7 @@ FROM rapatas-transmitron-windows-x86-64
 RUN true \
   && mkdir wxWidgets \
   && cd wxWidgets \
-  && wget https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.4/wxWidgets-3.2.4.zip \
+  && wget https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.6/wxWidgets-3.2.6.zip \
   && unzip *.zip \
   && mkdir buildwin \
   && cd buildwin \
@@ -23,7 +23,7 @@ RUN true \
 
 COPY ./conanfile.py  /workspace
 RUN true \
-  && conan profile update settings.build_type=Release windows \
+  && sed -i '/build_type/s/=.*$/=Release/' /root/.conan2/profiles/windows \
   && conan install /workspace --build=missing --profile:build=default --profile:host=windows
 
 RUN echo "rapatas-transmitron-windows-x86-64-release" > /etc/compilername

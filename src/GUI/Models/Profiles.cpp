@@ -299,6 +299,9 @@ bool Profiles::Profile::save(
   const Common::fs::path &config,
   const Common::fs::path &cache
 ) {
+  fs::create_directories(config);
+  fs::create_directories(cache);
+
   return true // NOLINT
     && saveOptionsBroker(config)
     && saveOptionsClient(config)
@@ -355,7 +358,6 @@ bool Profiles::Profile::saveOptionsClient(const Common::fs::path &path)
 
 bool Profiles::Profile::saveCache(const Common::fs::path &path) const
 {
-  fs::create_directories(path);
   topicsPublished->save(path.string() + "/topics/published.txt");
   topicsSubscribed->save(path.string() + "/topics/subscribed.txt");
   return true;
@@ -365,9 +367,9 @@ std::unique_ptr<FsTree::Leaf> Profiles::leafLoad(Id id, const Common::fs::path &
 {
   (void)id;
   auto profile = std::make_unique<Profile>(*this, mArtProvider);
-  const auto cache = String::replace(path, mConfigProfilesDir, mCacheProfilesDir);
+  const auto cache = String::replace(path.string(), mConfigProfilesDir, mCacheProfilesDir);
   profile->load(path, cache);
-  return std::move(profile);
+  return profile;
 }
 
 bool Profiles::Profile::load(const Common::fs::path &config, const Common::fs::path &cache)

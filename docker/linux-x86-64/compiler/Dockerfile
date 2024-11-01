@@ -13,19 +13,21 @@ RUN true \
   && apt-get install -y lsb-release wget software-properties-common gnupg \
   && wget https://apt.llvm.org/llvm.sh \
   && chmod +x llvm.sh \
-  && ./llvm.sh 17 \
+  && ./llvm.sh 18 \
   && apt-get install -y \
-    clang-tidy-17 \
-    clang-format-17 \
-  && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang-17 50 --force \
-  && update-alternatives --install /usr/bin/cc  cc  /usr/bin/clang-17 50 --force
+    clang-tidy-18 \
+    clang-format-18 \
+  && update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang-18 180 --force \
+  && update-alternatives --install /usr/bin/cc  cc  /usr/bin/clang-18 180 --force
 
 COPY ./update-alternatives-clang.sh /workspace/update-alternatives-clang.sh
-RUN /workspace/update-alternatives-clang.sh 17 17
+RUN /workspace/update-alternatives-clang.sh 18 18
 
 RUN true \
-  && apt-get install -y python3 python3-pip \
-  && pip3 install conan==1.62.0
+  && apt-get install -y python3.8 python3-pip \
+  && update-alternatives --install /usr/bin/python3  python3 /usr/bin/python3.8 308 --force \
+  && pip3 install markupsafe==2.0.0 \
+  && pip3 install conan
 
 RUN true \
   && apt-get update \
@@ -41,7 +43,7 @@ RUN true \
     libpng-dev \
     libjpeg-dev
 
-RUN mkdir -p /root/.conan/profiles
-COPY ./conan.profile /root/.conan/profiles/default
+RUN mkdir -p /root/.conan2/profiles
+COPY ./default.ini /root/.conan2/profiles/default
 
 RUN echo "rapatas-transmitron-linux-x86-64" > /etc/compilername

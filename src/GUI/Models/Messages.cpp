@@ -122,7 +122,7 @@ std::unique_ptr<FsTree::Leaf> Messages::leafLoad(Id id, const Common::fs::path &
   leaf->timestamp = message.timestamp;
   leaf->topic     = message.topic;
 
-  return std::move(leaf);
+  return leaf;
 }
 
 bool Messages::leafSave(Id id)

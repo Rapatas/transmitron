@@ -3,7 +3,7 @@ FROM rapatas-transmitron-linux-x86-64
 RUN true \
   && mkdir wxWidgets \
   && cd wxWidgets \
-  && wget https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.4/wxWidgets-3.2.4.zip \
+  && wget https://github.com/wxWidgets/wxWidgets/releases/download/v3.2.6/wxWidgets-3.2.6.zip \
   && unzip *.zip \
   && mkdir buildgtk \
   && cd buildgtk \
@@ -19,9 +19,9 @@ RUN true \
   && cd /workspace \
   && rm -rf *
 
-COPY ./conanfile.py  /workspace
+COPY ./conanfile.py /workspace
 RUN true \
-  && conan profile update settings.build_type=Release default \
+  && sed -i '/build_type/s/=.*$/=Release/' /root/.conan2/profiles/default \
   && conan install . --build=missing \
   && rm -rf *
 
