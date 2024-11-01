@@ -22,7 +22,7 @@ steps:
     commands:
       - mkdir build-rapatas-transmitron-linux-x86-64-release
       - cd    build-rapatas-transmitron-linux-x86-64-release
-      - conan install --build=missing --profile:build=default --profile:host=default ../conan
+      - conan install --build=missing --profile:build=default --profile:host=default -of ./ ../conan
       - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake ..
       - make -j 6
       - make package
@@ -34,7 +34,7 @@ steps:
     commands:
       - mkdir build-rapatas-transmitron-windows-x86-64-release
       - cd    build-rapatas-transmitron-windows-x86-64-release
-      - conan install ../conan --build=missing --profile:build=default --profile:host=windows
+      - conan install --build=missing --profile:build=default --profile:host=windows -of ./ ../conan 
       - cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=conan_toolchain.cmake -DCMAKE_PREFIX_PATH=/usr/x86_64-w64-mingw32 ..
       - make -j 6
       - make package
