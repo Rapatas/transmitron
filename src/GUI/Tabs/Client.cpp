@@ -327,9 +327,9 @@ void Client::setupPanelHistory(wxWindow *parent) {
   mHistoryClear = new wxButton(
     panel,
     -1,
-    "",
+    "Clear",
     wxDefaultPosition,
-    wxSize(mOptionsHeight, mOptionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
   mHistoryClear->SetToolTip("Clear history");
   mHistoryClear->SetBitmap(mArtProvider.bitmap(Icon::Delete));
@@ -337,9 +337,9 @@ void Client::setupPanelHistory(wxWindow *parent) {
   mHistoryRecord = new wxButton(
     panel,
     -1,
-    "",
+    "Store",
     wxDefaultPosition,
-    wxSize(mOptionsHeight - 1, mOptionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
   mHistoryRecord->SetToolTip("Store history recording");
   mHistoryRecord->SetBitmap(mArtProvider.bitmap(Icon::Save));
@@ -349,9 +349,10 @@ void Client::setupPanelHistory(wxWindow *parent) {
   topSizer->Add(mHistorySearchButton, 0, wxEXPAND);
   auto *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   hsizer->SetMinSize(0, mOptionsHeight);
+  hsizer->Add(mHistoryRecord, 0, wxEXPAND);
+  hsizer->AddStretchSpacer(1);
   hsizer->Add(mAutoScroll, 0, wxEXPAND);
   hsizer->AddStretchSpacer(1);
-  hsizer->Add(mHistoryRecord, 0, wxEXPAND);
   hsizer->Add(mHistoryClear, 0, wxEXPAND);
   auto *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(topSizer, 0, wxEXPAND);
