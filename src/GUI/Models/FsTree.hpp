@@ -1,19 +1,17 @@
 #pragma once
 
 #include <list>
-#include <set>
 #include <memory>
+#include <set>
 
 #include <spdlog/spdlog.h>
 #include <wx/dataview.h>
 
 #include "GUI/ArtProvider.hpp"
 
-namespace Rapatas::Transmitron::GUI::Models
-{
+namespace Rapatas::Transmitron::GUI::Models {
 
-class FsTree :
-  public wxDataViewModel
+class FsTree : public wxDataViewModel
 {
 public:
 
@@ -23,6 +21,7 @@ public:
   class Leaf
   {
   public:
+
     Leaf() = default;
     virtual ~Leaf() = default;
     Leaf(const Leaf &other) = delete;
@@ -31,8 +30,7 @@ public:
     Leaf &operator=(Leaf &&other) = delete;
   };
 
-  enum Column : uint8_t
-  {
+  enum Column : uint8_t {
     Name,
     Max
   };
@@ -64,26 +62,22 @@ public:
   void GetValue(
     wxVariant &variant,
     const Item &item,
-    unsigned int col
+    unsigned int col //
   ) const override;
   bool SetValue(
     const wxVariant &value,
     const Item &item,
-    unsigned int col
+    unsigned int col //
   ) override;
   [[nodiscard]] bool IsEnabled(
     const Item &item,
-    unsigned int col
+    unsigned int col //
   ) const override;
-  [[nodiscard]] Item GetParent(
-    const Item &item
-  ) const override;
-  [[nodiscard]] bool IsContainer(
-    const Item &item
-  ) const override;
+  [[nodiscard]] Item GetParent(const Item &item) const override;
+  [[nodiscard]] bool IsContainer(const Item &item) const override;
   unsigned int GetChildren(
     const Item &parent,
-    wxDataViewItemArray &array
+    wxDataViewItemArray &array //
   ) const override;
 
 protected:
@@ -104,23 +98,27 @@ protected:
     Item parent
   );
 
-  [[nodiscard]] virtual bool isLeaf(const Common::fs::directory_entry &entry) const = 0;
-  virtual std::unique_ptr<Leaf> leafLoad(Id id, const Common::fs::path &path) = 0;
-  virtual void leafValue(Id id, wxDataViewIconText &value, unsigned int col) const = 0;
+  [[nodiscard]] virtual bool isLeaf(const Common::fs::directory_entry &entry
+  ) const = 0;
+  virtual std::unique_ptr<Leaf> leafLoad(
+    Id id,
+    const Common::fs::path &path
+  ) = 0;
+  virtual void leafValue(Id id, wxDataViewIconText &value, unsigned int col)
+    const = 0;
   virtual bool leafSave(Id id) = 0;
 
-  [[nodiscard]] std::map<Id, Leaf*> getLeafs() const;
-  [[nodiscard]] Leaf* getLeaf(Item item) const;
+  [[nodiscard]] std::map<Id, Leaf *> getLeafs() const;
+  [[nodiscard]] Leaf *getLeaf(Item item) const;
   [[nodiscard]] std::string getNodePath(Id id) const;
   [[nodiscard]] std::vector<std::string> getNodeSegments(Id id) const;
-  [[nodiscard]] std::string createUniqueName(Item parent, std::string_view name) const;
+  [[nodiscard]] std::string createUniqueName(Item parent, std::string_view name)
+    const;
 
 private:
 
-  struct Node
-  {
-    enum class Type : uint8_t
-    {
+  struct Node {
+    enum class Type : uint8_t {
       Folder,
       Payload,
     };
@@ -143,10 +141,7 @@ private:
   size_t mColumnCount;
 
   void clear();
-  void loadDirectoryRecursive(
-    const Common::fs::path &path,
-    Id parentId
-  );
+  void loadDirectoryRecursive(const Common::fs::path &path, Id parentId);
   void loadLeaf(const Common::fs::directory_entry &entry, Id parentId);
   bool indexFileRead(const Common::fs::path &path, Id id);
   bool indexFileWrite(Id id);
@@ -154,25 +149,12 @@ private:
   bool saveLeaf(Id id);
   bool saveFolder(Id id);
   bool moveFile(Id nodeId, Id newParentId);
-  bool moveCheck(
-    Item item,
-    Item parent,
-    size_t index
-  );
-  void moveUnderNewParent(
-    Id nodeId,
-    Id newParentId,
-    size_t index
-  );
-  void moveUnderSameParent(
-    Id nodeId,
-    Id newParentId,
-    size_t index
-  );
+  bool moveCheck(Item item, Item parent, size_t index);
+  void moveUnderNewParent(Id nodeId, Id newParentId, size_t index);
+  void moveUnderSameParent(Id nodeId, Id newParentId, size_t index);
   Id getNextId();
 
   [[nodiscard]] bool isRecursive(Item parent, Item item) const;
-
 };
 
 } // namespace Rapatas::Transmitron::GUI::Models

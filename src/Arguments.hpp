@@ -1,13 +1,10 @@
 #pragma once
 
-#include "Common/Log.hpp"
 #include <string>
 
-namespace Rapatas::Transmitron
-{
+namespace Rapatas::Transmitron {
 
-struct Arguments
-{
+struct Arguments {
   bool exit = false;
 
   int argc{};

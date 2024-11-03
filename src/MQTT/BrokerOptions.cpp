@@ -1,8 +1,10 @@
 #include "BrokerOptions.hpp"
-#include <wx/utils.h>
+
 #include <chrono>
+
 #include <fmt/format.h>
-#include <string_view>
+#include <wx/utils.h>
+
 #include "Common/Extract.hpp"
 
 using namespace Rapatas::Transmitron;
@@ -20,7 +22,7 @@ BrokerOptions::BrokerOptions() :
   mClientId(fmt::format("{}_{}", wxGetHostName().ToStdString(), rand())),
   mHostname(DefaultHostname),
   mPassword(DefaultPassword),
-  mUsername(DefaultUsername)
+  mUsername(DefaultUsername) //
 {}
 
 BrokerOptions::BrokerOptions(
@@ -46,54 +48,61 @@ BrokerOptions::BrokerOptions(
   mClientId(std::move(clientId)),
   mHostname(std::move(hostname)),
   mPassword(std::move(password)),
-  mUsername(std::move(username))
+  mUsername(std::move(username)) //
 {
-  if (mClientId.empty())
-  {
+  if (mClientId.empty()) {
     // NOLINTNEXTLINE(concurrency-mt-unsafe, cert-msc50-cpp, cert-msc30-c)
     mClientId = fmt::format("{}_{}", wxGetHostName().ToStdString(), rand());
   }
 }
 
-BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data)
-{
+BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data) {
   using namespace Common;
 
-  const bool autoReconnect = extract<bool>(data, "autoReconnect")
-    .value_or(DefaultAutoReconnect);
+  const bool autoReconnect = //
+    extract<bool>(data, "autoReconnect").value_or(DefaultAutoReconnect);
 
-  const std::string clientId = extract<std::string>(data, "clientId")
-    // NOLINTNEXTLINE(concurrency-mt-unsafe, cert-msc50-cpp, cert-msc30-c)
-    .value_or(std::string(fmt::format("{}_{}", wxGetHostName().ToStdString(), rand())));
+  const std::string clientId =
+    extract<std::string>(data, "clientId")
+      // NOLINTNEXTLINE(concurrency-mt-unsafe, cert-msc50-cpp, cert-msc30-c)
+      .value_or(
+        std::string(fmt::format("{}_{}", wxGetHostName().ToStdString(), rand()))
+      );
 
-  const std::string hostname = extract<std::string>(data, "hostname")
-    .value_or(std::string(DefaultHostname));
+  const std::string hostname = //
+    extract<std::string>(data, "hostname")
+      .value_or(std::string(DefaultHostname));
 
-  const std::string password = extract<std::string>(data, "password")
-    .value_or(std::string(DefaultPassword));
+  const std::string password = //
+    extract<std::string>(data, "password")
+      .value_or(std::string(DefaultPassword));
 
-  const std::string username = extract<std::string>(data, "username")
-    .value_or(std::string(DefaultUsername));
+  const std::string username = //
+    extract<std::string>(data, "username")
+      .value_or(std::string(DefaultUsername));
 
-  const unsigned keepAliveInterval = extract<unsigned>(data, "keepAliveInterval")
-    .value_or(DefaultKeepAliveInterval.count());
+  const unsigned keepAliveInterval = //
+    extract<unsigned>(data, "keepAliveInterval")
+      .value_or(DefaultKeepAliveInterval.count());
 
-  const unsigned maxInFlight = extract<unsigned>(data, "maxInFlight")
-    .value_or(DefaultMaxInFlight);
+  const unsigned maxInFlight = //
+    extract<unsigned>(data, "maxInFlight").value_or(DefaultMaxInFlight);
 
-  const Port port = extract<Port>(data, "port")
-    .value_or(DefaultPort);
+  const Port port = //
+    extract<Port>(data, "port").value_or(DefaultPort);
 
-  const unsigned connectTimeout = extract<unsigned>(data, "connectTimeout")
-    .value_or(DefaultTimeout.count());
+  const unsigned connectTimeout = //
+    extract<unsigned>(data, "connectTimeout").value_or(DefaultTimeout.count());
 
-  const unsigned disconnectTimeout = extract<unsigned>(data, "disconnectTimeout")
-    .value_or(DefaultTimeout.count());
+  const unsigned disconnectTimeout = //
+    extract<unsigned>(data, "disconnectTimeout")
+      .value_or(DefaultTimeout.count());
 
-  const unsigned maxReconnectRetries = extract<unsigned>(data, "maxReconnectRetries")
-    .value_or(DefaultMaxReconnectRetries);
+  const unsigned maxReconnectRetries = //
+    extract<unsigned>(data, "maxReconnectRetries")
+      .value_or(DefaultMaxReconnectRetries);
 
-  return BrokerOptions {
+  return BrokerOptions{
     autoReconnect,
     maxInFlight,
     maxReconnectRetries,
@@ -108,84 +117,54 @@ BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data)
   };
 }
 
-nlohmann::json BrokerOptions::toJson() const
-{
+nlohmann::json BrokerOptions::toJson() const {
   return {
-    {"autoReconnect",       mAutoReconnect             },
-    {"maxReconnectRetries", mMaxReconnectRetries       },
-    {"clientId",            mClientId                  },
-    {"connectTimeout",      mConnectTimeout.count()    },
-    {"disconnectTimeout",   mDisconnectTimeout.count() },
-    {"hostname",            mHostname                  },
-    {"keepAliveInterval",   mKeepAliveInterval.count() },
-    {"maxInFlight",         mMaxInFlight               },
-    {"password",            mPassword                  },
-    {"port",                mPort                      },
-    {"username",            mUsername                  },
+    {"autoReconnect", mAutoReconnect},
+    {"maxReconnectRetries", mMaxReconnectRetries},
+    {"clientId", mClientId},
+    {"connectTimeout", mConnectTimeout.count()},
+    {"disconnectTimeout", mDisconnectTimeout.count()},
+    {"hostname", mHostname},
+    {"keepAliveInterval", mKeepAliveInterval.count()},
+    {"maxInFlight", mMaxInFlight},
+    {"password", mPassword},
+    {"port", mPort},
+    {"username", mUsername},
   };
 }
 
-bool BrokerOptions::getAutoReconnect() const
-{
-  return mAutoReconnect;
-}
+bool BrokerOptions::getAutoReconnect() const { return mAutoReconnect; }
 
-BrokerOptions::Port BrokerOptions::getPort() const
-{
-  return mPort;
-}
+BrokerOptions::Port BrokerOptions::getPort() const { return mPort; }
 
-std::chrono::seconds BrokerOptions::getKeepAliveInterval() const
-{
+std::chrono::seconds BrokerOptions::getKeepAliveInterval() const {
   return mKeepAliveInterval;
 }
 
-size_t BrokerOptions::getMaxInFlight() const
-{
-  return mMaxInFlight;
-}
+size_t BrokerOptions::getMaxInFlight() const { return mMaxInFlight; }
 
-std::chrono::seconds BrokerOptions::getConnectTimeout() const
-{
+std::chrono::seconds BrokerOptions::getConnectTimeout() const {
   return mConnectTimeout;
 }
 
-std::chrono::seconds BrokerOptions::getDisconnectTimeout() const
-{
+std::chrono::seconds BrokerOptions::getDisconnectTimeout() const {
   return mDisconnectTimeout;
 }
 
-std::string BrokerOptions::getHostname() const
-{
-  return mHostname;
-}
+std::string BrokerOptions::getHostname() const { return mHostname; }
 
-std::string BrokerOptions::getClientId() const
-{
-  return mClientId;
-}
+std::string BrokerOptions::getClientId() const { return mClientId; }
 
-std::string BrokerOptions::getUsername() const
-{
-  return mUsername;
-}
+std::string BrokerOptions::getUsername() const { return mUsername; }
 
-std::string BrokerOptions::getPassword() const
-{
-  return mPassword;
-}
+std::string BrokerOptions::getPassword() const { return mPassword; }
 
-size_t BrokerOptions::getMaxReconnectRetries() const
-{
+size_t BrokerOptions::getMaxReconnectRetries() const {
   return mMaxReconnectRetries;
 }
 
-void BrokerOptions::setHostname(std::string hostname)
-{
+void BrokerOptions::setHostname(std::string hostname) {
   mHostname = std::move(hostname);
 }
 
-void BrokerOptions::setPort(Port port)
-{
-  mPort = port;
-}
+void BrokerOptions::setPort(Port port) { mPort = port; }

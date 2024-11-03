@@ -1,26 +1,23 @@
 #pragma once
 
 #include <map>
+
 #include <wx/colour.h>
 #include <wx/event.h>
+
 #include "MQTT/QualityOfService.hpp"
 #include "MQTT/Subscription.hpp"
 
-namespace Rapatas::Transmitron::GUI::Types
-{
+namespace Rapatas::Transmitron::GUI::Types {
 
 class Subscription :
-  public wxEvtHandler,
+  public wxEvtHandler, //
   public MQTT::Subscription::Observer
 {
 public:
 
   explicit Subscription(const std::shared_ptr<MQTT::Subscription> &sub);
-  Subscription(
-    MQTT::Subscription::Id_t id,
-    std::string filter,
-    MQTT::QoS qos
-  );
+  Subscription(MQTT::Subscription::Id_t id, std::string filter, MQTT::QoS qos);
 
   // MQTT::Subscription::Observer interface.
   void onSubscribed() override;
@@ -50,4 +47,3 @@ private:
 };
 
 } // namespace Rapatas::Transmitron::GUI::Types
-

@@ -1,22 +1,20 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
-#include <wx/panel.h>
-#include <wx/stattext.h>
-#include <wx/sizer.h>
 #include <wx/dataview.h>
+#include <wx/panel.h>
 #include <wx/propgrid/property.h>
 #include <wx/propgrid/props.h>
+#include <wx/sizer.h>
+#include <wx/stattext.h>
 
+#include "GUI/ArtProvider.hpp"
 #include "GUI/Models/Layouts.hpp"
 #include "GUI/Models/Profiles.hpp"
-#include "GUI/ArtProvider.hpp"
 
-namespace Rapatas::Transmitron::GUI::Tabs
-{
+namespace Rapatas::Transmitron::GUI::Tabs {
 
-class Settings :
-  public wxPanel
+class Settings : public wxPanel
 {
 public:
 
@@ -34,8 +32,7 @@ public:
 
 private:
 
-  enum class ContextIDs : unsigned
-  {
+  enum class ContextIDs : uint8_t {
     LayoutsDelete,
     LayoutsRename,
     ProfilesDelete,
@@ -44,8 +41,7 @@ private:
     ProfilesRename,
   };
 
-  enum Properties : size_t
-  {
+  enum Properties : uint8_t {
     AutoReconnect,
     ClientId,
     ConnectTimeout,
@@ -80,7 +76,7 @@ private:
   std::pair<bool, wxDataViewItem> mProfilesPossible;
   wxDataViewColumn *mProfileColumnName = nullptr;
 
-  std::vector<wxPGProperty*> mProfileProperties;
+  std::vector<wxPGProperty *> mProfileProperties;
   wxBoxSizer *mProfileButtonsSizer = nullptr;
   wxPanel *mProfileOptions = nullptr;
   wxPropertyCategory *mGridCategoryBroker = nullptr;
@@ -136,7 +132,7 @@ private:
   void onProfileNewFolder(wxCommandEvent &event);
   void onProfileNewProfile(wxCommandEvent &event);
 
-  void onProfileGridChanged(wxPropertyGridEvent& event);
+  void onProfileGridChanged(wxPropertyGridEvent &event);
 
   void onButtonClickedNewProfile(wxCommandEvent &event);
   void onButtonClickedProfileDelete(wxCommandEvent &event);
@@ -145,8 +141,6 @@ private:
   void onButtonClickedConnect(wxCommandEvent &event);
 
   void onSectionSelected(wxListEvent &event);
-
 };
 
 } // namespace Rapatas::Transmitron::GUI::Tabs
-

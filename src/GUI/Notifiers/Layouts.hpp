@@ -2,15 +2,13 @@
 
 #include <wx/dataview.h>
 
-namespace Rapatas::Transmitron::GUI::Notifiers
-{
+namespace Rapatas::Transmitron::GUI::Notifiers {
 
-class Layouts :
+class Layouts : //
   public wxEvtHandler,
   public wxDataViewModelNotifier
 {
 public:
-
 private:
 
   // wxDataViewModelNotifier interface.
@@ -20,14 +18,12 @@ private:
   bool ValueChanged(const wxDataViewItem &item, unsigned int col) override;
   bool ItemAdded(
     const wxDataViewItem &parent,
-    const wxDataViewItem &item
+    const wxDataViewItem &item //
   ) override;
   bool ItemDeleted(
     const wxDataViewItem &parent,
-    const wxDataViewItem &item
+    const wxDataViewItem &item //
   ) override;
-
 };
 
 } // namespace Rapatas::Transmitron::GUI::Notifiers
-

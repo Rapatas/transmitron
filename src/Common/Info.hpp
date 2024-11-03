@@ -1,7 +1,6 @@
 #pragma once
 
-namespace Rapatas::Transmitron::Common::Info
-{
+namespace Rapatas::Transmitron::Common::Info {
 
 const char *getProjectName();
 const char *getProjectDescription();

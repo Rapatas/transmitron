@@ -1,24 +1,21 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
-#include <wx/wx.h>
 #include <wx/aui/aui.h>
+#include <wx/wx.h>
 
-#include "GUI/Notifiers/Layouts.hpp"
-#include "GUI/Models/Layouts.hpp"
-#include "GUI/Events/Layout.hpp"
 #include "GUI/ArtProvider.hpp"
+#include "GUI/Events/Layout.hpp"
+#include "GUI/Models/Layouts.hpp"
 
-namespace Rapatas::Transmitron::GUI::Widgets
-{
+namespace Rapatas::Transmitron::GUI::Widgets {
 
-class Layouts :
-  public wxPanel
+class Layouts : public wxPanel
 {
 public:
 
   explicit Layouts(
-    wxWindow* parent,
+    wxWindow *parent,
     wxWindowID id,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
     wxAuiManager *auiMan,
@@ -59,4 +56,3 @@ private:
 };
 
 } // namespace Rapatas::Transmitron::GUI::Widgets
-

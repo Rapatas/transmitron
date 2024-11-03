@@ -5,20 +5,17 @@
 #include <spdlog/spdlog.h>
 #include <wx/dataview.h>
 
-#include "MQTT/Client.hpp"
-#include "GUI/Types/Subscription.hpp"
 #include "GUI/Events/Subscription.hpp"
+#include "GUI/Types/Subscription.hpp"
+#include "MQTT/Client.hpp"
 
-namespace Rapatas::Transmitron::GUI::Models
-{
+namespace Rapatas::Transmitron::GUI::Models {
 
-class Subscriptions :
-  public wxDataViewVirtualListModel
+class Subscriptions : public wxDataViewVirtualListModel
 {
 public:
 
-  struct Observer
-  {
+  struct Observer {
     Observer() = default;
     virtual ~Observer() = default;
     Observer(const Observer &) = default;
@@ -41,8 +38,7 @@ public:
     ) = 0;
   };
 
-  enum class Column : unsigned
-  {
+  enum class Column : uint8_t {
     Icon,
     Qos,
     Topic,
@@ -66,16 +62,19 @@ public:
 
   [[nodiscard]] bool getMuted(MQTT::Subscription::Id_t subscriptionId) const;
   [[nodiscard]] bool getMuted(wxDataViewItem item) const;
-  [[nodiscard]] std::string getFilter(MQTT::Subscription::Id_t subscriptionId) const;
   [[nodiscard]] std::string getFilter(wxDataViewItem item) const;
   [[nodiscard]] wxColor getColor(MQTT::Subscription::Id_t subscriptionId) const;
   [[nodiscard]] nlohmann::json toJson() const;
+  [[nodiscard]] std::string getFilter( //
+    MQTT::Subscription::Id_t subscriptionId
+  ) const;
 
 private:
 
   std::shared_ptr<spdlog::logger> mLogger;
   std::shared_ptr<MQTT::Client> mClient;
-  std::map<MQTT::Subscription::Id_t, std::unique_ptr<Types::Subscription>> mSubscriptions;
+  std::map<MQTT::Subscription::Id_t, std::unique_ptr<Types::Subscription>>
+    mSubscriptions;
   std::vector<MQTT::Subscription::Id_t> mRemap;
   std::map<size_t, Observer *> mObservers;
 
@@ -86,7 +85,7 @@ private:
   void GetValueByRow(
     wxVariant &variant,
     unsigned int row,
-    unsigned int col
+    unsigned int col //
   ) const override;
   bool GetAttrByRow(
     unsigned int row,
@@ -105,4 +104,3 @@ private:
 };
 
 } // namespace Rapatas::Transmitron::GUI::Models
-

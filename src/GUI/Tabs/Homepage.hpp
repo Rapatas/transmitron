@@ -1,26 +1,21 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
+#include <wx/dataview.h>
+#include <wx/panel.h>
 #include <wx/propgrid/property.h>
 #include <wx/propgrid/props.h>
-#include <wx/panel.h>
 #include <wx/sizer.h>
-#include <wx/textctrl.h>
 #include <wx/spinctrl.h>
-#include <wx/dataview.h>
+#include <wx/textctrl.h>
 
-#include "GUI/Events/Connection.hpp"
-#include "GUI/Events/Layout.hpp"
+#include "GUI/ArtProvider.hpp"
 #include "GUI/Models/Layouts.hpp"
 #include "GUI/Models/Profiles.hpp"
-#include "GUI/Types/ClientOptions.hpp"
-#include "GUI/ArtProvider.hpp"
 
-namespace Rapatas::Transmitron::GUI::Tabs
-{
+namespace Rapatas::Transmitron::GUI::Tabs {
 
-class Homepage :
-  public wxPanel
+class Homepage : public wxPanel
 {
 public:
 
@@ -37,9 +32,7 @@ public:
 
 private:
 
-
-  enum class ContextIDs : unsigned
-  {
+  enum class ContextIDs : uint8_t {
     ProfilesConnect,
     ProfilesCreate,
     ProfilesEdit,
@@ -89,8 +82,6 @@ private:
   void onQuickConnect();
 
   void connectTo(wxDataViewItem profile);
-
 };
 
 } // namespace Rapatas::Transmitron::GUI::Tabs
-

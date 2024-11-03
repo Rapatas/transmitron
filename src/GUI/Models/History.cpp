@@ -1,16 +1,19 @@
-#include "Common/Filesystem.hpp"
+#include "History.hpp"
+
 #include <fstream>
 #include <future>
+
 #include <wx/dcmemory.h>
+
+#include "Common/Filesystem.hpp"
 #include "Common/Helpers.hpp"
-#include "History.hpp"
 #include "Common/Log.hpp"
-#include "MQTT/Message.hpp"
-#include "GUI/Resources/pin/pinned-18x18.hpp"
 #include "GUI/Resources/pin/not-pinned-18x18.hpp"
+#include "GUI/Resources/pin/pinned-18x18.hpp"
 #include "GUI/Resources/qos/qos-0.hpp"
 #include "GUI/Resources/qos/qos-1.hpp"
 #include "GUI/Resources/qos/qos-2.hpp"
+#include "MQTT/Message.hpp"
 
 using namespace Rapatas::Transmitron;
 using namespace GUI::Models;
@@ -18,54 +21,44 @@ using namespace GUI;
 using namespace Common;
 
 History::History(const wxObjectDataPtr<Subscriptions> &subscriptions) :
-  mSubscriptions(subscriptions)
+  mSubscriptions(subscriptions) //
 {
   mLogger = Common::Log::create("Models::History");
   mSubscriptions->attachObserver(this);
 }
 
-size_t History::attachObserver(Observer *observer)
-{
+size_t History::attachObserver(Observer *observer) {
   static size_t id = 0;
   return mObservers.insert(std::make_pair(id++, observer)).first->first;
 }
 
-bool History::detachObserver(size_t id)
-{
+bool History::detachObserver(size_t id) {
   auto it = mObservers.find(id);
-  if (it == std::end(mObservers))
-  {
-    return false;
-  }
+  if (it == std::end(mObservers)) { return false; }
 
   mObservers.erase(it);
   return true;
 }
 
-void History::clear()
-{
+void History::clear() {
   mMessages.clear();
   remap();
 }
 
-bool History::load(const std::string &recording)
-{
-  if (recording.empty())
-  {
+bool History::load(const std::string &recording) {
+  if (recording.empty()) {
     mLogger->error("No file provided");
     return false;
   }
 
   const bool exists = fs::exists(recording);
-  if (!exists)
-  {
+  if (!exists) {
     mLogger->warn("File does not exist: {}", recording);
     return false;
   }
 
   std::ifstream input(recording);
-  if (!input.is_open())
-  {
+  if (!input.is_open()) {
     const auto ec = std::error_code(errno, std::system_category());
     mLogger->warn("Could not open '{}': {}", recording, ec.message());
     return false;
@@ -73,34 +66,29 @@ bool History::load(const std::string &recording)
 
   std::stringstream buffer;
   buffer << input.rdbuf();
-  if (!nlohmann::json::accept(buffer.str()))
-  {
+  if (!nlohmann::json::accept(buffer.str())) {
     mLogger->warn("Could not parse '{}'", recording);
     return false;
   }
   const auto data = nlohmann::json::parse(buffer.str());
 
   const auto messagesIt = data.find("messages");
-  if (messagesIt == std::end(data))
-  {
+  if (messagesIt == std::end(data)) {
     mLogger->warn("Could not find key 'messages' in '{}'", recording);
     return false;
   }
-  if (!messagesIt->is_array())
-  {
+  if (!messagesIt->is_array()) {
     mLogger->warn("Key 'messages' is not an array");
     return false;
   }
 
-  for (const auto &msg : *messagesIt)
-  {
+  for (const auto &msg : *messagesIt) {
     Node node;
 
     const auto subscriptionIt = msg.find("subscription");
     if (false // NOLINT
-      || subscriptionIt == std::end(msg)
-      || !subscriptionIt->is_number_unsigned()
-    ) {
+        || subscriptionIt == std::end(msg)
+        || !subscriptionIt->is_number_unsigned()) {
       mLogger->warn("Message is missing subscription id");
       return false;
     }
@@ -108,41 +96,31 @@ bool History::load(const std::string &recording)
 
     const auto topicIt = msg.find("topic");
     if (true // NOLINT
-      && topicIt != std::end(msg)
-      && topicIt->is_string()
-    ) {
+        && topicIt != std::end(msg) && topicIt->is_string()) {
       node.message.topic = *topicIt;
     }
 
     const auto qosIt = msg.find("qos");
     if (true // NOLINT
-      && qosIt != std::end(msg)
-      && qosIt->is_number_unsigned()
-    ) {
+        && qosIt != std::end(msg) && qosIt->is_number_unsigned()) {
       node.message.qos = *qosIt;
     }
 
     const auto payloadIt = msg.find("payload");
     if (true // NOLINT
-      && payloadIt != std::end(msg)
-      && payloadIt->is_string()
-    ) {
+        && payloadIt != std::end(msg) && payloadIt->is_string()) {
       node.message.payload = *payloadIt;
     }
 
     const auto timestampIt = msg.find("timestamp");
     if (true // NOLINT
-      && timestampIt != std::end(msg)
-      && timestampIt->is_string()
-    ) {
+        && timestampIt != std::end(msg) && timestampIt->is_string()) {
       node.message.timestamp = Common::Helpers::stringToTime(*timestampIt);
     }
 
     const auto retainedIt = msg.find("retained");
     if (true // NOLINT
-      && retainedIt != std::end(msg)
-      && retainedIt->is_string()
-    ) {
+        && retainedIt != std::end(msg) && retainedIt->is_string()) {
       node.message.retained = *retainedIt;
     }
 
@@ -156,12 +134,10 @@ bool History::load(const std::string &recording)
   return true;
 }
 
-nlohmann::json History::toJson() const
-{
+nlohmann::json History::toJson() const {
   nlohmann::json result;
 
-  for (const auto &node : mMessages)
-  {
+  for (const auto &node : mMessages) {
     const auto &message = node.message;
     const auto timestamp = Common::Helpers::timeToString(message.timestamp);
     result.push_back({
@@ -181,59 +157,42 @@ void History::onMessage(
   MQTT::Subscription::Id_t subscriptionId,
   const MQTT::Message &message
 ) {
-  Node node {
-    message,
-    subscriptionId
-  };
+  Node node{message, subscriptionId};
   mMessages.push_back(std::move(node));
   const bool isMuted = mSubscriptions->getMuted(subscriptionId);
   const bool isFiltered = mFilter.empty()
     || message.topic.find(mFilter) != std::string::npos;
 
-  if (!isMuted && isFiltered)
-  {
+  if (!isMuted && isFiltered) {
     mRemap.push_back(mMessages.size() - 1);
     RowAppended();
 
     const auto row = static_cast<uint32_t>(mRemap.size() - 1);
     const auto item = GetItem(row);
-    for (const auto &[id, observer] : mObservers)
-    {
-      observer->onMessage(item);
-    }
+    for (const auto &[id, observer] : mObservers) { observer->onMessage(item); }
   }
 }
 
-void History::onMuted(MQTT::Subscription::Id_t /* subscriptionId */)
-{
+void History::onMuted(MQTT::Subscription::Id_t /* subscriptionId */) {
   remap();
 }
 
-void History::onUnmuted(MQTT::Subscription::Id_t /* subscriptionId */)
-{
+void History::onUnmuted(MQTT::Subscription::Id_t /* subscriptionId */) {
   remap();
 }
 
-void History::onSolo(MQTT::Subscription::Id_t /* subscriptionId */)
-{
-  remap();
-}
+void History::onSolo(MQTT::Subscription::Id_t /* subscriptionId */) { remap(); }
 
-void History::onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor /* color */)
-{
+void History::
+  onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor /* color */) {
   refresh(subscriptionId);
 }
 
-void History::onUnsubscribed(MQTT::Subscription::Id_t subscriptionId)
-{
-  for (auto it = std::begin(mMessages); it != std::end(mMessages); )
-  {
-    if (it->subscriptionId == subscriptionId)
-    {
+void History::onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) {
+  for (auto it = std::begin(mMessages); it != std::end(mMessages);) {
+    if (it->subscriptionId == subscriptionId) {
       it = mMessages.erase(it);
-    }
-    else
-    {
+    } else {
       ++it;
     }
   }
@@ -241,16 +200,11 @@ void History::onUnsubscribed(MQTT::Subscription::Id_t subscriptionId)
   remap();
 }
 
-void History::onCleared(MQTT::Subscription::Id_t subscriptionId)
-{
-  for (auto it = std::begin(mMessages); it != std::end(mMessages); )
-  {
-    if (it->subscriptionId == subscriptionId)
-    {
+void History::onCleared(MQTT::Subscription::Id_t subscriptionId) {
+  for (auto it = std::begin(mMessages); it != std::end(mMessages);) {
+    if (it->subscriptionId == subscriptionId) {
       it = mMessages.erase(it);
-    }
-    else
-    {
+    } else {
       ++it;
     }
   }
@@ -258,131 +212,96 @@ void History::onCleared(MQTT::Subscription::Id_t subscriptionId)
   remap();
 }
 
-void History::remap()
-{
+void History::remap() {
   const size_t before = mRemap.size();
   mRemap.clear();
   mRemap.reserve(mMessages.size());
 
-  for (size_t i = 0; i < mMessages.size(); ++i)
-  {
+  for (size_t i = 0; i < mMessages.size(); ++i) {
     const bool isMuted = mSubscriptions->getMuted(mMessages[i].subscriptionId);
     const bool isFiltered = mFilter.empty()
       || mMessages[i].message.topic.find(mFilter) != std::string::npos;
 
-    if (!isMuted && isFiltered)
-    {
-      mRemap.push_back(i);
-    }
+    if (!isMuted && isFiltered) { mRemap.push_back(i); }
   }
 
   mRemap.shrink_to_fit();
   const size_t after = mRemap.size();
 
   const auto common = std::min(before, after);
-  for (uint32_t i = 0; i != common; ++i)
-  {
-    RowChanged(i);
-  }
+  for (uint32_t i = 0; i != common; ++i) { RowChanged(i); }
 
-  if (after > before)
-  {
+  if (after > before) {
     const size_t diff = after - common;
-    for (size_t i = 0; i < diff; ++i)
-    {
-      RowAppended();
-    }
-  }
-  else if (after < before)
-  {
+    for (size_t i = 0; i < diff; ++i) { RowAppended(); }
+  } else if (after < before) {
     wxArrayInt rows;
     const size_t diff = before - common;
-    for (uint32_t i = 0; i < diff; ++i)
-    {
+    for (uint32_t i = 0; i < diff; ++i) {
       rows.Add(static_cast<int>(after + i));
     }
     RowsDeleted(rows);
   }
 }
 
-void History::refresh(MQTT::Subscription::Id_t subscriptionId)
-{
-  for (uint32_t i = 0; i < mRemap.size(); ++i)
-  {
-    if (mMessages[mRemap[i]].subscriptionId == subscriptionId)
-    {
+void History::refresh(MQTT::Subscription::Id_t subscriptionId) {
+  for (uint32_t i = 0; i < mRemap.size(); ++i) {
+    if (mMessages[mRemap[i]].subscriptionId == subscriptionId) {
       RowChanged(i);
     }
   }
 }
 
-std::string History::getPayload(const wxDataViewItem &item) const
-{
+std::string History::getPayload(const wxDataViewItem &item) const {
   return mMessages.at(mRemap.at(GetRow(item))).message.payload;
 }
 
-std::string History::getTopic(const wxDataViewItem &item) const
-{
+std::string History::getTopic(const wxDataViewItem &item) const {
   return mMessages.at(mRemap.at(GetRow(item))).message.topic;
 }
 
-MQTT::QoS History::getQos(const wxDataViewItem &item) const
-{
+MQTT::QoS History::getQos(const wxDataViewItem &item) const {
   return mMessages.at(mRemap.at(GetRow(item))).message.qos;
 }
 
-bool History::getRetained(const wxDataViewItem &item) const
-{
+bool History::getRetained(const wxDataViewItem &item) const {
   return mMessages.at(mRemap.at(GetRow(item))).message.retained;
 }
 
-const MQTT::Message &History::getMessage(const wxDataViewItem &item) const
-{
+const MQTT::Message &History::getMessage(const wxDataViewItem &item) const {
   return mMessages.at(mRemap.at(GetRow(item))).message;
 }
 
-void History::setFilter(const std::string &filter)
-{
+void History::setFilter(const std::string &filter) {
   mFilter = filter;
   remap();
 }
 
-std::string History::getFilter() const
-{
-  return mFilter;
-}
+std::string History::getFilter() const { return mFilter; }
 
-unsigned History::GetColumnCount() const
-{
+unsigned History::GetColumnCount() const {
   return static_cast<uint32_t>(Column::Max);
 }
 
-unsigned History::GetCount() const
-{
+unsigned History::GetCount() const {
   return static_cast<uint32_t>(mRemap.size());
 }
 
-wxString History::GetColumnType(unsigned int col) const
-{
-  switch (static_cast<Column>(col))
-  {
-    case Column::Icon:
-    {
+wxString History::GetColumnType(unsigned int col) const {
+  switch (static_cast<Column>(col)) {
+    case Column::Icon: {
       return "wxColour";
     } break;
 
-    case Column::Qos:
-    {
+    case Column::Qos: {
       return wxDataViewBitmapRenderer::GetDefaultType();
     } break;
 
-    case Column::Topic:
-    {
+    case Column::Topic: {
       return wxDataViewIconTextRenderer::GetDefaultType();
     } break;
 
-    default:
-    {
+    default: {
       return "string";
     }
   }
@@ -393,16 +312,13 @@ void History::GetValueByRow(
   unsigned int row,
   unsigned int col
 ) const {
-
   const auto &node = mMessages.at(mRemap.at(row));
 
   constexpr size_t MessageIconWidth = 10;
   constexpr size_t MessageIconHeight = 20;
 
-  switch (static_cast<Column>(col))
-  {
+  switch (static_cast<Column>(col)) {
     case Column::Icon: {
-
       auto color = mSubscriptions->getColor(node.subscriptionId);
 
       wxBitmap bitmap(MessageIconWidth, MessageIconHeight);
@@ -419,8 +335,7 @@ void History::GetValueByRow(
       const auto &topic = node.message.topic;
       const auto wxs = wxString::FromUTF8(topic.data(), topic.length());
       result.SetText(wxs);
-      if (node.message.retained)
-      {
+      if (node.message.retained) {
         wxIcon icon;
         icon.CopyFromBitmap(*bin2cPinned18x18());
         result.SetIcon(icon);
@@ -430,26 +345,33 @@ void History::GetValueByRow(
     case Column::Qos: {
       const wxBitmap *result = nullptr;
       switch (node.message.qos) {
-        case MQTT::QoS::AtLeastOnce: { result = bin2cQos0(); } break;
-        case MQTT::QoS::AtMostOnce:  { result = bin2cQos1(); } break;
-        case MQTT::QoS::ExactlyOnce: { result = bin2cQos2(); } break;
+        case MQTT::QoS::AtLeastOnce: {
+          result = bin2cQos0();
+        } break;
+        case MQTT::QoS::AtMostOnce: {
+          result = bin2cQos1();
+        } break;
+        case MQTT::QoS::ExactlyOnce: {
+          result = bin2cQos2();
+        } break;
       }
       variant << *result;
     } break;
-    default: {}
+    default: {
+    }
   }
 }
 
 bool History::GetAttrByRow(
   unsigned int /* row */,
   unsigned int /* col */,
-  wxDataViewItemAttr &/* attr */
+  wxDataViewItemAttr & /* attr */
 ) const {
   return false;
 }
 
 bool History::SetValueByRow(
-  const wxVariant &/* variant */,
+  const wxVariant & /* variant */,
   unsigned int /* row */,
   unsigned int /* col */
 ) {

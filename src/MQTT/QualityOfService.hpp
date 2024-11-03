@@ -2,11 +2,9 @@
 
 #include <cstdint>
 
-namespace Rapatas::Transmitron::MQTT
-{
+namespace Rapatas::Transmitron::MQTT {
 
-enum class QoS : uint8_t
-{
+enum class QoS : uint8_t {
   AtLeastOnce = 0,
   AtMostOnce = 1,
   ExactlyOnce = 2

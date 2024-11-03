@@ -1,30 +1,30 @@
 #pragma once
 
 #include <random>
+
 #include <spdlog/spdlog.h>
+#include <wx/aui/aui.h>
+#include <wx/combobox.h>
 #include <wx/event.h>
 #include <wx/listctrl.h>
 #include <wx/splitter.h>
-#include <wx/aui/aui.h>
 #include <wx/tglbtn.h>
-#include <wx/combobox.h>
 
-#include "MQTT/Client.hpp"
+#include "GUI/ArtProvider.hpp"
 #include "GUI/Events/Connection.hpp"
 #include "GUI/Events/Layout.hpp"
+#include "GUI/Models/History.hpp"
 #include "GUI/Models/KnownTopics.hpp"
 #include "GUI/Models/Layouts.hpp"
-#include "GUI/Types/ClientOptions.hpp"
-#include "GUI/Widgets/TopicCtrl.hpp"
-#include "GUI/Widgets/Layouts.hpp"
-#include "GUI/Models/History.hpp"
-#include "GUI/Models/Subscriptions.hpp"
 #include "GUI/Models/Messages.hpp"
+#include "GUI/Models/Subscriptions.hpp"
+#include "GUI/Types/ClientOptions.hpp"
 #include "GUI/Widgets/Edit.hpp"
-#include "GUI/ArtProvider.hpp"
+#include "GUI/Widgets/Layouts.hpp"
+#include "GUI/Widgets/TopicCtrl.hpp"
+#include "MQTT/Client.hpp"
 
-namespace Rapatas::Transmitron::GUI::Tabs
-{
+namespace Rapatas::Transmitron::GUI::Tabs {
 
 class Client :
   public wxPanel,
@@ -34,7 +34,7 @@ class Client :
 public:
 
   Client(
-    wxWindow* parent,
+    wxWindow *parent,
     const MQTT::BrokerOptions &brokerOptions,
     Types::ClientOptions clientOptions,
     const wxObjectDataPtr<Models::Messages> &messages,
@@ -48,7 +48,7 @@ public:
   );
 
   Client(
-    wxWindow* parent,
+    wxWindow *parent,
     const wxObjectDataPtr<Models::History> &historyModel,
     const wxObjectDataPtr<Models::Subscriptions> &subscriptionsModel,
     const wxObjectDataPtr<Models::Layouts> &layoutsModel,
@@ -68,8 +68,7 @@ public:
 
 private:
 
-  enum class ContextIDs : unsigned
-  {
+  enum class ContextIDs : uint8_t {
     SubscriptionsUnsubscribe,
     SubscriptionsChangeColor,
     SubscriptionsMute,
@@ -90,8 +89,7 @@ private:
     MessageOverwrite,
   };
 
-  enum class Panes : unsigned
-  {
+  enum class Panes : uint8_t {
     History = 0,
     Subscriptions = 1,
     Messages = 2,
@@ -99,8 +97,7 @@ private:
     Preview = 4,
   };
 
-  struct Pane
-  {
+  struct Pane {
     std::string name;
     wxAuiPaneInfo info;
     wxPanel *panel = nullptr;
@@ -156,7 +153,7 @@ private:
   // Messages:
   wxObjectDataPtr<Models::Messages> mMessagesModel;
   wxDataViewCtrl *mMessagesCtrl = nullptr;
-  std::array<wxDataViewColumn*, Models::Messages::Column::Max> mMessageColumns {};
+  std::array<wxDataViewColumn *, Models::Messages::Column::Max> mMessageColumns;
   bool mMessageExplicitEditRequest = false;
   bool mMessagesWasExpanded = false;
   std::pair<bool, wxDataViewItem> mMessagesPossible;
@@ -257,8 +254,6 @@ private:
   void onMessage(wxDataViewItem item) override;
 
   wxAuiManager mAuiMan;
-
 };
 
 } // namespace Rapatas::Transmitron::GUI::Tabs
-

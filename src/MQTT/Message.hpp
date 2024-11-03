@@ -2,14 +2,14 @@
 
 #include <chrono>
 #include <string>
+
 #include <nlohmann/json.hpp>
+
 #include "QualityOfService.hpp"
 
-namespace Rapatas::Transmitron::MQTT
-{
+namespace Rapatas::Transmitron::MQTT {
 
-struct Message
-{
+struct Message {
   std::string topic;
   std::string payload;
   MQTT::QoS qos = MQTT::QoS::AtLeastOnce;

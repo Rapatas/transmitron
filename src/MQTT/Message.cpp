@@ -1,18 +1,15 @@
 #include "Message.hpp"
+
 #include "Common/Extract.hpp"
 
 using namespace Rapatas::Transmitron;
 using namespace MQTT;
 
-Message Message::fromJson(const nlohmann::json &data)
-{
+Message Message::fromJson(const nlohmann::json &data) {
   Message result;
 
   auto iqos = Common::extract<unsigned>(data, "qos").value_or(0);
-  if (iqos > 2)
-  {
-    iqos = 0;
-  }
+  if (iqos > 2) { iqos = 0; }
 
   result.topic = Common::extract<std::string>(data, "topic").value_or("");
   result.payload = Common::extract<std::string>(data, "payload").value_or("");
@@ -22,8 +19,7 @@ Message Message::fromJson(const nlohmann::json &data)
   return result;
 }
 
-nlohmann::json Message::toJson(const Message &message)
-{
+nlohmann::json Message::toJson(const Message &message) {
   return {
     {"topic", message.topic},
     {"payload", message.payload},

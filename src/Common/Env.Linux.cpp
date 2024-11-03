@@ -4,14 +4,10 @@
 
 using namespace Rapatas::Transmitron::Common;
 
-std::string Env::get(const std::string &name)
-{
+std::string Env::get(const std::string &name) {
   // NOLINTNEXTLINE
   char *result = ::getenv(name.c_str());
-  if (result == nullptr)
-  {
-    return {};
-  }
+  if (result == nullptr) { return {}; }
   return result;
 }
 

@@ -2,8 +2,7 @@
 
 #include <string>
 
-namespace Rapatas::Transmitron::Common::Env
-{
+namespace Rapatas::Transmitron::Common::Env {
 
 std::string get(const std::string &name);
 

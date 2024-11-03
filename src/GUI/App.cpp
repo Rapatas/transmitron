@@ -1,41 +1,30 @@
-#include "Common/Filesystem.hpp"
-#include <wx/window.h>
-#include <fstream>
-#include <stdexcept>
+#include "App.hpp"
 
-#include <wx/artprov.h>
+#include <fstream>
+
 #include <fmt/core.h>
+#include <wx/artprov.h>
 #include <wx/aui/auibook.h>
 #include <wx/image.h>
 #include <wx/notebook.h>
 #include <wx/settings.h>
+#include <wx/window.h>
 
-#include "App.hpp"
+#include "Common/Filesystem.hpp"
 #include "Common/Helpers.hpp"
+#include "Common/Info.hpp"
 #include "Common/Log.hpp"
 #include "Common/Url.hpp"
 #include "Common/XdgBaseDir.hpp"
 #include "Events/Connection.hpp"
-#include "Common/Info.hpp"
-#include "MQTT/Client.hpp"
-#include "Resources/history/history-18x14.hpp"
-#include "Resources/pin/not-pinned-18x18.hpp"
-#include "Resources/pin/pinned-18x18.hpp"
-#include "Resources/preview/preview-18x14.hpp"
-#include "Resources/qos/qos-0.hpp"
-#include "Resources/qos/qos-1.hpp"
-#include "Resources/qos/qos-2.hpp"
-#include "Resources/send/send-18x14.hpp"
-#include "Resources/messages/messages-18x14.hpp"
-#include "Resources/subscription/subscription-18x14.hpp"
-#include "Tabs/Client.hpp"
-#include "Tabs/Homepage.hpp"
-#include "Tabs/Settings.hpp"
 #include "GUI/Events/Profile.hpp"
 #include "GUI/Events/Recording.hpp"
 #include "GUI/Models/History.hpp"
 #include "GUI/Models/Layouts.hpp"
 #include "GUI/Models/Subscriptions.hpp"
+#include "Tabs/Client.hpp"
+#include "Tabs/Homepage.hpp"
+#include "Tabs/Settings.hpp"
 
 using namespace Rapatas::Transmitron;
 using namespace GUI;
@@ -48,14 +37,13 @@ constexpr size_t MinWindowHeight = 400;
 constexpr size_t LabelFontSize = 15;
 
 App::App(bool verbose) :
-  LabelFontInfo(LabelFontSize)
+  LabelFontInfo(LabelFontSize) //
 {
   Common::Log::instance().initialize(verbose);
   mLogger = Common::Log::create("GUI::App");
 }
 
-bool App::OnInit()
-{
+bool App::OnInit() {
   wxImage::AddHandler(new wxPNGHandler);
   wxImage::AddHandler(new wxICOHandler);
 
@@ -71,19 +59,13 @@ bool App::OnInit()
 
   auto prefix = getInstallPrefix();
   const auto base = prefix.append("share/transmitron");
-  mArtProvider.initialize(
-    base,
-    {mIconHeight, mIconHeight},
-    mDarkMode
-  );
+  mArtProvider.initialize(base, {mIconHeight, mIconHeight}, mDarkMode);
 
   setupIcon();
 
-  const int noteStyle = wxAUI_NB_DEFAULT_STYLE & ~(0U
-    | wxAUI_NB_TAB_MOVE
-    | wxAUI_NB_TAB_EXTERNAL_MOVE
-    | wxAUI_NB_TAB_SPLIT
-  );
+  const int noteStyle = wxAUI_NB_DEFAULT_STYLE
+    & ~(0U | wxAUI_NB_TAB_MOVE | wxAUI_NB_TAB_EXTERNAL_MOVE | wxAUI_NB_TAB_SPLIT
+    );
 
   mNote = new wxAuiNotebook(
     mFrame,
@@ -94,7 +76,7 @@ bool App::OnInit()
   );
 
   const auto configDir = createConfigDir().string();
-  const auto cacheDir  = createCacheDir().string();
+  const auto cacheDir = createCacheDir().string();
 
   mLayoutsModel = new Models::Layouts();
   mLayoutsModel->load(configDir);
@@ -117,23 +99,19 @@ bool App::OnInit()
   return true;
 }
 
-int App::FilterEvent(wxEvent &event)
-{
-  if (event.GetEventType() != wxEVT_KEY_DOWN)
-  {
+int App::FilterEvent(wxEvent &event) {
+  if (event.GetEventType() != wxEVT_KEY_DOWN) {
     return wxEventFilter::Event_Skip;
   }
 
-  const auto keyEvent = dynamic_cast<wxKeyEvent&>(event);
+  const auto keyEvent = dynamic_cast<wxKeyEvent &>(event);
 
-  if (keyEvent.GetKeyCode() == 'W' && keyEvent.ControlDown())
-  {
+  if (keyEvent.GetKeyCode() == 'W' && keyEvent.ControlDown()) {
     onKeyDownControlW();
     return wxEventFilter::Event_Processed;
   }
 
-  if (keyEvent.GetKeyCode() == 'T' && keyEvent.ControlDown())
-  {
+  if (keyEvent.GetKeyCode() == 'T' && keyEvent.ControlDown()) {
     onKeyDownControlT();
     return wxEventFilter::Event_Processed;
   }
@@ -141,11 +119,9 @@ int App::FilterEvent(wxEvent &event)
   return wxEventFilter::Event_Skip;
 }
 
-bool App::openProfile(const std::string &profileName)
-{
+bool App::openProfile(const std::string &profileName) {
   const auto profileItem = mProfilesModel->getItemFromName(profileName);
-  if (!profileItem.IsOk())
-  {
+  if (!profileItem.IsOk()) {
     mLogger->warn("Profile '{}' not found", profileName);
     return false;
   }
@@ -154,40 +130,29 @@ bool App::openProfile(const std::string &profileName)
   return true;
 }
 
-void App::onPageSelected(wxBookCtrlEvent& event)
-{
+void App::onPageSelected(wxBookCtrlEvent &event) {
   const auto selection = static_cast<size_t>(event.GetSelection());
 
-  if (event.GetSelection() == wxNOT_FOUND)
-  {
+  if (event.GetSelection() == wxNOT_FOUND) {
     event.Skip();
     return;
   }
 
-  if (selection == mCount - 1)
-  {
+  if (selection == mCount - 1) {
     createHomepageTab(mCount - 1);
     event.Veto();
     return;
   }
 
   const auto style = mNote->GetWindowStyle();
-  constexpr int Closable = 0U
-    | wxAUI_NB_CLOSE_BUTTON
+  constexpr int Closable = 0U | wxAUI_NB_CLOSE_BUTTON
     | wxAUI_NB_CLOSE_ON_ACTIVE_TAB;
 
   // NOLINTBEGIN(hicpp-signed-bitwise)
-  if (selection == 0)
-  {
-    if ((style & Closable) != 0)
-    {
-      mNote->SetWindowStyle(style & ~Closable);
-    }
-  }
-  else
-  {
-    if ((style & Closable) != Closable)
-    {
+  if (selection == 0) {
+    if ((style & Closable) != 0) { mNote->SetWindowStyle(style & ~Closable); }
+  } else {
+    if ((style & Closable) != Closable) {
       mNote->SetWindowStyle(style | Closable);
     }
   }
@@ -202,65 +167,43 @@ void App::onPageSelected(wxBookCtrlEvent& event)
   event.Skip();
 }
 
-void App::onPageClosing(wxBookCtrlEvent& event)
-{
+void App::onPageClosing(wxBookCtrlEvent &event) {
   const auto selection = static_cast<size_t>(event.GetSelection());
   const auto previous = static_cast<size_t>(event.GetOldSelection());
 
   // Settings and Plus.
-  if (selection == 0 || selection == mCount - 1)
-  {
+  if (selection == 0 || selection == mCount - 1) {
     event.Veto();
     return;
   }
 
   --mCount;
 
-  if (mCount == 2)
-  {
-    createHomepageTab(mCount - 1);
-  }
+  if (mCount == 2) { createHomepageTab(mCount - 1); }
 
-  if (previous == mCount - 1)
-  {
-    mNote->ChangeSelection(mCount - 2);
-  }
+  if (previous == mCount - 1) { mNote->ChangeSelection(mCount - 2); }
 
   event.Skip();
 }
 
-void App::onKeyDownControlW()
-{
+void App::onKeyDownControlW() {
   const auto selection = static_cast<size_t>(mNote->GetSelection());
 
   // Settings and Plus.
-  if (selection == 0 || selection == mCount - 1)
-  {
-    return;
-  }
+  if (selection == 0 || selection == mCount - 1) { return; }
 
   mNote->RemovePage(selection);
 
   --mCount;
 
-  if (mCount == 2)
-  {
-    createHomepageTab(mCount - 1);
-  }
+  if (mCount == 2) { createHomepageTab(mCount - 1); }
 
-  if (selection == mCount - 1)
-  {
-    mNote->ChangeSelection(mCount - 2);
-  }
+  if (selection == mCount - 1) { mNote->ChangeSelection(mCount - 2); }
 }
 
-void App::onKeyDownControlT()
-{
-  createHomepageTab(mCount - 1);
-}
+void App::onKeyDownControlT() { createHomepageTab(mCount - 1); }
 
-void App::onRecordingSave(Events::Recording &event)
-{
+void App::onRecordingSave(Events::Recording &event) {
   const auto name = event.getName();
   const auto nameUtf8 = name.ToUTF8();
   const std::string nameStr(nameUtf8.data(), nameUtf8.length());
@@ -280,15 +223,11 @@ void App::onRecordingSave(Events::Recording &event)
     wxFD_SAVE | wxFD_OVERWRITE_PROMPT
   );
 
-  if (saveFileDialog.ShowModal() == wxID_CANCEL)
-  {
-    return;
-  }
+  if (saveFileDialog.ShowModal() == wxID_CANCEL) { return; }
 
   const auto filepath = saveFileDialog.GetPath().ToStdString();
   std::ofstream out(filepath);
-  if (!out.is_open())
-  {
+  if (!out.is_open()) {
     mLogger->error("Cannot save current contents in file '{}'.", filepath);
     return;
   }
@@ -296,21 +235,18 @@ void App::onRecordingSave(Events::Recording &event)
   out << event.getContents();
 }
 
-void App::onProfileCreate(Events::Profile &event)
-{
+void App::onProfileCreate(Events::Profile &event) {
   (void)event;
   mNote->ChangeSelection(0);
   mSettingsTab->createProfile();
 }
 
-void App::onProfileEdit(Events::Profile &event)
-{
+void App::onProfileEdit(Events::Profile &event) {
   mNote->ChangeSelection(0);
   mSettingsTab->selectProfile(event.getProfile());
 }
 
-void App::onRecordingOpen(Events::Recording &/* event */)
-{
+void App::onRecordingOpen(Events::Recording & /* event */) {
   wxFileDialog openFileDialog(
     mFrame,
     _("Open tmrc file"),
@@ -320,10 +256,7 @@ void App::onRecordingOpen(Events::Recording &/* event */)
     wxFD_OPEN | wxFD_FILE_MUST_EXIST
   );
 
-  if (openFileDialog.ShowModal() == wxID_CANCEL)
-  {
-    return;
-  }
+  if (openFileDialog.ShowModal() == wxID_CANCEL) { return; }
 
   const auto filename = openFileDialog.GetPath();
   const auto utf8 = filename.ToUTF8();
@@ -331,9 +264,7 @@ void App::onRecordingOpen(Events::Recording &/* event */)
   openRecording(encodedStr);
 }
 
-
-void App::createHomepageTab(size_t index)
-{
+void App::createHomepageTab(size_t index) {
   auto *homepage = new Tabs::Homepage(
     mNote,
     mArtProvider,
@@ -351,20 +282,21 @@ void App::createHomepageTab(size_t index)
   homepage->Bind(Events::PROFILE_CREATE, &App::onProfileCreate, this);
   homepage->Bind(Events::PROFILE_EDIT, &App::onProfileEdit, this);
 
-  homepage->Bind(Events::CONNECTION_REQUESTED, [this](Events::Connection event){
-    if (event.GetSelection() == wxNOT_FOUND)
-    {
-      event.Skip();
-      return;
-    }
+  homepage->Bind(
+    Events::CONNECTION_REQUESTED,
+    [this](Events::Connection event) {
+      if (event.GetSelection() == wxNOT_FOUND) {
+        event.Skip();
+        return;
+      }
 
-    const auto profileItem = event.getProfile();
-    openProfile(profileItem);
-  });
+      const auto profileItem = event.getProfile();
+      openProfile(profileItem);
+    }
+  );
 }
 
-void App::createSettingsTab()
-{
+void App::createSettingsTab() {
   mSettingsTab = new Tabs::Settings(
     mNote,
     mArtProvider,
@@ -373,29 +305,32 @@ void App::createSettingsTab()
     mProfilesModel,
     mLayoutsModel
   );
-  mSettingsTab->Bind(Events::CONNECTION_REQUESTED, [this](Events::Connection event){
-    if (event.GetSelection() == wxNOT_FOUND)
-    {
-      event.Skip();
-      return;
-    }
+  mSettingsTab->Bind(
+    Events::CONNECTION_REQUESTED,
+    [this](Events::Connection event) {
+      if (event.GetSelection() == wxNOT_FOUND) {
+        event.Skip();
+        return;
+      }
 
-    const auto profileItem = event.getProfile();
-    openProfile(profileItem);
-  });
+      const auto profileItem = event.getProfile();
+      openProfile(profileItem);
+    }
+  );
   mNote->AddPage(mSettingsTab, "", false, mArtProvider.bitmap(Icon::Settings));
   ++mCount;
 }
 
-Common::fs::path App::createConfigDir()
-{
+Common::fs::path App::createConfigDir() {
   const auto configHome = Common::XdgBaseDir::configHome();
-  const auto config = fmt::format("{}/{}", configHome.string(), Info::getProjectName());
+  const auto config = fmt::format(
+    "{}/{}",
+    configHome.string(),
+    Info::getProjectName()
+  );
 
-  if (!fs::is_directory(config) || !fs::exists(config))
-  {
-    if (!fs::create_directory(config))
-    {
+  if (!fs::is_directory(config) || !fs::exists(config)) {
+    if (!fs::create_directory(config)) {
       mLogger->warn("Could not create directory '%s'", config);
       return {};
     }
@@ -406,15 +341,16 @@ Common::fs::path App::createConfigDir()
   return config;
 }
 
-Common::fs::path App::createCacheDir()
-{
+Common::fs::path App::createCacheDir() {
   const auto configHome = Common::XdgBaseDir::cacheHome();
-  const auto config = fmt::format("{}/{}", configHome.string(), Info::getProjectName());
+  const auto config = fmt::format(
+    "{}/{}",
+    configHome.string(),
+    Info::getProjectName()
+  );
 
-  if (!fs::is_directory(config) || !fs::exists(config))
-  {
-    if (!fs::create_directory(config))
-    {
+  if (!fs::is_directory(config) || !fs::exists(config)) {
+    if (!fs::create_directory(config)) {
       mLogger->warn("Could not create directory '%s'", config);
       return {};
     }
@@ -425,8 +361,7 @@ Common::fs::path App::createCacheDir()
   return config;
 }
 
-void App::setupIcon()
-{
+void App::setupIcon() {
   Common::fs::path path = fmt::format(
     "{}/share/transmitron/transmitron.ico",
     getInstallPrefix().string()
@@ -434,23 +369,19 @@ void App::setupIcon()
   path.make_preferred();
 
   const auto bundle = wxIconBundle(path.string());
-  if (!bundle.IsOk())
-  {
+  if (!bundle.IsOk()) {
     mLogger->debug("Could not load icon: {}", path.string());
     return;
   }
   mFrame->SetIcons(bundle);
 }
 
-Common::fs::path App::getExecutablePath()
-{
-  const auto pathfinder = []()
-  {
+Common::fs::path App::getExecutablePath() {
+  const auto pathfinder = []() {
 #if defined WIN32
-    std::array<wchar_t, MAX_PATH> moduleFileName {};
+    std::array<wchar_t, MAX_PATH> moduleFileName{};
     const auto r = GetModuleFileNameW(nullptr, moduleFileName.data(), MAX_PATH);
-    if (r == 0)
-    {
+    if (r == 0) {
       throw std::runtime_error("Could not determine installation prefix");
     }
 
@@ -465,16 +396,14 @@ Common::fs::path App::getExecutablePath()
   return path;
 }
 
-Common::fs::path App::getInstallPrefix()
-{
+Common::fs::path App::getInstallPrefix() {
   const Common::fs::path executable = getExecutablePath();
   const auto executableDir = executable.parent_path();
   auto prefix = executableDir.parent_path();
   return prefix;
 }
 
-void App::openProfile(wxDataViewItem item)
-{
+void App::openProfile(wxDataViewItem item) {
   const auto options = mProfilesModel->getBrokerOptions(item);
 
   auto *client = new Tabs::Client(
@@ -494,19 +423,14 @@ void App::openProfile(wxDataViewItem item)
   client->Bind(Events::RECORDING_SAVE, &App::onRecordingSave, this);
 
   const auto selection = static_cast<size_t>(mNote->GetSelection());
-  const auto target = selection == 0
-    ? mCount - 1
-    : selection;
+  const auto target = selection == 0 ? mCount - 1 : selection;
 
   mLogger->info("Target: {}", target);
 
-  if (selection != 0)
-  {
+  if (selection != 0) {
     // Remove homepage.
     mNote->RemovePage(selection);
-  }
-  else
-  {
+  } else {
     ++mCount;
   }
 
@@ -517,8 +441,7 @@ void App::openProfile(wxDataViewItem item)
   client->focus();
 }
 
-void App::openRecording(const std::string &filename)
-{
+void App::openRecording(const std::string &filename) {
   const Common::fs::path path(filename);
   const auto filenameStr = path.stem().string();
   const std::string decodedStr = Url::decode(filenameStr);
@@ -531,8 +454,7 @@ void App::openRecording(const std::string &filename)
   history = new Models::History(subscriptions);
   const auto historyLoaded = history->load(filename);
 
-  if (!subscriptionsLoaded || !historyLoaded)
-  {
+  if (!subscriptionsLoaded || !historyLoaded) {
     mLogger->warn("Could not load recording: '{}'", filename);
     return;
   }
@@ -557,8 +479,7 @@ void App::openRecording(const std::string &filename)
   client->focus();
 }
 
-void App::calculateOptions()
-{
+void App::calculateOptions() {
   auto *button = new wxButton(mFrame, wxID_ANY, "Hello");
 
   mOptionsHeight = button->GetBestSize().y;
@@ -579,5 +500,4 @@ void App::calculateOptions()
 
   const auto appearance = wxSystemSettings::GetAppearance();
   mDarkMode = appearance.IsDark() || appearance.IsUsingDarkBackground();
-
 }

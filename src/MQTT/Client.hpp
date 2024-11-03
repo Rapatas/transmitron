@@ -1,6 +1,5 @@
 #pragma once
 
-#include <list>
 #include <map>
 #include <memory>
 
@@ -8,12 +7,10 @@
 #include <mqtt/disconnect_options.h>
 #include <spdlog/spdlog.h>
 
-#include "QualityOfService.hpp"
 #include "BrokerOptions.hpp"
 #include "Message.hpp"
 
-namespace Rapatas::Transmitron::MQTT
-{
+namespace Rapatas::Transmitron::MQTT {
 
 class Subscription;
 
@@ -26,8 +23,7 @@ public:
 
   using SubscriptionId = size_t;
 
-  struct Observer
-  {
+  struct Observer {
     Observer() = default;
     Observer(const Observer &other) = default;
     Observer(Observer &&other) = default;
@@ -70,29 +66,29 @@ private:
   mqtt::connect_options mConnectOptions;
   size_t mRetries = 0;
   std::map<SubscriptionId, std::shared_ptr<Subscription>> mSubscriptions;
-  std::map<size_t, MQTT::Client::Observer*> mObservers;
+  std::map<size_t, MQTT::Client::Observer *> mObservers;
   std::shared_ptr<mqtt::async_client> mClient;
 
   // mqtt::iaction_listener interface.
-  void on_success(const mqtt::token& tok) override;
-  void on_failure(const mqtt::token& tok) override;
+  void on_success(const mqtt::token &tok) override;
+  void on_failure(const mqtt::token &tok) override;
 
   // mqtt::callback interface.
-  void connected(const std::string& cause) override;
-  void connection_lost(const std::string& cause) override;
+  void connected(const std::string &cause) override;
+  void connection_lost(const std::string &cause) override;
   void message_arrived(mqtt::const_message_ptr msg) override;
-  void delivery_complete(mqtt::delivery_token_ptr token) override ;
+  void delivery_complete(mqtt::delivery_token_ptr token) override;
 
-  void onSuccessConnect(const mqtt::token& tok);
-  void onSuccessDisconnect(const mqtt::token& tok);
-  void onSuccessPublish(const mqtt::token& tok);
-  void onSuccessSubscribe(const mqtt::token& tok);
-  void onSuccessUnsubscribe(const mqtt::token& tok);
-  void onFailureConnect(const mqtt::token& tok);
-  void onFailureDisconnect(const mqtt::token& tok);
-  void onFailurePublish(const mqtt::token& tok);
-  void onFailureSubscribe(const mqtt::token& tok);
-  void onFailureUnsubscribe(const mqtt::token& tok);
+  void onSuccessConnect(const mqtt::token &tok);
+  void onSuccessDisconnect(const mqtt::token &tok);
+  void onSuccessPublish(const mqtt::token &tok);
+  void onSuccessSubscribe(const mqtt::token &tok);
+  void onSuccessUnsubscribe(const mqtt::token &tok);
+  void onFailureConnect(const mqtt::token &tok);
+  void onFailureDisconnect(const mqtt::token &tok);
+  void onFailurePublish(const mqtt::token &tok);
+  void onFailureSubscribe(const mqtt::token &tok);
+  void onFailureUnsubscribe(const mqtt::token &tok);
 
   void reconnect();
   void doSubscribe(size_t id);

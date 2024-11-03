@@ -7,8 +7,7 @@
 
 using namespace Rapatas::Transmitron::Common;
 
-std::string Env::get(const std::string &name)
-{
+std::string Env::get(const std::string &name) {
   LPCSTR lpName = name.c_str();
   const DWORD nSize = 4096;
 
@@ -16,13 +15,9 @@ std::string Env::get(const std::string &name)
   buffer.resize(nSize);
 
   const auto size = GetEnvironmentVariableA(lpName, buffer.data(), nSize);
-  if (size == 0)
-  {
-    return {};
-  }
+  if (size == 0) { return {}; }
 
   return {buffer.begin(), buffer.begin() + size};
 }
-
 
 #endif // _WIN32

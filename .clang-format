@@ -1,0 +1,85 @@
+---
+UseTab: Never
+IndentWidth: 2
+ContinuationIndentWidth: 2
+ConstructorInitializerIndentWidth: 2
+ColumnLimit: 80
+BreakBeforeBraces: Custom
+PackConstructorInitializers: Never
+IndentCaseLabels: true
+CompactNamespaces: false
+BreakConstructorInitializers: AfterColon
+BreakInheritanceList: AfterColon
+AllowAllParametersOfDeclarationOnNextLine: false
+BinPackParameters: false
+BinPackArguments: false
+AllowAllArgumentsOnNextLine: false
+AlignAfterOpenBracket: BlockIndent
+LambdaBodyIndentation: Signature
+AllowShortBlocksOnASingleLine: Always
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: true
+AllowShortEnumsOnASingleLine: false
+AlignConsecutiveAssignments:
+  Enabled: false
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignCompound: false
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+AlignOperands: DontAlign
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+SpaceBeforeCpp11BracedList: false
+MaxEmptyLinesToKeep: 1
+KeepEmptyLines:
+  AtEndOfFile: false
+  AtStartOfBlock: false
+  AtStartOfFile: false
+SeparateDefinitionBlocks: Always
+AlwaysBreakTemplateDeclarations: Yes
+BreakTemplateDeclarations: Yes
+EmptyLineAfterAccessModifier: Always
+RequiresClausePosition: OwnLine
+SortUsingDeclarations: Lexicographic
+EmptyLineBeforeAccessModifier: LogicalBlock
+BreakBeforeTernaryOperators: true
+BreakBeforeBinaryOperators: NonAssignment
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: ^<[[:alnum:].]+>
+    Priority: 1
+  - Regex: ^<.*>
+    Priority: 2
+  - Regex: ^".*"
+    Priority: 3
+QualifierAlignment: Left
+PointerAlignment: Right
+ReferenceAlignment: Right
+AlignConsecutiveBitFields: false
+PenaltyBreakAssignment: 500
+PenaltyReturnTypeOnItsOwnLine: 300
+ObjCBreakBeforeNestedBlockParam: true
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: false
+  AfterEnum: false
+  AfterExternBlock: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterObjCDeclaration: false
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyNamespace: false
+  SplitEmptyRecord: false

@@ -2,20 +2,19 @@
 
 #include <set>
 #include <vector>
-#include <wx/dataview.h>
+
 #include <spdlog/logger.h>
+#include <wx/dataview.h>
+
 #include "Common/Filesystem.hpp"
 
-namespace Rapatas::Transmitron::GUI::Models
-{
+namespace Rapatas::Transmitron::GUI::Models {
 
-class KnownTopics :
-  public wxDataViewVirtualListModel
+class KnownTopics : public wxDataViewVirtualListModel
 {
 public:
 
-  enum class Column : uint8_t
-  {
+  enum class Column : uint8_t {
     Topic,
     Max
   };
@@ -46,7 +45,7 @@ public:
   void GetValueByRow(
     wxVariant &variant,
     unsigned int row,
-    unsigned int col
+    unsigned int col //
   ) const override;
   bool GetAttrByRow(
     unsigned int row,
@@ -71,8 +70,6 @@ private:
 
   void remap();
   void save();
-
 };
 
 } // namespace Rapatas::Transmitron::GUI::Models
-

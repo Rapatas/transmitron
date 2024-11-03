@@ -1,10 +1,10 @@
 #pragma once
 
 #include <vector>
+
 #include "Common/Filesystem.hpp"
 
-namespace Rapatas::Transmitron::Common
-{
+namespace Rapatas::Transmitron::Common {
 
 class XdgBaseDir
 {

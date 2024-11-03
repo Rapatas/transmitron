@@ -1,15 +1,16 @@
-#include <wx/colour.h>
+#include "Settings.hpp"
+
 #include <wx/button.h>
+#include <wx/colour.h>
 #include <wx/listctrl.h>
-#include <wx/wx.h>
 #include <wx/propgrid/propgrid.h>
+#include <wx/wx.h>
 
 #include "Common/Log.hpp"
-#include "Settings.hpp"
+#include "GUI/Events/Connection.hpp"
 #include "GUI/Models/Layouts.hpp"
 #include "GUI/Models/Profiles.hpp"
 #include "GUI/Notifiers/Layouts.hpp"
-#include "GUI/Events/Connection.hpp"
 
 using namespace Rapatas::Transmitron;
 using namespace GUI::Tabs;
@@ -41,14 +42,14 @@ Settings::Settings(
   mOptionsHeight(optionsHeight),
   mArtProvider(artProvider),
   mProfilesModel(profilesModel),
-  mLayoutsModel(layoutsModel)
+  mLayoutsModel(layoutsModel) //
 {
   mLogger = Common::Log::create("GUI::Settings");
 
   auto *notifier = new Notifiers::Layouts;
   mLayoutsModel->AddNotifier(notifier);
 
-  notifier->Bind(Events::LAYOUT_ADDED,   &Settings::onLayoutAdded,   this);
+  notifier->Bind(Events::LAYOUT_ADDED, &Settings::onLayoutAdded, this);
   notifier->Bind(Events::LAYOUT_REMOVED, &Settings::onLayoutRemoved, this);
   notifier->Bind(Events::LAYOUT_CHANGED, &Settings::onLayoutChanged, this);
 
@@ -101,15 +102,13 @@ Settings::Settings(
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Settings::onContextSelected, this);
 }
 
-void Settings::createProfile()
-{
+void Settings::createProfile() {
   const auto parent = wxDataViewItem(nullptr);
   const auto item = mProfilesModel->createProfile(parent);
   selectProfile(item);
 }
 
-void Settings::selectProfile(wxDataViewItem profile)
-{
+void Settings::selectProfile(wxDataViewItem profile) {
   mSections->SetItemState(1, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
   mProfileDelete->Enable();
   mProfilesCtrl->Select(profile);
@@ -124,8 +123,7 @@ void Settings::selectProfile(wxDataViewItem profile)
   allowSaveProfile();
 }
 
-void Settings::setupLayouts(wxPanel *parent)
-{
+void Settings::setupLayouts(wxPanel *parent) {
   auto *renderer = new wxDataViewTextRenderer(
     wxDataViewTextRenderer::GetDefaultType(),
     wxDATAVIEW_CELL_EDITABLE
@@ -153,16 +151,12 @@ void Settings::setupLayouts(wxPanel *parent)
   );
   mLayoutsCtrl->AppendColumn(mLayoutColumnName);
   mLayoutsCtrl->AssociateModel(mLayoutsModel.get());
-  mLayoutsCtrl->Bind(
-    wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
-    &Settings::onLayoutsContext,
-    this
-  );
-  mLayoutsCtrl->Bind(
-    wxEVT_DATAVIEW_SELECTION_CHANGED,
-    &Settings::onLayoutSelected,
-    this
-  );
+  mLayoutsCtrl
+    ->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &Settings::onLayoutsContext, this);
+  mLayoutsCtrl
+    ->Bind(wxEVT_DATAVIEW_SELECTION_CHANGED, &Settings::onLayoutSelected, this);
+  mLayoutsCtrl
+    ->Bind(wxEVT_DATAVIEW_ITEM_START_EDITING, &Settings::onLayoutsEdit, this);
 
   mLayoutDelete = new wxButton(
     mLayouts,
@@ -190,15 +184,9 @@ void Settings::setupLayouts(wxPanel *parent)
   sizer->Add(vsizer, 0, wxEXPAND);
   mLayouts->SetSizer(sizer);
 
-  mLayoutsCtrl->Bind(
-    wxEVT_DATAVIEW_ITEM_START_EDITING,
-    &Settings::onLayoutsEdit,
-    this
-  );
 }
 
-void Settings::setupProfiles(wxPanel *parent)
-{
+void Settings::setupProfiles(wxPanel *parent) {
   mProfiles = new wxPanel(parent);
 
   auto *renderer = new wxDataViewIconTextRenderer(
@@ -228,21 +216,11 @@ void Settings::setupProfiles(wxPanel *parent)
     &Settings::onProfileSelected,
     this
   );
-  mProfilesCtrl->Bind(
-    wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
-    &Settings::onProfileContext,
-    this
-  );
-  mProfilesCtrl->Bind(
-    wxEVT_DATAVIEW_ITEM_BEGIN_DRAG,
-    &Settings::onProfileDrag,
-    this
-  );
-  mProfilesCtrl->Bind(
-    wxEVT_DATAVIEW_ITEM_DROP,
-    &Settings::onProfileDrop,
-    this
-  );
+  mProfilesCtrl
+    ->Bind(wxEVT_DATAVIEW_ITEM_CONTEXT_MENU, &Settings::onProfileContext, this);
+  mProfilesCtrl
+    ->Bind(wxEVT_DATAVIEW_ITEM_BEGIN_DRAG, &Settings::onProfileDrag, this);
+  mProfilesCtrl->Bind(wxEVT_DATAVIEW_ITEM_DROP, &Settings::onProfileDrop, this);
   mProfilesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE,
     &Settings::onProfileDropPossible,
@@ -300,8 +278,7 @@ void Settings::setupProfiles(wxPanel *parent)
   mProfiles->SetSizer(hsizer);
 }
 
-void Settings::setupProfileOptions(wxPanel *parent)
-{
+void Settings::setupProfileOptions(wxPanel *parent) {
   mProfileOptions = new wxPanel(parent);
 
   mProfileGrid = new wxPropertyGrid(
@@ -325,28 +302,48 @@ void Settings::setupProfileOptions(wxPanel *parent)
   mGridCategoryBroker = new wxPropertyCategory("Broker");
   mProfileGrid->Append(mGridCategoryBroker);
 
-  pfp.at(Properties::Hostname) =
-    pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Hostname", "", {}));
-  pfp.at(Properties::Port) =
-    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Port", "", {}));
-  pfp.at(Properties::Username) =
-    pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Username", "", {}));
-  pfp.at(Properties::Password) =
-    pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Password", "", {}));
-  pfp.at(Properties::ConnectTimeout) =
-    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Connect Timeout (s)", "", {}));
-  pfp.at(Properties::DisconnectTimeout) =
-    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Disconnect Timeout (s)", "", {}));
-  pfp.at(Properties::MaxInFlight) =
-    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Max in flight", "", {}));
-  pfp.at(Properties::KeepAlive) =
-    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Keep alive interval", "", {}));
-  pfp.at(Properties::ClientId) =
-    pfg->AppendIn(mGridCategoryBroker, new wxStringProperty("Client ID", "", {}));
-  pfp.at(Properties::AutoReconnect) =
-    pfg->AppendIn(mGridCategoryBroker, new wxBoolProperty("Auto Reconnect", "", {}));
-  pfp.at(Properties::MaxReconnectRetries) =
-    pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Max Reconnect Retries", "", {}));
+  pfp.at(Properties::Hostname) = pfg->AppendIn(
+    mGridCategoryBroker,
+    new wxStringProperty("Hostname", "", {})
+  );
+  pfp.at(Properties::Port
+  ) = pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Port", "", {}));
+  pfp.at(Properties::Username) = pfg->AppendIn(
+    mGridCategoryBroker,
+    new wxStringProperty("Username", "", {})
+  );
+  pfp.at(Properties::Password) = pfg->AppendIn(
+    mGridCategoryBroker,
+    new wxStringProperty("Password", "", {})
+  );
+  pfp.at(Properties::ConnectTimeout) = pfg->AppendIn(
+    mGridCategoryBroker,
+    new wxUIntProperty("Connect Timeout (s)", "", {})
+  );
+  pfp.at(Properties::DisconnectTimeout) = pfg->AppendIn(
+    mGridCategoryBroker,
+    new wxUIntProperty("Disconnect Timeout (s)", "", {})
+  );
+  pfp.at(Properties::MaxInFlight) = pfg->AppendIn(
+    mGridCategoryBroker,
+    new wxUIntProperty("Max in flight", "", {})
+  );
+  pfp.at(Properties::KeepAlive) = pfg->AppendIn(
+    mGridCategoryBroker,
+    new wxUIntProperty("Keep alive interval", "", {})
+  );
+  pfp.at(Properties::ClientId) = pfg->AppendIn(
+    mGridCategoryBroker,
+    new wxStringProperty("Client ID", "", {})
+  );
+  pfp.at(Properties::AutoReconnect) = pfg->AppendIn(
+    mGridCategoryBroker,
+    new wxBoolProperty("Auto Reconnect", "", {})
+  );
+  pfp.at(Properties::MaxReconnectRetries) = pfg->AppendIn(
+    mGridCategoryBroker,
+    new wxUIntProperty("Max Reconnect Retries", "", {})
+  );
 
   mGridCategoryClient = new wxPropertyCategory("Client");
   mProfileGrid->Append(mGridCategoryClient);
@@ -357,7 +354,8 @@ void Settings::setupProfileOptions(wxPanel *parent)
 
   mProfileGrid->Bind(wxEVT_PG_CHANGED, &Settings::onProfileGridChanged, this);
   mProfileGrid->Bind(wxEVT_PG_CHANGING, &Settings::onProfileGridChanged, this);
-  mProfileGrid->Bind(wxEVT_PG_LABEL_EDIT_BEGIN, &Settings::onProfileGridChanged, this);
+  mProfileGrid
+    ->Bind(wxEVT_PG_LABEL_EDIT_BEGIN, &Settings::onProfileGridChanged, this);
   mProfileGrid->Bind(wxEVT_PG_SELECTED, &Settings::onProfileGridChanged, this);
 
   mSave = new wxButton(
@@ -413,17 +411,14 @@ void Settings::setupProfileOptions(wxPanel *parent)
   propertyGridClear();
 }
 
-void Settings::onLayoutsContext(wxDataViewEvent &event)
-{
+void Settings::onLayoutsContext(wxDataViewEvent &event) {
   const auto item = event.GetItem();
-  if (!item.IsOk())
-  {
+  if (!item.IsOk()) {
     event.Skip();
     return;
   }
 
-  if (mLayoutsModel->getDefault() == item)
-  {
+  if (Models::Layouts::getDefault() == item) {
     event.Skip();
     return;
   }
@@ -449,10 +444,8 @@ void Settings::onLayoutsContext(wxDataViewEvent &event)
   PopupMenu(&menu);
 }
 
-void Settings::onContextSelected(wxCommandEvent &event)
-{
-  switch (static_cast<ContextIDs>(event.GetId()))
-  {
+void Settings::onContextSelected(wxCommandEvent &event) {
+  switch (static_cast<ContextIDs>(event.GetId())) {
     case ContextIDs::LayoutsDelete: onLayoutsDelete(event); break;
     case ContextIDs::LayoutsRename: onLayoutsRename(event); break;
     case ContextIDs::ProfilesDelete: onProfileDelete(event); break;
@@ -463,17 +456,15 @@ void Settings::onContextSelected(wxCommandEvent &event)
   event.Skip();
 }
 
-void Settings::onLayoutsDelete(wxCommandEvent &/* event */)
-{
+void Settings::onLayoutsDelete(wxCommandEvent & /* event */) {
   mLogger->info("Requesting delete");
   const auto item = mLayoutsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
-  if (mLayoutsModel->getDefault() == item) { return; }
+  if (Models::Layouts::getDefault() == item) { return; }
   mLayoutsModel->remove(item);
 }
 
-void Settings::onLayoutsRename(wxCommandEvent &/* event */)
-{
+void Settings::onLayoutsRename(wxCommandEvent & /* event */) {
   mLogger->info("Requesting rename");
   const auto item = mLayoutsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
@@ -481,26 +472,20 @@ void Settings::onLayoutsRename(wxCommandEvent &/* event */)
   mLayoutsCtrl->EditItem(item, mLayoutColumnName);
 }
 
-void Settings::onLayoutsEdit(wxDataViewEvent &event)
-{
+void Settings::onLayoutsEdit(wxDataViewEvent &event) {
   mLogger->info("Requesting edit");
   const auto item = event.GetItem();
-  if (mLayoutsModel->getDefault() == item)
-  {
+  if (Models::Layouts::getDefault() == item) {
     event.Veto();
-  }
-  else
-  {
+  } else {
     event.Skip();
   }
 }
 
-void Settings::onProfileContext(wxDataViewEvent &event)
-{
+void Settings::onProfileContext(wxDataViewEvent &event) {
   wxMenu menu;
 
-  if (event.GetItem().IsOk())
-  {
+  if (event.GetItem().IsOk()) {
     auto *del = new wxMenuItem(
       nullptr,
       static_cast<unsigned>(ContextIDs::ProfilesDelete),
@@ -518,10 +503,7 @@ void Settings::onProfileContext(wxDataViewEvent &event)
     menu.Append(rename);
   }
 
-  if (
-    !event.GetItem().IsOk()
-    || mProfilesModel->IsContainer(event.GetItem())
-  ) {
+  if (!event.GetItem().IsOk() || mProfilesModel->IsContainer(event.GetItem())) {
     auto *newProfile = new wxMenuItem(
       nullptr,
       static_cast<unsigned>(ContextIDs::ProfilesNewProfile),
@@ -542,18 +524,15 @@ void Settings::onProfileContext(wxDataViewEvent &event)
   PopupMenu(&menu);
 }
 
-void Settings::onProfileDelete(wxCommandEvent & /* event */)
-{
+void Settings::onProfileDelete(wxCommandEvent & /* event */) {
   const auto item = mProfilesCtrl->GetSelection();
   mProfilesModel->remove(item);
   propertyGridClear();
 }
 
-void Settings::onProfileNewFolder(wxCommandEvent &/* event */)
-{
+void Settings::onProfileNewFolder(wxCommandEvent & /* event */) {
   auto parent = mProfilesCtrl->GetSelection();
-  if (!mProfilesModel->IsContainer(parent))
-  {
+  if (!mProfilesModel->IsContainer(parent)) {
     parent = mProfilesModel->GetParent(parent);
   }
 
@@ -565,11 +544,9 @@ void Settings::onProfileNewFolder(wxCommandEvent &/* event */)
   mProfilesCtrl->EditItem(item, mProfileColumnName);
 }
 
-void Settings::onProfileNewProfile(wxCommandEvent &/* event */)
-{
+void Settings::onProfileNewProfile(wxCommandEvent & /* event */) {
   auto parent = mProfilesCtrl->GetSelection();
-  if (!mProfilesModel->IsContainer(parent))
-  {
+  if (!mProfilesModel->IsContainer(parent)) {
     parent = mProfilesModel->GetParent(parent);
   }
 
@@ -581,8 +558,7 @@ void Settings::onProfileNewProfile(wxCommandEvent &/* event */)
   mProfilesCtrl->EditItem(item, mProfileColumnName);
 }
 
-void Settings::onProfileRename(wxCommandEvent &/* event */)
-{
+void Settings::onProfileRename(wxCommandEvent & /* event */) {
   mLogger->info("Requesting rename");
   const auto item = mProfilesCtrl->GetSelection();
   if (!item.IsOk()) { return; }
@@ -590,11 +566,9 @@ void Settings::onProfileRename(wxCommandEvent &/* event */)
   mProfilesCtrl->EditItem(item, mProfileColumnName);
 }
 
-void Settings::onProfileSelected(wxDataViewEvent &event)
-{
+void Settings::onProfileSelected(wxDataViewEvent &event) {
   const auto item = event.GetItem();
-  if (!item.IsOk())
-  {
+  if (!item.IsOk()) {
     mProfileDelete->Disable();
     mProfileOptionsSizer->Hide(mProfileOptions);
     mProfileOptionsSizer->Layout();
@@ -602,8 +576,7 @@ void Settings::onProfileSelected(wxDataViewEvent &event)
     return;
   }
 
-  if (mProfilesModel->IsContainer(item))
-  {
+  if (mProfilesModel->IsContainer(item)) {
     mProfileDelete->Enable();
     mProfileOptionsSizer->Hide(mProfileOptions);
     mProfileOptionsSizer->Layout();
@@ -622,8 +595,7 @@ void Settings::onProfileSelected(wxDataViewEvent &event)
   event.Skip();
 }
 
-void Settings::onProfileDrag(wxDataViewEvent &event)
-{
+void Settings::onProfileDrag(wxDataViewEvent &event) {
   auto item = event.GetItem();
   mProfilesWasExpanded = mProfilesCtrl->IsExpanded(item);
 
@@ -642,12 +614,12 @@ void Settings::onProfileDrag(wxDataViewEvent &event)
   event.Skip(false);
 }
 
-void Settings::onProfileDrop(wxDataViewEvent &event)
-{
+void Settings::onProfileDrop(wxDataViewEvent &event) {
   const auto target = event.GetItem();
 
   wxTextDataObject object;
-  object.SetData(event.GetDataFormat(), event.GetDataSize(), event.GetDataBuffer());
+  object
+    .SetData(event.GetDataFormat(), event.GetDataSize(), event.GetDataBuffer());
   const uintptr_t message = std::stoul(object.GetText().ToStdString());
   void *id = nullptr;
   std::memcpy(&id, &message, sizeof(uintptr_t));
@@ -659,51 +631,33 @@ void Settings::onProfileDrop(wxDataViewEvent &event)
 
   const auto pIndex = event.GetProposedDropIndex();
 
-  if (pIndex == -1)
-  {
-    if (!mProfilesModel->IsContainer(target))
-    {
+  if (pIndex == -1) {
+    if (!mProfilesModel->IsContainer(target)) {
       moved = mProfilesModel->moveAfter(item, target);
-    }
-    else
-    {
-      if (target.IsOk())
-      {
+    } else {
+      if (target.IsOk()) {
         moved = mProfilesModel->moveInsideFirst(item, target);
-      }
-      else
-      {
+      } else {
         moved = mProfilesModel->moveInsideLast(item, target);
       }
     }
-  }
-  else
-  {
+  } else {
     const auto index = (size_t)pIndex;
     moved = mProfilesModel->moveInsideAtIndex(item, target, index);
   }
 
 #else
 
-  if (mProfilesPossible.first)
-  {
-    if (mProfilesModel->IsContainer(target))
-    {
+  if (mProfilesPossible.first) {
+    if (mProfilesModel->IsContainer(target)) {
       moved = mProfilesModel->moveInsideFirst(item, target);
-    }
-    else
-    {
+    } else {
       moved = mProfilesModel->moveAfter(item, target);
     }
-  }
-  else
-  {
-    if (target.IsOk())
-    {
+  } else {
+    if (target.IsOk()) {
       moved = mProfilesModel->moveBefore(item, target);
-    }
-    else
-    {
+    } else {
       moved = mProfilesModel->moveInsideLast(item, target);
     }
   }
@@ -712,23 +666,15 @@ void Settings::onProfileDrop(wxDataViewEvent &event)
 
   mProfilesPossible = {false, wxDataViewItem(nullptr)};
 
-  if (!moved.IsOk())
-  {
-    return;
-  }
+  if (!moved.IsOk()) { return; }
 
   mProfilesCtrl->Refresh();
   mProfilesCtrl->EnsureVisible(moved);
-  if (mProfilesWasExpanded)
-  {
-    mProfilesCtrl->Expand(moved);
-  }
+  if (mProfilesWasExpanded) { mProfilesCtrl->Expand(moved); }
   mProfilesCtrl->Select(moved);
-
 }
 
-void Settings::onProfileDropPossible(wxDataViewEvent &event)
-{
+void Settings::onProfileDropPossible(wxDataViewEvent &event) {
   const auto item = event.GetItem();
   mProfilesPossible = {true, item};
 
@@ -746,24 +692,19 @@ void Settings::onProfileDropPossible(wxDataViewEvent &event)
   event.Skip(true);
 
 #endif // WIN32
-
 }
 
-
-void Settings::onProfileGridChanged(wxPropertyGridEvent& event)
-{
+void Settings::onProfileGridChanged(wxPropertyGridEvent &event) {
   allowSaveProfile();
   event.Skip();
 }
 
-void Settings::onButtonClickedNewProfile(wxCommandEvent &event)
-{
+void Settings::onButtonClickedNewProfile(wxCommandEvent &event) {
   (void)event;
   createProfile();
 }
 
-void Settings::onButtonClickedCancel(wxCommandEvent &event)
-{
+void Settings::onButtonClickedCancel(wxCommandEvent &event) {
   (void)event;
 
   propertyGridClear();
@@ -779,16 +720,12 @@ void Settings::onButtonClickedCancel(wxCommandEvent &event)
   allowConnect();
 }
 
-void Settings::onButtonClickedSave(wxCommandEvent &event)
-{
+void Settings::onButtonClickedSave(wxCommandEvent &event) {
   (void)event;
 
   const auto item = mProfilesCtrl->GetSelection();
 
-  if (!item.IsOk())
-  {
-    return;
-  }
+  if (!item.IsOk()) { return; }
 
   const auto brokerOptions = brokerOptionsFromPropertyGrid();
   mProfilesModel->updateBrokerOptions(item, brokerOptions);
@@ -799,15 +736,11 @@ void Settings::onButtonClickedSave(wxCommandEvent &event)
   allowConnect();
 }
 
-void Settings::onButtonClickedConnect(wxCommandEvent &event)
-{
+void Settings::onButtonClickedConnect(wxCommandEvent &event) {
   (void)event;
 
   const auto item = mProfilesCtrl->GetSelection();
-  if (!item.IsOk())
-  {
-    return;
-  }
+  if (!item.IsOk()) { return; }
 
   const auto &brokerOptions = mProfilesModel->getBrokerOptions(item);
 
@@ -822,8 +755,7 @@ void Settings::onButtonClickedConnect(wxCommandEvent &event)
   wxQueueEvent(this, connectionEvent);
 }
 
-void Settings::allowSaveProfile()
-{
+void Settings::allowSaveProfile() {
   mSave->Enable(true);
   mCancel->Enable(true);
   mProfileButtonsSizer->Show(mSave);
@@ -835,8 +767,7 @@ void Settings::allowSaveProfile()
   mProfileButtonsSizer->Layout();
 }
 
-void Settings::allowConnect()
-{
+void Settings::allowConnect() {
   mSave->Enable(false);
   mCancel->Enable(false);
   mProfileButtonsSizer->Hide(mSave);
@@ -848,8 +779,7 @@ void Settings::allowConnect()
   mProfileButtonsSizer->Layout();
 }
 
-void Settings::propertyGridClear()
-{
+void Settings::propertyGridClear() {
   mSave->Enable(false);
   mConnect->Enable(false);
   mProfileGrid->Enable(false);
@@ -878,47 +808,64 @@ void Settings::propertyGridFill(
 
   pfp.at(Properties::AutoReconnect)->SetValue(brokerOptions.getAutoReconnect());
   pfp.at(Properties::ClientId)->SetValue(brokerOptions.getClientId());
-  pfp.at(Properties::ConnectTimeout)->SetValue(static_cast<int>(brokerOptions.getConnectTimeout().count()));
-  pfp.at(Properties::DisconnectTimeout)->SetValue(static_cast<int>(brokerOptions.getDisconnectTimeout().count()));
+  pfp.at(Properties::ConnectTimeout)
+    ->SetValue(static_cast<int>(brokerOptions.getConnectTimeout().count()));
+  pfp.at(Properties::DisconnectTimeout)
+    ->SetValue(static_cast<int>(brokerOptions.getDisconnectTimeout().count()));
   pfp.at(Properties::Hostname)->SetValue(brokerOptions.getHostname());
-  pfp.at(Properties::KeepAlive)->SetValue(static_cast<int>(brokerOptions.getKeepAliveInterval().count()));
-  pfp.at(Properties::MaxInFlight)->SetValue(static_cast<int>(brokerOptions.getMaxInFlight()));
-  pfp.at(Properties::MaxReconnectRetries)->SetValue(static_cast<int>(brokerOptions.getMaxReconnectRetries()));
+  pfp.at(Properties::KeepAlive)
+    ->SetValue(static_cast<int>(brokerOptions.getKeepAliveInterval().count()));
+  pfp.at(Properties::MaxInFlight)
+    ->SetValue(static_cast<int>(brokerOptions.getMaxInFlight()));
+  pfp.at(Properties::MaxReconnectRetries)
+    ->SetValue(static_cast<int>(brokerOptions.getMaxReconnectRetries()));
   pfp.at(Properties::Password)->SetValue(brokerOptions.getPassword());
-  pfp.at(Properties::Port)->SetValue(static_cast<uint16_t>(brokerOptions.getPort()));
+  pfp.at(Properties::Port)
+    ->SetValue(static_cast<uint16_t>(brokerOptions.getPort()));
   pfp.at(Properties::Username)->SetValue(brokerOptions.getUsername());
 
   (void)clientOptions;
   auto &pfpLayout = pfp.at(Properties::Layout);
   wxVariant layoutValue = pfpLayout->GetValue();
-  const bool hasValue = pfpLayout->StringToValue(layoutValue, clientOptions.getLayout());
-  if (hasValue)
-  {
-    pfpLayout->SetValue(layoutValue);
-  }
+  const bool hasValue = pfpLayout->StringToValue(
+    layoutValue,
+    clientOptions.getLayout()
+  );
+  if (hasValue) { pfpLayout->SetValue(layoutValue); }
 
   mSave->Enable(true);
   mConnect->Enable(true);
   mProfileGrid->Enable(true);
 }
 
-MQTT::BrokerOptions Settings::brokerOptionsFromPropertyGrid() const
-{
+MQTT::BrokerOptions Settings::brokerOptionsFromPropertyGrid() const {
   const auto &pfp = mProfileProperties;
 
-  const bool autoReconnect       = pfp.at(Properties::AutoReconnect)->GetValue();
-  const auto maxInFlight         = static_cast<size_t>(pfp.at(Properties::MaxInFlight)->GetValue().GetInteger());
-  const auto maxReconnectRetries = static_cast<size_t>(pfp.at(Properties::MaxReconnectRetries)->GetValue().GetInteger());
-  const auto port                = static_cast<uint16_t>(pfp.at(Properties::Port)->GetValue().GetInteger());
-  const auto connectTimeout      = static_cast<size_t>(pfp.at(Properties::ConnectTimeout)->GetValue().GetInteger());
-  const auto disconnectTimeout   = static_cast<size_t>(pfp.at(Properties::DisconnectTimeout)->GetValue().GetInteger());
-  const auto keepAliveInterval   = static_cast<size_t>(pfp.at(Properties::KeepAlive)->GetValue().GetLong());
-  const auto clientId            = pfp.at(Properties::ClientId)->GetValue();
-  const auto hostname            = pfp.at(Properties::Hostname)->GetValue();
-  const auto password            = pfp.at(Properties::Password)->GetValue();
-  const auto username            = pfp.at(Properties::Username)->GetValue();
+  const bool autoReconnect = pfp.at(Properties::AutoReconnect)->GetValue();
+  const auto maxInFlight = static_cast<size_t>(
+    pfp.at(Properties::MaxInFlight)->GetValue().GetInteger()
+  );
+  const auto maxReconnectRetries = static_cast<size_t>(
+    pfp.at(Properties::MaxReconnectRetries)->GetValue().GetInteger()
+  );
+  const auto port = static_cast<uint16_t>(
+    pfp.at(Properties::Port)->GetValue().GetInteger()
+  );
+  const auto connectTimeout = static_cast<size_t>(
+    pfp.at(Properties::ConnectTimeout)->GetValue().GetInteger()
+  );
+  const auto disconnectTimeout = static_cast<size_t>(
+    pfp.at(Properties::DisconnectTimeout)->GetValue().GetInteger()
+  );
+  const auto keepAliveInterval = static_cast<size_t>(
+    pfp.at(Properties::KeepAlive)->GetValue().GetLong()
+  );
+  const auto clientId = pfp.at(Properties::ClientId)->GetValue();
+  const auto hostname = pfp.at(Properties::Hostname)->GetValue();
+  const auto password = pfp.at(Properties::Password)->GetValue();
+  const auto username = pfp.at(Properties::Username)->GetValue();
 
-  return MQTT::BrokerOptions {
+  return MQTT::BrokerOptions{
     autoReconnect,
     maxInFlight,
     maxReconnectRetries,
@@ -933,8 +880,7 @@ MQTT::BrokerOptions Settings::brokerOptionsFromPropertyGrid() const
   };
 }
 
-Types::ClientOptions Settings::clientOptionsFromPropertyGrid() const
-{
+Types::ClientOptions Settings::clientOptionsFromPropertyGrid() const {
   const auto &pfp = mProfileProperties;
 
   const auto &pfpLayout = pfp.at(Properties::Layout);
@@ -942,33 +888,26 @@ Types::ClientOptions Settings::clientOptionsFromPropertyGrid() const
   const auto layoutIndex = static_cast<size_t>(layoutValue.GetInteger());
   const auto layout = mLayoutsModel->getLabelArray()[layoutIndex];
 
-  return Types::ClientOptions {
+  return Types::ClientOptions{
     layout.ToStdString(),
   };
 }
 
-void Settings::onLayoutAdded(Events::Layout &/* event */)
-{
+void Settings::onLayoutAdded(Events::Layout & /* event */) { refreshLayouts(); }
+
+void Settings::onLayoutRemoved(Events::Layout & /* event */) {
   refreshLayouts();
 }
 
-void Settings::onLayoutRemoved(Events::Layout &/* event */)
-{
-  refreshLayouts();
-}
-
-void Settings::onLayoutSelected(wxDataViewEvent &event)
-{
+void Settings::onLayoutSelected(wxDataViewEvent &event) {
   const auto item = event.GetItem();
-  if (!item.IsOk())
-  {
+  if (!item.IsOk()) {
     mLayoutDelete->Disable();
     event.Skip();
     return;
   }
 
-  if (mLayoutsModel->getDefault() == item)
-  {
+  if (Models::Layouts::getDefault() == item) {
     mLayoutDelete->Disable();
     event.Skip();
     return;
@@ -978,8 +917,7 @@ void Settings::onLayoutSelected(wxDataViewEvent &event)
   event.Skip();
 }
 
-void Settings::onLayoutChanged(Events::Layout &/* event */)
-{
+void Settings::onLayoutChanged(Events::Layout & /* event */) {
   auto &pfp = mProfileProperties;
   auto &pfg = mProfileGrid;
 
@@ -995,16 +933,14 @@ void Settings::onLayoutChanged(Events::Layout &/* event */)
   pfpLayout->SetValue(layoutValue);
 }
 
-void Settings::refreshLayouts()
-{
+void Settings::refreshLayouts() {
   auto &pfp = mProfileProperties;
   auto &pfg = mProfileGrid;
 
   auto &pfpLayout = pfp.at(Properties::Layout);
   const auto layoutLabels = mLayoutsModel->getLabelArray();
 
-  const auto selectedValue = [&]() -> std::optional<wxString>
-  {
+  const auto selectedValue = [&]() -> std::optional<wxString> {
     if (!mProfileOptions->IsShown()) { return std::nullopt; }
 
     wxVariant layoutValue = pfpLayout->GetValue();
@@ -1019,28 +955,23 @@ void Settings::refreshLayouts()
   auto *layoutPtr = new wxEnumProperty("Layout", "", layoutLabels);
   pfpLayout = pfg->AppendIn(mGridCategoryClient, layoutPtr);
 
-  if (selectedValue)
-  {
+  if (selectedValue) {
     wxVariant newLayoutValue;
-    const bool containsValue = pfpLayout->StringToValue(newLayoutValue, selectedValue.value());
-    if (containsValue)
-    {
-      pfpLayout->SetValue(newLayoutValue);
-    }
+    const bool containsValue = pfpLayout->StringToValue(
+      newLayoutValue,
+      selectedValue.value()
+    );
+    if (containsValue) { pfpLayout->SetValue(newLayoutValue); }
   }
 }
 
-void Settings::onSectionSelected(wxListEvent &event)
-{
+void Settings::onSectionSelected(wxListEvent &event) {
   const auto selected = event.GetIndex();
-  if (selected == 0)
-  {
+  if (selected == 0) {
     mSectionSizer->Hide(mProfiles);
     mSectionSizer->Show(mLayouts);
     mSectionSizer->Layout();
-  }
-  else
-  {
+  } else {
     mSectionSizer->Show(mProfiles);
     mSectionSizer->Hide(mLayouts);
     mSectionSizer->Layout();

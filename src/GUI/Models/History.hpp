@@ -1,15 +1,15 @@
 #pragma once
 
+#include <mqtt/message.h>
 #include <spdlog/spdlog.h>
 #include <wx/dataview.h>
-#include <mqtt/message.h>
+
+#include "GUI/Models/Subscriptions.hpp"
 #include "MQTT/Client.hpp"
 #include "MQTT/Message.hpp"
 #include "MQTT/Subscription.hpp"
-#include "GUI/Models/Subscriptions.hpp"
 
-namespace Rapatas::Transmitron::GUI::Models
-{
+namespace Rapatas::Transmitron::GUI::Models {
 
 class History :
   public wxEvtHandler,
@@ -18,8 +18,7 @@ class History :
 {
 public:
 
-  struct Observer
-  {
+  struct Observer {
     Observer() = default;
     virtual ~Observer() = default;
     Observer(const Observer &) = default;
@@ -30,8 +29,7 @@ public:
     virtual void onMessage(wxDataViewItem item) = 0;
   };
 
-  enum class Column : unsigned
-  {
+  enum class Column : unsigned {
     Icon,
     Qos,
     Topic,
@@ -50,16 +48,17 @@ public:
   [[nodiscard]] std::string getTopic(const wxDataViewItem &item) const;
   [[nodiscard]] MQTT::QoS getQos(const wxDataViewItem &item) const;
   [[nodiscard]] bool getRetained(const wxDataViewItem &item) const;
-  [[nodiscard]] const MQTT::Message &getMessage(const wxDataViewItem &item) const;
   [[nodiscard]] std::string getFilter() const;
   [[nodiscard]] nlohmann::json toJson() const;
+  [[nodiscard]] const MQTT::Message &getMessage( //
+    const wxDataViewItem &item
+  ) const;
 
 private:
 
-  struct Node
-  {
+  struct Node {
     MQTT::Message message;
-    MQTT::Subscription::Id_t subscriptionId {};
+    MQTT::Subscription::Id_t subscriptionId{};
   };
 
   std::shared_ptr<spdlog::logger> mLogger;
@@ -79,7 +78,7 @@ private:
   void GetValueByRow(
     wxVariant &variant,
     unsigned int row,
-    unsigned int col
+    unsigned int col //
   ) const override;
   bool GetAttrByRow(
     unsigned int row,
@@ -96,9 +95,12 @@ private:
   void onMuted(MQTT::Subscription::Id_t subscriptionId) override;
   void onUnmuted(MQTT::Subscription::Id_t subscriptionId) override;
   void onSolo(MQTT::Subscription::Id_t subscriptionId) override;
-  void onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor color) override;
   void onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) override;
   void onCleared(MQTT::Subscription::Id_t subscriptionId) override;
+  void onColorSet(
+    MQTT::Subscription::Id_t subscriptionId,
+    wxColor color //
+  ) override;
   void onMessage(
     MQTT::Subscription::Id_t subscriptionId,
     const MQTT::Message &message

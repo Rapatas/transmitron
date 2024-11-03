@@ -1,15 +1,16 @@
+#include "FsTree.hpp"
+
 #include <algorithm>
 #include <fstream>
 #include <ios>
 #include <iterator>
-#include <string_view>
 
 #include <fmt/format.h>
 #include <nlohmann/json.hpp>
+#include <string_view>
 
-#include "Common/Url.hpp"
 #include "Common/Log.hpp"
-#include "FsTree.hpp"
+#include "Common/Url.hpp"
 
 using namespace Rapatas::Transmitron;
 using namespace GUI::Models;
@@ -23,33 +24,23 @@ FsTree::FsTree(
   const ArtProvider &artProvider
 ) :
   mArtProvider(artProvider),
-  mColumnCount(columnCount)
+  mColumnCount(columnCount) //
 {
   mLogger = Common::Log::create(fmt::format("Models::{}", name));
   clear();
 }
 
-void FsTree::clear()
-{
+void FsTree::clear() {
   mNodes.clear();
   mNextAvailableId = 0;
 
   const auto id = getNextId();
-  Node root {
-    0,
-    "_",
-    {},
-    Node::Type::Folder,
-    {},
-    nullptr,
-    true
-  };
+  Node root{0, "_", {}, Node::Type::Folder, {}, nullptr, true};
 
   mNodes.insert({id, std::move(root)});
 }
 
-Leaf* FsTree::getLeaf(wxDataViewItem item) const
-{
+Leaf *FsTree::getLeaf(wxDataViewItem item) const {
   if (!item.IsOk()) { return nullptr; }
 
   const auto id = toId(item);
@@ -58,60 +49,45 @@ Leaf* FsTree::getLeaf(wxDataViewItem item) const
   return nodeIt->second.payload.get();
 }
 
-wxDataViewItem FsTree::getItemFromName(const std::string &name) const
-{
+wxDataViewItem FsTree::getItemFromName(const std::string &name) const {
   const auto it = std::find_if(
     std::begin(mNodes),
     std::end(mNodes),
-    [&](const auto &element)
-    {
+    [&](const auto &element) {
       const auto &node = element.second;
       return node.name == name;
     }
   );
 
-  if (it == std::end(mNodes))
-  {
-    return wxDataViewItem(nullptr);
-  }
+  if (it == std::end(mNodes)) { return wxDataViewItem(nullptr); }
 
   return toItem(it->first);
 }
 
-std::string FsTree::getName(wxDataViewItem item) const
-{
-  if (!item.IsOk())
-  {
-    return {};
-  }
+std::string FsTree::getName(wxDataViewItem item) const {
+  if (!item.IsOk()) { return {}; }
 
   const auto id = toId(item);
   const auto &node = mNodes.at(id);
   return node.name;
 }
 
-std::map<FsTree::Id, Leaf*> FsTree::getLeafs() const
-{
-  std::map<Id, Leaf*> result;
-  for (const auto &[nodeId, node]: mNodes) {
+std::map<FsTree::Id, Leaf *> FsTree::getLeafs() const {
+  std::map<Id, Leaf *> result;
+  for (const auto &[nodeId, node] : mNodes) {
     if (node.type != Node::Type::Payload) { continue; }
     result[nodeId] = node.payload.get();
   }
   return result;
 }
 
-wxDataViewItem FsTree::getRootItem()
-{
-  return toItem(0);
-}
+wxDataViewItem FsTree::getRootItem() { return toItem(0); }
 
-bool FsTree::load(const std::string &baseDir)
-{
+bool FsTree::load(const std::string &baseDir) {
   clear();
 
   mLogger->debug("load(): base: {}", baseDir);
-  if (baseDir.empty())
-  {
+  if (baseDir.empty()) {
     mLogger->warn("No directory provided");
     return false;
   }
@@ -121,18 +97,13 @@ bool FsTree::load(const std::string &baseDir)
   const bool exists = fs::exists(mBaseDir);
   const bool isDir = fs::is_directory(mBaseDir);
 
-  if (exists && !isDir && !fs::remove(mBaseDir))
-  {
+  if (exists && !isDir && !fs::remove(mBaseDir)) {
     mLogger->warn("Could not remove file {}", mBaseDir);
     return false;
   }
 
-  if (!exists && !fs::create_directory(mBaseDir))
-  {
-    mLogger->warn(
-      "Could not create messages directory: {}",
-      mBaseDir
-    );
+  if (!exists && !fs::create_directory(mBaseDir)) {
+    mLogger->warn("Could not create messages directory: {}", mBaseDir);
     return false;
   }
 
@@ -143,17 +114,12 @@ bool FsTree::load(const std::string &baseDir)
   return true;
 }
 
-wxDataViewItem FsTree::createFolder(
-  wxDataViewItem parentItem
-) {
+wxDataViewItem FsTree::createFolder(wxDataViewItem parentItem) {
   const constexpr std::string_view NewName{"New Folder"};
 
   auto parentId = toId(parentItem);
   const auto &parentNode = mNodes.at(parentId);
-  if (parentNode.type != Node::Type::Folder)
-  {
-    return wxDataViewItem(nullptr);
-  }
+  if (parentNode.type != Node::Type::Folder) { return wxDataViewItem(nullptr); }
 
   // Find a unique name.
   std::string uniqueName{NewName};
@@ -172,7 +138,7 @@ wxDataViewItem FsTree::createFolder(
 
   const std::string encoded = Url::encode(uniqueName);
 
-  Node newNode {
+  Node newNode{
     parentId,
     uniqueName,
     encoded,
@@ -194,8 +160,10 @@ wxDataViewItem FsTree::createFolder(
   return item;
 }
 
-std::string FsTree::createUniqueName(wxDataViewItem parent, std::string_view name) const
-{
+std::string FsTree::createUniqueName(
+  wxDataViewItem parent,
+  std::string_view name
+) const {
   // Find a unique name.
   std::string uniqueName{name};
   size_t postfix = 0;
@@ -213,10 +181,7 @@ wxDataViewItem FsTree::leafCreate(
 ) {
   auto parentId = toId(parentItem);
   const auto &parentNode = mNodes.at(parentId);
-  if (parentNode.type != Node::Type::Folder)
-  {
-    return wxDataViewItem(nullptr);
-  }
+  if (parentNode.type != Node::Type::Folder) { return wxDataViewItem(nullptr); }
 
   mLogger->info(
     "Creating leaf '{}' under [{}]'{}'",
@@ -227,7 +192,7 @@ wxDataViewItem FsTree::leafCreate(
 
   const std::string encoded = Url::encode(name);
 
-  Node newNode {
+  Node newNode{
     parentId,
     name,
     encoded,
@@ -257,15 +222,8 @@ wxDataViewItem FsTree::leafInsert(
   const auto parentId = toId(parentItem);
   const auto &parentNode = mNodes.at(parentId);
 
-  if (parentNode.type != Node::Type::Folder)
-  {
-    return wxDataViewItem(nullptr);
-  }
-
-  if (hasChildNamed(parentItem, name))
-  {
-    return wxDataViewItem(nullptr);
-  }
+  if (parentNode.type != Node::Type::Folder) { return wxDataViewItem(nullptr); }
+  if (hasChildNamed(parentItem, name)) { return wxDataViewItem(nullptr); }
 
   mLogger->info(
     "Creating message '{}' under [{}]'{}'",
@@ -276,7 +234,7 @@ wxDataViewItem FsTree::leafInsert(
 
   const std::string encoded = Url::encode(name);
 
-  Node newNode {
+  Node newNode{
     parentId,
     name,
     encoded,
@@ -303,8 +261,7 @@ wxDataViewItem FsTree::leafReplace(
 ) {
   const auto id = toId(item);
   auto &node = mNodes.at(id);
-  if (node.type != Node::Type::Payload)
-  {
+  if (node.type != Node::Type::Payload) {
     mLogger->warn("Can only replace messages");
     return wxDataViewItem(nullptr);
   }
@@ -316,10 +273,7 @@ wxDataViewItem FsTree::leafReplace(
   return item;
 }
 
-bool FsTree::rename(
-  wxDataViewItem item,
-  const std::string &name
-) {
+bool FsTree::rename(wxDataViewItem item, const std::string &name) {
   auto id = toId(item);
   auto &node = mNodes.at(id);
 
@@ -331,8 +285,7 @@ bool FsTree::rename(
 
   std::error_code ec;
   fs::rename(pathOld, pathNew, ec);
-  if (ec)
-  {
+  if (ec) {
     mLogger->error(
       "Could not rename '{}' to '{}': {}",
       pathOld,
@@ -353,8 +306,7 @@ bool FsTree::rename(
   return true;
 }
 
-bool FsTree::remove(wxDataViewItem item)
-{
+bool FsTree::remove(wxDataViewItem item) {
   const auto id = toId(item);
   auto &node = mNodes.at(id);
   const auto parent = GetParent(item);
@@ -362,18 +314,13 @@ bool FsTree::remove(wxDataViewItem item)
   std::error_code ec;
   const auto path = getNodePath(id);
   fs::remove_all(path, ec);
-  if (ec)
-  {
+  if (ec) {
     mLogger->error("Could not delete '{}': {}", node.name, ec.message());
     return false;
   }
 
   auto &children = mNodes.at(toId(parent)).children;
-  auto removeIt = std::remove(
-    std::begin(children),
-    std::end(children),
-    id
-  );
+  auto removeIt = std::remove(std::begin(children), std::end(children), id);
   children.erase(removeIt);
   mNodes.erase(id);
   ItemDeleted(parent, item);
@@ -381,19 +328,14 @@ bool FsTree::remove(wxDataViewItem item)
   return true;
 }
 
-wxDataViewItem FsTree::moveBefore(
-  wxDataViewItem item,
-  wxDataViewItem sibling
-) {
+wxDataViewItem FsTree::moveBefore(wxDataViewItem item, wxDataViewItem sibling) {
   const auto parent = GetParent(sibling);
   wxDataViewItemArray children;
   GetChildren(parent, children);
 
   size_t index = 0;
-  for (size_t i = 0; i != children.size(); ++i)
-  {
-    if (children[i].GetID() == sibling.GetID())
-    {
+  for (size_t i = 0; i != children.size(); ++i) {
+    if (children[i].GetID() == sibling.GetID()) {
       index = i;
       break;
     }
@@ -411,19 +353,14 @@ wxDataViewItem FsTree::moveInsideLast(
   return moveInsideAtIndex(item, parent, count);
 }
 
-wxDataViewItem FsTree::moveAfter(
-  wxDataViewItem item,
-  wxDataViewItem sibling
-) {
+wxDataViewItem FsTree::moveAfter(wxDataViewItem item, wxDataViewItem sibling) {
   const auto parent = GetParent(sibling);
   wxDataViewItemArray children;
   GetChildren(parent, children);
 
   size_t index = 0;
-  for (size_t i = 0; i != children.size(); ++i)
-  {
-    if (children[i].GetID() == sibling.GetID())
-    {
+  for (size_t i = 0; i != children.size(); ++i) {
+    if (children[i].GetID() == sibling.GetID()) {
       index = i + 1;
       break;
     }
@@ -444,49 +381,26 @@ wxDataViewItem FsTree::moveInsideAtIndex(
   wxDataViewItem parent,
   size_t index
 ) {
-
-  if (!moveCheck(item, parent, index))
-  {
-    return wxDataViewItem(nullptr);
-  }
+  if (!moveCheck(item, parent, index)) { return wxDataViewItem(nullptr); }
 
   const auto nodeId = toId(item);
   const auto &node = mNodes.at(nodeId);
   const auto newParentId = toId(parent);
   const auto oldParentId = node.parent;
 
-  if (!moveFile(nodeId, newParentId))
-  {
-    return wxDataViewItem(nullptr);
-  }
+  if (!moveFile(nodeId, newParentId)) { return wxDataViewItem(nullptr); }
 
-  if (oldParentId != newParentId)
-  {
-    mLogger->info(
-      "Moving {} in {} at index {}",
-      nodeId,
-      newParentId,
-      index
-    );
+  if (oldParentId != newParentId) {
+    mLogger->info("Moving {} in {} at index {}", nodeId, newParentId, index);
     moveUnderNewParent(nodeId, newParentId, index);
-  }
-  else
-  {
-    mLogger->info(
-      "Moving {} at index {}",
-      nodeId,
-      newParentId,
-      index
-    );
+  } else {
+    mLogger->info("Moving {} at index {}", nodeId, newParentId, index);
     moveUnderSameParent(nodeId, newParentId, index);
   }
 
   ItemDeleted(toItem(oldParentId), item);
   ItemAdded(parent, item);
-  for (const auto &child : node.children)
-  {
-    ItemAdded(item, toItem(child));
-  }
+  for (const auto &child : node.children) { ItemAdded(item, toItem(child)); }
 
   mNodes.at(newParentId).saved = false;
   save(newParentId);
@@ -494,33 +408,22 @@ wxDataViewItem FsTree::moveInsideAtIndex(
   return item;
 }
 
-void FsTree::loadDirectoryRecursive(
-  const Common::fs::path &path,
-  Id parentId
-) {
+void FsTree::loadDirectoryRecursive(const Common::fs::path &path, Id parentId) {
   const bool isRoot = parentId == std::numeric_limits<Id>::max();
   const auto currentId = isRoot ? 0 : getNextId();
   std::string decoded = "_";
 
   // mLogger->debug("loadDirectoryRecursive: {}", path.string());
 
-  if (!isRoot)
-  {
-    try
-    {
+  if (!isRoot) {
+    try {
       decoded = Url::decode(path.filename().string());
-    }
-    catch (std::runtime_error &error)
-    {
-      mLogger->error(
-        "Could not decode '{}': {}",
-        path.string(),
-        error.what()
-      );
+    } catch (std::runtime_error &error) {
+      mLogger->error("Could not decode '{}': {}", path.string(), error.what());
       return;
     }
 
-    Node newNode {
+    Node newNode{
       parentId,
       decoded,
       path.filename().string(),
@@ -534,59 +437,39 @@ void FsTree::loadDirectoryRecursive(
     mNodes.at(parentId).children.push_back(currentId);
   }
 
-  for (const auto &entry : fs::directory_iterator(path))
-  {
+  for (const auto &entry : fs::directory_iterator(path)) {
     if (entry.path().stem() == ".index") { continue; }
 
-    if (isLeaf(entry))
-    {
+    if (isLeaf(entry)) {
       mLogger->trace("  - detected! {}", entry.path().string());
       loadLeaf(entry, currentId);
-    }
-    else if (entry.status().type() == fs::file_type::directory)
-    {
+    } else if (entry.status().type() == fs::file_type::directory) {
       // mLogger->trace("  - is directory! {}", entry.path().string());
       loadDirectoryRecursive(entry.path(), currentId);
     }
   }
 
-  if (mNodes.at(currentId).children.empty())
-  {
-    return;
-  }
+  if (mNodes.at(currentId).children.empty()) { return; }
 
   const bool read = indexFileRead(path, currentId);
-  if (!read)
-  {
-    indexFileWrite(currentId);
-  }
+  if (!read) { indexFileWrite(currentId); }
 }
 
-void FsTree::loadLeaf(
-  const Common::fs::directory_entry &entry,
-  Id parentId
-) {
+void FsTree::loadLeaf(const Common::fs::directory_entry &entry, Id parentId) {
   std::string decoded;
   const auto &path = entry.path();
-  try
-  {
+  try {
     const auto real = (entry.status().type() == fs::file_type::directory)
       ? path.filename()
       : path.stem();
 
     decoded = Url::decode(real.string());
-  }
-  catch (std::runtime_error &error)
-  {
-    mLogger->error(
-      "Could not decode '{}': {}",
-      path.string(),
-      error.what()
-    );
+  } catch (std::runtime_error &error) {
+    mLogger->error("Could not decode '{}': {}", path.string(), error.what());
     return;
   }
 
-  Node newNode {
+  Node newNode{
     parentId,
     decoded,
     path.stem().string(),
@@ -603,26 +486,18 @@ void FsTree::loadLeaf(
   node.payload = std::move(leaf);
 }
 
-bool FsTree::indexFileRead(
-  const Common::fs::path &path,
-  Id id
-) {
-  const std::string indexPath = fmt::format(
-    "{}/.index.json",
-    path.string()
-  );
+bool FsTree::indexFileRead(const Common::fs::path &path, Id id) {
+  const std::string indexPath = fmt::format("{}/.index.json", path.string());
 
   const auto &name = mNodes.at(id).name;
 
-  if (!fs::exists(indexPath))
-  {
+  if (!fs::exists(indexPath)) {
     mLogger->error("Could not sort '{}': No .index.json found", name);
     return false;
   }
 
   std::ifstream indexFile(indexPath, std::ios::in);
-  if (!indexFile.is_open())
-  {
+  if (!indexFile.is_open()) {
     mLogger->error("Could not sort '{}': Failed to open .index.json", name);
     return false;
   }
@@ -630,29 +505,19 @@ bool FsTree::indexFileRead(
   nlohmann::json indexes;
   indexFile >> indexes;
 
-  if (indexes.type() != nlohmann::json::value_t::array)
-  {
+  if (indexes.type() != nlohmann::json::value_t::array) {
     mLogger->error("Could not sort '{}': .index.json is not an array", name);
     fs::remove(indexPath);
     return false;
   }
 
   mNodes.at(id).children.sort(
-    [this, &indexes](const Id &lhs, const Id &rhs) -> bool
-    {
+    [this, &indexes](const Id &lhs, const Id &rhs) -> bool {
       const auto &lhsEnc = mNodes.at(lhs).encoded;
       const auto &rhsEnc = mNodes.at(rhs).encoded;
 
-      auto lhsIt = std::find(
-        std::begin(indexes),
-        std::end(indexes),
-        lhsEnc
-      );
-      auto rhsIt = std::find(
-        std::begin(indexes),
-        std::end(indexes),
-        rhsEnc
-      );
+      auto lhsIt = std::find(std::begin(indexes), std::end(indexes), lhsEnc);
+      auto rhsIt = std::find(std::begin(indexes), std::end(indexes), rhsEnc);
 
       return lhsIt < rhsIt;
     }
@@ -661,13 +526,11 @@ bool FsTree::indexFileRead(
   return true;
 }
 
-bool FsTree::indexFileWrite(Id id)
-{
+bool FsTree::indexFileWrite(Id id) {
   const auto nodePath = getNodePath(id);
   const auto indexPath = nodePath + "/.index.json";
   std::ofstream output(indexPath);
-  if (!output.is_open())
-  {
+  if (!output.is_open()) {
     mLogger->warn("Could not save '{}'", indexPath);
     return false;
   }
@@ -675,8 +538,7 @@ bool FsTree::indexFileWrite(Id id)
   auto &node = mNodes.at(id);
 
   nlohmann::json data;
-  for (const auto &child : node.children)
-  {
+  for (const auto &child : node.children) {
     data.push_back(mNodes.at(child).encoded);
   }
   output << data;
@@ -686,29 +548,22 @@ bool FsTree::indexFileWrite(Id id)
   return true;
 }
 
-bool FsTree::hasChildNamed(
-  wxDataViewItem parent,
-  const std::string &name
-) const {
+bool FsTree::hasChildNamed(wxDataViewItem parent, const std::string &name)
+  const {
   const auto id = toId(parent);
   const auto children = mNodes.at(id).children;
   return std::any_of(
     std::begin(children),
     std::end(children),
-    [this, &name](const auto &child)
-    {
-      return mNodes.at(child).name == name;
-    }
+    [this, &name](const auto &child) { return mNodes.at(child).name == name; }
   );
 }
 
-unsigned FsTree::GetColumnCount() const
-{
+unsigned FsTree::GetColumnCount() const {
   return static_cast<unsigned>(mColumnCount);
 }
 
-wxString FsTree::GetColumnType(unsigned int col) const
-{
+wxString FsTree::GetColumnType(unsigned int col) const {
   (void)col;
   return wxDataViewIconTextRenderer::GetDefaultType();
 }
@@ -723,8 +578,7 @@ void FsTree::GetValue(
   wxDataViewIconText value;
   const auto wxs = wxString::FromUTF8(node.name.data(), node.name.length());
   value.SetText(wxs);
-  switch (node.type)
-  {
+  switch (node.type) {
     case Node::Type::Folder: {
       wxIcon icon;
       icon.CopyFromBitmap(mArtProvider.bitmap(Icon::Folder));
@@ -742,14 +596,8 @@ bool FsTree::SetValue(
   const wxDataViewItem &item,
   unsigned int col
 ) {
-  if (!item.IsOk())
-  {
-    return false;
-  }
-  if (static_cast<Column>(col) != Column::Name)
-  {
-    return false;
-  }
+  if (!item.IsOk()) { return false; }
+  if (static_cast<Column>(col) != Column::Name) { return false; }
   wxDataViewIconText iconText;
   iconText << value;
 
@@ -757,17 +605,13 @@ bool FsTree::SetValue(
   const auto utf8 = wxs.ToUTF8();
   const std::string newName(utf8.data(), utf8.length());
 
-  if (newName == ".index")
-  {
+  if (newName == ".index") {
     mLogger->warn("Could not rename '{}' to '.index': name is reserved");
     return false;
   }
 
   auto parentItem = GetParent(item);
-  if (hasChildNamed(parentItem, newName))
-  {
-    return false;
-  }
+  if (hasChildNamed(parentItem, newName)) { return false; }
 
   auto id = toId(item);
   auto &node = mNodes.at(id);
@@ -778,34 +622,22 @@ bool FsTree::SetValue(
 }
 
 bool FsTree::IsEnabled(
-  const wxDataViewItem &/* item */,
+  const wxDataViewItem & /* item */,
   unsigned int /* col */
 ) const {
   return true;
 }
 
-wxDataViewItem FsTree::GetParent(
-  const wxDataViewItem &item
-) const {
-
-  if (!item.IsOk())
-  {
-    return wxDataViewItem(nullptr);
-  }
+wxDataViewItem FsTree::GetParent(const wxDataViewItem &item) const {
+  if (!item.IsOk()) { return wxDataViewItem(nullptr); }
 
   auto id = toId(item);
   auto parent = mNodes.at(id).parent;
   return toItem(parent);
 }
 
-bool FsTree::IsContainer(
-  const wxDataViewItem &item
-) const {
-
-  if (!item.IsOk())
-  {
-    return true;
-  }
+bool FsTree::IsContainer(const wxDataViewItem &item) const {
+  if (!item.IsOk()) { return true; }
 
   const auto &node = mNodes.at(toId(item));
   return node.type == Node::Type::Folder;
@@ -817,56 +649,42 @@ unsigned FsTree::GetChildren(
 ) const {
   Id id = 0;
 
-  if (parent.IsOk())
-  {
-    id = toId(parent);
-  }
+  if (parent.IsOk()) { id = toId(parent); }
 
   const auto &node = mNodes.at(id);
 
-  for (auto childId : node.children)
-  {
-    array.Add(toItem(childId));
-  }
+  for (auto childId : node.children) { array.Add(toItem(childId)); }
   return static_cast<unsigned>(node.children.size());
 }
 
-FsTree::Id FsTree::toId(const wxDataViewItem &item)
-{
+FsTree::Id FsTree::toId(const wxDataViewItem &item) {
   uintptr_t result = 0;
   const void *id = item.GetID();
   std::memcpy(&result, &id, sizeof(item.GetID()));
   return result;
 }
 
-wxDataViewItem FsTree::toItem(Id id)
-{
+wxDataViewItem FsTree::toItem(Id id) {
   void *itemId = nullptr;
   const uintptr_t value = id;
   std::memcpy(&itemId, &value, sizeof(id));
   return wxDataViewItem(itemId);
 }
 
-FsTree::Id FsTree::getNextId()
-{
-  return mNextAvailableId++;
-}
+FsTree::Id FsTree::getNextId() { return mNextAvailableId++; }
 
-bool FsTree::isRecursive(wxDataViewItem parent, wxDataViewItem item) const
-{
+bool FsTree::isRecursive(wxDataViewItem parent, wxDataViewItem item) const {
   if (!parent.IsOk()) { return false; }
   if (parent == item) { return true; }
   return isRecursive(GetParent(parent), item);
 }
 
-std::string FsTree::getNodePath(Id id) const
-{
+std::string FsTree::getNodePath(Id id) const {
   auto parts = getNodeSegments(id);
   parts.push_back(mNodes.at(0).encoded);
 
   std::string result;
-  for (auto it = parts.rbegin(); it != parts.rend(); ++it)
-  {
+  for (auto it = parts.rbegin(); it != parts.rend(); ++it) {
     result += *it + "/";
   }
 
@@ -875,12 +693,10 @@ std::string FsTree::getNodePath(Id id) const
   return result;
 }
 
-std::vector<std::string> FsTree::getNodeSegments(Id id) const
-{
+std::vector<std::string> FsTree::getNodeSegments(Id id) const {
   Id currentId = id;
   std::vector<std::string> parts;
-  while (currentId != 0)
-  {
+  while (currentId != 0) {
     const auto &node = mNodes.at(currentId);
     parts.push_back(node.encoded);
     currentId = mNodes.at(currentId).parent;
@@ -888,26 +704,22 @@ std::vector<std::string> FsTree::getNodeSegments(Id id) const
   return parts;
 }
 
-bool FsTree::save(Id id)
-{
+bool FsTree::save(Id id) {
   auto &node = mNodes.at(id);
   if (node.saved) { return true; }
   if (id != 0 && !save(node.parent)) { return false; }
 
-  switch (node.type)
-  {
+  switch (node.type) {
     case Node::Type::Payload: return saveLeaf(id);
-    case Node::Type::Folder:  return saveFolder(id);
+    case Node::Type::Folder: return saveFolder(id);
   }
   return false;
 }
 
-bool FsTree::saveLeaf(Id id)
-{
+bool FsTree::saveLeaf(Id id) {
   mLogger->debug("Saving leaf {}", id);
   auto &node = mNodes.at(id);
-  if (!leafSave(id))
-  {
+  if (!leafSave(id)) {
     mLogger->error("Could not save '{}'", node.name);
     return false;
   }
@@ -916,26 +728,20 @@ bool FsTree::saveLeaf(Id id)
   return true;
 }
 
-bool FsTree::saveFolder(Id id)
-{
+bool FsTree::saveFolder(Id id) {
   mLogger->debug("Saving folder {}", id);
   const auto nodePath = getNodePath(id);
 
   const bool exists = fs::exists(nodePath);
   const bool isDir = fs::is_directory(nodePath);
 
-  if (exists && !isDir && !fs::remove(nodePath))
-  {
+  if (exists && !isDir && !fs::remove(nodePath)) {
     mLogger->warn("Could not remove file {}", nodePath);
     return false;
   }
 
-  if (!exists && !fs::create_directory(nodePath))
-  {
-    mLogger->warn(
-      "Could not create directory: {}",
-      nodePath
-    );
+  if (!exists && !fs::create_directory(nodePath)) {
+    mLogger->warn("Could not create directory: {}", nodePath);
     return false;
   }
 
@@ -944,14 +750,10 @@ bool FsTree::saveFolder(Id id)
   return true;
 }
 
-bool FsTree::moveFile(Id nodeId, Id newParentId)
-{
+bool FsTree::moveFile(Id nodeId, Id newParentId) {
   const auto &node = mNodes.at(nodeId);
 
-  if (node.parent == newParentId)
-  {
-    return true;
-  }
+  if (node.parent == newParentId) { return true; }
 
   const std::string pathNew = fmt::format(
     "{}/{}",
@@ -959,8 +761,7 @@ bool FsTree::moveFile(Id nodeId, Id newParentId)
     node.encoded
   );
 
-  if (fs::exists(pathNew))
-  {
+  if (fs::exists(pathNew)) {
     mLogger->error("Could not move item: target exists");
     return false;
   }
@@ -968,8 +769,7 @@ bool FsTree::moveFile(Id nodeId, Id newParentId)
   const auto pathOld = getNodePath(nodeId);
   std::error_code ec;
   fs::rename(pathOld, pathNew, ec);
-  if (ec)
-  {
+  if (ec) {
     mLogger->error(
       "Could not move item: failed to rename '{}' to '{}': {}",
       pathOld,
@@ -987,43 +787,36 @@ bool FsTree::moveCheck(
   wxDataViewItem parent,
   size_t index
 ) {
-  if (!item.IsOk())
-  {
+  if (!item.IsOk()) {
     mLogger->info("Could not move item: Item is null");
     return false;
   }
 
-  if (item == parent)
-  {
+  if (item == parent) {
     mLogger->info("Could not move item: Item is Target");
     return false;
   }
 
-  if (GetParent(item) == parent)
-  {
+  if (GetParent(item) == parent) {
     const auto parent = GetParent(item);
     wxDataViewItemArray children;
     GetChildren(parent, children);
 
     size_t currentIndex = 0;
-    for (size_t i = 0; i != children.size(); ++i)
-    {
-      if (children[i].GetID() == item.GetID())
-      {
+    for (size_t i = 0; i != children.size(); ++i) {
+      if (children[i].GetID() == item.GetID()) {
         currentIndex = i;
         break;
       }
     }
 
-    if (currentIndex == index)
-    {
+    if (currentIndex == index) {
       mLogger->info("Did not move item: no action required");
       return false;
     }
   }
 
-  if (isRecursive(parent, item))
-  {
+  if (isRecursive(parent, item)) {
     mLogger->info("Could not move item: Target is recursive");
     return false;
   }
@@ -1031,22 +824,14 @@ bool FsTree::moveCheck(
   return true;
 }
 
-void FsTree::moveUnderNewParent(
-  Id nodeId,
-  Id newParentId,
-  size_t index
-) {
+void FsTree::moveUnderNewParent(Id nodeId, Id newParentId, size_t index) {
   auto &node = mNodes.at(nodeId);
   const auto oldParentId = node.parent;
   auto &newParentNode = mNodes.at(newParentId);
   auto &oldParentNode = mNodes.at(oldParentId);
 
   auto &children = oldParentNode.children;
-  auto removeIt = std::remove(
-    std::begin(children),
-    std::end(children),
-    nodeId
-  );
+  auto removeIt = std::remove(std::begin(children), std::end(children), nodeId);
   children.erase(removeIt);
 
   mNodes.at(oldParentId).saved = false;
@@ -1054,12 +839,9 @@ void FsTree::moveUnderNewParent(
 
   node.parent = newParentId;
 
-  if (index == 0)
-  {
+  if (index == 0) {
     newParentNode.children.push_front(nodeId);
-  }
-  else
-  {
+  } else {
     auto &children = newParentNode.children;
     auto it = std::begin(children);
     std::advance(it, index);
@@ -1067,11 +849,7 @@ void FsTree::moveUnderNewParent(
   }
 }
 
-void FsTree::moveUnderSameParent(
-  Id nodeId,
-  Id newParentId,
-  size_t index
-) {
+void FsTree::moveUnderSameParent(Id nodeId, Id newParentId, size_t index) {
   auto &newParentNode = mNodes.at(newParentId);
   auto &siblings = newParentNode.children;
 
