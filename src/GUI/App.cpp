@@ -30,8 +30,8 @@ using namespace Rapatas::Transmitron;
 using namespace GUI;
 using namespace Common;
 
-constexpr size_t DefaultWindowWidth = 600;
-constexpr size_t DefaultWindowHeight = 500;
+constexpr size_t DefaultWindowHeight = 576;
+constexpr size_t DefaultWindowWidth = 1024;
 constexpr size_t MinWindowWidth = 550;
 constexpr size_t MinWindowHeight = 400;
 constexpr size_t LabelFontSize = 15;
