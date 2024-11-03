@@ -12,6 +12,7 @@
 
 #include "GUI/ArtProvider.hpp"
 #include "GUI/Events/Connection.hpp"
+#include "GUI/Events/Edit.hpp"
 #include "GUI/Events/Layout.hpp"
 #include "GUI/Models/History.hpp"
 #include "GUI/Models/KnownTopics.hpp"
@@ -19,7 +20,6 @@
 #include "GUI/Models/Messages.hpp"
 #include "GUI/Models/Subscriptions.hpp"
 #include "GUI/Types/ClientOptions.hpp"
-#include "GUI/Widgets/Edit.hpp"
 #include "GUI/Widgets/Layouts.hpp"
 #include "GUI/Widgets/TopicCtrl.hpp"
 #include "MQTT/Client.hpp"
@@ -105,10 +105,6 @@ private:
     const wxBitmap *icon18x14 = nullptr;
     wxButton *toggle = nullptr;
   };
-
-  static constexpr size_t PaneMinWidth = 200;
-  static constexpr size_t PaneMinHeight = 100;
-  static constexpr size_t EditorMinHeight = 200;
 
   std::shared_ptr<spdlog::logger> mLogger;
   std::map<Panes, Pane> mPanes;

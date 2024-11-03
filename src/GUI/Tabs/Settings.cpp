@@ -183,7 +183,6 @@ void Settings::setupLayouts(wxPanel *parent) {
   auto *sizer = new wxBoxSizer(wxHORIZONTAL);
   sizer->Add(vsizer, 0, wxEXPAND);
   mLayouts->SetSizer(sizer);
-
 }
 
 void Settings::setupProfiles(wxPanel *parent) {
@@ -418,7 +417,7 @@ void Settings::onLayoutsContext(wxDataViewEvent &event) {
     return;
   }
 
-  if (Models::Layouts::getDefault() == item) {
+  if (!Models::Layouts::isDeletable(item)) {
     event.Skip();
     return;
   }
@@ -460,7 +459,7 @@ void Settings::onLayoutsDelete(wxCommandEvent & /* event */) {
   mLogger->info("Requesting delete");
   const auto item = mLayoutsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
-  if (Models::Layouts::getDefault() == item) { return; }
+  if (!Models::Layouts::isDeletable(item)) { return; }
   mLayoutsModel->remove(item);
 }
 
@@ -475,7 +474,7 @@ void Settings::onLayoutsRename(wxCommandEvent & /* event */) {
 void Settings::onLayoutsEdit(wxDataViewEvent &event) {
   mLogger->info("Requesting edit");
   const auto item = event.GetItem();
-  if (Models::Layouts::getDefault() == item) {
+  if (!Models::Layouts::isDeletable(item)) {
     event.Veto();
   } else {
     event.Skip();
@@ -907,7 +906,7 @@ void Settings::onLayoutSelected(wxDataViewEvent &event) {
     return;
   }
 
-  if (Models::Layouts::getDefault() == item) {
+  if (!Models::Layouts::isDeletable(item)) {
     mLayoutDelete->Disable();
     event.Skip();
     return;

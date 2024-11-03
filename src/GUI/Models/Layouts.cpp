@@ -17,20 +17,10 @@ using namespace Rapatas::Transmitron;
 using namespace GUI::Models;
 using namespace Common;
 
-Layouts::Layouts() {
-  mLogger = Common::Log::create("Models::Layouts");
-
-  const auto id = mAvailableId++;
-  auto layout = std::make_unique<Node>();
-  layout->name = DefaultName;
-  layout->perspective = Perspective(DefaultPerspective);
-  layout->path = "";
-  layout->saved = true;
-  mLayouts.insert({id, std::move(layout)});
-
-  const auto parent = wxDataViewItem(nullptr);
-  const auto item = toItem(id);
-  ItemAdded(parent, item);
+Layouts::Layouts() :
+  mLogger(Common::Log::create("Models::Layouts")) //
+{
+  injectDefaultLayouts();
 }
 
 // Public {
@@ -113,6 +103,11 @@ wxDataViewItem Layouts::create(const Perspective &perspective) {
 // Getters {
 
 wxDataViewItem Layouts::getDefault() { return toItem(1); }
+
+bool Layouts::isDeletable(wxDataViewItem item) {
+  const auto id = toId(item);
+  return id >= 4;
+}
 
 const Layouts::Perspective &Layouts::getPerspective(wxDataViewItem item) const {
   const auto id = toId(item);
@@ -309,6 +304,84 @@ bool Layouts::SetValue(
 // Public }
 
 // Private {
+
+void Layouts::injectDefaultLayouts() {
+  // clang-format off
+  const std::string_view peIDE{
+    "layout2|"
+    "name=History;caption=History;state=1340;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=200;besth=100;minw=200;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|"
+    "name=Subscriptions;caption=Subscriptions;state=1532;dir=4;layer=1;row=0;pos=0;prop=100000;bestw=200;besth=100;minw=200;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|"
+    "name=Messages;caption=Messages;state=1532;dir=4;layer=1;row=0;pos=1;prop=100000;bestw=200;besth=100;minw=200;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|"
+    "name=Publish;caption=Publish;state=1532;dir=3;layer=2;row=0;pos=0;prop=100000;bestw=200;besth=200;minw=200;minh=200;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|"
+    "name=Preview;caption=Preview;state=1532;dir=3;layer=2;row=0;pos=1;prop=100000;bestw=200;besth=200;minw=200;minh=200;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|"
+    "dock_size(5,0,0)=200|"
+    "dock_size(4,1,0)=200|"
+    "dock_size(3,2,0)=214|"
+  };
+  const std::string_view peDefault{
+    "layout2|"
+    "name=History;caption=History;state=1340;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=412;besth=100;minw=100;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|"
+    "name=Subscriptions;caption=Subscriptions;state=1532;dir=1;layer=1;row=0;pos=0;prop=100000;bestw=412;besth=100;minw=100;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|"
+    "name=Messages;caption=Messages;state=1532;dir=4;layer=2;row=0;pos=0;prop=100000;bestw=200;besth=20;minw=100;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|"
+    "name=Publish;caption=Publish;state=1532;dir=2;layer=2;row=0;pos=0;prop=100000;bestw=412;besth=20;minw=100;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|"
+    "name=Preview;caption=Preview;state=1532;dir=2;layer=2;row=0;pos=1;prop=100000;bestw=412;besth=20;minw=100;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|"
+    "dock_size(5,0,0)=412|"
+    "dock_size(1,1,0)=117|"
+    "dock_size(4,2,0)=200|"
+    "dock_size(2,2,0)=412|"
+  };
+  const std::string_view peCasual{
+    "layout2|"
+    "name=History;caption=History;state=1340;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=200;besth=100;minw=200;minh=100;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|"
+    "name=Subscriptions;caption=Subscriptions;state=1532;dir=1;layer=0;row=1;pos=0;prop=100000;bestw=200;besth=100;minw=200;minh=100;maxw=-1;maxh=-1;floatx=847;floaty=333;floatw=400;floath=250|"
+    "name=Publish;caption=Publish;state=1532;dir=4;layer=2;row=0;pos=0;prop=100000;bestw=200;besth=200;minw=200;minh=200;maxw=-1;maxh=-1;floatx=196;floaty=543;floatw=400;floath=250|"
+    "name=Preview;caption=Preview;state=1532;dir=2;layer=3;row=0;pos=0;prop=100000;bestw=200;besth=200;minw=200;minh=200;maxw=-1;maxh=-1;floatx=1286;floaty=536;floatw=400;floath=250|"
+    "dock_size(5,0,0)=200|"
+    "dock_size(2,3,0)=322|"
+    "dock_size(1,0,1)=117|"
+    "dock_size(4,2,0)=309|"
+  };
+  // clang-format on
+
+  {
+    const auto id = mAvailableId++;
+    auto layout = std::make_unique<Node>();
+    layout->name = "Default";
+    layout->perspective = Perspective(peDefault);
+    layout->path = "";
+    layout->saved = true;
+    mLayouts.insert({id, std::move(layout)});
+    const auto parent = wxDataViewItem(nullptr);
+    const auto item = toItem(id);
+    ItemAdded(parent, item);
+  }
+
+  {
+    const auto id = mAvailableId++;
+    auto layout = std::make_unique<Node>();
+    layout->name = "IDE";
+    layout->perspective = Perspective(peIDE);
+    layout->path = "";
+    layout->saved = true;
+    mLayouts.insert({id, std::move(layout)});
+    const auto parent = wxDataViewItem(nullptr);
+    const auto item = toItem(id);
+    ItemAdded(parent, item);
+  }
+
+  {
+    const auto id = mAvailableId++;
+    auto layout = std::make_unique<Node>();
+    layout->name = "Casual";
+    layout->perspective = Perspective(peCasual);
+    layout->path = "";
+    layout->saved = true;
+    mLayouts.insert({id, std::move(layout)});
+    const auto parent = wxDataViewItem(nullptr);
+    const auto item = toItem(id);
+    ItemAdded(parent, item);
+  }
+}
 
 wxDataViewItem Layouts::loadLayoutFile(const Common::fs::path &filepath) {
   mLogger->info("Checking {}", filepath.u8string());

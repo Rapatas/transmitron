@@ -1,9 +1,6 @@
 #include "Client.hpp"
 
-#include <fstream>
-#include <iterator>
 #include <memory>
-#include <thread>
 
 #include <nlohmann/json.hpp>
 #include <wx/artprov.h>
@@ -11,7 +8,6 @@
 
 #include "Common/Helpers.hpp"
 #include "Common/Log.hpp"
-#include "Common/Url.hpp"
 #include "GUI/Events/Layout.hpp"
 #include "GUI/Events/Recording.hpp"
 #include "GUI/Resources/history/history-18x14.hpp"
@@ -19,6 +15,7 @@
 #include "GUI/Resources/preview/preview-18x14.hpp"
 #include "GUI/Resources/send/send-18x14.hpp"
 #include "GUI/Resources/subscription/subscription-18x14.hpp"
+#include "GUI/Widgets/Edit.hpp"
 #include "MQTT/Message.hpp"
 
 using namespace Rapatas::Transmitron;
@@ -28,6 +25,10 @@ using namespace GUI;
 using namespace Common;
 
 constexpr size_t FontSize = 9;
+static constexpr size_t PaneMinWidth = 100;
+static constexpr size_t PaneMinHeight = 100;
+static constexpr size_t PaneBestWidth = 412;
+static constexpr size_t MessagesBestWidth = 200;
 
 Client::Client(
   wxWindow *parent,
@@ -152,12 +153,16 @@ void Client::setupPanels() {
   };
 
   mPanes.at(Panes::History).info.Center();
-  mPanes.at(Panes::Subscriptions).info.Left();
-  mPanes.at(Panes::Preview).info.Bottom();
+  mPanes.at(Panes::Subscriptions).info.Top();
+  mPanes.at(Panes::Preview).info.Right();
 
   mPanes.at(Panes::History).info.Layer(0);
   mPanes.at(Panes::Subscriptions).info.Layer(1);
   mPanes.at(Panes::Preview).info.Layer(2);
+
+  mPanes.at(Panes::Subscriptions).info.MinSize(PaneBestWidth, PaneMinHeight);
+  mPanes.at(Panes::History).info.MinSize(PaneBestWidth, PaneMinHeight);
+  mPanes.at(Panes::Preview).info.MinSize(PaneBestWidth, -1);
 
   if (mClient != nullptr) {
     mPanes.insert({
@@ -185,35 +190,24 @@ void Client::setupPanels() {
     });
 
     mPanes.at(Panes::Messages).info.Left();
-    mPanes.at(Panes::Publish).info.Bottom();
+    mPanes.at(Panes::Publish).info.Right();
 
-    mPanes.at(Panes::Messages).info.Layer(1);
+    mPanes.at(Panes::Messages).info.Layer(2);
     mPanes.at(Panes::Publish).info.Layer(2);
+
+    mPanes.at(Panes::Messages).info.MinSize(MessagesBestWidth, -1);
+    mPanes.at(Panes::Publish).info.MinSize(PaneBestWidth, -1);
   }
 
   for (auto &pane : mPanes) {
-    pane.second.info.Name(pane.second.name);
-
-    const bool isEditor = pane.first == Panes::Preview
-      || pane.first == Panes::Publish;
-
-    const auto minSize = isEditor //
-      ? wxSize(PaneMinWidth, EditorMinHeight)
-      : wxSize(PaneMinWidth, PaneMinHeight);
-
-    pane.second.info.MinSize(minSize);
+    const auto fixed = pane.first == Panes::History;
     pane.second.info.Caption(pane.second.name);
     pane.second.info.CloseButton(false);
+    pane.second.info.Floatable(!fixed);
     pane.second.info.Icon(*pane.second.icon18x14);
+    pane.second.info.Movable(!fixed);
+    pane.second.info.Name(pane.second.name);
     pane.second.info.PaneBorder(false);
-
-    if (pane.first == Panes::History) {
-      pane.second.info.Movable(false);
-      pane.second.info.Floatable(false);
-    } else {
-      pane.second.info.Movable(true);
-      pane.second.info.Floatable(true);
-    }
   }
 
   auto *managed = new wxPanel(this);
@@ -236,6 +230,15 @@ void Client::setupPanels() {
   for (const auto &pane : mPanes) {
     mAuiMan.AddPane(pane.second.panel, pane.second.info);
   }
+
+  mAuiMan.Update();
+
+  for (auto &[window, pane] : mPanes) {
+    auto &info = mAuiMan.GetPane(pane.panel);
+    info.MinSize(PaneMinWidth, PaneMinHeight);
+  }
+
+  mAuiMan.Update();
 
   const auto layout = mClientOptions.getLayout();
   mLayouts->setSelectedLayout(layout);
@@ -431,19 +434,34 @@ void Client::setupPanelConnect(wxWindow *parent) {
 
     auto currentInfo = mAuiMan.GetPane(widget.panel);
 
-    if (currentInfo.IsOk()) {
-      if (currentInfo.IsDocked()) { mPanes.at(pane).info = currentInfo; }
+    // Pane missing.
+    if (!currentInfo.IsOk()) {
+      widget.panel->Show(true);
+      mAuiMan.AddPane(widget.panel, mPanes.at(pane).info);
+      widget.toggle->SetBackgroundColour(wxNullColour);
+      mAuiMan.Update();
+      return;
+    }
+
+    mPanes.at(pane).info = currentInfo;
+
+    // Pane is visible.
+    if (currentInfo.IsShown()) {
       mAuiMan.DetachPane(widget.panel);
       widget.panel->Show(false);
       constexpr uint8_t ColorChannelHalf = 255 / 2;
       widget.toggle->SetBackgroundColour(
         wxColor(ColorChannelHalf, ColorChannelHalf, ColorChannelHalf)
       );
-    } else {
-      widget.panel->Show(true);
-      mAuiMan.AddPane(widget.panel, mPanes.at(pane).info);
-      widget.toggle->SetBackgroundColour(wxNullColour);
+      mAuiMan.Update();
+      return;
     }
+
+    // Pane is known but hidden.
+    widget.info.Show(true);
+    widget.toggle->SetBackgroundColour(wxNullColour);
+    mAuiMan.DetachPane(widget.panel);
+    mAuiMan.AddPane(widget.panel, widget.info);
     mAuiMan.Update();
   };
 
@@ -1519,20 +1537,14 @@ void Client::onSubscriptionSelected(wxDataViewEvent &event) {
 void Client::onLayoutSelected(Events::Layout &event) {
   mAuiMan.LoadPerspective(event.getPerspective(), false);
 
-  for (auto &pane : mPanes) {
-    auto &info = mAuiMan.GetPane(pane.second.panel);
-
-    const bool isEditor = pane.first == Panes::Preview
-      || pane.first == Panes::Publish;
-
-    const auto minSize = isEditor ? wxSize(PaneMinWidth, EditorMinHeight)
-                                  : wxSize(PaneMinWidth, PaneMinHeight);
-
-    info.MinSize(minSize);
-    info.Caption(pane.second.name);
-    info.CloseButton(false);
-    info.Icon(*pane.second.icon18x14);
-    info.PaneBorder(false);
+  constexpr uint8_t ColorChannelHalf = 255 / 2;
+  for (auto &[type, pane] : mPanes) {
+    if (pane.toggle == nullptr) { continue; }
+    const auto info = mAuiMan.GetPane(pane.panel);
+    const auto color = (info.IsOk() && info.IsShown())
+      ? wxNullColour
+      : wxColor(ColorChannelHalf, ColorChannelHalf, ColorChannelHalf);
+    pane.toggle->SetBackgroundColour(color);
   }
 
   mAuiMan.Update();
