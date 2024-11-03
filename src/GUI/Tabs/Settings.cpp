@@ -16,11 +16,11 @@ using namespace Rapatas::Transmitron;
 using namespace GUI::Tabs;
 using namespace GUI;
 
-constexpr size_t SettingsWidth = 600;
+constexpr size_t SettingsWidth = 700;
 constexpr size_t SettingsHeight = 500;
 constexpr size_t Margin = 10;
-constexpr size_t SectionsWidth = 90;
-constexpr size_t SubSectionWidth = 200;
+constexpr size_t SectionsWidth = 100;
+constexpr size_t SubSectionWidth = 250;
 
 Settings::Settings(
   wxWindow *parent,
@@ -273,6 +273,7 @@ void Settings::setupProfiles(wxPanel *parent) {
 
   auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
   hsizer->Add(lsizer, 0, wxEXPAND);
+  hsizer->AddSpacer(Margin);
   hsizer->Add(mProfileOptionsSizer, 1, wxEXPAND);
   mProfiles->SetSizer(hsizer);
 }

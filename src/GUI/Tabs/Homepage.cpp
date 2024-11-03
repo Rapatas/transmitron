@@ -19,7 +19,7 @@ using namespace GUI::Tabs;
 using namespace GUI;
 using namespace GUI::Events;
 
-constexpr size_t HomepageWidth = 600;
+constexpr size_t HomepageWidth = 700;
 constexpr size_t HomepageHeight = 500;
 constexpr size_t Margin = 10;
 
