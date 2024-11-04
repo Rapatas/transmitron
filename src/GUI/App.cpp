@@ -161,11 +161,9 @@ void App::onPageSelected(wxBookCtrlEvent &event) {
   }
   // NOLINTEND(hicpp-signed-bitwise)
 
-  const auto windowName = fmt::format(
-    "{} - Transmitron",
-    mNote->GetPage(selection)->GetName().ToStdString()
-  );
-  mFrame->SetTitle(windowName);
+  const auto windowName = mNote->GetPage(selection)->GetName();
+  const auto title = wxString::FromUTF8(windowName).Append(" - Transmitron");
+  mFrame->SetTitle(title);
 
   event.Skip();
 }
@@ -439,7 +437,10 @@ void App::openProfile(wxDataViewItem item) {
 
   mNote->InsertPage(target, client, "");
   mNote->SetSelection(target);
-  mNote->SetPageText(target, mProfilesModel->getName(item));
+
+  const auto name = mProfilesModel->getName(item);
+  const auto utf8 = wxString::FromUTF8(name);
+  mNote->SetPageText(target, utf8);
 
   client->focus();
 }
