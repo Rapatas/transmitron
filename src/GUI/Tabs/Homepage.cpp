@@ -9,6 +9,7 @@
 #include <wx/wx.h>
 
 #include "Common/Log.hpp"
+#include "Common/Version.hpp"
 #include "GUI/Events/Connection.hpp"
 #include "GUI/Events/Profile.hpp"
 #include "GUI/Events/Recording.hpp"
@@ -18,9 +19,10 @@ using namespace Rapatas::Transmitron;
 using namespace GUI::Tabs;
 using namespace GUI;
 using namespace GUI::Events;
+using namespace Common;
 
 constexpr size_t HomepageWidth = 700;
-constexpr size_t HomepageHeight = 500;
+constexpr int HomepageHeight = 700;
 constexpr size_t Margin = 10;
 
 Homepage::Homepage(
@@ -39,6 +41,7 @@ Homepage::Homepage(
     wxTAB_TRAVERSAL,
     "Homepage"
   ),
+  mLogger(Log::create("GUI::Homepage")),
   mLabelFont(std::move(labelFont)),
   mOptionsHeight(optionsHeight),
   mArtProvider(artProvider),
@@ -46,29 +49,45 @@ Homepage::Homepage(
   mProfilesModelWrapper(new Models::ProfilesWrapper(mProfilesModel)),
   mLayoutsModel(layoutsModel) //
 {
-  mLogger = Common::Log::create("GUI::Homepage");
-
   auto *master = new wxPanel(this);
   master->SetMinSize(wxSize(HomepageWidth, HomepageHeight));
+
+  const auto versionStr = fmt::format(
+    "Version: {}",
+    Info::getProjectVersion()
+  );
+  auto *version = new wxStaticText(
+    this,
+    wxID_ANY,
+    versionStr,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxALIGN_CENTRE_HORIZONTAL
+  );
 
   setupProfiles(master);
   setupQuickConnect(master);
   setupRecordings(master);
 
-  auto *vsizer = new wxBoxSizer(wxVERTICAL);
-  vsizer->Add(mQuickConnect, 0, wxEXPAND);
-  vsizer->AddSpacer(Margin);
-  vsizer->Add(mRecordings, 0, wxEXPAND);
+  auto *rsizer = new wxBoxSizer(wxVERTICAL);
+  rsizer->Add(mQuickConnect, 0, wxEXPAND);
+  rsizer->AddSpacer(Margin);
+  rsizer->Add(mRecordings, 0, wxEXPAND);
 
   auto *hsizer = new wxBoxSizer(wxHORIZONTAL);
   hsizer->Add(mProfiles, 1, wxEXPAND);
   hsizer->AddSpacer(Margin);
-  hsizer->Add(vsizer, 1, wxEXPAND);
+  hsizer->Add(rsizer, 1, wxEXPAND);
   master->SetSizer(hsizer);
+
+  auto *vsizer = new wxBoxSizer(wxVERTICAL);
+  vsizer->Add(master, 1);
+  vsizer->AddSpacer(Margin);
+  vsizer->Add(version, 0, wxEXPAND);
 
   auto *sizer = new wxBoxSizer(wxHORIZONTAL);
   sizer->AddStretchSpacer(1);
-  sizer->Add(master, 0);
+  sizer->Add(vsizer, 0, wxEXPAND);
   sizer->AddStretchSpacer(1);
   SetSizer(sizer);
 
@@ -76,7 +95,6 @@ Homepage::Homepage(
 }
 
 void Homepage::focus() {
-
   mProfilesModelWrapper.reset(new Models::ProfilesWrapper(mProfilesModel));
   mProfilesCtrl->AssociateModel(mProfilesModelWrapper.get());
 

@@ -48,6 +48,7 @@ find_package(wxWidgets REQUIRED
 )
 
 include(${CMAKE_SOURCE_DIR}/cmake/clang-tidy.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/git-version.cmake)
 
 add_subdirectory(src)
 

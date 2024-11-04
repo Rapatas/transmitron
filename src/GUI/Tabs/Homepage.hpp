@@ -38,11 +38,10 @@ private:
     ProfilesEdit,
   };
 
+  std::shared_ptr<spdlog::logger> mLogger;
   wxFontInfo mLabelFont;
   int mOptionsHeight;
   const ArtProvider &mArtProvider;
-
-  std::shared_ptr<spdlog::logger> mLogger;
 
   // Profiles.
   wxPanel *mProfiles = nullptr;
@@ -56,6 +55,9 @@ private:
 
   // Recordings.
   wxPanel *mRecordings = nullptr;
+
+  // Info.
+  wxPanel *mInfo = nullptr;
 
   // Quick Connect.
   wxPanel *mQuickConnect = nullptr;
@@ -78,6 +80,7 @@ private:
   void setupProfiles(wxPanel *parent);
   void setupQuickConnect(wxPanel *parent);
   void setupRecordings(wxPanel *parent);
+  void setupInfo(wxPanel *parent);
 
   void onQuickConnect();
 

@@ -7,6 +7,7 @@
 #include <wx/wx.h>
 
 #include "Common/Log.hpp"
+#include "Common/Version.hpp"
 #include "GUI/Events/Connection.hpp"
 #include "GUI/Models/Layouts.hpp"
 #include "GUI/Models/Profiles.hpp"
@@ -15,9 +16,10 @@
 using namespace Rapatas::Transmitron;
 using namespace GUI::Tabs;
 using namespace GUI;
+using namespace Common;
 
 constexpr size_t SettingsWidth = 700;
-constexpr size_t SettingsHeight = 500;
+constexpr size_t SettingsHeight = 700;
 constexpr size_t Margin = 10;
 constexpr size_t SectionsWidth = 100;
 constexpr size_t SubSectionWidth = 250;
@@ -45,6 +47,19 @@ Settings::Settings(
   mLayoutsModel(layoutsModel) //
 {
   mLogger = Common::Log::create("GUI::Settings");
+
+  const auto versionStr = fmt::format(
+    "Version: {}",
+    Info::getProjectVersion()
+  );
+  auto *version = new wxStaticText(
+    this,
+    wxID_ANY,
+    versionStr,
+    wxDefaultPosition,
+    wxDefaultSize,
+    wxALIGN_CENTRE_HORIZONTAL
+  );
 
   auto *notifier = new Notifiers::Layouts;
   mLayoutsModel->AddNotifier(notifier);
@@ -93,9 +108,14 @@ Settings::Settings(
   msizer->Add(mSectionSizer, 1, wxEXPAND);
   master->SetSizer(msizer);
 
+  auto *vsizer = new wxBoxSizer(wxVERTICAL);
+  vsizer->Add(master, 1);
+  vsizer->AddSpacer(Margin);
+  vsizer->Add(version, 0, wxEXPAND);
+
   auto *sizer = new wxBoxSizer(wxHORIZONTAL);
   sizer->AddStretchSpacer(1);
-  sizer->Add(master, 0);
+  sizer->Add(vsizer, 0, wxEXPAND);
   sizer->AddStretchSpacer(1);
   SetSizer(sizer);
 
