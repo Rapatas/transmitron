@@ -43,6 +43,7 @@ Homepage::Homepage(
   mOptionsHeight(optionsHeight),
   mArtProvider(artProvider),
   mProfilesModel(profilesModel),
+  mProfilesModelWrapper(new Models::ProfilesWrapper(mProfilesModel)),
   mLayoutsModel(layoutsModel) //
 {
   mLogger = Common::Log::create("GUI::Homepage");
@@ -75,8 +76,12 @@ Homepage::Homepage(
 }
 
 void Homepage::focus() {
+
+  mProfilesModelWrapper.reset(new Models::ProfilesWrapper(mProfilesModel));
+  mProfilesCtrl->AssociateModel(mProfilesModelWrapper.get());
+
   wxDataViewItemArray children;
-  mProfilesModel->GetChildren(wxDataViewItem(nullptr), children);
+  mProfilesModelWrapper->GetChildren(wxDataViewItem(nullptr), children);
   if (children.empty()) { return; }
 
   const auto first = children.front();
@@ -112,7 +117,7 @@ void Homepage::setupProfiles(wxPanel *parent) {
     wxDefaultSize,
     wxDV_NO_HEADER
   );
-  mProfilesCtrl->AssociateModel(mProfilesModel.get());
+  mProfilesCtrl->AssociateModel(mProfilesModelWrapper.get());
   mProfilesCtrl->AppendColumn(name);
   mProfilesCtrl->AppendColumn(url);
   mProfilesCtrl->Bind(
@@ -293,13 +298,6 @@ void Homepage::onConnectClicked(wxCommandEvent & /* event */) {
   auto *connectionEvent = new Events::Connection(Events::CONNECTION_REQUESTED);
   connectionEvent->setProfile(item);
   wxQueueEvent(this, connectionEvent);
-}
-
-void Homepage::onNewProfileClicked(wxCommandEvent & /* event */) {
-  const auto parent = wxDataViewItem(nullptr);
-  const auto item = mProfilesModel->createProfile(parent);
-  mProfilesCtrl->Select(item);
-  mProfilesCtrl->EnsureVisible(item);
 }
 
 void Homepage::onProfileContext(wxDataViewEvent &event) {

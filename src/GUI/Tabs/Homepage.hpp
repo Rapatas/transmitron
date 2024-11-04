@@ -11,7 +11,7 @@
 
 #include "GUI/ArtProvider.hpp"
 #include "GUI/Models/Layouts.hpp"
-#include "GUI/Models/Profiles.hpp"
+#include "GUI/Models/ProfilesWrapper.hpp"
 
 namespace Rapatas::Transmitron::GUI::Tabs {
 
@@ -48,6 +48,7 @@ private:
   wxPanel *mProfiles = nullptr;
   wxDataViewCtrl *mProfilesCtrl = nullptr;
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
+  wxObjectDataPtr<Models::ProfilesWrapper> mProfilesModelWrapper;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
   wxButton *mProfileCreate = nullptr;
   wxButton *mProfileEdit = nullptr;
@@ -62,7 +63,6 @@ private:
   wxButton *mQuickConnectBtn = nullptr;
 
   void onCancelClicked(wxCommandEvent &event);
-  void onNewProfileClicked(wxCommandEvent &event);
   void onRecordingOpen(wxCommandEvent &event);
 
   void onConnectClicked(wxCommandEvent &event);

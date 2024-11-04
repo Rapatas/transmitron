@@ -155,6 +155,9 @@ void App::onPageSelected(wxBookCtrlEvent &event) {
     if ((style & Closable) != Closable) {
       mNote->SetWindowStyle(style | Closable);
     }
+    auto *page = mNote->GetPage(selection);
+    auto *home = dynamic_cast<Tabs::Homepage *>(page);
+    if (home != nullptr) { home->focus(); }
   }
   // NOLINTEND(hicpp-signed-bitwise)
 
