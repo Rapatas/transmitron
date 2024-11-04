@@ -60,16 +60,6 @@ private:
   struct Profile : public FsTree::Leaf {
     Profile(const Profiles &profiles, const ArtProvider &artProvider);
 
-    std::shared_ptr<spdlog::logger> mLogger;
-    const Profiles &mProfiles;
-    const ArtProvider &mArtProvider;
-
-    Types::ClientOptions clientOptions;
-    MQTT::BrokerOptions brokerOptions;
-    wxObjectDataPtr<Messages> messages;
-    wxObjectDataPtr<KnownTopics> topicsSubscribed;
-    wxObjectDataPtr<KnownTopics> topicsPublished;
-
     bool saveOptionsBroker(const Common::fs::path &path);
     bool saveOptionsClient(const Common::fs::path &path);
     bool save(const Common::fs::path &config, const Common::fs::path &cache);
@@ -82,6 +72,18 @@ private:
     std::optional<Types::ClientOptions> loadOptionsClient(
       const Common::fs::path &directory
     );
+
+    std::shared_ptr<spdlog::logger> mLogger;
+    const Profiles &mProfiles;
+    const ArtProvider &mArtProvider;
+
+    Types::ClientOptions clientOptions;
+    MQTT::BrokerOptions brokerOptions;
+    wxObjectDataPtr<Messages> messages;
+    wxObjectDataPtr<KnownTopics> topicsSubscribed;
+    wxObjectDataPtr<KnownTopics> topicsPublished;
+    Common::fs::path configDir;
+    Common::fs::path cacheDir;
   };
 
   static constexpr std::string_view

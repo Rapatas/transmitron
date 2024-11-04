@@ -402,8 +402,11 @@ wxDataViewItem FsTree::moveInsideAtIndex(
   ItemAdded(parent, item);
   for (const auto &child : node.children) { ItemAdded(item, toItem(child)); }
 
+  mNodes.at(oldParentId).saved = false;
+  mNodes.at(nodeId).saved = false;
   mNodes.at(newParentId).saved = false;
   save(newParentId);
+  save(oldParentId);
 
   return item;
 }
@@ -746,6 +749,9 @@ bool FsTree::saveFolder(Id id) {
   }
 
   indexFileWrite(id);
+
+  const auto &node = mNodes.at(id);
+  for (const auto &childId : node.children) { save(childId); }
 
   return true;
 }
