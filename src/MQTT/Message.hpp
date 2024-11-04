@@ -17,7 +17,7 @@ struct Message {
   std::chrono::system_clock::time_point timestamp;
 
   static Message fromJson(const nlohmann::json &data);
-  static nlohmann::json toJson(const Message &message);
+  [[nodiscard]] nlohmann::json toJson() const;
 };
 
 } // namespace Rapatas::Transmitron::MQTT

@@ -19,11 +19,11 @@ Message Message::fromJson(const nlohmann::json &data) {
   return result;
 }
 
-nlohmann::json Message::toJson(const Message &message) {
+nlohmann::json Message::toJson() const {
   return {
-    {"topic", message.topic},
-    {"payload", message.payload},
-    {"qos", message.qos},
-    {"retained", message.retained},
+    {"topic", topic},
+    {"payload", payload},
+    {"qos", qos},
+    {"retained", retained},
   };
 }

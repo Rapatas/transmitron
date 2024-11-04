@@ -119,7 +119,7 @@ bool Messages::leafSave(Id id) {
   auto *leaf = getLeaf(item);
   auto &message = *dynamic_cast<Message *>(leaf);
 
-  output << MQTT::Message::toJson(message);
+  output << message.toJson();
 
   return true;
 }
