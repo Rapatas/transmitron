@@ -16,7 +16,7 @@ class Subscription : public std::enable_shared_from_this<Subscription>
 {
 public:
 
-  using Id_t = size_t;
+  using Id = size_t;
 
   enum class State {
     ToSubscribe,
@@ -39,7 +39,7 @@ public:
   };
 
   explicit Subscription(
-    Id_t id,
+    Id id,
     std::string filter,
     QoS qos,
     std::shared_ptr<Client> client
@@ -56,11 +56,11 @@ public:
   std::string getFilter() const;
   State getState() const;
   QoS getQos() const;
-  Id_t getId() const;
+  Id getId() const;
 
 private:
 
-  Id_t mId;
+  Id mId;
   std::string mFilter;
   QoS mQos;
   State mState = State::Unsubscribed;

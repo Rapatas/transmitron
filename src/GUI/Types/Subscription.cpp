@@ -19,7 +19,7 @@ Subscription::Subscription(const std::shared_ptr<MQTT::Subscription> &sub) :
 }
 
 Subscription::Subscription(
-  MQTT::Subscription::Id_t id,
+  MQTT::Subscription::Id id,
   std::string filter,
   MQTT::QoS qos
 ) :

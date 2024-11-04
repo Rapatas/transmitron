@@ -58,7 +58,7 @@ private:
 
   struct Node {
     MQTT::Message message;
-    MQTT::Subscription::Id_t subscriptionId{};
+    MQTT::Subscription::Id subscriptionId{};
   };
 
   std::shared_ptr<spdlog::logger> mLogger;
@@ -69,7 +69,7 @@ private:
   std::string mFilter;
 
   void remap();
-  void refresh(MQTT::Subscription::Id_t subscriptionId);
+  void refresh(MQTT::Subscription::Id subscriptionId);
 
   // wxDataViewVirtualListModel interface.
   [[nodiscard]] unsigned GetColumnCount() const override;
@@ -92,17 +92,17 @@ private:
   ) override;
 
   // Models::Subscriptions::Observer interface.
-  void onMuted(MQTT::Subscription::Id_t subscriptionId) override;
-  void onUnmuted(MQTT::Subscription::Id_t subscriptionId) override;
-  void onSolo(MQTT::Subscription::Id_t subscriptionId) override;
-  void onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) override;
-  void onCleared(MQTT::Subscription::Id_t subscriptionId) override;
+  void onMuted(MQTT::Subscription::Id subscriptionId) override;
+  void onUnmuted(MQTT::Subscription::Id subscriptionId) override;
+  void onSolo(MQTT::Subscription::Id subscriptionId) override;
+  void onUnsubscribed(MQTT::Subscription::Id subscriptionId) override;
+  void onCleared(MQTT::Subscription::Id subscriptionId) override;
   void onColorSet(
-    MQTT::Subscription::Id_t subscriptionId,
+    MQTT::Subscription::Id subscriptionId,
     wxColor color //
   ) override;
   void onMessage(
-    MQTT::Subscription::Id_t subscriptionId,
+    MQTT::Subscription::Id subscriptionId,
     const MQTT::Message &message
   ) override;
 };

@@ -450,14 +450,14 @@ bool Layouts::save(size_t id) {
 
 // Static {
 
-Layouts::Node::Id_t Layouts::toId(const wxDataViewItem &item) {
+Layouts::Node::Id Layouts::toId(const wxDataViewItem &item) {
   uintptr_t result = 0;
   const void *id = item.GetID();
   std::memcpy(&result, &id, sizeof(item.GetID()));
   return result;
 }
 
-wxDataViewItem Layouts::toItem(Node::Id_t id) {
+wxDataViewItem Layouts::toItem(Node::Id id) {
   void *itemId = nullptr;
   const uintptr_t value = id;
   std::memcpy(&itemId, &value, sizeof(id));

@@ -154,7 +154,7 @@ nlohmann::json History::toJson() const {
 }
 
 void History::onMessage(
-  MQTT::Subscription::Id_t subscriptionId,
+  MQTT::Subscription::Id subscriptionId,
   const MQTT::Message &message
 ) {
   Node node{message, subscriptionId};
@@ -173,22 +173,22 @@ void History::onMessage(
   }
 }
 
-void History::onMuted(MQTT::Subscription::Id_t /* subscriptionId */) {
+void History::onMuted(MQTT::Subscription::Id /* subscriptionId */) {
   remap();
 }
 
-void History::onUnmuted(MQTT::Subscription::Id_t /* subscriptionId */) {
+void History::onUnmuted(MQTT::Subscription::Id /* subscriptionId */) {
   remap();
 }
 
-void History::onSolo(MQTT::Subscription::Id_t /* subscriptionId */) { remap(); }
+void History::onSolo(MQTT::Subscription::Id /* subscriptionId */) { remap(); }
 
 void History::
-  onColorSet(MQTT::Subscription::Id_t subscriptionId, wxColor /* color */) {
+  onColorSet(MQTT::Subscription::Id subscriptionId, wxColor /* color */) {
   refresh(subscriptionId);
 }
 
-void History::onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) {
+void History::onUnsubscribed(MQTT::Subscription::Id subscriptionId) {
   for (auto it = std::begin(mMessages); it != std::end(mMessages);) {
     if (it->subscriptionId == subscriptionId) {
       it = mMessages.erase(it);
@@ -200,7 +200,7 @@ void History::onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) {
   remap();
 }
 
-void History::onCleared(MQTT::Subscription::Id_t subscriptionId) {
+void History::onCleared(MQTT::Subscription::Id subscriptionId) {
   for (auto it = std::begin(mMessages); it != std::end(mMessages);) {
     if (it->subscriptionId == subscriptionId) {
       it = mMessages.erase(it);
@@ -244,7 +244,7 @@ void History::remap() {
   }
 }
 
-void History::refresh(MQTT::Subscription::Id_t subscriptionId) {
+void History::refresh(MQTT::Subscription::Id subscriptionId) {
   for (uint32_t i = 0; i < mRemap.size(); ++i) {
     if (mMessages[mRemap[i]].subscriptionId == subscriptionId) {
       RowChanged(i);

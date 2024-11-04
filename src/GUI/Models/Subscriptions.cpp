@@ -83,7 +83,7 @@ bool Subscriptions::load(const std::string &recording) {
   }
 
   for (const auto &sub : *subscriptionsIt) {
-    MQTT::Subscription::Id_t id{};
+    MQTT::Subscription::Id id{};
     std::string filter;
     MQTT::QoS qos = MQTT::QoS::AtLeastOnce;
 
@@ -136,7 +136,7 @@ std::string Subscriptions::getFilter(wxDataViewItem item) const {
   return sub->getFilter();
 }
 
-std::string Subscriptions::getFilter(MQTT::Subscription::Id_t subscriptionId
+std::string Subscriptions::getFilter(MQTT::Subscription::Id subscriptionId
 ) const {
   const auto &sub = mSubscriptions.at(subscriptionId);
   return sub->getFilter();
@@ -147,12 +147,12 @@ bool Subscriptions::getMuted(wxDataViewItem item) const {
   return sub->getMuted();
 }
 
-bool Subscriptions::getMuted(MQTT::Subscription::Id_t subscriptionId) const {
+bool Subscriptions::getMuted(MQTT::Subscription::Id subscriptionId) const {
   const auto &sub = mSubscriptions.at(subscriptionId);
   return sub->getMuted();
 }
 
-wxColor Subscriptions::getColor(MQTT::Subscription::Id_t subscriptionId) const {
+wxColor Subscriptions::getColor(MQTT::Subscription::Id subscriptionId) const {
   const auto &sub = mSubscriptions.at(subscriptionId);
   return sub->getColor();
 }

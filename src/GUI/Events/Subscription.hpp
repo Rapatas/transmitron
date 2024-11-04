@@ -31,7 +31,7 @@ public:
     return new Subscription(*this);
   }
 
-  [[nodiscard]] MQTT::Subscription::Id_t getSubscriptionId() const {
+  [[nodiscard]] MQTT::Subscription::Id getSubscriptionId() const {
     return mId;
   }
 
@@ -39,12 +39,12 @@ public:
 
   void setMessage(MQTT::Message msg) { mMsg = std::move(msg); }
 
-  void setId(MQTT::Subscription::Id_t id) { mId = id; }
+  void setId(MQTT::Subscription::Id id) { mId = id; }
 
 private:
 
   MQTT::Message mMsg;
-  MQTT::Subscription::Id_t mId = 0;
+  MQTT::Subscription::Id mId = 0;
 };
 
 } // namespace Rapatas::Transmitron::GUI::Events

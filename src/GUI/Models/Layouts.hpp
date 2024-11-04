@@ -69,7 +69,7 @@ public:
 private:
 
   struct Node {
-    using Id_t = size_t;
+    using Id = size_t;
     std::string name;
     Perspective perspective;
     Common::fs::path path;
@@ -77,16 +77,16 @@ private:
   };
 
   std::shared_ptr<spdlog::logger> mLogger;
-  Node::Id_t mAvailableId = 1;
-  std::map<Node::Id_t, std::unique_ptr<Node>> mLayouts;
+  Node::Id mAvailableId = 1;
+  std::map<Node::Id, std::unique_ptr<Node>> mLayouts;
   std::string mLayoutsDir;
 
   void injectDefaultLayouts();
   wxDataViewItem loadLayoutFile(const Common::fs::path &filepath);
   bool save(size_t id);
 
-  static Node::Id_t toId(const wxDataViewItem &item);
-  static wxDataViewItem toItem(Node::Id_t id);
+  static Node::Id toId(const wxDataViewItem &item);
+  static wxDataViewItem toItem(Node::Id id);
 };
 
 } // namespace Rapatas::Transmitron::GUI::Models

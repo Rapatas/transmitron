@@ -17,7 +17,7 @@ class Subscription :
 public:
 
   explicit Subscription(const std::shared_ptr<MQTT::Subscription> &sub);
-  Subscription(MQTT::Subscription::Id_t id, std::string filter, MQTT::QoS qos);
+  Subscription(MQTT::Subscription::Id id, std::string filter, MQTT::QoS qos);
 
   // MQTT::Subscription::Observer interface.
   void onSubscribed() override;
@@ -38,7 +38,7 @@ private:
 
   std::shared_ptr<MQTT::Subscription> mSub;
   bool mMuted;
-  MQTT::Subscription::Id_t mId;
+  MQTT::Subscription::Id mId;
   std::string mFilter;
   MQTT::QoS mQos;
   wxColor mColor;

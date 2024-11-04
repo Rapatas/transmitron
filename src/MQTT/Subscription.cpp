@@ -10,7 +10,7 @@ using namespace Rapatas::Transmitron;
 using namespace MQTT;
 
 Subscription::Subscription(
-  Id_t id,
+  Id id,
   std::string filter,
   QoS qos,
   std::shared_ptr<Client> client
@@ -84,6 +84,6 @@ QoS Subscription::getQos() const { return mQos; }
 
 Subscription::State Subscription::getState() const { return mState; }
 
-Subscription::Id_t Subscription::getId() const { return mId; }
+Subscription::Id Subscription::getId() const { return mId; }
 
 void Subscription::setState(State newState) { mState = newState; }

@@ -24,16 +24,16 @@ public:
     Observer &operator=(Observer &&) = default;
 
     virtual void onColorSet(
-      MQTT::Subscription::Id_t subscriptionId,
+      MQTT::Subscription::Id subscriptionId,
       wxColor color
     ) = 0;
-    virtual void onMuted(MQTT::Subscription::Id_t subscriptionId) = 0;
-    virtual void onSolo(MQTT::Subscription::Id_t subscriptionId) = 0;
-    virtual void onUnmuted(MQTT::Subscription::Id_t subscriptionId) = 0;
-    virtual void onUnsubscribed(MQTT::Subscription::Id_t subscriptionId) = 0;
-    virtual void onCleared(MQTT::Subscription::Id_t subscriptionId) = 0;
+    virtual void onMuted(MQTT::Subscription::Id subscriptionId) = 0;
+    virtual void onSolo(MQTT::Subscription::Id subscriptionId) = 0;
+    virtual void onUnmuted(MQTT::Subscription::Id subscriptionId) = 0;
+    virtual void onUnsubscribed(MQTT::Subscription::Id subscriptionId) = 0;
+    virtual void onCleared(MQTT::Subscription::Id subscriptionId) = 0;
     virtual void onMessage(
-      MQTT::Subscription::Id_t subscriptionId,
+      MQTT::Subscription::Id subscriptionId,
       const MQTT::Message &message
     ) = 0;
   };
@@ -60,22 +60,22 @@ public:
   void unsubscribe(wxDataViewItem item);
   void clear(wxDataViewItem item);
 
-  [[nodiscard]] bool getMuted(MQTT::Subscription::Id_t subscriptionId) const;
+  [[nodiscard]] bool getMuted(MQTT::Subscription::Id subscriptionId) const;
   [[nodiscard]] bool getMuted(wxDataViewItem item) const;
   [[nodiscard]] std::string getFilter(wxDataViewItem item) const;
-  [[nodiscard]] wxColor getColor(MQTT::Subscription::Id_t subscriptionId) const;
+  [[nodiscard]] wxColor getColor(MQTT::Subscription::Id subscriptionId) const;
   [[nodiscard]] nlohmann::json toJson() const;
   [[nodiscard]] std::string getFilter( //
-    MQTT::Subscription::Id_t subscriptionId
+    MQTT::Subscription::Id subscriptionId
   ) const;
 
 private:
 
   std::shared_ptr<spdlog::logger> mLogger;
   std::shared_ptr<MQTT::Client> mClient;
-  std::map<MQTT::Subscription::Id_t, std::unique_ptr<Types::Subscription>>
+  std::map<MQTT::Subscription::Id, std::unique_ptr<Types::Subscription>>
     mSubscriptions;
-  std::vector<MQTT::Subscription::Id_t> mRemap;
+  std::vector<MQTT::Subscription::Id> mRemap;
   std::map<size_t, Observer *> mObservers;
 
   // wxDataViewVirtualListModel interface.
