@@ -273,6 +273,15 @@ void Client::setupPanelHistory(wxWindow *parent) {
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
+  auto *deltatRender = new wxDataViewTextRenderer();
+  deltatRender->EnableMarkup();
+  auto *const deltat = new wxDataViewColumn(
+    L"Δt",
+    deltatRender,
+    static_cast<unsigned>(Models::History::Column::Dt),
+    wxCOL_WIDTH_DEFAULT,
+    wxALIGN_RIGHT
+  );
   auto *const qos = new wxDataViewColumn(
     L"qos",
     new wxDataViewBitmapRenderer(),
@@ -302,6 +311,7 @@ void Client::setupPanelHistory(wxWindow *parent) {
   mHistoryCtrl->AppendColumn(icon);
   mHistoryCtrl->AppendColumn(qos);
   mHistoryCtrl->AppendColumn(topic);
+  mHistoryCtrl->AppendColumn(deltat);
 
   mHistorySearchFilter = new Widgets::TopicCtrl(panel, -1);
   mHistorySearchFilter->SetHint("Filter...");
@@ -323,6 +333,10 @@ void Client::setupPanelHistory(wxWindow *parent) {
 
   mAutoScroll = new wxCheckBox(panel, -1, "auto-scroll");
   mAutoScroll->SetValue(true);
+
+  mShowDt = new wxCheckBox(panel, -1, wxString::FromUTF8("Show Δt"));
+  mShowDt->SetValue(false);
+  mShowDt->Bind(wxEVT_CHECKBOX, &Client::onHistoryShowDtChanged, this);
 
   mHistoryClear = new wxButton(
     panel,
@@ -352,6 +366,8 @@ void Client::setupPanelHistory(wxWindow *parent) {
   hsizer->Add(mHistoryRecord, 0, wxEXPAND);
   hsizer->AddStretchSpacer(1);
   hsizer->Add(mAutoScroll, 0, wxEXPAND);
+  hsizer->AddStretchSpacer(1);
+  hsizer->Add(mShowDt, 0, wxEXPAND);
   hsizer->AddStretchSpacer(1);
   hsizer->Add(mHistoryClear, 0, wxEXPAND);
   auto *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
@@ -1482,6 +1498,7 @@ void Client::onMessage(wxDataViewItem item) {
   if (!mAutoScroll->GetValue()) { return; }
 
   mHistoryCtrl->Select(item);
+  mHistoryModel->setSelected(item);
   mHistoryCtrl->EnsureVisible(item);
 
   auto *preview = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Preview).panel
@@ -1610,10 +1627,14 @@ void Client::onHistorySelected(wxDataViewEvent &event) {
   if (!event.GetItem().IsOk()) { return; }
   const auto item = event.GetItem();
 
-  auto *preview = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Preview).panel
-  );
+  mHistoryModel->setSelected(item);
+  mHistoryCtrl->Refresh();
+  mHistoryCtrl->Update();
+
+  auto *preview = mPanes.at(Panes::Preview).panel;
+  auto *edit = dynamic_cast<Widgets::Edit *>(preview);
   const auto message = mHistoryModel->getMessage(item);
-  preview->setMessage(message);
+  edit->setMessage(message);
 }
 
 void Client::onHistoryClearClicked(wxCommandEvent &event) {
@@ -1680,6 +1701,11 @@ void Client::onHistorySearchButton(wxCommandEvent &event) {
   (void)event;
   const auto filter = mHistorySearchFilter->GetValue().ToStdString();
   mHistoryModel->setFilter(filter);
+}
+
+void Client::onHistoryShowDtChanged(wxCommandEvent &event){
+  (void)event;
+  mHistoryModel->showDt(mShowDt->GetValue());
 }
 
 // History }

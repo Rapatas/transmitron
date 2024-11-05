@@ -53,6 +53,57 @@ std::string Common::Helpers::timeToString(
   return sstream.str();
 }
 
+std::string Common::Helpers::durationToString(
+  const std::chrono::milliseconds &dur
+) {
+  const bool negative = dur.count() < 0;
+  const std::string prefix = negative ? "-" : "";
+  milliseconds abs{std::abs(dur.count())};
+
+  const auto dhours = duration_cast<hours>(abs);
+  const auto dminutes = duration_cast<minutes>(abs - dhours);
+  const auto dseconds = duration_cast<seconds>(abs - dhours - dminutes);
+  const auto dmsec = duration_cast<milliseconds>(
+    abs - dhours - dminutes - dseconds
+  );
+
+  if (dhours.count() == 0 && dminutes.count() == 0 && dseconds.count() == 0) {
+    return fmt::format( //
+      "{}{}ms",
+      prefix,
+      dmsec.count()
+    );
+  }
+
+  if (dhours.count() == 0 && dminutes.count() == 0) {
+    return fmt::format( //
+      "{}{}.{:0<3}s",
+      prefix,
+      dseconds.count(),
+      dmsec.count()
+    );
+  }
+
+  if (dhours.count() == 0) {
+    return fmt::format(
+      "{}{:02}:{:02}.{:0<3}",
+      prefix,
+      dminutes.count(),
+      dseconds.count(),
+      dmsec.count()
+    );
+  }
+
+  return fmt::format(
+    "{}{:02}:{:02}:{:02}.{:0<3}",
+    prefix,
+    dhours.count(),
+    dminutes.count(),
+    dseconds.count(),
+    dmsec.count()
+  );
+}
+
 std::string Common::Helpers::timeToFilename(
   const system_clock::time_point &timestamp
 ) {

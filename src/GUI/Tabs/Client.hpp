@@ -135,6 +135,7 @@ private:
   wxObjectDataPtr<Models::History> mHistoryModel;
   wxDataViewCtrl *mHistoryCtrl = nullptr;
   wxCheckBox *mAutoScroll = nullptr;
+  wxCheckBox *mShowDt = nullptr;
   wxButton *mHistoryClear = nullptr;
   wxButton *mHistoryRecord = nullptr;
   Widgets::TopicCtrl *mHistorySearchFilter = nullptr;
@@ -199,6 +200,7 @@ private:
   void onHistoryDoubleClicked(wxDataViewEvent &event);
   void onHistorySearchKey(wxKeyEvent &event);
   void onHistorySearchButton(wxCommandEvent &event);
+  void onHistoryShowDtChanged(wxCommandEvent &event);
 
   // Preview.
   void onPreviewSaveMessage(Events::Edit &event);

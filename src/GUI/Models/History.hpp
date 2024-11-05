@@ -29,10 +29,11 @@ public:
     virtual void onMessage(wxDataViewItem item) = 0;
   };
 
-  enum class Column : unsigned {
+  enum class Column : uint8_t {
     Icon,
     Qos,
     Topic,
+    Dt,
     Max
   };
 
@@ -43,6 +44,8 @@ public:
   void clear();
   bool load(const std::string &recording);
   void setFilter(const std::string &filter);
+  void setSelected(const wxDataViewItem &item);
+  void showDt(bool show);
 
   [[nodiscard]] std::string getPayload(const wxDataViewItem &item) const;
   [[nodiscard]] std::string getTopic(const wxDataViewItem &item) const;
@@ -67,9 +70,12 @@ private:
   wxObjectDataPtr<Subscriptions> mSubscriptions;
   std::map<size_t, Observer *> mObservers;
   std::string mFilter;
+  wxDataViewItem mSelected;
+  bool mShowDt = false;
 
   void remap();
   void refresh(MQTT::Subscription::Id subscriptionId);
+  std::chrono::milliseconds deltaToSelected(size_t row) const;
 
   // wxDataViewVirtualListModel interface.
   [[nodiscard]] unsigned GetColumnCount() const override;

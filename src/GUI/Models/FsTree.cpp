@@ -473,7 +473,7 @@ void FsTree::loadLeaf(const Common::fs::directory_entry &entry, Id parentId) {
   Node newNode{
     parentId,
     decoded,
-    real,
+    real.string(),
     Node::Type::Payload,
     {},
     nullptr,

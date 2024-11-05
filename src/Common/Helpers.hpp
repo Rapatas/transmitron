@@ -12,8 +12,11 @@ std::string timeToFilename(
   const std::chrono::system_clock::time_point &timestamp
 );
 
-std::string timeToString(const std::chrono::system_clock::time_point &timestamp
+std::string timeToString( //
+  const std::chrono::system_clock::time_point &timestamp
 );
+
+std::string durationToString(const std::chrono::milliseconds &dur);
 
 std::chrono::system_clock::time_point stringToTime(const std::string &line);
 

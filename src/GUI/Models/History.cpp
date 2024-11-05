@@ -3,6 +3,7 @@
 #include <fstream>
 #include <future>
 
+#include <fmt/chrono.h>
 #include <wx/dcmemory.h>
 
 #include "Common/Filesystem.hpp"
@@ -173,9 +174,7 @@ void History::onMessage(
   }
 }
 
-void History::onMuted(MQTT::Subscription::Id /* subscriptionId */) {
-  remap();
-}
+void History::onMuted(MQTT::Subscription::Id /* subscriptionId */) { remap(); }
 
 void History::onUnmuted(MQTT::Subscription::Id /* subscriptionId */) {
   remap();
@@ -277,6 +276,10 @@ void History::setFilter(const std::string &filter) {
   remap();
 }
 
+void History::setSelected(const wxDataViewItem &item) { mSelected = item; }
+
+void History::showDt(bool show) { mShowDt = show; }
+
 std::string History::getFilter() const { return mFilter; }
 
 unsigned History::GetColumnCount() const {
@@ -299,6 +302,10 @@ wxString History::GetColumnType(unsigned int col) const {
 
     case Column::Topic: {
       return wxDataViewIconTextRenderer::GetDefaultType();
+    } break;
+
+    case Column::Dt: {
+      return wxDataViewTextRenderer::GetDefaultType();
     } break;
 
     default: {
@@ -357,9 +364,30 @@ void History::GetValueByRow(
       }
       variant << *result;
     } break;
+    case Column::Dt: {
+      if (mShowDt) {
+        const auto diff = deltaToSelected(row);
+        const auto str = Helpers::durationToString(diff);
+        const auto utf8 = fmt::format("<span color=\"#888888\">{}</span>", str);
+        const auto wxs = wxString::FromUTF8(utf8.data(), utf8.length());
+        variant = wxs;
+      } else {
+        variant = "";
+      }
+    } break;
     default: {
     }
   }
+}
+
+std::chrono::milliseconds History::deltaToSelected(size_t row) const {
+  using namespace std::chrono;
+  if (!mSelected.IsOk()) { return {}; }
+  const auto &current = mMessages.at(mRemap.at(row));
+  const auto &selected = mMessages.at(mRemap.at(GetRow(mSelected)));
+  return duration_cast<milliseconds>(
+    current.message.timestamp - selected.message.timestamp
+  );
 }
 
 bool History::GetAttrByRow(
