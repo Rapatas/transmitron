@@ -19,7 +19,7 @@ KnownTopics::KnownTopics() {
 KnownTopics::~KnownTopics() { save(); }
 
 bool KnownTopics::load(const Common::fs::path &filepath) {
-  mLogger->info("Loading {}", filepath.string());
+  mLogger->debug("Loading {}", filepath.string());
   mFilepath = filepath;
   const bool exists = fs::exists(mFilepath);
   if (!exists) {

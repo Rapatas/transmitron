@@ -444,10 +444,8 @@ void FsTree::loadDirectoryRecursive(const Common::fs::path &path, Id parentId) {
     if (entry.path().stem() == ".index") { continue; }
 
     if (isLeaf(entry)) {
-      mLogger->trace("  - detected! {}", entry.path().string());
       loadLeaf(entry, currentId);
     } else if (entry.status().type() == fs::file_type::directory) {
-      // mLogger->trace("  - is directory! {}", entry.path().string());
       loadDirectoryRecursive(entry.path(), currentId);
     }
   }
@@ -459,13 +457,13 @@ void FsTree::loadDirectoryRecursive(const Common::fs::path &path, Id parentId) {
 }
 
 void FsTree::loadLeaf(const Common::fs::directory_entry &entry, Id parentId) {
-  std::string decoded;
   const auto &path = entry.path();
-  try {
-    const auto real = (entry.status().type() == fs::file_type::directory)
-      ? path.filename()
-      : path.stem();
+  const auto real = (entry.status().type() == fs::file_type::directory)
+    ? path.filename()
+    : path.stem();
 
+  std::string decoded;
+  try {
     decoded = Url::decode(real.string());
   } catch (std::runtime_error &error) {
     mLogger->error("Could not decode '{}': {}", path.string(), error.what());
@@ -475,7 +473,7 @@ void FsTree::loadLeaf(const Common::fs::directory_entry &entry, Id parentId) {
   Node newNode{
     parentId,
     decoded,
-    path.stem().string(),
+    real,
     Node::Type::Payload,
     {},
     nullptr,
