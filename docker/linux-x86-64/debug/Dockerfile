@@ -26,5 +26,9 @@ RUN true \
   && conan install . --build=missing \
   && rm -rf *
 
+RUN true \
+  && apt-get install -y git \
+  && git config --global --add safe.directory /workspace
+
 RUN echo "rapatas-transmitron-linux-x86-64-debug" > /etc/compilername
 COPY ./macro-make  /usr/local/bin

@@ -26,5 +26,9 @@ RUN true \
   && sed -i '/build_type/s/=.*$/=Release/' /root/.conan2/profiles/windows \
   && conan install /workspace --build=missing --profile:build=default --profile:host=windows
 
+RUN true \
+  && apt-get install -y git \
+  && git config --global --add safe.directory /workspace
+
 RUN echo "rapatas-transmitron-windows-x86-64-release" > /etc/compilername
 COPY ./macro-make  /usr/local/bin

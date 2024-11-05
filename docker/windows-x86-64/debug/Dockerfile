@@ -27,5 +27,9 @@ RUN true \
   && cd /workspace \
   && rm -rf *
 
+RUN true \
+  && apt-get install -y git \
+  && git config --global --add safe.directory /workspace
+
 RUN echo "rapatas-transmitron-windows-x86-64-debug" > /etc/compilername
 COPY ./macro-make  /usr/local/bin
