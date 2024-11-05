@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.0.0] - 2024-11-05
+
+### Added
+
+- Folders for profiles
+- Support for SSL connection
+- Option to display Δt of history
+- New layouts: `IDE`, `Casual`, `Default`
+
+### Fixed
+
+- Crash on empty subscription
+- Emojis not displaying in tab name
+- Panels disappearing after switching layout
+- Failure to save profile when the name contains a dot
+
 ## [0.0.5] - 2024-01-29
 
 ### Added
