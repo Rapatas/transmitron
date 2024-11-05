@@ -1,28 +1,24 @@
 #pragma once
 
-#include <functional>
-#include <string>
 #include <map>
+#include <string>
 
 #include <mqtt/async_client.h>
 #include <spdlog/spdlog.h>
 
 #include "Client.hpp"
 
-namespace Rapatas::Transmitron::MQTT
-{
+namespace Rapatas::Transmitron::MQTT {
 
 struct Message;
 
-class Subscription :
-  public std::enable_shared_from_this<Subscription>
+class Subscription : public std::enable_shared_from_this<Subscription>
 {
 public:
 
-  using Id_t = size_t;
+  using Id = size_t;
 
-  enum class State
-  {
+  enum class State {
     ToSubscribe,
     PendingSubscription,
     Subscribed,
@@ -30,8 +26,7 @@ public:
     Unsubscribed
   };
 
-  struct Observer
-  {
+  struct Observer {
     Observer() = default;
     Observer(const Observer &other) = default;
     Observer(Observer &&other) = default;
@@ -44,7 +39,7 @@ public:
   };
 
   explicit Subscription(
-    Id_t id,
+    Id id,
     std::string filter,
     QoS qos,
     std::shared_ptr<Client> client
@@ -61,16 +56,16 @@ public:
   std::string getFilter() const;
   State getState() const;
   QoS getQos() const;
-  Id_t getId() const;
+  Id getId() const;
 
 private:
 
-  Id_t mId;
+  Id mId;
   std::string mFilter;
   QoS mQos;
   State mState = State::Unsubscribed;
   std::shared_ptr<Client> mClient;
-  std::map<size_t, MQTT::Subscription::Observer*> mObservers;
+  std::map<size_t, MQTT::Subscription::Observer *> mObservers;
   std::shared_ptr<spdlog::logger> mLogger;
 
   friend class Client; // Can set the state.

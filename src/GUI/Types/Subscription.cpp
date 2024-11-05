@@ -1,4 +1,5 @@
 #include "Subscription.hpp"
+
 #include "Common/Helpers.hpp"
 #include "GUI/Events/Subscription.hpp"
 
@@ -12,13 +13,13 @@ Subscription::Subscription(const std::shared_ptr<MQTT::Subscription> &sub) :
   mId(mSub->getId()),
   mFilter(mSub->getFilter()),
   mQos(mSub->getQos()),
-  mColor(colorFromString(mFilter))
+  mColor(colorFromString(mFilter)) //
 {
   sub->attachObserver(this);
 }
 
 Subscription::Subscription(
-  MQTT::Subscription::Id_t id,
+  MQTT::Subscription::Id id,
   std::string filter,
   MQTT::QoS qos
 ) :
@@ -27,74 +28,48 @@ Subscription::Subscription(
   mId(id),
   mFilter(std::move(filter)),
   mQos(qos),
-  mColor(colorFromString(mFilter))
+  mColor(colorFromString(mFilter)) //
 {}
 
-void Subscription::onSubscribed()
-{
+void Subscription::onSubscribed() {
   auto *event = new Events::Subscription(Events::SUBSCRIPTION_SUBSCRIBED);
   event->setId(mId);
   wxQueueEvent(this, event);
 }
 
-void Subscription::onUnsubscribed()
-{
+void Subscription::onUnsubscribed() {
   auto *event = new Events::Subscription(Events::SUBSCRIPTION_UNSUBSCRIBED);
   event->setId(mId);
   wxQueueEvent(this, event);
 }
 
-void Subscription::onMessage(const MQTT::Message &message)
-{
+void Subscription::onMessage(const MQTT::Message &message) {
   auto *event = new Events::Subscription(Events::SUBSCRIPTION_RECEIVED);
   event->setMessage(message);
   event->setId(mId);
   wxQueueEvent(this, event);
 }
 
-size_t Subscription::getId() const
-{
-  return mId;
-}
+size_t Subscription::getId() const { return mId; }
 
-void Subscription::setMuted(bool muted)
-{
-  mMuted = muted;
-}
+void Subscription::setMuted(bool muted) { mMuted = muted; }
 
-void Subscription::setColor(const wxColor &color)
-{
-  mColor = color;
-}
+void Subscription::setColor(const wxColor &color) { mColor = color; }
 
-void Subscription::unsubscribe()
-{
+void Subscription::unsubscribe() {
   if (mSub == nullptr) { return; }
   mSub->unsubscribe();
 }
 
-std::string Subscription::getFilter() const
-{
-  return mFilter;
-}
+std::string Subscription::getFilter() const { return mFilter; }
 
-wxColor Subscription::getColor() const
-{
-  return mColor;
-}
+wxColor Subscription::getColor() const { return mColor; }
 
-MQTT::QoS Subscription::getQos() const
-{
-  return mQos;
-}
+MQTT::QoS Subscription::getQos() const { return mQos; }
 
-bool Subscription::getMuted() const
-{
-  return mMuted;
-}
+bool Subscription::getMuted() const { return mMuted; }
 
-wxColor Subscription::colorFromString(const std::string &data)
-{
+wxColor Subscription::colorFromString(const std::string &data) {
   const size_t hash = std::hash<std::string>{}(data);
   return Common::Helpers::colorFromNumber(hash);
 }

@@ -1,22 +1,19 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
-#include <wx/wx.h>
 #include <wx/aui/auibook.h>
+#include <wx/wx.h>
 
-#include "Common/Log.hpp"
+#include "GUI/ArtProvider.hpp"
 #include "GUI/Events/Profile.hpp"
 #include "GUI/Events/Recording.hpp"
-#include "GUI/Models/Profiles.hpp"
 #include "GUI/Models/Layouts.hpp"
+#include "GUI/Models/Profiles.hpp"
 #include "GUI/Tabs/Settings.hpp"
-#include "GUI/ArtProvider.hpp"
 
-namespace Rapatas::Transmitron::GUI
-{
+namespace Rapatas::Transmitron::GUI {
 
-class App :
-  public wxApp
+class App : public wxApp
 {
 public:
 

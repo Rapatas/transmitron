@@ -1,23 +1,22 @@
-#include <fstream>
-#include <iterator>
-#include <thread>
+#include "Client.hpp"
+
+#include <memory>
 
 #include <nlohmann/json.hpp>
 #include <wx/artprov.h>
 #include <wx/clipbrd.h>
 
-#include "Client.hpp"
 #include "Common/Helpers.hpp"
 #include "Common/Log.hpp"
-#include "Common/Url.hpp"
-#include "MQTT/Message.hpp"
 #include "GUI/Events/Layout.hpp"
 #include "GUI/Events/Recording.hpp"
 #include "GUI/Resources/history/history-18x14.hpp"
+#include "GUI/Resources/messages/messages-18x14.hpp"
 #include "GUI/Resources/preview/preview-18x14.hpp"
 #include "GUI/Resources/send/send-18x14.hpp"
-#include "GUI/Resources/messages/messages-18x14.hpp"
 #include "GUI/Resources/subscription/subscription-18x14.hpp"
+#include "GUI/Widgets/Edit.hpp"
+#include "MQTT/Message.hpp"
 
 using namespace Rapatas::Transmitron;
 using namespace GUI::Tabs;
@@ -26,9 +25,13 @@ using namespace GUI;
 using namespace Common;
 
 constexpr size_t FontSize = 9;
+static constexpr size_t PaneMinWidth = 100;
+static constexpr size_t PaneMinHeight = 100;
+static constexpr size_t PaneBestWidth = 412;
+static constexpr size_t MessagesBestWidth = 200;
 
 Client::Client(
-  wxWindow* parent,
+  wxWindow *parent,
   const MQTT::BrokerOptions &brokerOptions,
   Types::ClientOptions clientOptions,
   const wxObjectDataPtr<Models::Messages> &messages,
@@ -46,7 +49,7 @@ Client::Client(
     wxDefaultPosition,
     wxDefaultSize,
     wxTAB_TRAVERSAL,
-    name
+    name //
   ),
   mName(name),
   mClientOptions(std::move(clientOptions)),
@@ -60,8 +63,9 @@ Client::Client(
   mRandomGenerator(mRandomDev()),
   mRandomColor(0, 255 * 255 * 255), // NOLINT
   mMessagesModel(messages),
+  mMessageColumns({}),
   mClient(std::make_shared<MQTT::Client>()),
-  mMqttObserverId(mClient->attachObserver(this))
+  mMqttObserverId(mClient->attachObserver(this)) //
 {
   Bind(Events::CONNECTION_CONNECTED, &Client::onConnectedSync, this);
   Bind(Events::CONNECTION_DISCONNECTED, &Client::onDisconnectedSync, this);
@@ -74,7 +78,7 @@ Client::Client(
 }
 
 Client::Client(
-  wxWindow* parent,
+  wxWindow *parent,
   const wxObjectDataPtr<Models::History> &historyModel,
   const wxObjectDataPtr<Models::Subscriptions> &subscriptionsModel,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
@@ -89,7 +93,7 @@ Client::Client(
     wxDefaultPosition,
     wxDefaultSize,
     wxTAB_TRAVERSAL,
-    name
+    name //
   ),
   mName(name),
   mFont(wxFontInfo(FontSize).FaceName("Consolas")),
@@ -100,115 +104,115 @@ Client::Client(
   mRandomGenerator(mRandomDev()),
   mRandomColor(0, 255 * 255 * 255), // NOLINT
   mHistoryModel(historyModel),
-  mSubscriptionsModel(subscriptionsModel)
+  mSubscriptionsModel(subscriptionsModel),
+  mMessageColumns({}) //
 {
   setupPanels();
 }
 
-void Client::setupPanels()
-{
+void Client::setupPanels() {
   Bind(wxEVT_CLOSE_WINDOW, &Client::onClose, this);
   Bind(wxEVT_COMMAND_MENU_SELECTED, &Client::onContextSelected, this);
 
   mLogger = Common::Log::create("GUI::Client");
 
-  mPanes =
-  {
-    {Panes::History, {
-      "History",
-      {},
-      nullptr,
-      mArtProvider.bitmap(Icon::History),
-      bin2cHistory18x14(),
-      nullptr
-    }},
-    {Panes::Preview, {
-      "Preview",
-      {},
-      nullptr,
-      mArtProvider.bitmap(Icon::FileFull),
-      bin2cPreview18x14(),
-      nullptr
-    }},
-    {Panes::Subscriptions, {
-      "Subscriptions",
-      {},
-      nullptr,
-      mArtProvider.bitmap(Icon::Subscriptions),
-      bin2cSubscription18x14(),
-      nullptr
-    }},
+  mPanes = {
+    {
+      Panes::History,
+      {
+        "History",
+        {},
+        nullptr,
+        mArtProvider.bitmap(Icon::History),
+        bin2cHistory18x14(),
+        nullptr,
+      },
+    },
+    {
+      Panes::Preview,
+      {
+        "Preview",
+        {},
+        nullptr,
+        mArtProvider.bitmap(Icon::FileFull),
+        bin2cPreview18x14(),
+        nullptr,
+      },
+    },
+    {
+      Panes::Subscriptions,
+      {
+        "Subscriptions",
+        {},
+        nullptr,
+        mArtProvider.bitmap(Icon::Subscriptions),
+        bin2cSubscription18x14(),
+        nullptr,
+      },
+    },
   };
 
   mPanes.at(Panes::History).info.Center();
-  mPanes.at(Panes::Subscriptions).info.Left();
-  mPanes.at(Panes::Preview).info.Bottom();
+  mPanes.at(Panes::Subscriptions).info.Top();
+  mPanes.at(Panes::Preview).info.Right();
 
   mPanes.at(Panes::History).info.Layer(0);
   mPanes.at(Panes::Subscriptions).info.Layer(1);
   mPanes.at(Panes::Preview).info.Layer(2);
 
-  if (mClient != nullptr)
-  {
-    mPanes.insert({Panes::Messages, {
-      "Messages",
-      {},
-      nullptr,
-      mArtProvider.bitmap(Icon::Archive),
-      bin2cMessages18x14(),
-      nullptr
-    }});
+  mPanes.at(Panes::Subscriptions).info.MinSize(PaneBestWidth, PaneMinHeight);
+  mPanes.at(Panes::History).info.MinSize(PaneBestWidth, PaneMinHeight);
+  mPanes.at(Panes::Preview).info.MinSize(PaneBestWidth, -1);
 
-    mPanes.insert({Panes::Publish, {
-      "Publish",
-      {},
-      nullptr,
-      mArtProvider.bitmap(Icon::Publish),
-      bin2cSend18x14(),
-      nullptr
-    }});
+  if (mClient != nullptr) {
+    mPanes.insert({
+      Panes::Messages,
+      {
+        "Messages",
+        {},
+        nullptr,
+        mArtProvider.bitmap(Icon::Archive),
+        bin2cMessages18x14(),
+        nullptr,
+      },
+    });
+
+    mPanes.insert({
+      Panes::Publish,
+      {
+        "Publish",
+        {},
+        nullptr,
+        mArtProvider.bitmap(Icon::Publish),
+        bin2cSend18x14(),
+        nullptr,
+      },
+    });
 
     mPanes.at(Panes::Messages).info.Left();
-    mPanes.at(Panes::Publish).info.Bottom();
+    mPanes.at(Panes::Publish).info.Right();
 
-    mPanes.at(Panes::Messages).info.Layer(1);
+    mPanes.at(Panes::Messages).info.Layer(2);
     mPanes.at(Panes::Publish).info.Layer(2);
+
+    mPanes.at(Panes::Messages).info.MinSize(MessagesBestWidth, -1);
+    mPanes.at(Panes::Publish).info.MinSize(PaneBestWidth, -1);
   }
 
-  for (auto &pane : mPanes)
-  {
-    pane.second.info.Name(pane.second.name);
-
-    const bool isEditor =
-      pane.first == Panes::Preview
-      || pane.first == Panes::Publish;
-
-    const auto minSize = isEditor
-      ? wxSize(PaneMinWidth, EditorMinHeight)
-      : wxSize(PaneMinWidth, PaneMinHeight);
-
-    pane.second.info.MinSize(minSize);
+  for (auto &pane : mPanes) {
+    const auto fixed = pane.first == Panes::History;
     pane.second.info.Caption(pane.second.name);
     pane.second.info.CloseButton(false);
+    pane.second.info.Floatable(!fixed);
     pane.second.info.Icon(*pane.second.icon18x14);
+    pane.second.info.Movable(!fixed);
+    pane.second.info.Name(pane.second.name);
     pane.second.info.PaneBorder(false);
-
-    if (pane.first == Panes::History)
-    {
-      pane.second.info.Movable(false);
-      pane.second.info.Floatable(false);
-    }
-    else
-    {
-      pane.second.info.Movable(true);
-      pane.second.info.Floatable(true);
-    }
   }
 
   auto *managed = new wxPanel(this);
 
-  if (mClient != nullptr)
-  {
+  if (mClient != nullptr) {
     setupPanelMessages(managed);
     setupPanelPublish(managed);
   }
@@ -223,51 +227,62 @@ void Client::setupPanels()
   SetSizer(sizer);
 
   mAuiMan.SetManagedWindow(managed);
-  for (const auto &pane : mPanes)
-  {
+  for (const auto &pane : mPanes) {
     mAuiMan.AddPane(pane.second.panel, pane.second.info);
   }
+
+  mAuiMan.Update();
+
+  for (auto &[window, pane] : mPanes) {
+    auto &info = mAuiMan.GetPane(pane.panel);
+    info.MinSize(PaneMinWidth, PaneMinHeight);
+  }
+
+  mAuiMan.Update();
 
   const auto layout = mClientOptions.getLayout();
   mLayouts->setSelectedLayout(layout);
 }
 
-Client::~Client()
-{
-  if (mClient != nullptr)
-  {
+Client::~Client() {
+  if (mClient != nullptr) {
     mClient->disconnect();
     mClient->detachObserver(mMqttObserverId);
   }
   mAuiMan.UnInit();
 }
 
-void Client::focus() const
-{
-  mFilter->SetFocus();
-}
+void Client::focus() const { mFilter->SetFocus(); }
 
 // Private {
 
 // Setup {
 
-void Client::setupPanelHistory(wxWindow *parent)
-{
-  auto* const icon = new wxDataViewColumn(
+void Client::setupPanelHistory(wxWindow *parent) {
+  auto *const icon = new wxDataViewColumn(
     L"icon",
     new wxDataViewBitmapRenderer(),
     static_cast<unsigned>(Models::History::Column::Icon),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
-  auto* const topic = new wxDataViewColumn(
+  auto *const topic = new wxDataViewColumn(
     L"topic",
     new wxDataViewIconTextRenderer(),
     static_cast<unsigned>(Models::History::Column::Topic),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
-  auto* const qos = new wxDataViewColumn(
+  auto *deltatRender = new wxDataViewTextRenderer();
+  deltatRender->EnableMarkup();
+  auto *const deltat = new wxDataViewColumn(
+    L"Δt",
+    deltatRender,
+    static_cast<unsigned>(Models::History::Column::Dt),
+    wxCOL_WIDTH_DEFAULT,
+    wxALIGN_RIGHT
+  );
+  auto *const qos = new wxDataViewColumn(
     L"qos",
     new wxDataViewBitmapRenderer(),
     static_cast<unsigned>(Models::History::Column::Qos),
@@ -285,8 +300,7 @@ void Client::setupPanelHistory(wxWindow *parent)
     wxDV_NO_HEADER | wxDV_ROW_LINES
   );
 
-  if (mClient != nullptr)
-  {
+  if (mClient != nullptr) {
     mHistoryModel = new Models::History(mSubscriptionsModel);
   }
   mHistoryModel->attachObserver(this);
@@ -297,14 +311,11 @@ void Client::setupPanelHistory(wxWindow *parent)
   mHistoryCtrl->AppendColumn(icon);
   mHistoryCtrl->AppendColumn(qos);
   mHistoryCtrl->AppendColumn(topic);
+  mHistoryCtrl->AppendColumn(deltat);
 
   mHistorySearchFilter = new Widgets::TopicCtrl(panel, -1);
   mHistorySearchFilter->SetHint("Filter...");
-  mHistorySearchFilter->Bind(
-    wxEVT_KEY_DOWN,
-    &Client::onHistorySearchKey,
-    this
-  );
+  mHistorySearchFilter->Bind(wxEVT_KEY_DOWN, &Client::onHistorySearchKey, this);
 
   mHistorySearchButton = new wxButton(
     panel,
@@ -317,18 +328,22 @@ void Client::setupPanelHistory(wxWindow *parent)
   mHistorySearchButton->Bind(
     wxEVT_BUTTON,
     &Client::onHistorySearchButton,
-    this
+    this //
   );
 
   mAutoScroll = new wxCheckBox(panel, -1, "auto-scroll");
   mAutoScroll->SetValue(true);
 
+  mShowDt = new wxCheckBox(panel, -1, wxString::FromUTF8("Show Δt"));
+  mShowDt->SetValue(false);
+  mShowDt->Bind(wxEVT_CHECKBOX, &Client::onHistoryShowDtChanged, this);
+
   mHistoryClear = new wxButton(
     panel,
     -1,
-    "",
+    "Clear",
     wxDefaultPosition,
-    wxSize(mOptionsHeight, mOptionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
   mHistoryClear->SetToolTip("Clear history");
   mHistoryClear->SetBitmap(mArtProvider.bitmap(Icon::Delete));
@@ -336,9 +351,9 @@ void Client::setupPanelHistory(wxWindow *parent)
   mHistoryRecord = new wxButton(
     panel,
     -1,
-    "",
+    "Store",
     wxDefaultPosition,
-    wxSize(mOptionsHeight-1, mOptionsHeight)
+    wxSize(-1, mOptionsHeight)
   );
   mHistoryRecord->SetToolTip("Store history recording");
   mHistoryRecord->SetBitmap(mArtProvider.bitmap(Icon::Save));
@@ -348,9 +363,12 @@ void Client::setupPanelHistory(wxWindow *parent)
   topSizer->Add(mHistorySearchButton, 0, wxEXPAND);
   auto *hsizer = new wxBoxSizer(wxOrientation::wxHORIZONTAL);
   hsizer->SetMinSize(0, mOptionsHeight);
+  hsizer->Add(mHistoryRecord, 0, wxEXPAND);
+  hsizer->AddStretchSpacer(1);
   hsizer->Add(mAutoScroll, 0, wxEXPAND);
   hsizer->AddStretchSpacer(1);
-  hsizer->Add(mHistoryRecord, 0, wxEXPAND);
+  hsizer->Add(mShowDt, 0, wxEXPAND);
+  hsizer->AddStretchSpacer(1);
   hsizer->Add(mHistoryClear, 0, wxEXPAND);
   auto *vsizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   vsizer->Add(topSizer, 0, wxEXPAND);
@@ -361,7 +379,7 @@ void Client::setupPanelHistory(wxWindow *parent)
   mHistoryCtrl->Bind(
     wxEVT_DATAVIEW_SELECTION_CHANGED,
     &Client::onHistorySelected,
-    this
+    this //
   );
   mHistoryCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_ACTIVATED,
@@ -371,34 +389,28 @@ void Client::setupPanelHistory(wxWindow *parent)
   mHistoryCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
     &Client::onHistoryContext,
-    this
+    this //
   );
-  mHistoryClear->Bind(
-    wxEVT_BUTTON,
-    &Client::onHistoryClearClicked,
-    this
-  );
-  mHistoryRecord->Bind(
-    wxEVT_BUTTON,
-    &Client::onHistoryRecordClicked,
-    this
-  );
+  mHistoryClear->Bind(wxEVT_BUTTON, &Client::onHistoryClearClicked, this);
+  mHistoryRecord->Bind(wxEVT_BUTTON, &Client::onHistoryRecordClicked, this);
 
-  if (mClient == nullptr)
-  {
+  if (mClient == nullptr) {
     vsizer->Hide(hsizer);
     vsizer->Layout();
   }
 }
 
-void Client::setupPanelConnect(wxWindow *parent)
-{
+void Client::setupPanelConnect(wxWindow *parent) {
   mProfileBar = new wxPanel(parent);
 
-  mIndicator = new wxStaticBitmap(mProfileBar, wxID_ANY, mArtProvider.bitmap(Icon::Connecting));
+  mIndicator = new wxStaticBitmap(
+    mProfileBar,
+    wxID_ANY,
+    mArtProvider.bitmap(Icon::Connecting)
+  );
   mIndicator->SetMinSize(wxSize(mOptionsHeight, mOptionsHeight));
 
-  mConnect    = new wxButton(
+  mConnect = new wxButton(
     mProfileBar,
     -1,
     "Connect",
@@ -413,7 +425,7 @@ void Client::setupPanelConnect(wxWindow *parent)
     wxDefaultPosition,
     wxSize(-1, mOptionsHeight)
   );
-  mCancel     = new wxButton(
+  mCancel = new wxButton(
     mProfileBar,
     -1,
     "Cancel",
@@ -431,35 +443,42 @@ void Client::setupPanelConnect(wxWindow *parent)
     mOptionsHeight
   );
   mLayouts->Bind(Events::LAYOUT_SELECTED, &Client::onLayoutSelected, this);
-  mLayouts->Bind(Events::LAYOUT_RESIZED,  &Client::onLayoutResized,  this);
+  mLayouts->Bind(Events::LAYOUT_RESIZED, &Client::onLayoutResized, this);
 
-  auto callback = [this](Panes pane, wxCommandEvent &/* event */)
-  {
+  auto callback = [this](Panes pane, wxCommandEvent &event) {
+    (void)event;
     auto widget = mPanes.at(pane);
 
     auto currentInfo = mAuiMan.GetPane(widget.panel);
 
-    if (currentInfo.IsOk())
-    {
-      if (currentInfo.IsDocked())
-      {
-        mPanes.at(pane).info = currentInfo;
-      }
-      mAuiMan.DetachPane(widget.panel);
-      widget.panel->Show(false);
-      constexpr uint8_t ColorChannelHalf = 255 / 2;
-      widget.toggle->SetBackgroundColour(wxColor(
-        ColorChannelHalf,
-        ColorChannelHalf,
-        ColorChannelHalf
-      ));
-    }
-    else
-    {
+    // Pane missing.
+    if (!currentInfo.IsOk()) {
       widget.panel->Show(true);
       mAuiMan.AddPane(widget.panel, mPanes.at(pane).info);
       widget.toggle->SetBackgroundColour(wxNullColour);
+      mAuiMan.Update();
+      return;
     }
+
+    mPanes.at(pane).info = currentInfo;
+
+    // Pane is visible.
+    if (currentInfo.IsShown()) {
+      mAuiMan.DetachPane(widget.panel);
+      widget.panel->Show(false);
+      constexpr uint8_t ColorChannelHalf = 255 / 2;
+      widget.toggle->SetBackgroundColour(
+        wxColor(ColorChannelHalf, ColorChannelHalf, ColorChannelHalf)
+      );
+      mAuiMan.Update();
+      return;
+    }
+
+    // Pane is known but hidden.
+    widget.info.Show(true);
+    widget.toggle->SetBackgroundColour(wxNullColour);
+    mAuiMan.DetachPane(widget.panel);
+    mAuiMan.AddPane(widget.panel, widget.info);
     mAuiMan.Update();
   };
 
@@ -472,12 +491,8 @@ void Client::setupPanelConnect(wxWindow *parent)
   allowCancel();
 
   auto *panelSelector = new wxBoxSizer(wxHORIZONTAL);
-  for (auto &pane : mPanes)
-  {
-    if (pane.first == Panes::History)
-    {
-      continue;
-    }
+  for (auto &pane : mPanes) {
+    if (pane.first == Panes::History) { continue; }
 
     const auto &bitmap = mPanes.at(pane.first).icon18x18;
     auto *button = new wxButton(
@@ -489,10 +504,9 @@ void Client::setupPanelConnect(wxWindow *parent)
     );
     button->SetToolTip(pane.second.name);
     button->SetBitmap(bitmap);
-    button->Bind(
-      wxEVT_BUTTON,
-      [callback, pane](wxCommandEvent &event) { callback(pane.first, event); }
-    );
+    button->Bind(wxEVT_BUTTON, [callback, pane](wxCommandEvent &event) {
+      callback(pane.first, event);
+    });
     panelSelector->Add(button, 0, wxEXPAND);
 
     pane.second.toggle = button;
@@ -504,25 +518,12 @@ void Client::setupPanelConnect(wxWindow *parent)
 
   mProfileBar->SetSizer(mProfileSizer);
 
-  mConnect->Bind(
-    wxEVT_BUTTON,
-    &Client::onConnectClicked,
-    this
-  );
-  mDisconnect->Bind(
-    wxEVT_BUTTON,
-    &Client::onDisconnectClicked,
-    this
-  );
-  mCancel->Bind(
-    wxEVT_BUTTON,
-    &Client::onCancelClicked,
-    this
-  );
+  mConnect->Bind(wxEVT_BUTTON, &Client::onConnectClicked, this);
+  mDisconnect->Bind(wxEVT_BUTTON, &Client::onDisconnectClicked, this);
+  mCancel->Bind(wxEVT_BUTTON, &Client::onCancelClicked, this);
 }
 
-void Client::setupPanelSubscriptions(wxWindow *parent)
-{
+void Client::setupPanelSubscriptions(wxWindow *parent) {
   auto *panel = new wxPanel(parent);
   mPanes.at(Panes::Subscriptions).panel = panel;
 
@@ -540,20 +541,20 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mSubscribe->SetBitmap(mArtProvider.bitmap(Icon::Subscribe));
   mSubscribe->SetToolTip("Subscribe");
 
-  auto* const icon = new wxDataViewColumn(
+  auto *const icon = new wxDataViewColumn(
     "icon",
     new wxDataViewBitmapRenderer(),
     static_cast<unsigned>(Models::Subscriptions::Column::Icon),
     wxCOL_WIDTH_AUTOSIZE
   );
-  auto* const topic = new wxDataViewColumn(
+  auto *const topic = new wxDataViewColumn(
     "topic",
     new wxDataViewTextRenderer(),
     static_cast<unsigned>(Models::Subscriptions::Column::Topic),
     wxCOL_WIDTH_AUTOSIZE,
     wxALIGN_LEFT
   );
-  auto* const qos = new wxDataViewColumn(
+  auto *const qos = new wxDataViewColumn(
     "qos",
     new wxDataViewBitmapRenderer(),
     static_cast<unsigned>(Models::Subscriptions::Column::Qos),
@@ -571,8 +572,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   mSubscriptionsCtrl->AppendColumn(qos);
   mSubscriptionsCtrl->AppendColumn(topic);
 
-  if (mClient != nullptr)
-  {
+  if (mClient != nullptr) {
     mSubscriptionsModel = new Models::Subscriptions(mClient);
   }
   mSubscriptionsCtrl->AssociateModel(mSubscriptionsModel.get());
@@ -585,7 +585,7 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
   hsizer->Add(mFilter, 1, wxEXPAND);
   hsizer->Add(mSubscribe, 0, wxEXPAND);
   vsizer->Add(hsizer, 0, wxEXPAND);
-  vsizer->Add(mSubscriptionsCtrl,  1, wxEXPAND);
+  vsizer->Add(mSubscriptionsCtrl, 1, wxEXPAND);
   panel->SetSizer(vsizer);
 
   mSubscriptionsCtrl->Bind(
@@ -598,20 +598,11 @@ void Client::setupPanelSubscriptions(wxWindow *parent)
     &Client::onSubscriptionContext,
     this
   );
-  mSubscribe->Bind(
-    wxEVT_BUTTON,
-    &Client::onSubscribeClicked,
-    this
-  );
-  mFilter->Bind(
-    wxEVT_KEY_UP,
-    &Client::onSubscribeEnter,
-    this
-  );
+  mSubscribe->Bind(wxEVT_BUTTON, &Client::onSubscribeClicked, this);
+  mFilter->Bind(wxEVT_KEY_UP, &Client::onSubscribeEnter, this);
 }
 
-void Client::setupPanelPreview(wxWindow *parent)
-{
+void Client::setupPanelPreview(wxWindow *parent) {
   auto *panel = new Widgets::Edit(
     parent,
     -1,
@@ -621,15 +612,10 @@ void Client::setupPanelPreview(wxWindow *parent)
   );
   mPanes.at(Panes::Preview).panel = panel;
   panel->setReadOnly(true);
-  panel->Bind(
-    Events::EDIT_SAVE_MESSAGE,
-    &Client::onPreviewSaveMessage,
-    this
-  );
+  panel->Bind(Events::EDIT_SAVE_MESSAGE, &Client::onPreviewSaveMessage, this);
 }
 
-void Client::setupPanelPublish(wxWindow *parent)
-{
+void Client::setupPanelPublish(wxWindow *parent) {
   auto *panel = new Widgets::Edit(
     parent,
     -1,
@@ -639,20 +625,11 @@ void Client::setupPanelPublish(wxWindow *parent)
   );
   panel->addKnownTopics(mTopicsPublished);
   mPanes.at(Panes::Publish).panel = panel;
-  panel->Bind(
-    Events::EDIT_PUBLISH,
-    &Client::onPublishClicked,
-    this
-  );
-  panel->Bind(
-    Events::EDIT_SAVE_MESSAGE,
-    &Client::onPublishSaveMessage,
-    this
-  );
+  panel->Bind(Events::EDIT_PUBLISH, &Client::onPublishClicked, this);
+  panel->Bind(Events::EDIT_SAVE_MESSAGE, &Client::onPublishSaveMessage, this);
 }
 
-void Client::setupPanelMessages(wxWindow *parent)
-{
+void Client::setupPanelMessages(wxWindow *parent) {
   auto *renderer = new wxDataViewIconTextRenderer(
     wxDataViewIconTextRenderer::GetDefaultType(),
     wxDATAVIEW_CELL_EDITABLE
@@ -691,22 +668,27 @@ void Client::setupPanelMessages(wxWindow *parent)
   mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_CONTEXT_MENU,
     &Client::onMessagesContext,
-    this
+    this //
   );
   mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_START_EDITING,
     &Client::onMessagesEdit,
-    this
+    this //
   );
   mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_VALUE_CHANGED,
     &Client::onMessagesChanged,
-    this
+    this //
   );
   mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_SELECTION_CHANGED,
     &Client::onMessagesSelected,
-    this
+    this //
+  );
+  mMessagesCtrl->Bind(
+    wxEVT_DATAVIEW_ITEM_BEGIN_DRAG,
+    &Client::onMessagesDrag,
+    this //
   );
   mMessagesCtrl->Bind(
     wxEVT_COMMAND_DATAVIEW_ITEM_ACTIVATED,
@@ -714,14 +696,9 @@ void Client::setupPanelMessages(wxWindow *parent)
     this
   );
   mMessagesCtrl->Bind(
-    wxEVT_DATAVIEW_ITEM_BEGIN_DRAG,
-    &Client::onMessagesDrag,
-    this
-  );
-  mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_DROP,
     &Client::onMessagesDrop,
-    this
+    this //
   );
   mMessagesCtrl->Bind(
     wxEVT_DATAVIEW_ITEM_DROP_POSSIBLE,
@@ -734,83 +711,64 @@ void Client::setupPanelMessages(wxWindow *parent)
 
 // Messages {
 
-void Client::onMessagesSelected(wxDataViewEvent &event)
-{
+void Client::onMessagesSelected(wxDataViewEvent &event) {
   auto item = event.GetItem();
-  if (!item.IsOk())
-  {
+  if (!item.IsOk()) {
     event.Skip();
     return;
   }
 
-  auto *publish = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Publish).panel
-  );
+  auto *publish = mPanes.at(Panes::Publish).panel;
+  auto *edit = dynamic_cast<Widgets::Edit *>(publish);
 
-  if (!mMessagesModel->IsContainer(item))
-  {
+  if (!mMessagesModel->IsContainer(item)) {
     const auto &message = mMessagesModel->getMessage(item);
     const auto &name = mMessagesModel->getName(item);
-    publish->setMessage(message);
-    publish->setInfoLine(name);
+    edit->setMessage(message);
+    edit->setInfoLine(name);
   }
 }
 
-void Client::onMessagesEdit(wxDataViewEvent &event)
-{
-  if (mMessageExplicitEditRequest)
-  {
+void Client::onMessagesEdit(wxDataViewEvent &event) {
+  if (mMessageExplicitEditRequest) {
     mMessageExplicitEditRequest = false;
     event.Skip();
-  }
-  else
-  {
+  } else {
     event.Veto();
   }
 }
 
-void Client::onMessagesChanged(wxDataViewEvent &event)
-{
+void Client::onMessagesChanged(wxDataViewEvent &event) {
   const auto item = event.GetItem();
-  if (!item.IsOk())
-  {
+  if (!item.IsOk()) {
     event.Skip();
     return;
   }
 
   const auto name = mMessagesModel->getName(item);
 
-  auto *publish = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Publish).panel
-  );
-  publish->setInfoLine(name);
+  auto *publish = mPanes.at(Panes::Publish).panel;
+  auto *edit = dynamic_cast<Widgets::Edit *>(publish);
+  edit->setInfoLine(name);
 }
 
-void Client::onMessagesActivated(wxDataViewEvent &event)
-{
+void Client::onMessagesActivated(wxDataViewEvent &event) {
   const auto item = event.GetItem();
   if (!item.IsOk()) { return; }
 
-  if (mMessagesModel->IsContainer(item))
-  {
-    if (mMessagesCtrl->IsExpanded(item))
-    {
+  if (mMessagesModel->IsContainer(item)) {
+    if (mMessagesCtrl->IsExpanded(item)) {
       mMessagesCtrl->Collapse(item);
-    }
-    else
-    {
+    } else {
       mMessagesCtrl->Expand(item);
     }
-  }
-  else
-  {
+  } else {
     const auto message = mMessagesModel->getMessage(item);
     mClient->publish(message);
   }
 }
 
-void Client::onMessagesDrag(wxDataViewEvent &event)
-{
+void Client::onMessagesDrag(wxDataViewEvent &event) {
   auto item = event.GetItem();
   mMessagesWasExpanded = mMessagesCtrl->IsExpanded(item);
 
@@ -829,12 +787,15 @@ void Client::onMessagesDrag(wxDataViewEvent &event)
   event.Skip(false);
 }
 
-void Client::onMessagesDrop(wxDataViewEvent &event)
-{
+void Client::onMessagesDrop(wxDataViewEvent &event) {
   const auto target = event.GetItem();
 
   wxTextDataObject object;
-  object.SetData(event.GetDataFormat(), event.GetDataSize(), event.GetDataBuffer());
+  object.SetData(
+    event.GetDataFormat(),
+    event.GetDataSize(),
+    event.GetDataBuffer() //
+  );
   const uintptr_t message = std::stoul(object.GetText().ToStdString());
   void *id = nullptr;
   std::memcpy(&id, &message, sizeof(uintptr_t));
@@ -846,51 +807,33 @@ void Client::onMessagesDrop(wxDataViewEvent &event)
 
   const auto pIndex = event.GetProposedDropIndex();
 
-  if (pIndex == -1)
-  {
-    if (!mMessagesModel->IsContainer(target))
-    {
+  if (pIndex == -1) {
+    if (!mMessagesModel->IsContainer(target)) {
       moved = mMessagesModel->moveAfter(item, target);
-    }
-    else
-    {
-      if (target.IsOk())
-      {
+    } else {
+      if (target.IsOk()) {
         moved = mMessagesModel->moveInsideFirst(item, target);
-      }
-      else
-      {
+      } else {
         moved = mMessagesModel->moveInsideLast(item, target);
       }
     }
-  }
-  else
-  {
+  } else {
     const auto index = (size_t)pIndex;
     moved = mMessagesModel->moveInsideAtIndex(item, target, index);
   }
 
 #else
 
-  if (mMessagesPossible.first)
-  {
-    if (mMessagesModel->IsContainer(target))
-    {
+  if (mMessagesPossible.first) {
+    if (mMessagesModel->IsContainer(target)) {
       moved = mMessagesModel->moveInsideFirst(item, target);
-    }
-    else
-    {
+    } else {
       moved = mMessagesModel->moveAfter(item, target);
     }
-  }
-  else
-  {
-    if (target.IsOk())
-    {
+  } else {
+    if (target.IsOk()) {
       moved = mMessagesModel->moveBefore(item, target);
-    }
-    else
-    {
+    } else {
       moved = mMessagesModel->moveInsideLast(item, target);
     }
   }
@@ -899,22 +842,15 @@ void Client::onMessagesDrop(wxDataViewEvent &event)
 
   mMessagesPossible = {false, wxDataViewItem(nullptr)};
 
-  if (!moved.IsOk())
-  {
-    return;
-  }
+  if (!moved.IsOk()) { return; }
 
   mMessagesCtrl->Refresh();
   mMessagesCtrl->EnsureVisible(moved);
-  if (mMessagesWasExpanded)
-  {
-    mMessagesCtrl->Expand(moved);
-  }
+  if (mMessagesWasExpanded) { mMessagesCtrl->Expand(moved); }
   mMessagesCtrl->Select(moved);
 }
 
-void Client::onMessagesDropPossible(wxDataViewEvent &event)
-{
+void Client::onMessagesDropPossible(wxDataViewEvent &event) {
   const auto item = event.GetItem();
   mMessagesPossible = {true, item};
 
@@ -938,10 +874,9 @@ void Client::onMessagesDropPossible(wxDataViewEvent &event)
 
 // Connection {
 
-void Client::onConnectClicked(wxCommandEvent &/* event */)
-{
-  if (mClient->connected())
-  {
+void Client::onConnectClicked(wxCommandEvent &event) {
+  (void)event;
+  if (mClient->connected()) {
     mLogger->info("Was connected");
     return;
   }
@@ -950,10 +885,9 @@ void Client::onConnectClicked(wxCommandEvent &/* event */)
   mClient->connect();
 }
 
-void Client::onDisconnectClicked(wxCommandEvent &/* event */)
-{
-  if (!mClient->connected())
-  {
+void Client::onDisconnectClicked(wxCommandEvent &event) {
+  (void)event;
+  if (!mClient->connected()) {
     mLogger->info("Was not connected");
     return;
   }
@@ -962,15 +896,13 @@ void Client::onDisconnectClicked(wxCommandEvent &/* event */)
   mClient->disconnect();
 }
 
-void Client::onCancelClicked(wxCommandEvent &/* event */)
-{
+void Client::onCancelClicked(wxCommandEvent &event) {
+  (void)event;
   mClient->cancel();
 }
 
-void Client::allowConnect()
-{
-  if (mClient == nullptr)
-  {
+void Client::allowConnect() {
+  if (mClient == nullptr) {
     allowNothing();
     return;
   }
@@ -978,17 +910,13 @@ void Client::allowConnect()
   mProfileSizer->Hide(mDisconnect);
   mProfileSizer->Hide(mCancel);
   mIndicator->SetBitmap(mArtProvider.bitmap(Icon::Disconnected));
-  const uint8_t brightness = mDarkMode
-    ? 150
-    : 250;
+  const uint8_t brightness = mDarkMode ? 150 : 250;
   mIndicator->SetBackgroundColour(wxColor(brightness, 0, 0));
   mProfileSizer->Layout();
 }
 
-void Client::allowDisconnect()
-{
-  if (mClient == nullptr)
-  {
+void Client::allowDisconnect() {
+  if (mClient == nullptr) {
     allowNothing();
     return;
   }
@@ -996,17 +924,13 @@ void Client::allowDisconnect()
   mProfileSizer->Show(mDisconnect);
   mProfileSizer->Hide(mCancel);
   mIndicator->SetBitmap(mArtProvider.bitmap(Icon::Connected));
-  const uint8_t brightness = mDarkMode
-    ? 150
-    : 250;
+  const uint8_t brightness = mDarkMode ? 150 : 250;
   mIndicator->SetBackgroundColour(wxColor(0, brightness, 0));
   mProfileSizer->Layout();
 }
 
-void Client::allowCancel()
-{
-  if (mClient == nullptr)
-  {
+void Client::allowCancel() {
+  if (mClient == nullptr) {
     allowNothing();
     return;
   }
@@ -1014,15 +938,12 @@ void Client::allowCancel()
   mProfileSizer->Hide(mDisconnect);
   mProfileSizer->Show(mCancel);
   mIndicator->SetBitmap(mArtProvider.bitmap(Icon::Connecting));
-  const uint8_t brightness = mDarkMode
-    ? 150
-    : 250;
+  const uint8_t brightness = mDarkMode ? 150 : 250;
   mIndicator->SetBackgroundColour(wxColor(brightness, brightness, 0));
   mProfileSizer->Layout();
 }
 
-void Client::allowNothing()
-{
+void Client::allowNothing() {
   mProfileSizer->Hide(mConnect);
   mProfileSizer->Hide(mDisconnect);
   mProfileSizer->Hide(mCancel);
@@ -1034,8 +955,7 @@ void Client::allowNothing()
 
 // Context {
 
-void Client::onSubscriptionContext(wxDataViewEvent& event)
-{
+void Client::onSubscriptionContext(wxDataViewEvent &event) {
   if (!event.GetItem().IsOk()) { return; }
 
   const auto item = event.GetItem();
@@ -1044,8 +964,7 @@ void Client::onSubscriptionContext(wxDataViewEvent& event)
   const bool muted = mSubscriptionsModel->getMuted(item);
 
   wxMenu menu;
-  if (mClient != nullptr)
-  {
+  if (mClient != nullptr) {
     auto *unsubscribe = new wxMenuItem(
       nullptr,
       static_cast<unsigned>(ContextIDs::SubscriptionsUnsubscribe),
@@ -1079,8 +998,7 @@ void Client::onSubscriptionContext(wxDataViewEvent& event)
   solo->SetBitmap(mArtProvider.bitmap(Icon::Solo));
   menu.Append(solo);
 
-  if (muted)
-  {
+  if (muted) {
     auto *unmute = new wxMenuItem(
       nullptr,
       static_cast<unsigned>(ContextIDs::SubscriptionsUnmute),
@@ -1088,9 +1006,7 @@ void Client::onSubscriptionContext(wxDataViewEvent& event)
     );
     unmute->SetBitmap(mArtProvider.bitmap(Icon::Unmute));
     menu.Append(unmute);
-  }
-  else
-  {
+  } else {
     auto *mute = new wxMenuItem(
       nullptr,
       static_cast<unsigned>(ContextIDs::SubscriptionsMute),
@@ -1102,8 +1018,7 @@ void Client::onSubscriptionContext(wxDataViewEvent& event)
   PopupMenu(&menu);
 }
 
-void Client::onHistoryContext(wxDataViewEvent& event)
-{
+void Client::onHistoryContext(wxDataViewEvent &event) {
   if (!event.GetItem().IsOk()) { return; }
 
   mHistoryCtrl->Select(event.GetItem());
@@ -1126,8 +1041,7 @@ void Client::onHistoryContext(wxDataViewEvent& event)
   copyPayload->SetBitmap(mArtProvider.bitmap(Icon::Copy));
   menu.Append(copyPayload);
 
-  if (mClient != nullptr)
-  {
+  if (mClient != nullptr) {
     auto *edit = new wxMenuItem(
       nullptr,
       static_cast<unsigned>(ContextIDs::HistoryEdit),
@@ -1164,20 +1078,15 @@ void Client::onHistoryContext(wxDataViewEvent& event)
   PopupMenu(&menu);
 }
 
-void Client::onMessagesContext(wxDataViewEvent& event)
-{
+void Client::onMessagesContext(wxDataViewEvent &event) {
   wxMenu menu;
 
-  if (!event.GetItem().IsOk())
-  {
+  if (!event.GetItem().IsOk()) {
     mMessagesCtrl->UnselectAll();
-  }
-  else
-  {
+  } else {
     const auto item = event.GetItem();
 
-    if (!mMessagesModel->IsContainer(item))
-    {
+    if (!mMessagesModel->IsContainer(item)) {
       auto *publish = new wxMenuItem(
         nullptr,
         static_cast<unsigned>(ContextIDs::MessagePublish),
@@ -1187,8 +1096,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
       menu.Append(publish);
     }
 
-    if (!mMessagesModel->IsContainer(item))
-    {
+    if (!mMessagesModel->IsContainer(item)) {
       auto *overwrite = new wxMenuItem(
         nullptr,
         static_cast<unsigned>(ContextIDs::MessageOverwrite),
@@ -1215,10 +1123,7 @@ void Client::onMessagesContext(wxDataViewEvent& event)
     menu.Append(del);
   }
 
-  if (
-    !event.GetItem().IsOk()
-    || mMessagesModel->IsContainer(event.GetItem())
-  ) {
+  if (!event.GetItem().IsOk() || mMessagesModel->IsContainer(event.GetItem())) {
     auto *newFolder = new wxMenuItem(
       nullptr,
       static_cast<unsigned>(ContextIDs::MessageNewFolder),
@@ -1239,10 +1144,8 @@ void Client::onMessagesContext(wxDataViewEvent& event)
   PopupMenu(&menu);
 }
 
-void Client::onContextSelected(wxCommandEvent& event)
-{
-  switch (static_cast<ContextIDs>(event.GetId()))
-  {
+void Client::onContextSelected(wxCommandEvent &event) {
+  switch (static_cast<ContextIDs>(event.GetId())) {
     case ContextIDs::HistoryRetainedClear: {
       onContextSelectedHistoryRetainedClear(event);
     } break;
@@ -1301,27 +1204,25 @@ void Client::onContextSelected(wxCommandEvent& event)
   event.Skip();
 }
 
-void Client::onContextSelectedSubscriptionsUnsubscribe(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedSubscriptionsUnsubscribe( //
+  wxCommandEvent &event
+) {
+  (void)event;
   const auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
   const auto selected = mHistoryCtrl->GetSelection();
-  if (selected.IsOk())
-  {
-    mHistoryCtrl->Unselect(selected);
-  }
+  if (selected.IsOk()) { mHistoryCtrl->Unselect(selected); }
 
   mSubscriptionsModel->unsubscribe(item);
 
-  auto *preview = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Preview).panel
+  auto *preview = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Preview).panel
   );
   preview->clear();
 }
 
-void Client::onContextSelectedSubscriptionsChangeColor(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedSubscriptionsChangeColor(wxCommandEvent &event) {
+  (void)event;
   const auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
@@ -1334,47 +1235,47 @@ void Client::onContextSelectedSubscriptionsChangeColor(wxCommandEvent &/* event 
   mHistoryCtrl->Refresh();
 }
 
-void Client::onContextSelectedSubscriptionsMute(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedSubscriptionsMute(wxCommandEvent &event) {
+  (void)event;
   const auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
   mSubscriptionsModel->mute(item);
 }
 
-void Client::onContextSelectedSubscriptionsUnmute(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedSubscriptionsUnmute(wxCommandEvent &event) {
+  (void)event;
   const auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
   mSubscriptionsModel->unmute(item);
 }
 
-void Client::onContextSelectedSubscriptionsSolo(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedSubscriptionsSolo(wxCommandEvent &event) {
+  (void)event;
   const auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
   mSubscriptionsModel->solo(item);
 }
 
-void Client::onContextSelectedSubscriptionsClear(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedSubscriptionsClear(wxCommandEvent &event) {
+  (void)event;
   const auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
   mSubscriptionsModel->clear(item);
 }
 
-void Client::onContextSelectedHistoryRetainedClear(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedHistoryRetainedClear(wxCommandEvent &event) {
+  (void)event;
   const auto item = mHistoryCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
   const auto topic = mHistoryModel->getTopic(item);
   const auto qos = mHistoryModel->getQos(item);
-  const MQTT::Message message {topic, {}, qos, true, {}};
+  const MQTT::Message message{topic, {}, qos, true, {}};
   mClient->publish(message);
 }
 
-void Client::onContextSelectedHistoryResend(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedHistoryResend(wxCommandEvent &event) {
+  (void)event;
   const auto item = mHistoryCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
@@ -1382,13 +1283,12 @@ void Client::onContextSelectedHistoryResend(wxCommandEvent &/* event */)
   mClient->publish(message);
 }
 
-void Client::onContextSelectedHistoryEdit(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedHistoryEdit(wxCommandEvent &event) {
+  (void)event;
   const auto item = mHistoryCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
-  auto *publish = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Publish).panel
+  auto *publish = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Publish).panel
   );
 
   publish->clear();
@@ -1398,11 +1298,10 @@ void Client::onContextSelectedHistoryEdit(wxCommandEvent &/* event */)
   publish->setRetained(mHistoryModel->getRetained(item));
 }
 
-void Client::onContextSelectedHistorySaveMessage(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedHistorySaveMessage(wxCommandEvent &event) {
+  (void)event;
   auto messageItem = mMessagesCtrl->GetSelection();
-  if (!mMessagesModel->IsContainer(messageItem))
-  {
+  if (!mMessagesModel->IsContainer(messageItem)) {
     messageItem = mMessagesModel->GetParent(messageItem);
   }
 
@@ -1410,13 +1309,9 @@ void Client::onContextSelectedHistorySaveMessage(wxCommandEvent &/* event */)
   const auto &message = mHistoryModel->getMessage(historyItem);
   const auto inserted = mMessagesModel->createMessage(messageItem, message);
 
-  if (!inserted.IsOk())
-  {
-    return;
-  }
+  if (!inserted.IsOk()) { return; }
 
-  auto *publish = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Publish).panel
+  auto *publish = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Publish).panel
   );
   publish->setMessage(mMessagesModel->getMessage(inserted));
 
@@ -1428,34 +1323,32 @@ void Client::onContextSelectedHistorySaveMessage(wxCommandEvent &/* event */)
   mMessagesCtrl->EditItem(inserted, nameColumn);
 }
 
-void Client::onContextSelectedHistoryCopyTopic(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedHistoryCopyTopic(wxCommandEvent &event) {
+  (void)event;
   const auto historyItem = mHistoryCtrl->GetSelection();
   const auto &message = mHistoryModel->getMessage(historyItem);
 
-  if (wxTheClipboard->Open())
-  {
+  if (wxTheClipboard->Open()) {
     auto *dataObject = new wxTextDataObject(message.topic);
     wxTheClipboard->SetData(dataObject);
     wxTheClipboard->Close();
   }
 }
 
-void Client::onContextSelectedHistoryCopyPayload(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedHistoryCopyPayload(wxCommandEvent &event) {
+  (void)event;
   const auto historyItem = mHistoryCtrl->GetSelection();
   const auto &message = mHistoryModel->getMessage(historyItem);
 
-  if (wxTheClipboard->Open())
-  {
+  if (wxTheClipboard->Open()) {
     auto *dataObject = new wxTextDataObject(message.payload);
     wxTheClipboard->SetData(dataObject);
     wxTheClipboard->Close();
   }
 }
 
-void Client::onContextSelectedMessageRename(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedMessageRename(wxCommandEvent &event) {
+  (void)event;
   const auto item = mMessagesCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
@@ -1463,13 +1356,12 @@ void Client::onContextSelectedMessageRename(wxCommandEvent &/* event */)
   mMessagesCtrl->EditItem(item, mMessageColumns.at(Messages::Column::Name));
 }
 
-void Client::onContextSelectedMessagePublish(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedMessagePublish(wxCommandEvent &event) {
+  (void)event;
   const auto item = mMessagesCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
-  auto *publish = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Publish).panel
+  auto *publish = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Publish).panel
   );
 
   const auto &message = mMessagesModel->getMessage(item);
@@ -1480,55 +1372,44 @@ void Client::onContextSelectedMessagePublish(wxCommandEvent &/* event */)
   mClient->publish(message);
 }
 
-void Client::onContextSelectedMessageOverwrite(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedMessageOverwrite(wxCommandEvent &event) {
+  (void)event;
   const auto item = mMessagesCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
-  auto *publish = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Publish).panel
+  auto *publish = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Publish).panel
   );
   const auto message = publish->getMessage();
-
   mMessagesModel->replace(item, message);
 }
 
-void Client::onContextSelectedMessageDelete(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedMessageDelete(wxCommandEvent &event) {
+  (void)event;
   const auto item = mMessagesCtrl->GetSelection();
   if (!item.IsOk()) { return; }
 
   const bool done = mMessagesModel->remove(item);
-  if (!done)
-  {
-    return;
-  }
+  if (!done) { return; }
 
   const auto root = mMessagesModel->getRootItem();
   mMessagesCtrl->Select(root);
 
-  auto *publish = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Publish).panel
+  auto *publish = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Publish).panel
   );
   publish->setInfoLine({});
 }
 
-void Client::onContextSelectedMessageNewMessage(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedMessageNewMessage(wxCommandEvent &event) {
+  (void)event;
   auto item = mMessagesCtrl->GetSelection();
-  if (!mMessagesModel->IsContainer(item))
-  {
+  if (!mMessagesModel->IsContainer(item)) {
     item = mMessagesModel->GetParent(item);
   }
 
   const auto inserted = mMessagesModel->createMessage(item, {});
-  if (!inserted.IsOk())
-  {
-    return;
-  }
+  if (!inserted.IsOk()) { return; }
 
-  auto *publish = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Publish).panel
+  auto *publish = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Publish).panel
   );
   const auto &message = mMessagesModel->getMessage(item);
   const auto &name = mMessagesModel->getName(item);
@@ -1543,19 +1424,15 @@ void Client::onContextSelectedMessageNewMessage(wxCommandEvent &/* event */)
   mMessagesCtrl->EditItem(inserted, nameColumn);
 }
 
-void Client::onContextSelectedMessageNewFolder(wxCommandEvent &/* event */)
-{
+void Client::onContextSelectedMessageNewFolder(wxCommandEvent &event) {
+  (void)event;
   auto item = mMessagesCtrl->GetSelection();
-  if (!mMessagesModel->IsContainer(item))
-  {
+  if (!mMessagesModel->IsContainer(item)) {
     item = mMessagesModel->GetParent(item);
   }
 
   const auto inserted = mMessagesModel->createFolder(item);
-  if (!inserted.IsOk())
-  {
-    return;
-  }
+  if (!inserted.IsOk()) { return; }
 
   mMessagesCtrl->Select(inserted);
   mMessagesCtrl->EnsureVisible(inserted);
@@ -1569,50 +1446,46 @@ void Client::onContextSelectedMessageNewFolder(wxCommandEvent &/* event */)
 
 // MQTT::Client::Observer {
 
-void Client::onConnected()
-{
+void Client::onConnected() {
   auto *event = new Events::Connection(Events::CONNECTION_CONNECTED);
   wxQueueEvent(this, event);
 }
 
-void Client::onDisconnected()
-{
+void Client::onDisconnected() {
   auto *event = new Events::Connection(Events::CONNECTION_DISCONNECTED);
   wxQueueEvent(this, event);
 }
 
-void Client::onConnectionLost()
-{
+void Client::onConnectionLost() {
   auto *event = new Events::Connection(Events::CONNECTION_LOST);
   wxQueueEvent(this, event);
 }
 
-void Client::onConnectionFailure()
-{
+void Client::onConnectionFailure() {
   auto *event = new Events::Connection(Events::CONNECTION_FAILURE);
   wxQueueEvent(this, event);
 }
 
-void Client::onConnectedSync(Events::Connection &/* event */)
-{
+void Client::onConnectedSync(Events::Connection &event) {
+  (void)event;
   mLogger->info("Connected");
   allowDisconnect();
 }
 
-void Client::onDisconnectedSync(Events::Connection &/* event */)
-{
+void Client::onDisconnectedSync(Events::Connection &event) {
+  (void)event;
   mLogger->info("Disconnected");
   allowConnect();
 }
 
-void Client::onConnectionLostSync(Events::Connection &/* event */)
-{
+void Client::onConnectionLostSync(Events::Connection &event) {
+  (void)event;
   mLogger->info("Connection lost, reconnecting...");
   allowCancel();
 }
 
-void Client::onConnectionFailureSync(Events::Connection &/* event */)
-{
+void Client::onConnectionFailureSync(Events::Connection &event) {
+  (void)event;
   mLogger->info("Unable to connect to server");
   allowConnect();
 }
@@ -1621,17 +1494,15 @@ void Client::onConnectionFailureSync(Events::Connection &/* event */)
 
 // Models::History::Observer {
 
-void Client::onMessage(wxDataViewItem item)
-{
-  if (!mAutoScroll->GetValue())
-  {
-    return;
-  }
+void Client::onMessage(wxDataViewItem item) {
+  if (!mAutoScroll->GetValue()) { return; }
 
   mHistoryCtrl->Select(item);
+  mHistoryModel->setSelected(item);
   mHistoryCtrl->EnsureVisible(item);
 
-  auto *preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
+  auto *preview = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Preview).panel
+  );
   preview->setMessage(mHistoryModel->getMessage(item));
 }
 
@@ -1639,8 +1510,8 @@ void Client::onMessage(wxDataViewItem item)
 
 // Subscriptions {
 
-void Client::onSubscribeClicked(wxCommandEvent &/* event */)
-{
+void Client::onSubscribeClicked(wxCommandEvent &event) {
+  (void)event;
   const auto value = mFilter->GetValue();
   mFilter->SetValue({});
   const auto wxs = value.empty() ? "#" : value;
@@ -1651,10 +1522,8 @@ void Client::onSubscribeClicked(wxCommandEvent &/* event */)
   mSubscriptionsModel->subscribe(topic, MQTT::QoS::ExactlyOnce);
 }
 
-void Client::onSubscribeEnter(wxKeyEvent &event)
-{
-  if (event.GetKeyCode() != WXK_RETURN)
-  {
+void Client::onSubscribeEnter(wxKeyEvent &event) {
+  if (event.GetKeyCode() != WXK_RETURN) {
     event.Skip();
     return;
   }
@@ -1670,8 +1539,8 @@ void Client::onSubscribeEnter(wxKeyEvent &event)
   event.Skip();
 }
 
-void Client::onSubscriptionSelected(wxDataViewEvent &/* event */)
-{
+void Client::onSubscriptionSelected(wxDataViewEvent &event) {
+  (void)event;
   const auto item = mSubscriptionsCtrl->GetSelection();
   if (!item.IsOk()) { return; }
   const auto utf8 = mSubscriptionsModel->getFilter(item);
@@ -1683,34 +1552,24 @@ void Client::onSubscriptionSelected(wxDataViewEvent &/* event */)
 
 // Layouts {
 
-void Client::onLayoutSelected(Events::Layout &event)
-{
+void Client::onLayoutSelected(Events::Layout &event) {
   mAuiMan.LoadPerspective(event.getPerspective(), false);
 
-  for (auto &pane : mPanes)
-  {
-    auto &info = mAuiMan.GetPane(pane.second.panel);
-
-    const bool isEditor =
-      pane.first == Panes::Preview
-      || pane.first == Panes::Publish;
-
-    const auto minSize = isEditor
-      ? wxSize(PaneMinWidth, EditorMinHeight)
-      : wxSize(PaneMinWidth, PaneMinHeight);
-
-    info.MinSize(minSize);
-    info.Caption(pane.second.name);
-    info.CloseButton(false);
-    info.Icon(*pane.second.icon18x14);
-    info.PaneBorder(false);
+  constexpr uint8_t ColorChannelHalf = 255 / 2;
+  for (auto &[type, pane] : mPanes) {
+    if (pane.toggle == nullptr) { continue; }
+    const auto info = mAuiMan.GetPane(pane.panel);
+    const auto color = (info.IsOk() && info.IsShown())
+      ? wxNullColour
+      : wxColor(ColorChannelHalf, ColorChannelHalf, ColorChannelHalf);
+    pane.toggle->SetBackgroundColour(color);
   }
 
   mAuiMan.Update();
 }
 
-void Client::onLayoutResized(Events::Layout &/* event */)
-{
+void Client::onLayoutResized(Events::Layout &event) {
+  (void)event;
   mProfileSizer->Layout();
 }
 
@@ -1718,35 +1577,33 @@ void Client::onLayoutResized(Events::Layout &/* event */)
 
 // Publish {
 
-void Client::onPublishClicked(wxCommandEvent &/* event */)
-{
-  auto *publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
+void Client::onPublishClicked(wxCommandEvent &event) {
+  (void)event;
+  auto *publish = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Publish).panel
+  );
   const auto &message = publish->getMessage();
   if (message.topic.empty()) { return; }
   mTopicsPublished->append(message.topic);
   mClient->publish(message);
 }
 
-void Client::onPublishSaveMessage(Events::Edit &/* event */)
-{
+void Client::onPublishSaveMessage(Events::Edit &event) {
+  (void)event;
   mLogger->info("Saving current message");
   auto messageItem = mMessagesCtrl->GetSelection();
-  if (!mMessagesModel->IsContainer(messageItem))
-  {
+  if (!mMessagesModel->IsContainer(messageItem)) {
     mLogger->info("Selecting parent");
     messageItem = mMessagesModel->GetParent(messageItem);
   }
 
-  auto *publish = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Publish).panel
+  auto *publish = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Publish).panel
   );
 
   const auto &message = publish->getMessage();
   mLogger->info("Storing {}", message.topic);
   auto inserted = mMessagesModel->createMessage(messageItem, message);
-  if (inserted.IsOk())
-  {
-    auto *publish = dynamic_cast<Widgets::Edit*>(
+  if (inserted.IsOk()) {
+    auto *publish = dynamic_cast<Widgets::Edit *>(
       mPanes.at(Panes::Publish).panel
     );
     const auto &message = mMessagesModel->getMessage(inserted);
@@ -1766,111 +1623,111 @@ void Client::onPublishSaveMessage(Events::Edit &/* event */)
 
 // History {
 
-void Client::onHistorySelected(wxDataViewEvent &event)
-{
+void Client::onHistorySelected(wxDataViewEvent &event) {
   if (!event.GetItem().IsOk()) { return; }
   const auto item = event.GetItem();
 
-  auto *preview = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Preview).panel);
+  mHistoryModel->setSelected(item);
+  mHistoryCtrl->Refresh();
+  mHistoryCtrl->Update();
+
+  auto *preview = mPanes.at(Panes::Preview).panel;
+  auto *edit = dynamic_cast<Widgets::Edit *>(preview);
   const auto message = mHistoryModel->getMessage(item);
-  preview->setMessage(message);
+  edit->setMessage(message);
 }
 
-void Client::onHistoryClearClicked(wxCommandEvent &/* event */)
-{
+void Client::onHistoryClearClicked(wxCommandEvent &event) {
+  (void)event;
   mHistoryModel->clear();
 
-  auto *preview = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Preview).panel
+  auto *preview = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Preview).panel
   );
   preview->clear();
 }
 
-void Client::onHistoryRecordClicked(wxCommandEvent &/* event */)
-{
-  const nlohmann::json contents {
-    {"subscriptions", mSubscriptionsModel->toJson() },
-    {"messages", mHistoryModel->toJson() },
+void Client::onHistoryRecordClicked(wxCommandEvent &event) {
+  (void)event;
+  const nlohmann::json contents{
+    {"subscriptions", mSubscriptionsModel->toJson()},
+    {"messages", mHistoryModel->toJson()},
   };
 
   mLogger->info("Queuing up recording event");
-  auto *event = new Events::Recording(Events::RECORDING_SAVE);
-  event->setContents(contents.dump());
-  event->setName(mName);
-  wxQueueEvent(this, event);
+  auto *recording = new Events::Recording(Events::RECORDING_SAVE);
+  recording->setContents(contents.dump());
+  recording->setName(mName);
+  wxQueueEvent(this, recording);
 }
 
-void Client::onHistoryDoubleClicked(wxDataViewEvent &event)
-{
+void Client::onHistoryDoubleClicked(wxDataViewEvent &event) {
   if (!event.GetItem().IsOk()) { return; }
 
   const auto messageItem = mMessagesCtrl->GetSelection();
-  if (messageItem.IsOk())
-  {
-    mMessagesCtrl->Unselect(messageItem);
-  }
+  if (messageItem.IsOk()) { mMessagesCtrl->Unselect(messageItem); }
 
   const auto historyItem = event.GetItem();
-  auto *publish = dynamic_cast<Widgets::Edit*>(mPanes.at(Panes::Publish).panel);
+  auto *publish = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Publish).panel
+  );
   auto message = mHistoryModel->getMessage(historyItem);
   message.retained = false;
   publish->setMessage(message);
 }
 
-void Client::onHistorySearchKey(wxKeyEvent &event)
-{
+void Client::onHistorySearchKey(wxKeyEvent &event) {
   const auto filter = mHistorySearchFilter->GetValue().ToStdString();
   long since = 0;
   long until = 0;
   mHistorySearchFilter->GetSelection(&since, &until);
 
   const auto isBackspace = event.GetKeyCode() == WXK_BACK;
-  const auto isEnter     = event.GetKeyCode() == WXK_RETURN;
+  const auto isEnter = event.GetKeyCode() == WXK_RETURN;
 
-  const auto isAllSelected = (since == 0 && until == static_cast<long>(filter.size()));
-  const auto willBeEmpty   = filter.empty() || filter.size() == 1 || isAllSelected;
+  const auto
+    isAllSelected = (since == 0 && until == static_cast<long>(filter.size()));
+  const auto willBeEmpty = filter.empty() || filter.size() == 1
+    || isAllSelected;
 
-  if (isBackspace && willBeEmpty)
-  {
+  if (isBackspace && willBeEmpty) {
     mHistoryModel->setFilter({});
-  }
-  else if (isEnter)
-  {
+  } else if (isEnter) {
     mHistoryModel->setFilter(filter);
   }
 
   event.Skip();
 }
 
-void Client::onHistorySearchButton(wxCommandEvent &/* event */)
-{
+void Client::onHistorySearchButton(wxCommandEvent &event) {
+  (void)event;
   const auto filter = mHistorySearchFilter->GetValue().ToStdString();
   mHistoryModel->setFilter(filter);
+}
+
+void Client::onHistoryShowDtChanged(wxCommandEvent &event){
+  (void)event;
+  mHistoryModel->showDt(mShowDt->GetValue());
 }
 
 // History }
 
 // Preview {
 
-void Client::onPreviewSaveMessage(Events::Edit &/* event */)
-{
+void Client::onPreviewSaveMessage(Events::Edit &event) {
+  (void)event;
   mLogger->info("Saving current message");
   auto messageItem = mMessagesCtrl->GetSelection();
-  if (!mMessagesModel->IsContainer(messageItem))
-  {
+  if (!mMessagesModel->IsContainer(messageItem)) {
     mLogger->info("Selecting parent");
     messageItem = mMessagesModel->GetParent(messageItem);
   }
 
-  auto *preview = dynamic_cast<Widgets::Edit*>(
-    mPanes.at(Panes::Preview).panel
+  auto *preview = dynamic_cast<Widgets::Edit *>(mPanes.at(Panes::Preview).panel
   );
 
   const auto &message = preview->getMessage();
   mLogger->info("Storing {}", message.topic);
   auto inserted = mMessagesModel->createMessage(messageItem, message);
-  if (inserted.IsOk())
-  {
+  if (inserted.IsOk()) {
     mMessagesCtrl->Select(inserted);
     mMessagesCtrl->EnsureVisible(inserted);
     auto *nameColumn = mMessageColumns.at(Messages::Column::Name);
@@ -1881,11 +1738,10 @@ void Client::onPreviewSaveMessage(Events::Edit &/* event */)
 
 // Preview }
 
-void Client::onClose(wxCloseEvent &/* event */)
-{
-  if (mClient != nullptr && mClient->connected())
-  {
-    auto *preview = dynamic_cast<Widgets::Edit*>(
+void Client::onClose(wxCloseEvent &event) {
+  (void)event;
+  if (mClient != nullptr && mClient->connected()) {
+    auto *preview = dynamic_cast<Widgets::Edit *>(
       mPanes.at(Panes::Preview).panel
     );
     preview->setPayload("Closing...");

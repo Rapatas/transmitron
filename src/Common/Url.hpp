@@ -2,8 +2,7 @@
 
 #include <string>
 
-namespace Rapatas::Transmitron::Common::Url
-{
+namespace Rapatas::Transmitron::Common::Url {
 
 std::string encode(const std::string &data);
 std::string decode(const std::string &data);

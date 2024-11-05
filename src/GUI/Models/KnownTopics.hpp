@@ -2,20 +2,19 @@
 
 #include <set>
 #include <vector>
+
+#include <spdlog/logger.h>
 #include <wx/dataview.h>
+
 #include "Common/Filesystem.hpp"
-#include "GUI/Models/Subscriptions.hpp"
 
-namespace Rapatas::Transmitron::GUI::Models
-{
+namespace Rapatas::Transmitron::GUI::Models {
 
-class KnownTopics :
-  public wxDataViewVirtualListModel
+class KnownTopics : public wxDataViewVirtualListModel
 {
 public:
 
-  enum class Column : unsigned
-  {
+  enum class Column : uint8_t {
     Topic,
     Max
   };
@@ -28,7 +27,8 @@ public:
   KnownTopics &operator=(const KnownTopics &other) = delete;
   KnownTopics &operator=(KnownTopics &&other) = delete;
 
-  bool load(Common::fs::path filepath);
+  bool load(const Common::fs::path &filepath);
+  bool save(const Common::fs::path &filepath);
 
   void clear();
   void setFilter(std::string filter);
@@ -45,7 +45,7 @@ public:
   void GetValueByRow(
     wxVariant &variant,
     unsigned int row,
-    unsigned int col
+    unsigned int col //
   ) const override;
   bool GetAttrByRow(
     unsigned int row,
@@ -70,8 +70,6 @@ private:
 
   void remap();
   void save();
-
 };
 
 } // namespace Rapatas::Transmitron::GUI::Models
-

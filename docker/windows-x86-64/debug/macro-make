@@ -5,12 +5,12 @@ build_dir="build-$(cat /etc/compilername)"
 mkdir -p "/workspace/$build_dir"
 cd "/workspace/$build_dir"
 
-conan \
-  install ../conan \
+conan install \
   --build=missing \
-  --update \
   --profile:build=default \
-  --profile:host=windows
+  --profile:host=windows \
+  -of . \
+  ../conan
 
 cmake \
   -DCMAKE_BUILD_TYPE=Debug \

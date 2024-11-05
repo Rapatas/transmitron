@@ -1,10 +1,10 @@
 #include "Url.hpp"
 
 #include <algorithm>
-#include <spdlog/spdlog.h>
 #include <stdexcept>
 
 #include <fmt/format.h>
+#include <spdlog/spdlog.h>
 
 constexpr uint8_t NibbleFirst = 0xF0;
 constexpr uint8_t NibbleSeccond = 0x0F;
@@ -14,8 +14,8 @@ constexpr uint8_t MaxSingleDigit = 9;
 
 using namespace Rapatas::Transmitron::Common;
 
-bool Url::encodable(char value)
-{
+bool Url::encodable(char value) {
+  // clang-format off
   return !(false // NOLINT
     || isalnum(value) != 0
     || value == '-'
@@ -23,33 +23,27 @@ bool Url::encodable(char value)
     || value == ','
     || value == '.'
   );
+  // clang-format on
 }
 
-bool Url::isHexChar(char value)
-{
+bool Url::isHexChar(char value) {
   return isdigit(value) != 0 || (value >= 'A' && value <= 'F');
 }
 
-std::string Url::encode(const std::string &data)
-{
+std::string Url::encode(const std::string &data) {
   const auto encodeCharCount = static_cast<size_t>(std::count_if(
     std::begin(data),
     std::end(data),
-    [](char value)
-    {
-      return encodable(value);
-    }
+    [](char value) { return encodable(value); }
   ));
 
-  const size_t length = (encodeCharCount * 3) + (data.length() - encodeCharCount);
+  const auto length = (encodeCharCount * 3) + (data.length() - encodeCharCount);
   std::string result;
   result.resize(length);
 
   size_t index = 0;
-  for (const auto &value : data)
-  {
-    if (!encodable(value))
-    {
+  for (const auto &value : data) {
+    if (!encodable(value)) {
       result[index++] = value;
       continue;
     }
@@ -71,22 +65,17 @@ std::string Url::encode(const std::string &data)
   return result;
 }
 
-std::string Url::decode(const std::string &data)
-{
-  const auto encodeCharCount = static_cast<size_t>(std::count(
-    std::begin(data),
-    std::end(data),
-     '%'
-  ));
+std::string Url::decode(const std::string &data) {
+  const auto encodeCharCount = static_cast<size_t>(
+    std::count(std::begin(data), std::end(data), '%')
+  );
 
-  const size_t length = (data.length() - encodeCharCount * 3) + encodeCharCount;
+  const auto length = (data.length() - encodeCharCount * 3) + encodeCharCount;
   std::string result;
   result.resize(length);
 
-  auto charToNibble = [](char value)
-  {
-    if (!isHexChar(value))
-    {
+  auto charToNibble = [](char value) {
+    if (!isHexChar(value)) {
       const auto msg = fmt::format(
         "Unexpected non-printable ASCII char '0x{:X}' '{}'",
         value,
@@ -100,10 +89,8 @@ std::string Url::decode(const std::string &data)
   };
 
   size_t index = 0;
-  for (auto it = data.begin(); it != data.end(); )
-  {
-    if (*it != '%')
-    {
+  for (auto it = data.begin(); it != data.end();) {
+    if (*it != '%') {
       result[index++] = *it;
       it++;
       continue;

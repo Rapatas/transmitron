@@ -9,6 +9,7 @@ conan install \
   --build=missing \
   --profile:build=default \
   --profile:host=default \
+  -of . \
   ../conan
 
 cmake \

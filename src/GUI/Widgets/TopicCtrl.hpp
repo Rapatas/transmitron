@@ -4,23 +4,18 @@
 #include <wx/dnd.h>
 #include <wx/popupwin.h>
 #include <wx/textctrl.h>
+
 #include "GUI/Models/KnownTopics.hpp"
 
-namespace Rapatas::Transmitron::GUI::Widgets
-{
+namespace Rapatas::Transmitron::GUI::Widgets {
 
-class TopicCtrl :
-  public wxTextCtrl
+class TopicCtrl : public wxTextCtrl
 {
 public:
 
-  explicit TopicCtrl(
-    wxWindow *parent,
-    wxWindowID id
-  );
+  explicit TopicCtrl(wxWindow *parent, wxWindowID id);
 
-  enum class ContextIDs : unsigned
-  {
+  enum class ContextIDs : uint8_t {
     Copy
   };
 
@@ -31,9 +26,7 @@ public:
 
 private:
 
-  struct NotAllowedDropTarget :
-    public wxDropTarget
-  {
+  struct NotAllowedDropTarget : public wxDropTarget {
     // NOLINTNEXTLINE(readability-identifier-length)
     wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult defResult) override;
   };
@@ -72,8 +65,6 @@ private:
   void autoCompleteUp();
   void autoCompleteDown();
   void autoCompleteSelect();
-
 };
 
 } // namespace Rapatas::Transmitron::GUI::Widgets
-

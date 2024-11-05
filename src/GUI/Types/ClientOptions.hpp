@@ -6,24 +6,23 @@
 
 #include "GUI/Models/Layouts.hpp"
 
-namespace Rapatas::Transmitron::GUI::Types
-{
+namespace Rapatas::Transmitron::GUI::Types {
 
 class ClientOptions
 {
 public:
 
-    explicit ClientOptions() = default;
-    explicit ClientOptions(std::string layout);
+  explicit ClientOptions() = default;
+  explicit ClientOptions(std::string layout);
 
-    static ClientOptions fromJson(const nlohmann::json &data);
-    [[nodiscard]] nlohmann::json toJson() const;
+  static ClientOptions fromJson(const nlohmann::json &data);
+  [[nodiscard]] nlohmann::json toJson() const;
 
-    [[nodiscard]] std::string getLayout() const;
+  [[nodiscard]] std::string getLayout() const;
 
 private:
 
-    std::string mLayout{Models::Layouts::DefaultName};
+  std::string mLayout{Models::Layouts::DefaultName};
 };
 
 } // namespace Rapatas::Transmitron::GUI::Types

@@ -1,16 +1,18 @@
-#include <wx/frame.h>
+#include "TopicCtrl.hpp"
+
 #include <cctype>
+
+#include <fmt/format.h>
 #include <wx/artprov.h>
-#include <wx/dataview.h>
-#include <wx/gdicmn.h>
-#include <wx/sizer.h>
 #include <wx/clipbrd.h>
+#include <wx/dataview.h>
+#include <wx/frame.h>
+#include <wx/gdicmn.h>
 #include <wx/listctrl.h>
 #include <wx/menu.h>
-#include <fmt/format.h>
+#include <wx/sizer.h>
 
 #include "Common/Log.hpp"
-#include "TopicCtrl.hpp"
 #include "GUI/Events/TopicCtrl.hpp"
 #include "GUI/Models/KnownTopics.hpp"
 
@@ -20,12 +22,9 @@ using namespace GUI::Widgets;
 
 constexpr size_t FontSize = 9;
 
-TopicCtrl::TopicCtrl(
-  wxWindow *parent,
-  wxWindowID id
-) :
+TopicCtrl::TopicCtrl(wxWindow *parent, wxWindowID id) :
   wxTextCtrl(parent, id),
-  mFont(wxFontInfo(FontSize).FaceName("Consolas"))
+  mFont(wxFontInfo(FontSize).FaceName("Consolas")) //
 {
   SetFont(mFont);
   SetWindowStyle(wxWANTS_CHARS);
@@ -34,13 +33,13 @@ TopicCtrl::TopicCtrl(
 
   mLogger = Common::Log::create("GUI::TopicCtrl");
 
-  Bind(wxEVT_LEFT_UP,     &TopicCtrl::onLeftUp,        this);
-  Bind(wxEVT_LEFT_DOWN,   &TopicCtrl::onLeftDown,      this);
+  Bind(wxEVT_LEFT_UP, &TopicCtrl::onLeftUp, this);
+  Bind(wxEVT_LEFT_DOWN, &TopicCtrl::onLeftDown, this);
   Bind(wxEVT_LEFT_DCLICK, &TopicCtrl::onDoubleClicked, this);
-  Bind(wxEVT_RIGHT_DOWN,  &TopicCtrl::onRightClicked,  this);
-  Bind(wxEVT_KILL_FOCUS,  &TopicCtrl::onLostFocus,     this);
-  Bind(wxEVT_KEY_DOWN,    &TopicCtrl::onKeyDown,       this);
-  Bind(wxEVT_KEY_UP,      &TopicCtrl::onKeyUp,         this);
+  Bind(wxEVT_RIGHT_DOWN, &TopicCtrl::onRightClicked, this);
+  Bind(wxEVT_KILL_FOCUS, &TopicCtrl::onLostFocus, this);
+  Bind(wxEVT_KEY_DOWN, &TopicCtrl::onKeyDown, this);
+  Bind(wxEVT_KEY_UP, &TopicCtrl::onKeyUp, this);
 
 #ifdef _WIN32
 
@@ -49,22 +48,18 @@ TopicCtrl::TopicCtrl(
 
 #endif
 
-  Bind(wxEVT_COMMAND_TEXT_UPDATED,  &TopicCtrl::onValueChanged,    this);
+  Bind(wxEVT_COMMAND_TEXT_UPDATED, &TopicCtrl::onValueChanged, this);
   Bind(wxEVT_COMMAND_MENU_SELECTED, &TopicCtrl::onContextSelected, this);
 }
 
-void TopicCtrl::setReadOnly(bool readonly)
-{
+void TopicCtrl::setReadOnly(bool readonly) {
   mReadOnly = readonly;
 
-  if (mReadOnly)
-  {
+  if (mReadOnly) {
     auto *target = new NotAllowedDropTarget;
     SetDropTarget(target);
     Bind(wxEVT_CONTEXT_MENU, &TopicCtrl::onContext, this);
-  }
-  else
-  {
+  } else {
     Unbind(wxEVT_CONTEXT_MENU, &TopicCtrl::onContext, this);
   }
 }
@@ -75,13 +70,10 @@ void TopicCtrl::addKnownTopics(
   mKnownTopicsModel = knownTopicsModel;
 }
 
-void TopicCtrl::onContextSelected(wxCommandEvent &event)
-{
-  switch (static_cast<ContextIDs>(event.GetId()))
-  {
+void TopicCtrl::onContextSelected(wxCommandEvent &event) {
+  switch (static_cast<ContextIDs>(event.GetId())) {
     case ContextIDs::Copy: {
-      if (wxTheClipboard->Open())
-      {
+      if (wxTheClipboard->Open()) {
         long fromIn = 0;
         long toIn = 0;
         GetSelection(&fromIn, &toIn);
@@ -89,10 +81,7 @@ void TopicCtrl::onContextSelected(wxCommandEvent &event)
         const auto until = static_cast<size_t>(toIn);
 
         auto topic = GetValue();
-        if (since != until)
-        {
-          topic = topic.substr(since, until - since);
-        }
+        if (since != until) { topic = topic.substr(since, until - since); }
         auto *dataObject = new wxTextDataObject(topic);
         wxTheClipboard->SetData(dataObject);
         wxTheClipboard->Close();
@@ -101,18 +90,15 @@ void TopicCtrl::onContextSelected(wxCommandEvent &event)
   }
 }
 
-void TopicCtrl::onLeftUp(wxMouseEvent &event)
-{
+void TopicCtrl::onLeftUp(wxMouseEvent &event) {
   long since = 0;
   long until = 0;
   GetSelection(&since, &until);
   mFakeSelection = false;
-  if (since == until)
-  {
+  if (since == until) {
     mCursonPosition = since;
 
-    if (mFirstClick)
-    {
+    if (mFirstClick) {
       SetSelection(-1, -1);
       mFakeSelection = true;
     }
@@ -121,27 +107,21 @@ void TopicCtrl::onLeftUp(wxMouseEvent &event)
   event.Skip();
 }
 
-void TopicCtrl::onLeftDown(wxMouseEvent &event)
-{
+void TopicCtrl::onLeftDown(wxMouseEvent &event) {
   long since = 0;
   long until = 0;
   GetSelection(&since, &until);
-  if (since != until)
-  {
-    mFirstClick = false;
-  }
+  if (since != until) { mFirstClick = false; }
   popupShow();
   event.Skip();
 }
 
-void TopicCtrl::onRightClicked(wxMouseEvent &event)
-{
+void TopicCtrl::onRightClicked(wxMouseEvent &event) {
   long since = 0;
   long until = 0;
   GetSelection(&since, &until);
   mFakeSelection = false;
-  if (since == until)
-  {
+  if (since == until) {
     SetSelection(-1, -1);
     mFakeSelection = true;
   }
@@ -149,19 +129,14 @@ void TopicCtrl::onRightClicked(wxMouseEvent &event)
   event.Skip();
 }
 
-void TopicCtrl::onValueChanged(wxCommandEvent &/* event */)
-{
-  popupRefresh();
-}
+void TopicCtrl::onValueChanged(wxCommandEvent & /* event */) { popupRefresh(); }
 
-void TopicCtrl::onCompletionDoubleClicked(wxDataViewEvent &event)
-{
+void TopicCtrl::onCompletionDoubleClicked(wxDataViewEvent &event) {
   if (!event.GetItem().IsOk()) { return; }
   autoCompleteSelect();
 }
 
-void TopicCtrl::onCompletionLeftUp(wxMouseEvent &event)
-{
+void TopicCtrl::onCompletionLeftUp(wxMouseEvent &event) {
   const auto selected = mAutoCompleteList->GetSelection();
   if (!selected.IsOk()) { return; }
 
@@ -173,19 +148,18 @@ void TopicCtrl::onCompletionLeftUp(wxMouseEvent &event)
   autoCompleteSelect();
 }
 
-void TopicCtrl::onDoubleClicked(wxMouseEvent &event)
-{
-  if (mFakeSelection)
-  {
-    SetSelection(mCursonPosition, mCursonPosition);
-  }
+void TopicCtrl::onDoubleClicked(wxMouseEvent &event) {
+  if (mFakeSelection) { SetSelection(mCursonPosition, mCursonPosition); }
   event.Skip();
 }
 
-void TopicCtrl::onContext(wxContextMenuEvent &event)
-{
+void TopicCtrl::onContext(wxContextMenuEvent &event) {
   wxMenu menu;
-  auto *item = new wxMenuItem(nullptr, static_cast<unsigned>(ContextIDs::Copy), "Copy");
+  auto *item = new wxMenuItem(
+    nullptr,
+    static_cast<unsigned>(ContextIDs::Copy),
+    "Copy"
+  );
   item->SetBitmap(wxArtProvider::GetBitmap(wxART_COPY));
   menu.Append(item);
   PopupMenu(&menu);
@@ -193,18 +167,15 @@ void TopicCtrl::onContext(wxContextMenuEvent &event)
   event.Skip(false);
 }
 
-void TopicCtrl::onLostFocus(wxFocusEvent &event)
-{
+void TopicCtrl::onLostFocus(wxFocusEvent &event) {
   mFirstClick = true;
   SetSelection(0, 0);
   popupHide();
   event.Skip();
 }
 
-void TopicCtrl::onKeyUp(wxKeyEvent &event)
-{
-  if (event.GetKeyCode() == WXK_RETURN && !GetValue().empty())
-  {
+void TopicCtrl::onKeyUp(wxKeyEvent &event) {
+  if (event.GetKeyCode() == WXK_RETURN && !GetValue().empty()) {
     auto *event = new Events::TopicCtrl(Events::TOPICCTRL_RETURN);
     wxQueueEvent(this, event);
     return;
@@ -212,8 +183,7 @@ void TopicCtrl::onKeyUp(wxKeyEvent &event)
 
 #ifdef _WIN32
 
-  if (event.ControlDown() && event.GetKeyCode() == 'A')
-  {
+  if (event.ControlDown() && event.GetKeyCode() == 'A') {
     SetSelection(-1, -1);
     event.Skip(false);
     return;
@@ -224,49 +194,36 @@ void TopicCtrl::onKeyUp(wxKeyEvent &event)
   event.Skip();
 }
 
-void TopicCtrl::onChar(wxKeyEvent &event)
-{
+void TopicCtrl::onChar(wxKeyEvent &event) {
   (void)this;
 
   // Don't skip if Enter.
-  if (event.GetKeyCode() == WXK_RETURN)
-  {
-    return;
-  }
+  if (event.GetKeyCode() == WXK_RETURN) { return; }
 
   // Don't skip if `Ctrl-A`.
-  if (event.ControlDown() && event.GetKeyCode() == 1)
-  {
-    return;
-  }
+  if (event.ControlDown() && event.GetKeyCode() == 1) { return; }
 
   event.Skip();
 }
 
-void TopicCtrl::onKeyDown(wxKeyEvent &event)
-{
-  if (event.GetKeyCode() == WXK_ESCAPE)
-  {
+void TopicCtrl::onKeyDown(wxKeyEvent &event) {
+  if (event.GetKeyCode() == WXK_ESCAPE) {
     popupHide();
     return;
   }
 
-  if (event.GetKeyCode() == WXK_UP)
-  {
+  if (event.GetKeyCode() == WXK_UP) {
     autoCompleteUp();
     return;
   }
 
-  if (event.GetKeyCode() == WXK_DOWN)
-  {
+  if (event.GetKeyCode() == WXK_DOWN) {
     autoCompleteDown();
     return;
   }
 
-  if (event.GetKeyCode() == WXK_TAB)
-  {
-    if (mAutoComplete == nullptr)
-    {
+  if (event.GetKeyCode() == WXK_TAB) {
+    if (mAutoComplete == nullptr) {
       HandleAsNavigationKey(event);
       return;
     }
@@ -275,14 +232,12 @@ void TopicCtrl::onKeyDown(wxKeyEvent &event)
     return;
   }
 
-  if (event.GetKeyCode() == WXK_RETURN)
-  {
+  if (event.GetKeyCode() == WXK_RETURN) {
     popupHide();
     return;
   }
 
-  if (event.GetKeyCode() == WXK_SPACE && event.ControlDown())
-  {
+  if (event.GetKeyCode() == WXK_SPACE && event.ControlDown()) {
     popupShow();
     return;
   }
@@ -290,10 +245,7 @@ void TopicCtrl::onKeyDown(wxKeyEvent &event)
   const bool allowedReadOnlyKeys = true // NOLINT
     && event.ControlDown()
     && (event.GetKeyCode() == 'C' || event.GetKeyCode() == 'A');
-  if (mReadOnly && !allowedReadOnlyKeys)
-  {
-    return;
-  }
+  if (mReadOnly && !allowedReadOnlyKeys) { return; }
 
   event.Skip(true);
 }
@@ -306,15 +258,11 @@ wxDragResult TopicCtrl::NotAllowedDropTarget::OnData(
   return wxDragResult::wxDragNone;
 }
 
-void TopicCtrl::popupShow()
-{
+void TopicCtrl::popupShow() {
   if (mKnownTopicsModel == nullptr) { return; }
   if (mKnownTopicsModel->GetCount() == 0) { return; }
 
-  if (mAutoComplete != nullptr)
-  {
-    mAutoComplete->Destroy();
-  }
+  if (mAutoComplete != nullptr) { mAutoComplete->Destroy(); }
 
   mPopupShow = true;
 
@@ -322,7 +270,7 @@ void TopicCtrl::popupShow()
   const auto filterSize = GetSize();
 
   const wxPoint popupPoint(filterPoint.x, filterPoint.y + filterSize.y);
-  const wxSize popupSize(filterSize.x, 150);
+  const wxSize popupSize(std::max(filterSize.x, 300), 200);
 
   mAutoComplete = new wxPopupWindow(this);
   mAutoComplete->SetSize(popupSize);
@@ -348,8 +296,7 @@ void TopicCtrl::popupShow()
   mAutoCompleteList->AssociateModel(mKnownTopicsModel.get());
   mAutoCompleteList->AppendColumn(mAutoCompleteTopic);
 
-  if (mKnownTopicsModel->GetCount() != 0)
-  {
+  if (mKnownTopicsModel->GetCount() != 0) {
     const auto firstItem = mKnownTopicsModel->GetItem(0);
     mAutoCompleteList->Select(firstItem);
   }
@@ -360,11 +307,7 @@ void TopicCtrl::popupShow()
     this
   );
 
-  mAutoCompleteList->Bind(
-    wxEVT_LEFT_UP,
-    &TopicCtrl::onCompletionLeftUp,
-    this
-  );
+  mAutoCompleteList->Bind(wxEVT_LEFT_UP, &TopicCtrl::onCompletionLeftUp, this);
 
   auto *wrapperSizer = new wxBoxSizer(wxOrientation::wxVERTICAL);
   wrapperSizer->Add(mAutoCompleteList, 1, wxEXPAND);
@@ -373,92 +316,60 @@ void TopicCtrl::popupShow()
   mAutoComplete->Show();
 }
 
-void TopicCtrl::popupHide()
-{
-  if (mAutoComplete == nullptr)
-  {
-    return;
-  }
+void TopicCtrl::popupHide() {
+  if (mAutoComplete == nullptr) { return; }
 
   mPopupShow = false;
   mAutoComplete->Destroy();
   mAutoComplete = nullptr;
 }
 
-void TopicCtrl::popupRefresh()
-{
-  if (mKnownTopicsModel == nullptr)
-  {
-    return;
-  }
+void TopicCtrl::popupRefresh() {
+  if (mKnownTopicsModel == nullptr) { return; }
 
   const auto filter = GetValue().ToStdString();
 
-  if (mPopupShow)
-  {
-    mAutoCompleteList->UnselectAll();
-  }
+  if (mPopupShow) { mAutoCompleteList->UnselectAll(); }
 
   mKnownTopicsModel->setFilter(filter);
-  if (mKnownTopicsModel->GetCount() == 0)
-  {
+  if (mKnownTopicsModel->GetCount() == 0) {
     popupHide();
-  }
-  else if (mPopupShow && mAutoComplete == nullptr)
-  {
+  } else if (mPopupShow && mAutoComplete == nullptr) {
     popupShow();
-  }
-  else
-  {
+  } else if (mPopupShow) {
     // Re-select the top result
-    if (mKnownTopicsModel->GetCount() != 0)
-    {
+    if (mKnownTopicsModel->GetCount() != 0) {
       const auto firstItem = mKnownTopicsModel->GetItem(0);
       mAutoCompleteList->Select(firstItem);
     }
   }
 }
 
-void TopicCtrl::autoCompleteUp()
-{
-  if (mAutoCompleteList == nullptr)
-  {
-    return;
-  }
+void TopicCtrl::autoCompleteUp() {
+  if (mAutoCompleteList == nullptr) { return; }
 
   const auto selected = mAutoCompleteList->GetSelection();
   const auto row = mKnownTopicsModel->GetRow(selected);
-  if (row == 0)
-  {
-    return;
-  }
+  if (row == 0) { return; }
 
   const auto newSelection = mKnownTopicsModel->GetItem(row - 1);
   mAutoCompleteList->Select(newSelection);
   mAutoCompleteList->EnsureVisible(newSelection);
 }
 
-void TopicCtrl::autoCompleteDown()
-{
-  if (mAutoCompleteList == nullptr)
-  {
-    return;
-  }
+void TopicCtrl::autoCompleteDown() {
+  if (mAutoCompleteList == nullptr) { return; }
 
   const auto selected = mAutoCompleteList->GetSelection();
   const auto row = mKnownTopicsModel->GetRow(selected);
-  if (row + 1 == mKnownTopicsModel->GetCount())
-  {
-    return;
-  }
+  if (row + 1 == mKnownTopicsModel->GetCount()) { return; }
 
   const auto newSelection = mKnownTopicsModel->GetItem(row + 1);
   mAutoCompleteList->Select(newSelection);
   mAutoCompleteList->EnsureVisible(newSelection);
 }
 
-void TopicCtrl::autoCompleteSelect()
-{
+void TopicCtrl::autoCompleteSelect() {
   if (!mPopupShow) { return; }
   if (mAutoCompleteList == nullptr) { return; }
 

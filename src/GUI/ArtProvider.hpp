@@ -1,15 +1,15 @@
 #pragma once
 
-#include "Common/Filesystem.hpp"
-#include <wx/bitmap.h>
 #include <map>
+
 #include <spdlog/logger.h>
+#include <wx/bitmap.h>
 
-namespace Rapatas::Transmitron::GUI
-{
+#include "Common/Filesystem.hpp"
 
-enum class Icon
-{
+namespace Rapatas::Transmitron::GUI {
+
+enum class Icon : uint8_t {
   Add,
   Archive,
   Cancel,
@@ -59,7 +59,6 @@ private:
   std::shared_ptr<spdlog::logger> mLogger;
   std::map<Icon, wxBitmap> mIcons;
   wxBitmap mPlaceholder;
-
 };
 
 } // namespace Rapatas::Transmitron::GUI

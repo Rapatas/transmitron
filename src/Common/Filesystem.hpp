@@ -1,4 +1,5 @@
 #pragma once
+// clang-format off
 /*
   https://stackoverflow.com/a/53365539
   Modified to use Common::fs instead of std::filesystem.
@@ -84,3 +85,4 @@ namespace Rapatas::Transmitron::Common
 
 // NOLINTEND(cppcoreguidelines-macro-usage)
 // NOLINTEND(misc-unused-alias-decls)
+// clang-format on

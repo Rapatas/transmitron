@@ -1,19 +1,18 @@
+#include "Helpers.hpp"
+
 #include <iomanip>
 #include <iostream>
 #include <sstream>
-#include <string_view>
 #include <vector>
 
 #include <date/date.h>
 #include <fmt/format.h>
-
-#include "Helpers.hpp"
+#include <string_view>
 
 using namespace std::chrono;
 using namespace Rapatas::Transmitron;
 
-wxColor Common::Helpers::colorFromNumber(size_t number)
-{
+wxColor Common::Helpers::colorFromNumber(size_t number) {
   // NOLINTBEGIN(readability-identifier-length)
   // NOLINTBEGIN(hicpp-signed-bitwise)
 
@@ -26,8 +25,7 @@ wxColor Common::Helpers::colorFromNumber(size_t number)
   uint8_t g = ((number >> (ByteSize * 1)) & ByteMask);
   uint8_t b = ((number >> (ByteSize * 2)) & ByteMask);
 
-  if (r < MinValue && g < MinValue && b < MinValue)
-  {
+  if (r < MinValue && g < MinValue && b < MinValue) {
     r += Offset;
     g += Offset;
     b += Offset;
@@ -53,6 +51,57 @@ std::string Common::Helpers::timeToString(
   std::stringstream sstream;
   sstream << std::put_time(&nowtm, "%Y-%m-%d %H:%M:%S");
   return sstream.str();
+}
+
+std::string Common::Helpers::durationToString(
+  const std::chrono::milliseconds &dur
+) {
+  const bool negative = dur.count() < 0;
+  const std::string prefix = negative ? "-" : "";
+  milliseconds abs{std::abs(dur.count())};
+
+  const auto dhours = duration_cast<hours>(abs);
+  const auto dminutes = duration_cast<minutes>(abs - dhours);
+  const auto dseconds = duration_cast<seconds>(abs - dhours - dminutes);
+  const auto dmsec = duration_cast<milliseconds>(
+    abs - dhours - dminutes - dseconds
+  );
+
+  if (dhours.count() == 0 && dminutes.count() == 0 && dseconds.count() == 0) {
+    return fmt::format( //
+      "{}{}ms",
+      prefix,
+      dmsec.count()
+    );
+  }
+
+  if (dhours.count() == 0 && dminutes.count() == 0) {
+    return fmt::format( //
+      "{}{}.{:0<3}s",
+      prefix,
+      dseconds.count(),
+      dmsec.count()
+    );
+  }
+
+  if (dhours.count() == 0) {
+    return fmt::format(
+      "{}{:02}:{:02}.{:0<3}",
+      prefix,
+      dminutes.count(),
+      dseconds.count(),
+      dmsec.count()
+    );
+  }
+
+  return fmt::format(
+    "{}{:02}:{:02}:{:02}.{:0<3}",
+    prefix,
+    dhours.count(),
+    dminutes.count(),
+    dseconds.count(),
+    dmsec.count()
+  );
 }
 
 std::string Common::Helpers::timeToFilename(
@@ -81,7 +130,7 @@ std::chrono::system_clock::time_point Common::Helpers::stringToTime(
 }
 
 std::string Common::Helpers::hexDump(
-  const std::vector<uint8_t>& bytes,
+  const std::vector<uint8_t> &bytes,
   size_t columns
 ) {
   constexpr size_t FixedCharacterCount = 9;
@@ -93,17 +142,11 @@ std::string Common::Helpers::hexDump(
   std::string line;
   line.reserve(lineWidth);
 
-  for (i = 0; i < bytes.size(); i++)
-  {
-    if ((i % columns) == 0)
-    {
-      if (i != 0)
-      {
+  for (i = 0; i < bytes.size(); i++) {
+    if ((i % columns) == 0) {
+      if (i != 0) {
         line += "  ";
-        for (const auto &byte : buff)
-        {
-          line += static_cast<char>(byte);
-        }
+        for (const auto &byte : buff) { line += static_cast<char>(byte); }
         result += line + '\n';
         line.clear();
         line.reserve(lineWidth);
@@ -114,23 +157,17 @@ std::string Common::Helpers::hexDump(
 
     line += fmt::format(" {:02X}", bytes[i]);
 
-    buff[i % columns] = ::isprint(bytes[i]) != 0
-      ? bytes[i]
-      : '.';
+    buff[i % columns] = ::isprint(bytes[i]) != 0 ? bytes[i] : '.';
   }
 
-  while ((i % columns) != 0)
-  {
+  while ((i % columns) != 0) {
     line += "   ";
     buff[i % columns] = ' ';
     i++;
   }
 
   line += "  ";
-  for (const auto &byte : buff)
-  {
-    line += static_cast<char>(byte);
-  }
+  for (const auto &byte : buff) { line += static_cast<char>(byte); }
   result += line + '\n';
 
   return result;

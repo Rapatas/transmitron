@@ -1,7 +1,8 @@
-#include "Common/Filesystem.hpp"
+#include "Profiles.hpp"
+
 #include <algorithm>
 #include <fstream>
-#include <iterator>
+#include <limits>
 #include <optional>
 #include <stdexcept>
 
@@ -10,11 +11,10 @@
 #include "Common/Log.hpp"
 #include "Common/String.hpp"
 #include "Common/Url.hpp"
-#include "MQTT/BrokerOptions.hpp"
-#include "Profiles.hpp"
 #include "GUI/Models/KnownTopics.hpp"
-#include "GUI/Types/ClientOptions.hpp"
 #include "GUI/Notifiers/Layouts.hpp"
+#include "GUI/Types/ClientOptions.hpp"
+#include "MQTT/BrokerOptions.hpp"
 
 using namespace Rapatas::Transmitron;
 using namespace GUI::Models;
@@ -23,16 +23,18 @@ using namespace Common;
 
 using Port = MQTT::BrokerOptions::Port;
 constexpr Port DefaultMqttPort = 1883;
+constexpr std::string_view NewName{"New profile"};
 
 Profiles::Profiles(
   const wxObjectDataPtr<Layouts> &layouts,
   const ArtProvider &artProvider
 ) :
+  FsTree("Profiles", static_cast<size_t>(Column::Max), artProvider),
+  mLogger(Common::Log::create("Models::Profiles")),
   mArtProvider(artProvider),
-  mLayoutsModel(layouts)
+  mLayoutsModel(layouts),
+  mQuickConnect(*this, mArtProvider) //
 {
-  mLogger = Common::Log::create("Models::Profiles");
-
   auto *notifier = new Notifiers::Layouts;
   mLayoutsModel->AddNotifier(notifier);
 
@@ -40,18 +42,13 @@ Profiles::Profiles(
   notifier->Bind(Events::LAYOUT_CHANGED, &Profiles::onLayoutChanged, this);
 }
 
-bool Profiles::load(
-  const std::string &configDir,
-  const std::string &cacheDir
-) {
-  if (configDir.empty())
-  {
+bool Profiles::load(const std::string &configDir, const std::string &cacheDir) {
+  if (configDir.empty()) {
     mLogger->warn("No config directory provided");
     return false;
   }
 
-  if (cacheDir.empty())
-  {
+  if (cacheDir.empty()) {
     mLogger->warn("No cache directory provided");
     return false;
   }
@@ -60,44 +57,28 @@ bool Profiles::load(
   mConfigProfilesDir = configDir + "/profiles";
 
   if (!ensureDirectoryExists(mConfigProfilesDir)) { return false; }
-  if (!ensureDirectoryExists(mCacheProfilesDir))  { return false; }
+  if (!ensureDirectoryExists(mCacheProfilesDir)) { return false; }
 
+  const bool result = FsTree::load(mConfigProfilesDir);
   createQuickConnect();
-
-  for (const auto &entry : fs::directory_iterator(mConfigProfilesDir))
-  {
-    mLogger->info("Checking {}", entry.path().u8string());
-    if (entry.status().type() != fs::file_type::directory) { continue; }
-    if (entry.path().filename() == "QuickConnect") { continue; }
-
-    const auto item = loadProfile(entry.path());
-    if (!item.IsOk())
-    {
-      continue;
-    }
-
-    mLogger->info("Loaded {}", entry.path().u8string());
-  }
-
-  return true;
+  return result;
 }
 
 bool Profiles::updateBrokerOptions(
   wxDataViewItem item,
   const MQTT::BrokerOptions &brokerOptions
 ) {
-  if (!item.IsOk())
-  {
-    return false;
-  }
+  auto *leaf = getLeaf(item);
+  if (leaf == nullptr) { return false; }
+  auto &profile = *dynamic_cast<Profile *>(leaf);
+
+  profile.brokerOptions = brokerOptions;
 
   const auto id = toId(item);
-  auto &profile = mProfiles.at(id);
-  profile->brokerOptions = brokerOptions;
-  profile->saved = false;
+  leafSave(id);
 
-  save(id);
   ItemChanged(item);
+
   return true;
 }
 
@@ -105,541 +86,331 @@ bool Profiles::updateClientOptions(
   wxDataViewItem item,
   const Types::ClientOptions &clientOptions
 ) {
-    if (!item.IsOk())
-    {
-      return false;
-    }
+  auto *leaf = getLeaf(item);
+  if (leaf == nullptr) { return false; }
+  auto &profile = *dynamic_cast<Profile *>(leaf);
 
-    const auto id = toId(item);
-    auto &profile = mProfiles.at(id);
-    profile->clientOptions = clientOptions;
-    profile->saved = false;
-
-    save(id);
-    ItemChanged(item);
-    return true;
-}
-
-bool Profiles::rename(
-  wxDataViewItem item,
-  const std::string &name
-) {
-  if (!item.IsOk())
-  {
-    return false;
-  }
+  profile.clientOptions = clientOptions;
 
   const auto id = toId(item);
-  auto &profile = mProfiles.at(id);
+  leafSave(id);
 
-  if (profile->name == name)
-  {
-    return true;
-  }
-
-  const bool nameExists = std::any_of(
-    std::begin(mProfiles),
-    std::end(mProfiles),
-    [&name](const auto &profile)
-    {
-      return profile.second->name == name;
-    }
-  );
-  if (nameExists)
-  {
-    mLogger->error("Could not rename '{}': file exists", profile->name);
-    return false;
-  }
-
-  const std::string encoded = Url::encode(name);
-
-  const std::string pathNew = fmt::format(
-    "{}/{}",
-    mConfigProfilesDir,
-    encoded
-  );
-
-  std::error_code ec;
-  fs::rename(profile->path, pathNew, ec);
-  if (ec)
-  {
-    mLogger->error(
-      "Could not rename '{}' to '{}': {}",
-      profile->name,
-      name,
-      ec.message()
-    );
-    return false;
-  }
-
-  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages(mArtProvider)};
-  messages->load(pathNew);
-
-  profile->name = name;
-  profile->path = pathNew;
-  profile->messages = messages;
-  profile->saved = false;
-
-  save(id);
   ItemChanged(item);
 
   return true;
 }
 
-bool Profiles::remove(wxDataViewItem item)
-{
-  const auto id = toId(item);
-  auto &node = mProfiles.at(id);
-
-  std::error_code ec;
-  fs::remove_all(node->path, ec);
-  if (ec)
-  {
-    mLogger->error("Could not delete '{}': {}", node->name, ec.message());
-    return false;
-  }
-
-  mProfiles.erase(id);
-
-  const auto parent = wxDataViewItem(nullptr);
-  ItemDeleted(parent, item);
-
-  return true;
-}
-
-void Profiles::updateQuickConnect(const std::string &url)
-{
+void Profiles::updateQuickConnect(const std::string &url) {
   const auto parts = String::split(url, ':');
 
-  const auto port = [&]() -> Port
-  {
+  const auto port = [&]() -> Port {
     if (parts.size() != 2) { return DefaultMqttPort; }
     const auto &portStr = parts[1];
     const auto isNumeric = std::all_of(
       portStr.begin(),
       portStr.end(),
-      [](char value){ return std::isdigit(value) != 0; }
+      [](char value) { return std::isdigit(value) != 0; }
     );
     if (!isNumeric) { return DefaultMqttPort; }
     return static_cast<Port>(std::stoul(portStr));
   }();
 
-  const auto domain = [&]()
-  {
+  const auto hostname = [&]() {
     if (parts.empty()) { return std::string("localhost"); }
     return parts[0];
   }();
 
-  auto &node = mProfiles.at(mQuickConnectId);
-
-  node->brokerOptions.setPort(port);
-  node->brokerOptions.setHostname(domain);
+  mQuickConnect.brokerOptions.setPort(port);
+  mQuickConnect.brokerOptions.setHostname(hostname);
 }
 
-std::string Profiles::getUniqueName() const
-{
-  const constexpr std::string_view NewProfileName{"New Profile"};
-  std::string uniqueName{NewProfileName};
-  unsigned postfix = 0;
-  while (std::any_of(
-      std::begin(mProfiles),
-      std::end(mProfiles),
-      [=](const auto &profile)
-      {
-        return profile.second->name == uniqueName;
-      }
-  )) {
-    ++postfix;
-    uniqueName = fmt::format("{} - {}", NewProfileName, postfix);
-  }
-
-  return uniqueName;
-}
-
-void Profiles::createQuickConnect()
-{
+void Profiles::createQuickConnect() {
   if (mQuickConnectId != 0) { return; }
 
   const std::string uniqueName = "QuickConnect";
   const std::string encoded = Url::encode(uniqueName);
 
-  const std::string path = fmt::format(
-    "{}/{}",
-    mConfigProfilesDir,
-    encoded
-  );
+  const std::string path = fmt::format("{}/{}", mConfigProfilesDir, encoded);
 
   bool canSave = true;
-  if (!fs::exists(path) && !fs::create_directory(path))
-  {
+  if (!fs::exists(path) && !fs::create_directory(path)) {
     mLogger->warn("Could not create profile '{}' directory", path);
     canSave = false;
   }
 
-  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages(mArtProvider)};
+  const wxObjectDataPtr<Models::Messages> messages{
+    new Models::Messages(mArtProvider)
+  };
   messages->load(path);
 
-  const wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
-  const wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
+  const wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{
+    new Models::KnownTopics
+  };
+  const wxObjectDataPtr<Models::KnownTopics> topicsPublished{
+    new Models::KnownTopics
+  };
 
-  const auto id = mAvailableId++;
-  auto profile = std::make_unique<Node>();
-  profile->name = uniqueName;
-  profile->path = path;
-  profile->saved = false;
-  profile->messages = messages;
-  profile->topicsSubscribed = topicsSubscribed;
-  profile->topicsPublished = topicsPublished;
-  mProfiles.insert({id, std::move(profile)});
+  mQuickConnectId = std::numeric_limits<Id>::max();
+  mQuickConnect.messages = messages;
+  mQuickConnect.topicsSubscribed = topicsSubscribed;
+  mQuickConnect.topicsPublished = topicsPublished;
 
-  mQuickConnectId = id;
-
-  if (canSave)
-  {
-    save(id);
+  if (canSave) {
+    const auto cache = String::replace(
+      path,
+      mConfigProfilesDir,
+      mCacheProfilesDir
+    );
+    mQuickConnect.save(path, cache);
   }
 }
 
-wxDataViewItem Profiles::createProfile()
-{
-  const std::string uniqueName = getUniqueName();
-  const std::string encoded = Url::encode(uniqueName);
-
-  const std::string path = fmt::format(
-    "{}/{}",
-    mConfigProfilesDir,
-    encoded
+wxDataViewItem Profiles::createProfile(wxDataViewItem parentItem) {
+  const std::string uniqueName = createUniqueName(
+    wxDataViewItem(nullptr),
+    NewName
   );
 
-  if (!fs::exists(path) && !fs::create_directory(path))
-  {
-    mLogger->warn("Could not create profile '{}' directory", path);
-    return wxDataViewItem(nullptr);
-  }
+  const wxObjectDataPtr<Models::Messages> messages{
+    new Models::Messages(mArtProvider)
+  };
+  const wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{
+    new Models::KnownTopics
+  };
+  const wxObjectDataPtr<Models::KnownTopics> topicsPublished{
+    new Models::KnownTopics
+  };
 
-  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages(mArtProvider)};
-  messages->load(path);
-
-  const wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
-  const wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
-
-  const auto id = mAvailableId++;
-  auto profile = std::make_unique<Node>();
-  profile->name = uniqueName;
-  profile->path = path;
-  profile->saved = false;
+  auto profile = std::make_unique<Profile>(*this, mArtProvider);
   profile->messages = messages;
   profile->topicsSubscribed = topicsSubscribed;
   profile->topicsPublished = topicsPublished;
-  mProfiles.insert({id, std::move(profile)});
 
-  save(id);
+  const auto item = leafCreate(parentItem, std::move(profile), uniqueName);
+  const auto id = toId(item);
+  const auto path = getNodePath(id);
 
-  const auto parent = wxDataViewItem(nullptr);
-  const auto item = toItem(id);
-  ItemAdded(parent, item);
+  messages->load(path);
 
   return item;
 }
 
-const MQTT::BrokerOptions &Profiles::getBrokerOptions(wxDataViewItem item) const
-{
-  return mProfiles.at(toId(item))->brokerOptions;
-}
-
-const Types::ClientOptions &Profiles::getClientOptions(wxDataViewItem item) const
-{
-    return mProfiles.at(toId(item))->clientOptions;
-}
-
-wxString Profiles::getName(wxDataViewItem item) const
-{
-  const auto name = mProfiles.at(toId(item))->name;
-  const auto wxs = wxString::FromUTF8(name.data(), name.length());
-  return wxs;
-}
-
-wxDataViewItem Profiles::getItemFromName(const std::string &profileName) const
-{
-  const auto it = std::find_if(
-    std::begin(mProfiles),
-    std::end(mProfiles),
-    [=](const auto &profile)
-    {
-      const auto &node = profile.second;
-      return node->name == profileName;
-    }
-  );
-
-  if (it == std::end(mProfiles))
-  {
-    return wxDataViewItem(nullptr);
+const MQTT::BrokerOptions &Profiles::getBrokerOptions(wxDataViewItem item
+) const {
+  auto *leaf = getLeaf(item);
+  if (leaf == nullptr) {
+    static MQTT::BrokerOptions empty{};
+    return empty;
   }
 
-  return toItem(it->first);
+  auto &profile = *dynamic_cast<Profile *>(leaf);
+  return profile.brokerOptions;
 }
 
-wxDataViewItem Profiles::getQuickConnect() const
-{
+const Types::ClientOptions &Profiles::getClientOptions(wxDataViewItem item
+) const {
+  auto *leaf = getLeaf(item);
+  if (leaf == nullptr) {
+    static Types::ClientOptions empty{};
+    return empty;
+  }
+
+  auto &profile = *dynamic_cast<Profile *>(leaf);
+  return profile.clientOptions;
+}
+
+wxDataViewItem Profiles::getQuickConnect() const {
   return toItem(mQuickConnectId);
 }
 
-wxObjectDataPtr<Messages> Profiles::getMessagesModel(wxDataViewItem item)
-{
-  return mProfiles.at(toId(item))->messages;
+wxObjectDataPtr<Messages> Profiles::getMessagesModel(wxDataViewItem item) {
+  auto *leaf = getLeaf(item);
+  if (leaf == nullptr) { return wxObjectDataPtr<Messages>{nullptr}; }
+
+  auto &profile = *dynamic_cast<Profile *>(leaf);
+  return profile.messages;
 }
 
-wxObjectDataPtr<KnownTopics> Profiles::getTopicsSubscribed(wxDataViewItem item)
-{
-  return mProfiles.at(toId(item))->topicsSubscribed;
-}
-
-wxObjectDataPtr<KnownTopics> Profiles::getTopicsPublished(wxDataViewItem item)
-{
-  return mProfiles.at(toId(item))->topicsPublished;
-}
-
-unsigned Profiles::GetColumnCount() const
-{
-  return static_cast<unsigned>(Column::Max);
-}
-
-wxString Profiles::GetColumnType(unsigned int /* col */) const
-{
-  return wxDataViewTextRenderer::GetDefaultType();
-}
-
-void Profiles::GetValue(
-  wxVariant &variant,
-  const wxDataViewItem &item,
-  unsigned int col
-) const {
-  const auto &profile = mProfiles.at(toId(item));
-
-  switch (static_cast<Column>(col))
-  {
-    case Column::Name: {
-      const auto &name = profile->name;
-      const auto wxs = wxString::FromUTF8(name.data(), name.length());
-      variant = wxs;
-    } break;
-    case Column::URL: {
-      variant =
-        profile->brokerOptions.getHostname()
-        + ":"
-        + std::to_string(profile->brokerOptions.getPort());
-    } break;
-    default: {}
-  }
-}
-
-bool Profiles::SetValue(
-  const wxVariant &/* variant */,
-  const wxDataViewItem &/* item */,
-  unsigned int /* col */
+wxObjectDataPtr<KnownTopics> Profiles::getTopicsSubscribed(wxDataViewItem item
 ) {
-  return false;
+  auto *leaf = getLeaf(item);
+  if (leaf == nullptr) { return wxObjectDataPtr<KnownTopics>{nullptr}; }
+
+  auto &profile = *dynamic_cast<Profile *>(leaf);
+  return profile.topicsSubscribed;
 }
 
-bool Profiles::IsEnabled(
-  const wxDataViewItem &/* item */,
-  unsigned int /* col */
-) const {
-  return true;
+wxObjectDataPtr<KnownTopics> Profiles::getTopicsPublished(wxDataViewItem item) {
+  auto *leaf = getLeaf(item);
+  if (leaf == nullptr) { return wxObjectDataPtr<KnownTopics>{nullptr}; }
+
+  auto &profile = *dynamic_cast<Profile *>(leaf);
+  return profile.topicsPublished;
 }
 
-wxDataViewItem Profiles::GetParent(
-  const wxDataViewItem &/* item */
+void Profiles::leafValue(
+  Id id,
+  wxDataViewIconText &value,
+  unsigned int col //
 ) const {
-  return wxDataViewItem(nullptr);
-}
+  auto item = toItem(id);
+  auto *leaf = getLeaf(item);
+  if (leaf == nullptr) { return; }
+  auto &profile = *dynamic_cast<Profile *>(leaf);
 
-bool Profiles::IsContainer(
-  const wxDataViewItem &item
-) const {
-  return !item.IsOk();
-}
-
-unsigned Profiles::GetChildren(
-  const wxDataViewItem &parent,
-  wxDataViewItemArray &children
-) const {
-  if (parent.IsOk())
-  {
-    return 0;
+  if (static_cast<Column>(col) == Column::Name) {
+    wxIcon icon;
+    icon.CopyFromBitmap(mArtProvider.bitmap(Icon::Profile));
+    value.SetIcon(icon);
   }
 
-  for (const auto &[nodeId, node] : mProfiles)
-  {
-    if (nodeId == mQuickConnectId) { continue; }
-    children.Add(toItem(nodeId));
+  if (static_cast<Column>(col) == Column::URL) {
+    const auto url = fmt::format(
+      "{}:{}",
+      profile.brokerOptions.getHostname(),
+      profile.brokerOptions.getPort()
+    );
+    const auto wxs = wxString::FromUTF8(url.data(), url.length());
+    value.SetText(wxs);
   }
+}
 
-  std::sort(
-    std::begin(children),
-    std::end(children),
-    [this](wxDataViewItem lhs, wxDataViewItem rhs)
-    {
-      const auto lhsid = toId(lhs);
-      const auto rhsid = toId(rhs);
+bool Profiles::leafSave(Id id) {
+  auto item = toItem(id);
+  auto *leaf = getLeaf(item);
+  if (leaf == nullptr) { return false; }
+  auto &profile = *dynamic_cast<Profile *>(leaf);
 
-      auto lhsv = mProfiles.at(lhsid)->name;
-      auto rhsv = mProfiles.at(rhsid)->name;
-
-      std::transform(
-        rhsv.begin(),
-        rhsv.end(),
-        rhsv.begin(),
-        [](unsigned char value)
-        {
-          return std::tolower(value);
-        }
-      );
-
-      std::transform(
-        lhsv.begin(),
-        lhsv.end(),
-        lhsv.begin(),
-        [](unsigned char value)
-        {
-          return std::tolower(value);
-        }
-      );
-
-      return lhsv < rhsv;
-    }
+  const auto config = getNodePath(id);
+  const auto cache = String::replace(
+    config,
+    mConfigProfilesDir,
+    mCacheProfilesDir
   );
-
-  return static_cast<unsigned>(children.size());
+  const auto result = profile.save(config, cache);
+  profile.messages->load(config);
+  return result;
 }
 
-bool Profiles::save(size_t id)
-{
-  auto &profile = mProfiles.at(id);
-  if (profile->saved) { return true; }
-  const bool saved = saveOptionsBroker(id) && saveOptionsClient(id);
-  profile->saved = saved;
-  return saved;
+bool Profiles::Profile::save(
+  const Common::fs::path &config,
+  const Common::fs::path &cache
+) {
+  if (!configDir.empty() && configDir != config) {
+    fs::rename(configDir, config);
+  }
+  if (!cacheDir.empty() && cacheDir != cache) { //
+    fs::rename(cacheDir, cache);
+  }
+  configDir = config;
+  cacheDir = cache;
+  fs::create_directories(config);
+  fs::create_directories(cache);
+
+  return true                    // NOLINT
+    && saveOptionsBroker(config) //
+    && saveOptionsClient(config) //
+    && saveCache(cache);
 }
 
-bool Profiles::saveOptionsBroker(size_t id)
-{
-  auto &profile = mProfiles.at(id);
-  if (profile->saved) { return true; }
-
+bool Profiles::Profile::saveOptionsBroker(const Common::fs::path &path) {
   const auto brokerOptionsFilepath = fmt::format(
     "{}/{}",
-    profile->path.string(),
+    path.string(),
     BrokerOptionsFilename
   );
 
   std::ofstream output(brokerOptionsFilepath);
-  if (!output.is_open())
-  {
+  if (!output.is_open()) {
     const auto ec = std::error_code(errno, std::system_category());
-    mLogger->error(
-      "Could not save '{}':",
-      brokerOptionsFilepath,
-      ec.message()
-    );
+    mLogger
+      ->error("Could not save '{}': {}", brokerOptionsFilepath, ec.message());
     return false;
   }
 
-  output << profile->brokerOptions.toJson();
+  output << brokerOptions.toJson();
   return true;
 }
 
-bool Profiles::saveOptionsClient(size_t id)
-{
-  auto &profile = mProfiles.at(id);
-  if (profile->saved) { return true; }
-
+bool Profiles::Profile::saveOptionsClient(const Common::fs::path &path) {
   const auto clientOptionsFilepath = fmt::format(
     "{}/{}",
-    profile->path.string(),
+    path.string(),
     ClientOptionsFilename
   );
 
   std::ofstream output(clientOptionsFilepath);
-  if (!output.is_open())
-  {
+  if (!output.is_open()) {
     const auto ec = std::error_code(errno, std::system_category());
-    mLogger->error(
-      "Could not save '{}':",
-      clientOptionsFilepath,
-      ec.message()
-    );
+    mLogger
+      ->error("Could not save '{}': {}", clientOptionsFilepath, ec.message());
     return false;
   }
 
-  output << profile->clientOptions.toJson();
+  output << clientOptions.toJson();
   return true;
 }
 
-wxDataViewItem Profiles::loadProfile(const Common::fs::path &directory)
-{
-  const std::string encoded = directory.stem().u8string();
-  std::string decoded;
-  try
-  {
-    decoded = Url::decode(encoded);
+bool Profiles::Profile::saveCache(const Common::fs::path &path) const {
+  topicsPublished->save(path.string() + "/topics/published.txt");
+  topicsSubscribed->save(path.string() + "/topics/subscribed.txt");
+  return true;
+}
+
+std::unique_ptr<FsTree::Leaf> Profiles::leafLoad(
+  Id id,
+  const Common::fs::path &path
+) {
+  (void)id;
+  auto profile = std::make_unique<Profile>(*this, mArtProvider);
+  const auto cache = String::replace(
+    path.string(),
+    mConfigProfilesDir,
+    mCacheProfilesDir
+  );
+  profile->load(path, cache);
+  return profile;
+}
+
+bool Profiles::Profile::load(
+  const Common::fs::path &config,
+  const Common::fs::path &cache
+) {
+  mLogger->debug("Profile::load({})", config.string());
+
+  if (const auto opt = loadOptionsClient(config)) {
+    clientOptions = opt.value();
   }
-  catch (std::runtime_error &error)
-  {
-    mLogger->error("Could not decode '{}': {}", encoded, error.what());
-    return wxDataViewItem(nullptr);
+
+  if (const auto opt = loadOptionsBroker(config)) {
+    brokerOptions = opt.value();
   }
-  const std::string name{decoded.begin(), decoded.end()};
 
-  const auto brokerOptions = [this, directory]()
-  {
-    const auto opt = loadProfileOptionsBroker(directory);
-    if (!opt) { return MQTT::BrokerOptions{}; }
-    return opt.value();
-  }();
+  const wxObjectDataPtr<Models::Messages> messages{
+    new Models::Messages(mArtProvider)
+  };
+  const wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{
+    new Models::KnownTopics
+  };
+  const wxObjectDataPtr<Models::KnownTopics> topicsPublished{
+    new Models::KnownTopics
+  };
 
-  const auto clientOptions = [this, directory]()
-  {
-    const auto opt = loadProfileOptionsClient(directory);
-    if (!opt) { return Types::ClientOptions{}; }
-    return opt.value();
-  }();
+  this->messages = messages;
+  this->topicsSubscribed = topicsSubscribed;
+  this->topicsPublished = topicsPublished;
 
-  const wxObjectDataPtr<Models::Messages> messages{new Models::Messages(mArtProvider)};
-  messages->load(directory.string());
+  messages->load(config.string());
 
-  const wxObjectDataPtr<Models::KnownTopics> topicsSubscribed{new Models::KnownTopics};
-  const wxObjectDataPtr<Models::KnownTopics> topicsPublished{new Models::KnownTopics};
-
-  const auto cacheProfile = fmt::format("{}/{}", mCacheProfilesDir, encoded);
-  const auto topics = cacheProfile + "/topics";
-  if (true // NOLINT
-    && ensureDirectoryExists(cacheProfile)
-    && ensureDirectoryExists(topics)
-  ) {
-    topicsSubscribed->load(topics + "/subscribed.txt");
-    topicsPublished->load(topics + "/published.txt");
-  }
+  topicsSubscribed->load(cache.string() + "/topics/subscribed.txt");
+  topicsPublished->load(cache.string() + "/topics/published.txt");
 
   topicsPublished->append(messages->getKnownTopics());
 
-  const auto id = mAvailableId++;
-  auto profile = std::make_unique<Node>(Node{
-    name,
-    clientOptions,
-    brokerOptions,
-    directory,
-    messages,
-    topicsSubscribed,
-    topicsPublished,
-    true
-  });
-  mProfiles.insert({id, std::move(profile)});
-
-  return toItem(id);
+  return true;
 }
 
-std::optional<MQTT::BrokerOptions> Profiles::loadProfileOptionsBroker(
+std::optional<MQTT::BrokerOptions> Profiles::Profile::loadOptionsBroker(
   const Common::fs::path &directory
 ) {
   const auto brokerOptionsFilepath = fmt::format(
@@ -649,16 +420,14 @@ std::optional<MQTT::BrokerOptions> Profiles::loadProfileOptionsBroker(
   );
 
   std::ifstream brokerOptionsFile(brokerOptionsFilepath);
-  if (!brokerOptionsFile.is_open())
-  {
+  if (!brokerOptionsFile.is_open()) {
     mLogger->warn("Could not open '{}'", brokerOptionsFilepath);
     return std::nullopt;
   }
 
   std::stringstream buffer;
   buffer << brokerOptionsFile.rdbuf();
-  if (!nlohmann::json::accept(buffer.str()))
-  {
+  if (!nlohmann::json::accept(buffer.str())) {
     mLogger->warn("Could not parse '{}'", brokerOptionsFilepath);
     return std::nullopt;
   }
@@ -668,7 +437,7 @@ std::optional<MQTT::BrokerOptions> Profiles::loadProfileOptionsBroker(
   return brokerOptions;
 }
 
-std::optional<Types::ClientOptions> Profiles::loadProfileOptionsClient(
+std::optional<Types::ClientOptions> Profiles::Profile::loadOptionsClient(
   const Common::fs::path &directory
 ) {
   const auto clientOptionsFilepath = fmt::format(
@@ -678,16 +447,14 @@ std::optional<Types::ClientOptions> Profiles::loadProfileOptionsClient(
   );
 
   std::ifstream clientOptionsFile(clientOptionsFilepath);
-  if (!clientOptionsFile.is_open())
-  {
+  if (!clientOptionsFile.is_open()) {
     mLogger->warn("Could not open '{}'", clientOptionsFilepath);
     return std::nullopt;
   }
 
   std::stringstream buffer;
   buffer << clientOptionsFile.rdbuf();
-  if (!nlohmann::json::accept(buffer.str()))
-  {
+  if (!nlohmann::json::accept(buffer.str())) {
     mLogger->warn("Could not parse '{}'", clientOptionsFilepath);
     return std::nullopt;
   }
@@ -695,83 +462,70 @@ std::optional<Types::ClientOptions> Profiles::loadProfileOptionsClient(
   const auto data = nlohmann::json::parse(buffer.str());
   auto clientOptions = Types::ClientOptions::fromJson(data);
   return clientOptions;
-
 }
 
-size_t Profiles::toId(const wxDataViewItem &item)
-{
-  uintptr_t result = 0;
-  const void *id = item.GetID();
-  std::memcpy(&result, &id, sizeof(uintptr_t));
-  return result;
-}
-
-wxDataViewItem Profiles::toItem(size_t id)
-{
-  void *itemId = nullptr;
-  const uintptr_t value = id;
-  std::memcpy(&itemId, &value, sizeof(uintptr_t));
-  return wxDataViewItem(itemId);
-}
-
-void Profiles::onLayoutRemoved(Events::Layout &/* event */)
-{
+void Profiles::onLayoutRemoved(Events::Layout & /* event */) {
   const std::string newName{Layouts::DefaultName};
   renameLayoutIfMissing(newName);
 }
 
-void Profiles::onLayoutChanged(Events::Layout &event)
-{
+void Profiles::onLayoutChanged(Events::Layout &event) {
   const auto item = event.getItem();
   const std::string newName = mLayoutsModel->getName(item);
   renameLayoutIfMissing(newName);
 }
 
-bool Profiles::ensureDirectoryExists(const std::string &dir) const
-{
+bool Profiles::ensureDirectoryExists(const std::string &dir) const {
   const bool exists = fs::exists(dir);
   const bool isDir = fs::is_directory(dir);
 
-  if (exists && !isDir && !fs::remove(dir))
-  {
+  if (exists && !isDir && !fs::remove(dir)) {
     mLogger->warn("Could not remove file {}", dir);
     return false;
   }
 
-  if (!exists && !fs::create_directory(dir))
-  {
-    mLogger->warn(
-      "Could not create cache directory: {}",
-      dir
-    );
+  if (!exists && !fs::create_directory(dir)) {
+    mLogger->warn("Could not create cache directory: {}", dir);
     return false;
   }
 
   return true;
 }
 
-void Profiles::renameLayoutIfMissing(const std::string &newName)
-{
+void Profiles::renameLayoutIfMissing(const std::string &newName) {
   const auto &layouts = mLayoutsModel->getLabelVector();
 
-  for (auto &profile : mProfiles)
-  {
+  for (auto [nodeId, leaf] : getLeafs()) {
+    auto &profile = *dynamic_cast<Profile *>(leaf);
     const auto it = std::find(
       std::begin(layouts),
       std::end(layouts),
-      profile.second->clientOptions.getLayout()
+      profile.clientOptions.getLayout()
     );
+    if (it != std::end(layouts)) { continue; }
 
-    if (it != std::end(layouts))
-    {
-      continue;
-    }
-
-    auto &node = profile.second;
-    node->clientOptions = Types::ClientOptions{newName};
-    node->saved = false;
-
-    const auto id = profile.first;
-    save(id);
+    profile.clientOptions = Types::ClientOptions{newName};
+    leafSave(nodeId);
   }
 }
+
+bool Profiles::isLeaf(const Common::fs::directory_entry &entry) const {
+  if (entry.status().type() != fs::file_type::directory) { return false; }
+  for (const auto &entry : fs::directory_iterator(entry)) {
+    const bool hasIt = entry.path().filename() == "client-options.json";
+    if (hasIt) { return true; }
+  }
+  return false;
+}
+
+Profiles::Profile::Profile(
+  const Profiles &profiles,
+  const ArtProvider &artProvider
+) :
+  mLogger(Common::Log::create("Models::Profile")),
+  mProfiles(profiles),
+  mArtProvider(artProvider),
+  messages(new Models::Messages(mArtProvider)),
+  topicsSubscribed(new Models::KnownTopics),
+  topicsPublished(new Models::KnownTopics) //
+{}

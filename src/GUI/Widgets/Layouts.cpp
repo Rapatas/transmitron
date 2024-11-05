@@ -1,10 +1,11 @@
+#include "Layouts.hpp"
+
 #include <iterator>
 
 #include <wx/button.h>
 #include <wx/event.h>
 
 #include "Common/Log.hpp"
-#include "Layouts.hpp"
 #include "GUI/Events/Layout.hpp"
 #include "GUI/Models/Layouts.hpp"
 #include "GUI/Notifiers/Layouts.hpp"
@@ -14,7 +15,7 @@ using namespace GUI::Widgets;
 using namespace GUI;
 
 Layouts::Layouts(
-  wxWindow* parent,
+  wxWindow *parent,
   wxWindowID id,
   const wxObjectDataPtr<Models::Layouts> &layoutsModel,
   wxAuiManager *auiMan,
@@ -26,7 +27,7 @@ Layouts::Layouts(
   mLayoutsModel(layoutsModel),
   mAuiMan(auiMan),
   mArtProvider(artProvider),
-  mSizer(new wxBoxSizer(wxHORIZONTAL))
+  mSizer(new wxBoxSizer(wxHORIZONTAL)) //
 {
   mLogger = Common::Log::create("Widgets::Layouts");
 
@@ -38,7 +39,7 @@ Layouts::Layouts(
   notifier->Bind(Events::LAYOUT_CHANGED, &Layouts::onLayoutChanged, this);
 
   const auto options = getNames();
-  mCurrentSelection = mLayoutsModel->getDefault();
+  mCurrentSelection = Models::Layouts::getDefault();
   const auto currentValue = mLayoutsModel->getName(mCurrentSelection);
 
   mLayoutsLocked = new wxComboBox(
@@ -75,41 +76,19 @@ Layouts::Layouts(
   mSizer->Add(mLayoutsEdit, 0, wxEXPAND);
   mSizer->Add(mSave, 0, wxEXPAND);
 
-  mLayoutsEdit->Bind(
-    wxEVT_COMBOBOX,
-    &Layouts::onLayoutEditSelected,
-    this
-  );
-  mLayoutsEdit->Bind(
-    wxEVT_TEXT_ENTER,
-    &Layouts::onLayoutEditEnter,
-    this
-  );
-  mLayoutsEdit->Bind(
-    wxEVT_KILL_FOCUS,
-    &Layouts::onLayoutEditLostFocus,
-    this
-  );
-  mLayoutsLocked->Bind(
-    wxEVT_COMBOBOX,
-    &Layouts::onLayoutLockedSelected,
-    this
-  );
-  mSave->Bind(
-    wxEVT_BUTTON,
-    &Layouts::onLayoutSaveClicked,
-    this
-  );
+  mLayoutsEdit->Bind(wxEVT_COMBOBOX, &Layouts::onLayoutEditSelected, this);
+  mLayoutsEdit->Bind(wxEVT_TEXT_ENTER, &Layouts::onLayoutEditEnter, this);
+  mLayoutsEdit->Bind(wxEVT_KILL_FOCUS, &Layouts::onLayoutEditLostFocus, this);
+  mLayoutsLocked->Bind(wxEVT_COMBOBOX, &Layouts::onLayoutLockedSelected, this);
+  mSave->Bind(wxEVT_BUTTON, &Layouts::onLayoutSaveClicked, this);
 
   SetSizer(mSizer);
 }
 
-bool Layouts::setSelectedLayout(const std::string &layoutName)
-{
+bool Layouts::setSelectedLayout(const std::string &layoutName) {
   const auto item = mLayoutsModel->findItemByName(layoutName);
 
-  if (!item.IsOk())
-  {
+  if (!item.IsOk()) {
     mLogger->warn("Could not find perspective '{}'", layoutName);
     return false;
   }
@@ -122,13 +101,11 @@ bool Layouts::setSelectedLayout(const std::string &layoutName)
   return true;
 }
 
-void Layouts::onLayoutSaveClicked(wxCommandEvent &/* event */)
-{
+void Layouts::onLayoutSaveClicked(wxCommandEvent & /* event */) {
   const auto perspective = mAuiMan->SavePerspective().ToStdString();
   const auto item = mLayoutsModel->create(perspective);
 
-  if (!item.IsOk())
-  {
+  if (!item.IsOk()) {
     mLogger->warn("Could not store perspective");
     return;
   }
@@ -136,8 +113,7 @@ void Layouts::onLayoutSaveClicked(wxCommandEvent &/* event */)
   mCurrentSelection = item;
 }
 
-void Layouts::onLayoutEditEnter(wxCommandEvent &/* event */)
-{
+void Layouts::onLayoutEditEnter(wxCommandEvent & /* event */) {
   const auto wxs = mLayoutsEdit->GetValue();
   const wxVariant value = wxs;
 
@@ -147,41 +123,31 @@ void Layouts::onLayoutEditEnter(wxCommandEvent &/* event */)
     static_cast<unsigned>(Models::Layouts::Column::Name)
   );
 
-  if (!saved)
-  {
-    return;
-  }
+  if (!saved) { return; }
 
   mLayoutsEdit->SetValue(value.GetString());
   mLayoutsLocked->SetValue(value.GetString());
   resize();
 }
 
-void Layouts::onLayoutEditSelected(wxCommandEvent &/* event */)
-{
+void Layouts::onLayoutEditSelected(wxCommandEvent & /* event */) {
   onLayoutSelected(mLayoutsEdit->GetValue().ToStdString());
 }
 
-void Layouts::onLayoutEditLostFocus(wxFocusEvent &/* event */)
-{
+void Layouts::onLayoutEditLostFocus(wxFocusEvent & /* event */) {
   const auto value = mLayoutsModel->getName(mCurrentSelection);
   mLayoutsEdit->SetValue(value);
   mLayoutsLocked->SetValue(value);
   resize();
 }
 
-void Layouts::onLayoutLockedSelected(wxCommandEvent &/* event */)
-{
+void Layouts::onLayoutLockedSelected(wxCommandEvent & /* event */) {
   onLayoutSelected(mLayoutsLocked->GetValue().ToStdString());
 }
 
-void Layouts::onLayoutSelected(const std::string &value)
-{
+void Layouts::onLayoutSelected(const std::string &value) {
   const auto item = mLayoutsModel->findItemByName(value);
-  if (!item.IsOk())
-  {
-    return;
-  }
+  if (!item.IsOk()) { return; }
 
   mCurrentSelection = item;
   const auto perspective = mLayoutsModel->getPerspective(item);
@@ -192,8 +158,7 @@ void Layouts::onLayoutSelected(const std::string &value)
   wxQueueEvent(this, event);
 }
 
-void Layouts::onLayoutAdded(Events::Layout &event)
-{
+void Layouts::onLayoutAdded(Events::Layout &event) {
   const auto item = event.getItem();
   const auto prevValue = mLayoutsLocked->GetValue();
 
@@ -203,8 +168,7 @@ void Layouts::onLayoutAdded(Events::Layout &event)
   mLayoutsEdit->Set(options);
   mLayoutsLocked->Set(options);
 
-  if (item == mCurrentSelection)
-  {
+  if (item == mCurrentSelection) {
     mLayoutsLocked->SetValue(value);
     mLayoutsEdit->SetValue(value);
 
@@ -216,17 +180,14 @@ void Layouts::onLayoutAdded(Events::Layout &event)
 
     mLayoutsEdit->SelectAll();
     mLayoutsEdit->SetFocus();
-  }
-  else
-  {
+  } else {
     mLayoutsEdit->SetValue(prevValue);
     mLayoutsLocked->SetValue(prevValue);
     resize();
   }
 }
 
-void Layouts::onLayoutRemoved(Events::Layout &/* event */)
-{
+void Layouts::onLayoutRemoved(Events::Layout & /* event */) {
   const auto editval = mLayoutsEdit->GetValue();
   const auto lockval = mLayoutsLocked->GetValue();
 
@@ -240,38 +201,42 @@ void Layouts::onLayoutRemoved(Events::Layout &/* event */)
   resize();
 }
 
-void Layouts::onLayoutChanged(Events::Layout &/* event */)
-{
+void Layouts::onLayoutChanged(Events::Layout & /* event */) {
   auto options = getNames();
 
   mLayoutsEdit->Set(options);
   mLayoutsLocked->Set(options);
 
   wxVariant value;
-  mLayoutsModel->GetValue(value, mCurrentSelection, static_cast<unsigned>(Models::Layouts::Column::Name));
+  mLayoutsModel->GetValue(
+    value,
+    mCurrentSelection,
+    static_cast<unsigned>(Models::Layouts::Column::Name)
+  );
 
   mLayoutsEdit->SetValue(value.GetString());
   mLayoutsLocked->SetValue(value.GetString());
   resize();
 }
 
-wxArrayString Layouts::getNames() const
-{
+wxArrayString Layouts::getNames() const {
   wxArrayString result;
   const wxDataViewItem parent(nullptr);
   wxDataViewItemArray children;
   mLayoutsModel->GetChildren(parent, children);
-  for (const auto &child : children)
-  {
+  for (const auto &child : children) {
     wxVariant value;
-    mLayoutsModel->GetValue(value, child, static_cast<unsigned>(Models::Layouts::Column::Name));
+    mLayoutsModel->GetValue(
+      value,
+      child,
+      static_cast<unsigned>(Models::Layouts::Column::Name)
+    );
     result.push_back(value.GetString());
   }
   return result;
 }
 
-void Layouts::resize()
-{
+void Layouts::resize() {
   mLayoutsEdit->Hide();
 
   mLayoutsLocked->Hide();

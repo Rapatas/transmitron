@@ -7,23 +7,21 @@
 #include <wx/stc/stc.h>
 #include <wx/wx.h>
 
+#include "GUI/ArtProvider.hpp"
+#include "GUI/Events/Edit.hpp"
+#include "GUI/Events/TopicCtrl.hpp"
 #include "MQTT/Client.hpp"
 #include "MQTT/Message.hpp"
 #include "TopicCtrl.hpp"
-#include "GUI/Events/Edit.hpp"
-#include "GUI/Events/TopicCtrl.hpp"
-#include "GUI/ArtProvider.hpp"
 
-namespace Rapatas::Transmitron::GUI::Widgets
-{
+namespace Rapatas::Transmitron::GUI::Widgets {
 
-class Edit :
-  public wxPanel
+class Edit : public wxPanel
 {
 public:
 
   explicit Edit(
-    wxWindow* parent,
+    wxWindow *parent,
     wxWindowID id,
     const ArtProvider &artProvider,
     int optionsHeight,
@@ -55,14 +53,12 @@ public:
 
 private:
 
-  enum class Theme : uint8_t
-  {
+  enum class Theme : uint8_t {
     Light,
     Dark,
   };
 
-  enum class Style : uint8_t
-  {
+  enum class Style : uint8_t {
     Comment,
     Editor,
     Error,
@@ -73,6 +69,14 @@ private:
     Special,
     String,
     Uri,
+  };
+
+  enum class Format : uint8_t {
+    Auto,
+    Text,
+    Json,
+    Xml,
+    Binary,
   };
 
   using ThemeStyles = std::map<Style, std::pair<uint32_t, uint32_t>>;
@@ -111,14 +115,6 @@ private:
   wxButton *mSaveMessage = nullptr;
   wxComboBox *mFormatSelect = nullptr;
 
-  enum class Format
-  {
-    Auto,
-    Text,
-    Json,
-    Xml,
-    Binary,
-  };
   Format mCurrentFormat = Format::Auto;
 
   void onQosClicked(wxMouseEvent &event);
@@ -129,11 +125,7 @@ private:
   void onFormatSelected(wxCommandEvent &event);
   void onTopicCtrlReturn(Events::TopicCtrl &event);
 
-
-  std::string formatTry(
-    const std::string &text,
-    Format format
-  );
+  std::string formatTry(const std::string &text, Format format);
 
   static Format formatGuess(const std::string &text);
   static const std::map<std::string, Format> &formats();
@@ -141,4 +133,3 @@ private:
 };
 
 } // namespace Rapatas::Transmitron::GUI::Widgets
-

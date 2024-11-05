@@ -3,54 +3,36 @@
 #include <wx/dataview.h>
 #include <wx/event.h>
 
-namespace Rapatas::Transmitron::GUI::Events
-{
+namespace Rapatas::Transmitron::GUI::Events {
 
 class Recording;
 wxDECLARE_EVENT(RECORDING_SAVE, Recording);
 wxDECLARE_EVENT(RECORDING_OPEN, Recording);
 
 // NOLINTNEXTLINE
-class Recording :
-  public wxCommandEvent
+class Recording : public wxCommandEvent
 {
 public:
 
   explicit Recording(wxEventType commandType, int id = 0) :
-    wxCommandEvent(commandType, id)
+    wxCommandEvent(commandType, id) //
   {}
 
-  Recording(const Recording& event) :
-    wxCommandEvent(event)
-  {
+  Recording(const Recording &event) :
+    wxCommandEvent(event) {
     this->setContents(event.getContents());
     this->setName(event.getName());
   }
 
-  [[nodiscard]] wxEvent* Clone() const override
-  {
-    return new Recording(*this);
-  }
+  [[nodiscard]] wxEvent *Clone() const override { return new Recording(*this); }
 
-  [[nodiscard]] std::string getContents() const
-  {
-    return mContents;
-  }
+  [[nodiscard]] std::string getContents() const { return mContents; }
 
-  void setContents(const std::string &contents)
-  {
-    mContents = contents;
-  }
+  void setContents(const std::string &contents) { mContents = contents; }
 
-  [[nodiscard]] wxString getName() const
-  {
-    return mName;
-  }
+  [[nodiscard]] wxString getName() const { return mName; }
 
-  void setName(const wxString &name)
-  {
-    mName = name;
-  }
+  void setName(const wxString &name) { mName = name; }
 
 private:
 

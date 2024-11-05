@@ -23,11 +23,13 @@ set(
   GUI/Events/Recording.cpp
   GUI/Events/Subscription.cpp
   GUI/Events/TopicCtrl.cpp
+  GUI/Models/FsTree.cpp
   GUI/Models/History.cpp
   GUI/Models/KnownTopics.cpp
   GUI/Models/Layouts.cpp
   GUI/Models/Messages.cpp
   GUI/Models/Profiles.cpp
+  GUI/Models/ProfilesWrapper.cpp
   GUI/Models/Subscriptions.cpp
   GUI/Notifiers/Layouts.cpp
   GUI/Resources/history/history-18x14.cpp

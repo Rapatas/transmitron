@@ -1,26 +1,21 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
+#include <wx/dataview.h>
+#include <wx/panel.h>
 #include <wx/propgrid/property.h>
 #include <wx/propgrid/props.h>
-#include <wx/panel.h>
 #include <wx/sizer.h>
-#include <wx/textctrl.h>
 #include <wx/spinctrl.h>
-#include <wx/dataview.h>
+#include <wx/textctrl.h>
 
-#include "GUI/Events/Connection.hpp"
-#include "GUI/Events/Layout.hpp"
-#include "GUI/Models/Layouts.hpp"
-#include "GUI/Models/Profiles.hpp"
-#include "GUI/Types/ClientOptions.hpp"
 #include "GUI/ArtProvider.hpp"
+#include "GUI/Models/Layouts.hpp"
+#include "GUI/Models/ProfilesWrapper.hpp"
 
-namespace Rapatas::Transmitron::GUI::Tabs
-{
+namespace Rapatas::Transmitron::GUI::Tabs {
 
-class Homepage :
-  public wxPanel
+class Homepage : public wxPanel
 {
 public:
 
@@ -37,24 +32,22 @@ public:
 
 private:
 
-
-  enum class ContextIDs : unsigned
-  {
+  enum class ContextIDs : uint8_t {
     ProfilesConnect,
     ProfilesCreate,
     ProfilesEdit,
   };
 
+  std::shared_ptr<spdlog::logger> mLogger;
   wxFontInfo mLabelFont;
   int mOptionsHeight;
   const ArtProvider &mArtProvider;
-
-  std::shared_ptr<spdlog::logger> mLogger;
 
   // Profiles.
   wxPanel *mProfiles = nullptr;
   wxDataViewCtrl *mProfilesCtrl = nullptr;
   wxObjectDataPtr<Models::Profiles> mProfilesModel;
+  wxObjectDataPtr<Models::ProfilesWrapper> mProfilesModelWrapper;
   wxObjectDataPtr<Models::Layouts> mLayoutsModel;
   wxButton *mProfileCreate = nullptr;
   wxButton *mProfileEdit = nullptr;
@@ -63,13 +56,15 @@ private:
   // Recordings.
   wxPanel *mRecordings = nullptr;
 
+  // Info.
+  wxPanel *mInfo = nullptr;
+
   // Quick Connect.
   wxPanel *mQuickConnect = nullptr;
   wxTextCtrl *mQuickConnectUrl = nullptr;
   wxButton *mQuickConnectBtn = nullptr;
 
   void onCancelClicked(wxCommandEvent &event);
-  void onNewProfileClicked(wxCommandEvent &event);
   void onRecordingOpen(wxCommandEvent &event);
 
   void onConnectClicked(wxCommandEvent &event);
@@ -85,12 +80,11 @@ private:
   void setupProfiles(wxPanel *parent);
   void setupQuickConnect(wxPanel *parent);
   void setupRecordings(wxPanel *parent);
+  void setupInfo(wxPanel *parent);
 
   void onQuickConnect();
 
   void connectTo(wxDataViewItem profile);
-
 };
 
 } // namespace Rapatas::Transmitron::GUI::Tabs
-

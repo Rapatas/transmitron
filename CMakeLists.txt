@@ -4,9 +4,9 @@ project(transmitron)
 
 set(PROGRAM_DESCRIPTION "Transmitron MQTT desktop client")
 
-set(TRANSMITRON_VERSION_MAJOR 0)
+set(TRANSMITRON_VERSION_MAJOR 1)
 set(TRANSMITRON_VERSION_MINOR 0)
-set(TRANSMITRON_VERSION_PATCH 5)
+set(TRANSMITRON_VERSION_PATCH 0)
 set(TRANSMITRON_VERSION_POSTFIX "")
 
 string(CONCAT TRANSMITRON_VERSION
@@ -48,6 +48,7 @@ find_package(wxWidgets REQUIRED
 )
 
 include(${CMAKE_SOURCE_DIR}/cmake/clang-tidy.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/git-version.cmake)
 
 add_subdirectory(src)
 
