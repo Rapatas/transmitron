@@ -22,6 +22,7 @@ public:
   static constexpr size_t DefaultMaxReconnectRetries = 10;
   static constexpr size_t DefaultMaxInFlight = 10;
   static constexpr Port DefaultPort = 1883;
+  static constexpr bool DefaultSSL = false;
 
   explicit BrokerOptions();
   explicit BrokerOptions(
@@ -29,6 +30,7 @@ public:
     size_t maxInFlight,
     size_t maxReconnectRetries,
     Port port,
+    bool ssl,
     std::chrono::seconds connectTimeout,
     std::chrono::seconds disconnectTimeout,
     std::chrono::seconds keepAliveInterval,
@@ -52,6 +54,7 @@ public:
   [[nodiscard]] size_t getMaxInFlight() const;
   [[nodiscard]] size_t getMaxReconnectRetries() const;
   [[nodiscard]] Port getPort() const;
+  [[nodiscard]] bool getSSL() const;
 
   void setHostname(std::string hostname);
   void setPort(Port port);
@@ -62,6 +65,7 @@ private:
   size_t mMaxInFlight;
   size_t mMaxReconnectRetries;
   Port mPort;
+  bool mSsl;
   std::chrono::seconds mConnectTimeout;
   std::chrono::seconds mDisconnectTimeout;
   std::chrono::seconds mKeepAliveInterval;

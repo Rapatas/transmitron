@@ -38,8 +38,12 @@ void Client::connect() {
   mCanceled = false;
   mShouldReconnect = false;
   mRetries = 0;
+  const auto prefix = ( //
+    mBrokerOptions.getSSL() && mBrokerOptions.getHostname().find("ssl://") != 0
+  );
   const std::string address = fmt::format(
-    "{}:{}",
+    "{}{}:{}",
+    (prefix ? "ssl://" : ""),
     mBrokerOptions.getHostname(),
     mBrokerOptions.getPort()
   );
@@ -142,11 +146,17 @@ void Client::setBrokerOptions(BrokerOptions brokerOptions) {
 
   // Connect.
   mConnectOptions.set_clean_session(true);
-  mConnectOptions.set_keep_alive_interval(mBrokerOptions.getKeepAliveInterval()
-  );
   mConnectOptions.set_connect_timeout(mBrokerOptions.getConnectTimeout());
   mConnectOptions.set_user_name(mBrokerOptions.getUsername());
   mConnectOptions.set_password(mBrokerOptions.getPassword());
+  mConnectOptions.set_keep_alive_interval( //
+    mBrokerOptions.getKeepAliveInterval()
+  );
+
+  if (mBrokerOptions.getSSL()) {
+    mqtt::ssl_options sslopts;
+    mConnectOptions.set_ssl(std::move(sslopts));
+  }
 }
 
 // Setters }

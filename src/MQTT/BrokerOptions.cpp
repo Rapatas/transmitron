@@ -15,6 +15,7 @@ BrokerOptions::BrokerOptions() :
   mMaxInFlight(DefaultMaxInFlight),
   mMaxReconnectRetries(DefaultMaxReconnectRetries),
   mPort(DefaultPort),
+  mSsl(DefaultSSL),
   mConnectTimeout(DefaultTimeout),
   mDisconnectTimeout(DefaultTimeout),
   mKeepAliveInterval(DefaultKeepAliveInterval),
@@ -30,6 +31,7 @@ BrokerOptions::BrokerOptions(
   size_t maxInFlight,
   size_t maxReconnectRetries,
   Port port,
+  bool ssl,
   std::chrono::seconds connectTimeout,
   std::chrono::seconds disconnectTimeout,
   std::chrono::seconds keepAliveInterval,
@@ -42,6 +44,7 @@ BrokerOptions::BrokerOptions(
   mMaxInFlight(maxInFlight),
   mMaxReconnectRetries(maxReconnectRetries),
   mPort(port),
+  mSsl(ssl),
   mConnectTimeout(connectTimeout),
   mDisconnectTimeout(disconnectTimeout),
   mKeepAliveInterval(keepAliveInterval),
@@ -98,6 +101,9 @@ BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data) {
     extract<unsigned>(data, "disconnectTimeout")
       .value_or(DefaultTimeout.count());
 
+  const bool ssl = //
+    extract<bool>(data, "ssl").value_or(DefaultSSL);
+
   const unsigned maxReconnectRetries = //
     extract<unsigned>(data, "maxReconnectRetries")
       .value_or(DefaultMaxReconnectRetries);
@@ -107,6 +113,7 @@ BrokerOptions BrokerOptions::fromJson(const nlohmann::json &data) {
     maxInFlight,
     maxReconnectRetries,
     port,
+    ssl,
     std::chrono::seconds(connectTimeout),
     std::chrono::seconds(disconnectTimeout),
     std::chrono::seconds(keepAliveInterval),
@@ -129,6 +136,7 @@ nlohmann::json BrokerOptions::toJson() const {
     {"maxInFlight", mMaxInFlight},
     {"password", mPassword},
     {"port", mPort},
+    {"ssl", mSsl},
     {"username", mUsername},
   };
 }
@@ -136,6 +144,8 @@ nlohmann::json BrokerOptions::toJson() const {
 bool BrokerOptions::getAutoReconnect() const { return mAutoReconnect; }
 
 BrokerOptions::Port BrokerOptions::getPort() const { return mPort; }
+
+bool BrokerOptions::getSSL() const { return mSsl; }
 
 std::chrono::seconds BrokerOptions::getKeepAliveInterval() const {
   return mKeepAliveInterval;

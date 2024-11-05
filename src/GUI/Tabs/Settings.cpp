@@ -48,10 +48,7 @@ Settings::Settings(
 {
   mLogger = Common::Log::create("GUI::Settings");
 
-  const auto versionStr = fmt::format(
-    "Version: {}",
-    Info::getProjectVersion()
-  );
+  const auto versionStr = fmt::format("Version: {}", Info::getProjectVersion());
   auto *version = new wxStaticText(
     this,
     wxID_ANY,
@@ -326,8 +323,14 @@ void Settings::setupProfileOptions(wxPanel *parent) {
     mGridCategoryBroker,
     new wxStringProperty("Hostname", "", {})
   );
-  pfp.at(Properties::Port
-  ) = pfg->AppendIn(mGridCategoryBroker, new wxUIntProperty("Port", "", {}));
+  pfp.at(Properties::Port) = pfg->AppendIn( //
+    mGridCategoryBroker,
+    new wxUIntProperty("Port", "", {})
+  );
+  pfp.at(Properties::SSL) = pfg->AppendIn( //
+    mGridCategoryBroker,
+    new wxBoolProperty("SSL", "", {})
+  );
   pfp.at(Properties::Username) = pfg->AppendIn(
     mGridCategoryBroker,
     new wxStringProperty("Username", "", {})
@@ -816,6 +819,7 @@ void Settings::propertyGridClear() {
   pfp.at(Properties::MaxReconnectRetries)->SetValue({});
   pfp.at(Properties::Password)->SetValue({});
   pfp.at(Properties::Port)->SetValue({});
+  pfp.at(Properties::SSL)->SetValue({});
   pfp.at(Properties::Username)->SetValue({});
   pfp.at(Properties::Layout)->SetValue({});
 }
@@ -842,6 +846,7 @@ void Settings::propertyGridFill(
   pfp.at(Properties::Password)->SetValue(brokerOptions.getPassword());
   pfp.at(Properties::Port)
     ->SetValue(static_cast<uint16_t>(brokerOptions.getPort()));
+  pfp.at(Properties::SSL)->SetValue(brokerOptions.getSSL());
   pfp.at(Properties::Username)->SetValue(brokerOptions.getUsername());
 
   (void)clientOptions;
@@ -871,6 +876,7 @@ MQTT::BrokerOptions Settings::brokerOptionsFromPropertyGrid() const {
   const auto port = static_cast<uint16_t>(
     pfp.at(Properties::Port)->GetValue().GetInteger()
   );
+  const auto ssl = pfp.at(Properties::SSL)->GetValue().GetBool();
   const auto connectTimeout = static_cast<size_t>(
     pfp.at(Properties::ConnectTimeout)->GetValue().GetInteger()
   );
@@ -890,6 +896,7 @@ MQTT::BrokerOptions Settings::brokerOptionsFromPropertyGrid() const {
     maxInFlight,
     maxReconnectRetries,
     port,
+    ssl,
     std::chrono::seconds(connectTimeout),
     std::chrono::seconds(disconnectTimeout),
     std::chrono::seconds(keepAliveInterval),

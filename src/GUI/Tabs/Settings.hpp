@@ -52,6 +52,7 @@ private:
     MaxReconnectRetries,
     Password,
     Port,
+    SSL,
     Username,
     Layout,
     Max,
