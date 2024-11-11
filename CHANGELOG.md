@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.0.1] - 2024-11-11
+
+### Fixed
+
+- Crash when renaming the same profile twice
+
 ## [1.0.0] - 2024-11-05
 
 ### Added

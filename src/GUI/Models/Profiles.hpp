@@ -82,8 +82,6 @@ private:
     wxObjectDataPtr<Messages> messages;
     wxObjectDataPtr<KnownTopics> topicsSubscribed;
     wxObjectDataPtr<KnownTopics> topicsPublished;
-    Common::fs::path configDir;
-    Common::fs::path cacheDir;
   };
 
   static constexpr std::string_view
