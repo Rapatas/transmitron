@@ -296,14 +296,6 @@ bool Profiles::Profile::save(
   const Common::fs::path &config,
   const Common::fs::path &cache
 ) {
-  if (!configDir.empty() && configDir != config) {
-    fs::rename(configDir, config);
-  }
-  if (!cacheDir.empty() && cacheDir != cache) { //
-    fs::rename(cacheDir, cache);
-  }
-  configDir = config;
-  cacheDir = cache;
   fs::create_directories(config);
   fs::create_directories(cache);
 
